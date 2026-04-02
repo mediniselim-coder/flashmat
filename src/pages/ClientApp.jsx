@@ -192,23 +192,28 @@ return (
           <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes véhicules</div><div className={styles.pageSub}>Vos véhicules enregistrés</div></div><button className="btn btn-green" onClick={() => setAddVehicleModal(true)}>+ Ajouter un véhicule</button></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
-                {[{make:'Honda Civic',year:2019,plate:'AAB 1234',badge:'Principal',badgeCls:'badge-green',score:87,oil:22,brakes:90,battery:91},
-                  {make:'Toyota RAV4',year:2021,plate:'ZZC 9876',badge:'Secondaire',badgeCls:'badge-blue',score:96,oil:65,brakes:95,battery:99}].map(v => (
-                  <div key={v.make} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
-                    <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-                      <div style={{fontFamily:'var(--display)',fontSize:18,fontWeight:800}}>{v.make} {v.year}</div>
-                      <span className={`badge ${v.badgeCls}`}>{v.badge}</span>
-                    </div>
-                    <div style={{fontFamily:'var(--mono)',fontSize:10,background:'var(--bg2)',border:'1px solid var(--border)',padding:'3px 8px',borderRadius:4,display:'inline-block',marginBottom:12}}>{v.plate}</div>
-                    {[['FlashScore™',v.score,'green'],['Huile',v.oil,'amber'],['Freins',v.brakes,'green'],['Batterie',v.battery,'blue']].map(([l,val,c]) => (
-                      <div key={l} style={{marginBottom:8}}>
-                        <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}><span style={{color:'var(--ink2)'}}>{l}</span><span style={{color:`var(--${c})`,fontFamily:'var(--mono)'}}>{val}%</span></div>
-                        <div className="prog-bar"><div className="prog-fill" style={{width:`${val}%`,background:`var(--${c})`}}/></div>
-                      </div>
-                    ))}
-                    <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={() => setBookingModal(true)}>Réserver un service</button>
-                  </div>
-                ))}
+                {myVehicles.length === 0 ? (
+  <div style={{textAlign:'center',padding:40,color:'var(--ink3)',gridColumn:'1/-1'}}>
+    <div style={{fontSize:40,marginBottom:12}}>🚗</div>
+    <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucun véhicule enregistré</div>
+    <div style={{fontSize:13,marginBottom:16}}>Ajoutez votre premier véhicule!</div>
+    <button className="btn btn-green btn-lg" onClick={() => setAddVehicleModal(true)}>+ Ajouter un véhicule</button>
+  </div>
+) : myVehicles.map(v => (
+  <div key={v.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+    <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
+      <div style={{fontFamily:'var(--display)',fontSize:18,fontWeight:800}}>{v.make} {v.model} {v.year}</div>
+      <span className="badge badge-green">Mon véhicule</span>
+    </div>
+    {v.plate && <div style={{fontFamily:'var(--mono)',fontSize:10,background:'var(--bg2)',border:'1px solid var(--border)',padding:'3px 8px',borderRadius:4,display:'inline-block',marginBottom:12}}>{v.plate}</div>}
+    {v.color && <div style={{fontSize:11,color:'var(--ink2)',marginBottom:8}}>Couleur: {v.color}</div>}
+    <div style={{marginBottom:8}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}><span style={{color:'var(--ink2)'}}>FlashScore™</span><span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span></div>
+      <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
+    </div>
+    <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={() => setBookingModal(true)}>Réserver un service</button>
+  </div>
+))}
               </div>
             </div>
           </div>
