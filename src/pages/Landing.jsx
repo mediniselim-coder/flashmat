@@ -3,16 +3,16 @@ import { useNavigate } from 'react-router-dom'
 import styles from './Landing.module.css'
 
 const SERVICES = [
-  { id: 'mechanic', name: 'Mécanique',      icon: '🔧', count: 47 },
-  { id: 'wash',     name: 'Lave-auto',       icon: '🚿', count: 32 },
-  { id: 'tire',     name: 'Pneus',           icon: '🔩', count: 28 },
-  { id: 'body',     name: 'Carrosserie',     icon: '🎨', count: 19 },
-  { id: 'glass',    name: 'Vitres auto',     icon: '🪟', count: 15 },
-  { id: 'tuning',   name: 'Performance',     icon: '🏎️', count: 11 },
-  { id: 'parts',    name: 'Pièces auto',     icon: '⚙️', count: 24 },
-  { id: 'parking',  name: 'Stationnement',   icon: '🅿️', count: 38 },
-  { id: 'tow',      name: 'Remorquage',      icon: '🚛', count: 22 },
-  { id: 'junk',     name: 'Casses auto',     icon: '♻️', count:  9 },
+  { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 47 },
+  { id: 'wash',     name: 'Lave-auto',    icon: '🚿', count: 32 },
+  { id: 'tire',     name: 'Pneus',        icon: '🔩', count: 28 },
+  { id: 'body',     name: 'Carrosserie',  icon: '🎨', count: 19 },
+  { id: 'glass',    name: 'Vitres auto',  icon: '🪟', count: 15 },
+  { id: 'tuning',   name: 'Performance',  icon: '🏎️', count: 11 },
+  { id: 'parts',    name: 'Pièces auto',  icon: '⚙️', count: 24 },
+  { id: 'parking',  name: 'Stationnement',icon: '🅿️', count: 38 },
+  { id: 'tow',      name: 'Remorquage',   icon: '🚛', count: 22 },
+  { id: 'junk',     name: 'Casses auto',  icon: '♻️', count:  9 },
 ]
 
 const TICKER = [
@@ -22,18 +22,18 @@ const TICKER = [
   'JA Automobile — Freins $149, alignement offert',
   'Lave-Auto 365 — Abonnement mensuel illimité $59',
   'Speedy Glass — Répare le pare-brise sans franchise',
-  'Remorquage Elite — Dès $79 n\'importe où MTL',
+  "Remorquage Elite — Dès $79 n'importe où MTL",
 ]
 
 const PROVIDERS = [
-  { name: 'Garage Los Santos',       icon: '🔧', type: 'Mécanique',      rating: 4.8, reviews: 312, open: true,  dist: '0.8km' },
-  { name: 'CS Lave Auto Décarie',    icon: '🚿', type: 'Lave-auto',      rating: 4.8, reviews: 198, open: true,  dist: '1.2km' },
-  { name: 'Dubé Pneu et Mécan.',     icon: '🔩', type: 'Pneus',          rating: 4.3, reviews: 256, open: true,  dist: '2.1km' },
-  { name: 'Garage Méca. MK',         icon: '🔧', type: 'Mécanique',      rating: 4.9, reviews: 145, open: false, dist: '1.8km' },
-  { name: 'Remorquage Elite 24/7',   icon: '🚛', type: 'Remorquage',     rating: 4.6, reviews: 432, open: true,  dist: 'Mobile' },
-  { name: 'Lave-Auto 365',           icon: '🚿', type: 'Lave-auto',      rating: 4.8, reviews: 210, open: true,  dist: '2.4km' },
-  { name: 'JA Automobile',           icon: '🔧', type: 'Mécanique',      rating: 4.8, reviews:  89, open: true,  dist: '3.2km' },
-  { name: 'Speedy Glass Montréal',   icon: '🪟', type: 'Vitres auto',    rating: 4.5, reviews: 521, open: true,  dist: '1.5km' },
+  { name: 'Garage Los Santos',     icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews: 312, open: true,  dist: '0.8km' },
+  { name: 'CS Lave Auto Décarie',  icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 198, open: true,  dist: '1.2km' },
+  { name: 'Dubé Pneu et Mécan.',   icon: '🔩', type: 'Pneus',       rating: 4.3, reviews: 256, open: true,  dist: '2.1km' },
+  { name: 'Garage Méca. MK',       icon: '🔧', type: 'Mécanique',   rating: 4.9, reviews: 145, open: false, dist: '1.8km' },
+  { name: 'Remorquage Elite 24/7', icon: '🚛', type: 'Remorquage',  rating: 4.6, reviews: 432, open: true,  dist: 'Mobile' },
+  { name: 'Lave-Auto 365',         icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 210, open: true,  dist: '2.4km' },
+  { name: 'JA Automobile',         icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews:  89, open: true,  dist: '3.2km' },
+  { name: 'Speedy Glass Montréal', icon: '🪟', type: 'Vitres auto', rating: 4.5, reviews: 521, open: true,  dist: '1.5km' },
 ]
 
 const TABS = [
@@ -44,9 +44,9 @@ const TABS = [
 ]
 
 export default function Landing() {
-  const navigate  = useNavigate()
-  const [tab, setTab]     = useState('plaque')
-  const [query, setQuery] = useState('')
+  const navigate = useNavigate()
+  const [tab, setTab]         = useState('plaque')
+  const [query, setQuery]     = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
 
   const activeTab = TABS.find(t => t.key === tab)
@@ -67,8 +67,7 @@ export default function Landing() {
       {/* NAV */}
       <nav className={styles.nav}>
         <div className={styles.logo} onClick={() => navigate('/')}>
-          <div className={styles.logoHex}>FM</div>
-          <div className={styles.logoText}>Flash<span>Mat</span><sup>.ca</sup></div>
+          <img src="/logo.jpg" alt="FlashMat" style={{ height: 40, objectFit: 'contain' }} />
         </div>
 
         <div className={styles.navLinks}>
@@ -83,7 +82,6 @@ export default function Landing() {
           <button className="btn btn-green" onClick={() => navigate('/auth')}>Connexion / S'inscrire</button>
         </div>
 
-        {/* Mobile hamburger */}
         <button className={styles.hamburger} onClick={() => setMenuOpen(true)}>☰</button>
       </nav>
 
@@ -91,7 +89,7 @@ export default function Landing() {
       {menuOpen && (
         <div className={styles.mobileMenuOverlay} onClick={() => setMenuOpen(false)}>
           <div className={styles.mobileMenu} onClick={e => e.stopPropagation()}>
-            <div className={styles.mobileMenuTitle}>Menu FlashMat.ca</div>
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain', marginBottom: 8 }} />
             <button className="btn btn-green btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth'); setMenuOpen(false) }}>
               🚗 Portail Client — Se connecter
             </button>
@@ -110,7 +108,7 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.heroBadge}>
           <span className={styles.badgeDot} />
-          Hub Automobile · Montréal · 280+ Fournisseurs
+          The MarketPlace for Auto Tech · Montréal · 280+ Fournisseurs
         </div>
 
         <h1 className={styles.h1}>
@@ -124,7 +122,6 @@ export default function Landing() {
           Recherche par immatriculation, FlashScore™, alertes intelligentes.
         </p>
 
-        {/* SEARCH */}
         <div className={styles.searchWrap}>
           <div className={styles.searchTabs}>
             {TABS.map(t => (
@@ -134,21 +131,14 @@ export default function Landing() {
             ))}
           </div>
           <form className={styles.searchBox} onSubmit={handleSearch}>
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder={activeTab.ph}
-              className={styles.searchInput}
-            />
+            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={activeTab.ph} className={styles.searchInput} />
             <button type="submit" className={styles.searchBtn}>Rechercher →</button>
           </form>
         </div>
 
         <div className={styles.chips}>
           {['🔧 Mécanique', '🚿 Lave-auto', '🔩 Pneus', '🚛 Remorquage 24/7', '🪟 Vitres', '🎨 Carrosserie', '♻️ Casse auto'].map(c => (
-            <button key={c} className={styles.chip} onClick={() => quickSearch(c.split(' ').slice(1).join(' '))}>
-              {c}
-            </button>
+            <button key={c} className={styles.chip} onClick={() => quickSearch(c.split(' ').slice(1).join(' '))}>{c}</button>
           ))}
         </div>
       </section>
@@ -200,9 +190,7 @@ export default function Landing() {
               <div className={styles.provRating}>
                 <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(p.rating))}</span> {p.rating} ({p.reviews})
               </div>
-              <span className={`badge ${p.open ? 'badge-green' : 'badge-amber'}`}>
-                {p.open ? '● Ouvert' : '● Fermé'}
-              </span>
+              <span className={`badge ${p.open ? 'badge-green' : 'badge-amber'}`}>{p.open ? '● Ouvert' : '● Fermé'}</span>
               <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>
             </div>
           ))}
@@ -223,7 +211,7 @@ export default function Landing() {
                 ['📊','FlashScore™','Score santé de votre véhicule en temps réel'],
                 ['📅','Réservation instantanée','Agenda live de tous les fournisseurs'],
                 ['⚡','Alertes intelligentes','Rappels proactifs, promos, urgences'],
-                ['🛒','Marketplace','Achat/vente pièces entre Montréalais']
+                ['🛒','Marketplace','Achat/vente pièces entre Montréalais'],
               ].map(([ico, t, d]) => (
                 <div key={t} className={styles.pcFeat}>
                   <span>{ico}</span>
@@ -243,7 +231,7 @@ export default function Landing() {
                 ['📅','Gestion réservations','Calendrier intelligent, file d\'attente'],
                 ['📣','Promos ciblées','Offres à vos clients fidèles'],
                 ['✅','Notifier les clients','Alerte quand la voiture est prête'],
-                ['🏪','Profil public','Visibilité FlashMat + Google']
+                ['🏪','Profil public','Visibilité FlashMat + Google'],
               ].map(([ico, t, d]) => (
                 <div key={t} className={styles.pcFeat}>
                   <span>{ico}</span>
@@ -258,10 +246,7 @@ export default function Landing() {
 
       {/* FOOTER */}
       <footer className={styles.footer}>
-        <div className={styles.logo}>
-          <div className={styles.logoHex}>FM</div>
-          <div className={styles.logoText}>Flash<span>Mat</span><sup>.ca</sup></div>
-        </div>
+        <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain' }} />
         <div className={styles.footerLinks}>
           {['À propos', 'Conditions', 'Confidentialité', 'info@flashmat.ca', '514-476-1708'].map(l => (
             <span key={l} className={styles.footerLink}>{l}</span>
