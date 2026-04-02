@@ -105,7 +105,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
             <label className="form-label">Année</label>
             <select className="form-select" value={selectedYear} onChange={e => setSelectedYear(e.target.value)}>
               <option value="">Choisir une année...</option>
-              {years.map(y => <option key={y.year} value={y.year}>{y.year} — {y.body_type} — {y.engine}</option>)}
+             {years.map((y, i) => <option key={i} value={y.year}>{y.year}{y.trim ? ` — ${y.trim}` : ''} — {y.body_type}</option>)}
             </select>
           </div>
         )}
