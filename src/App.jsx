@@ -43,6 +43,10 @@ export default function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
+          <Route path="/app/search" element={<Navigate to="/" replace />} />
+          <Route path="/app/marketplace" element={
+            <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
+          } />
           <Route path="/app/client/*" element={
             <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
           } />

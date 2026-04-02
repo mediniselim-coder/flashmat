@@ -66,6 +66,14 @@ export default function ClientApp() {
   })
 
   function go(id) { setPane(id); setSidebar(false) }
+
+  function slugify(name) {
+    return name.toLowerCase()
+      .replace(/[àáâã]/g, 'a').replace(/[éèêë]/g, 'e')
+      .replace(/[îï]/g, 'i').replace(/[ôö]/g, 'o')
+      .replace(/[ùûü]/g, 'u').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
+  }
 return (
     <div className={styles.shell}>
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
@@ -123,7 +131,7 @@ return (
                 <div className="stat-card sc-green"><div className="stat-lbl">Fournisseurs MTL</div><div className="stat-val">{providers.length}</div><div className="stat-sub">disponibles</div></div>
                 <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">87<span style={{fontSize:14}}>%</span></div><div className="stat-sub">Honda Civic</div></div>
                 <div className="stat-card sc-amber"><div className="stat-lbl">Prochain service</div><div className="stat-val">7j</div><div className="stat-sub">Vidange — 6 avr.</div></div>
-                <div className="stat-card sc-purple"><div className="stat-lbl">Véhicules</div><div className="stat-val">2</div><div className="stat-sub">Civic · RAV4</div></div>
+                <div className="stat-card sc-purple"><div className="stat-lbl">Véhicules</div><div className="stat-val">{myVehicles.length}</div><div className="stat-sub">{myVehicles.length === 0 ? 'Aucun véhicule' : myVehicles.slice(0,2).map(v => v.model).join(' · ')}</div></div>
               </div>
               <div style={{textAlign:'center',marginTop:20}}>
                 <button className="btn btn-green btn-lg" onClick={() => go('search')}>🗺️ Trouver un fournisseur →</button>
@@ -164,7 +172,7 @@ return (
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
                   {filtered.map((p,i) => (
                     <div key={p.id||i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14,display:'flex',gap:12,alignItems:'flex-start',cursor:'pointer',boxShadow:'var(--shadow)'}}
-                      onClick={() => setBookingModal(true)}>
+                      onClick={() => navigate(`/provider/${slugify(p.name)}`)}>
                       <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{p.icon||'🔧'}</div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:2}}>{p.name}</div>

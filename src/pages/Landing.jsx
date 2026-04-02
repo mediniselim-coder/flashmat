@@ -48,17 +48,24 @@ export default function Landing() {
   const [tab, setTab]           = useState('plaque')
   const [query, setQuery]       = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [filterTerm, setFilterTerm] = useState('')
 
   const activeTab = TABS.find(t => t.key === tab)
 
   function handleSearch(e) {
     e.preventDefault()
-    navigate(`/app/search?q=${encodeURIComponent(query)}&tab=${tab}`)
+    setFilterTerm(query.toLowerCase())
+    setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
   function quickSearch(term) {
-    navigate(`/app/search?q=${encodeURIComponent(term)}`)
+    setFilterTerm(term.toLowerCase())
+    setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
+
+  const filteredProviders = filterTerm
+    ? PROVIDERS.filter(p => p.type.toLowerCase().includes(filterTerm) || p.name.toLowerCase().includes(filterTerm))
+    : PROVIDERS
 
   return (
     <div className={styles.page}>
@@ -170,8 +177,14 @@ export default function Landing() {
       <section className={styles.section} id="providers" style={{ paddingTop: 0 }}>
         <div className={styles.eyebrow}>● Fournisseurs vedettes</div>
         <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
+        {filterTerm && (
+          <div style={{ textAlign: 'center', marginBottom: 12, fontSize: 13, color: 'var(--ink2)' }}>
+            {filteredProviders.length} résultat{filteredProviders.length !== 1 ? 's' : ''} pour «&nbsp;{filterTerm}&nbsp;»
+            <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕ Effacer</button>
+          </div>
+        )}
         <div className={styles.provScroll}>
-          {PROVIDERS.map(p => (
+          {filteredProviders.map(p => (
             <div key={p.name} className={styles.provCard} onClick={() => navigate(`/provider/${p.slug}`)}>
               <div className={styles.provAvatar}>{p.icon}</div>
               <div className={styles.provName}>{p.name}</div>

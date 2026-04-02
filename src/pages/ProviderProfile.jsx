@@ -3,6 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+})
 
 const DEMO_PROVIDERS = {
   'garage-los-santos': {
@@ -33,6 +41,90 @@ const DEMO_PROVIDERS = {
     gallery: ['🚿','✨','🚗','💧'],
     highlights: ['Lavage à la main','Produits premium','Service rapide','Intérieur/extérieur'],
   },
+  'dube-pneu-et-mecan': {
+    name: 'Dubé Pneu et Mécan.', slug: 'dube-pneu-et-mecan',
+    cover: null, logo: '🔩', type: 'Pneus', rating: 4.3, reviews: 256,
+    address: '3325 Rue Jarry E, Montréal, QC', phone: '(514) 727-1234',
+    website: null, email: 'dube@email.com',
+    description: 'Spécialistes des pneus et de la mécanique générale. Meilleur prix garanti sur les pneus hiver et été. Service rapide sans rendez-vous.',
+    services: ['Pneus hiver','Pneus été','Alignement','Balancement','Vidange','Freins'],
+    hours: { Mon: '07:30-17:30', Tue: '07:30-17:30', Wed: '07:30-17:30', Thu: '07:30-17:30', Fri: '07:30-17:30', Sat: '08:00-16:00', Sun: 'Fermé' },
+    coords: [45.5663, -73.6018],
+    team: [{ name: 'Jean-Pierre D.', role: 'Propriétaire', phone: '514-727-1234' }],
+    reviews_list: [{ user: 'Martin L.', rating: 4, comment: 'Bon prix, service efficace.', date: 'Mars 2025' }, { user: 'Pierre B.', rating: 5, comment: 'Pneus installés en 45 minutes!', date: 'Fév. 2025' }],
+    gallery: ['🔩','🚗','🏎️','⚙️'],
+    highlights: ['Meilleur prix garanti','Sans rendez-vous','Pneus hiver/été','Alignement précis'],
+  },
+  'garage-meca-mk': {
+    name: 'Garage Méca. MK', slug: 'garage-meca-mk',
+    cover: null, logo: '🔧', type: 'Mécanique', rating: 4.9, reviews: 145,
+    address: '8245 Rue Hochelaga, Montréal, QC', phone: '(514) 255-8877',
+    website: null, email: 'mecamk@email.com',
+    description: 'Garage de quartier reconnu pour son honnêteté et la qualité de ses réparations. Spécialistes Honda, Toyota et Hyundai. Note parfaite sur Google.',
+    services: ['Vidange','Freins','Suspension','Diagnostic','Embrayage','Courroie distribution'],
+    hours: { Mon: '08:00-18:00', Tue: '08:00-18:00', Wed: '08:00-18:00', Thu: '08:00-18:00', Fri: '08:00-18:00', Sat: '08:00-14:00', Sun: 'Fermé' },
+    coords: [45.5523, -73.5401],
+    team: [{ name: 'Mehdi K.', role: 'Mécanicien propriétaire', phone: '514-255-8877' }],
+    reviews_list: [{ user: 'Claudine R.', rating: 5, comment: 'Le meilleur garage de Montréal, honnête et professionnel!', date: 'Avr. 2025' }, { user: 'François T.', rating: 5, comment: 'Je ne vais nulle part ailleurs.', date: 'Mars 2025' }],
+    gallery: ['🔧','⚙️','🚗','🏎️'],
+    highlights: ['Note 4.9/5','Honnêteté garantie','Spécialiste Honda/Toyota','Devis gratuit'],
+  },
+  'remorquage-elite-24-7': {
+    name: 'Remorquage Elite 24/7', slug: 'remorquage-elite-24-7',
+    cover: null, logo: '🚛', type: 'Remorquage', rating: 4.6, reviews: 432,
+    address: 'Service mobile — Montréal et environs', phone: '(514) 476-1708',
+    website: null, email: 'elite@email.com',
+    description: 'Remorquage rapide 24h/7j partout à Montréal et environs. Temps de réponse moyen: 25 minutes. Paiement par carte accepté. Véhicules lourds bienvenus.',
+    services: ['Remorquage','Dépannage','Boost de batterie','Déverrouillage','Pneu crevé','Livraison carburant'],
+    hours: { Mon: '00:00-24:00', Tue: '00:00-24:00', Wed: '00:00-24:00', Thu: '00:00-24:00', Fri: '00:00-24:00', Sat: '00:00-24:00', Sun: '00:00-24:00' },
+    coords: [45.5088, -73.5540],
+    team: [{ name: 'David E.', role: 'Dispatcher', phone: '514-476-1708' }],
+    reviews_list: [{ user: 'Isabelle M.', rating: 5, comment: 'Arrivés en 20 minutes, super pro!', date: 'Avr. 2025' }, { user: 'Robert G.', rating: 4, comment: 'Rapide et courtois, bon prix.', date: 'Mars 2025' }],
+    gallery: ['🚛','🚗','⚡','🔧'],
+    highlights: ['Disponible 24/7','Temps de réponse 25 min','Toute île de Montréal','Paiement carte'],
+  },
+  'lave-auto-365': {
+    name: 'Lave-Auto 365', slug: 'lave-auto-365',
+    cover: null, logo: '🚿', type: 'Lave-auto', rating: 4.8, reviews: 210,
+    address: '4455 Rue Saint-Denis, Montréal, QC', phone: '(514) 843-3650',
+    website: null, email: 'laveauto365@email.com',
+    description: 'Lavage automatique et à la main disponible tous les jours de l\'année. Abonnement mensuel illimité à $59. Produits écologiques utilisés.',
+    services: ['Lavage express','Lavage complet','Détail intérieur','Abonnement mensuel','Cire','Polissage'],
+    hours: { Mon: '07:00-21:00', Tue: '07:00-21:00', Wed: '07:00-21:00', Thu: '07:00-21:00', Fri: '07:00-21:00', Sat: '07:00-20:00', Sun: '08:00-18:00' },
+    coords: [45.5231, -73.5777],
+    team: [{ name: 'Karim A.', role: 'Gérant', phone: '514-843-3650' }],
+    reviews_list: [{ user: 'Sophie L.', rating: 5, comment: 'Abonnement mensuel imbattable! Ma voiture est toujours propre.', date: 'Avr. 2025' }, { user: 'Marc D.', rating: 5, comment: 'Ouvert 365 jours par an, super pratique!', date: 'Mars 2025' }],
+    gallery: ['🚿','💧','✨','🚗'],
+    highlights: ['Ouvert 365 jours','Abonnement $59/mois','Produits écologiques','Express 15 min'],
+  },
+  'ja-automobile': {
+    name: 'JA Automobile', slug: 'ja-automobile',
+    cover: null, logo: '🔧', type: 'Mécanique', rating: 4.8, reviews: 89,
+    address: '2185 Bd Rosemont, Montréal, QC', phone: '(514) 722-5544',
+    website: null, email: 'jauto@email.com',
+    description: 'Spécialistes en freins, alignement et mécanique générale. Freins à partir de $149 avec alignement offert. Équipe jeune et dynamique, diagnostic électronique de pointe.',
+    services: ['Freins','Alignement','Vidange','Diagnostic électronique','Suspension','Climatisation'],
+    hours: { Mon: '08:00-17:30', Tue: '08:00-17:30', Wed: '08:00-17:30', Thu: '08:00-17:30', Fri: '08:00-17:00', Sat: '08:00-13:00', Sun: 'Fermé' },
+    coords: [45.5448, -73.5839],
+    team: [{ name: 'Jonathan A.', role: 'Mécanicien propriétaire', phone: '514-722-5544' }],
+    reviews_list: [{ user: 'Annie B.', rating: 5, comment: 'Freins faits en 1h, alignement offert. Parfait!', date: 'Avr. 2025' }, { user: 'Kevin T.', rating: 5, comment: 'Prix honnête, travail impeccable.', date: 'Mars 2025' }],
+    gallery: ['🔧','⚙️','🚗','🏎️'],
+    highlights: ['Freins dès $149','Alignement offert','Diagnostic électronique','Garantie pièces et main-d\'oeuvre'],
+  },
+  'speedy-glass-montreal': {
+    name: 'Speedy Glass Montréal', slug: 'speedy-glass-montreal',
+    cover: null, logo: '🪟', type: 'Vitres auto', rating: 4.5, reviews: 521,
+    address: '7000 Bd Décarie, Montréal, QC', phone: '(514) 731-5555',
+    website: null, email: 'speedyglass@email.com',
+    description: 'Réparation et remplacement de pare-brise depuis 1947. Travail direct avec votre assurance, sans franchise dans la plupart des cas. Calibration ADAS disponible.',
+    services: ['Réparation pare-brise','Remplacement vitres','Calibration ADAS','Vitre teintée','Dégivrage','Assurance directe'],
+    hours: { Mon: '08:00-17:00', Tue: '08:00-17:00', Wed: '08:00-17:00', Thu: '08:00-17:00', Fri: '08:00-17:00', Sat: '08:00-14:00', Sun: 'Fermé' },
+    coords: [45.4822, -73.6284],
+    team: [{ name: 'Steve R.', role: 'Technicien vitres', phone: '514-731-5555' }],
+    reviews_list: [{ user: 'Lucie F.', rating: 5, comment: 'Pare-brise remplacé sans franchise, super rapide!', date: 'Avr. 2025' }, { user: 'Thomas M.', rating: 4, comment: 'Bon service, assurance gérée directement.', date: 'Mars 2025' }],
+    gallery: ['🪟','🚗','✨','⚙️'],
+    highlights: ['Sans franchise assurance','Calibration ADAS','Depuis 1947','Service mobile disponible'],
+  },
 }
 
 const DAYS_FR = { Mon: 'Lundi', Tue: 'Mardi', Wed: 'Mercredi', Thu: 'Jeudi', Fri: 'Vendredi', Sat: 'Samedi', Sun: 'Dimanche' }
@@ -43,16 +135,17 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [bookingOpen, setBookingOpen] = useState(false)
+  const [bookingSuccess, setBookingSuccess] = useState(false)
 
   useEffect(() => {
-    // Use demo data for now
     const demo = DEMO_PROVIDERS[slug]
     if (demo) { setProvider(demo); setLoading(false) }
     else {
-      // Try to find in providers_list
-      supabase.from('providers_list').select('*').ilike('name', slug.replace(/-/g, ' ')).single()
+      // Try to find in providers_list using first keyword from slug
+      const keyword = slug.split('-').filter(s => s.length > 2)[0] || slug.split('-')[0]
+      supabase.from('providers_list').select('*').ilike('name', `%${keyword}%`).limit(1)
         .then(({ data }) => {
-          if (data) setProvider({ ...data, slug, coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data.services || [] })
+          if (data?.[0]) setProvider({ ...data[0], slug, coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data[0].services || [] })
           setLoading(false)
         })
     }
@@ -112,7 +205,7 @@ export default function ProviderProfile() {
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24 }}>
+      <div className="providerLayout">
 
         {/* LEFT COLUMN */}
         <div>
@@ -310,9 +403,14 @@ export default function ProviderProfile() {
               <label className="form-label">Notes</label>
               <input className="form-input" placeholder="Décrivez votre problème…" />
             </div>
+            {bookingSuccess && (
+              <div style={{ background: 'var(--green-bg)', border: '1px solid var(--green)', borderRadius: 10, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10, color: 'var(--green)', fontWeight: 600, fontSize: 14 }}>
+                ✅ Réservation envoyée! Vous serez contacté sous peu.
+              </div>
+            )}
             <div className="modal-actions">
               <button className="btn" onClick={() => setBookingOpen(false)}>Annuler</button>
-              <button className="btn btn-green btn-lg" onClick={() => { setBookingOpen(false); alert('Réservation envoyée! Vous serez contacté sous peu.') }}>Confirmer →</button>
+              <button className="btn btn-green btn-lg" disabled={bookingSuccess} onClick={() => { setBookingSuccess(true); setTimeout(() => { setBookingOpen(false); setBookingSuccess(false) }, 2500) }}>Confirmer →</button>
             </div>
           </div>
         </div>
