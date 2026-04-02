@@ -16,16 +16,17 @@ export default function AddVehicleModal({ onClose, onAdd }) {
 
   useEffect(() => { fetchMakes() }, [])
 
-  async function fetchMakes() {
+async function fetchMakes() {
     const { data } = await supabase
       .from('vehicles_catalog')
       .select('make')
       .order('make')
+      .limit(1000)
     const unique = [...new Set(data?.map(d => d.make))]
     setMakes(unique)
   }
 
-  async function fetchModels(make) {
+ async function fetchModels(make) {
     setSelectedMake(make)
     setSelectedModel('')
     setSelectedYear('')
@@ -34,6 +35,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
       .select('model')
       .eq('make', make)
       .order('model')
+      .limit(500)
     const unique = [...new Set(data?.map(d => d.model))]
     setModels(unique)
   }
@@ -43,10 +45,11 @@ export default function AddVehicleModal({ onClose, onAdd }) {
     setSelectedYear('')
     const { data } = await supabase
       .from('vehicles_catalog')
-      .select('year, body_type, engine')
+      .select('year, body_type, engine, trim')
       .eq('make', selectedMake)
       .eq('model', model)
       .order('year', { ascending: false })
+      .limit(500)
     setYears(data || [])
   }
 
