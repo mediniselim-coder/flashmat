@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom"
+﻿import { Routes, Route, Navigate, useNavigate } from "react-router-dom"
 import { useEffect } from "react"
 import { AuthProvider, useAuth } from "./hooks/useAuth"
 import { ToastProvider } from "./hooks/useToast"
@@ -7,6 +7,7 @@ import Landing from "./pages/Landing"
 import Auth from "./pages/Auth"
 import ClientApp from "./pages/ClientApp"
 import ProviderApp from "./pages/ProviderApp"
+import ProviderProfile from "./pages/ProviderProfile"
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/client/*" element={
             <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
           } />
