@@ -3,9 +3,9 @@ import { useEffect } from 'react'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 import { ToastProvider } from './hooks/useToast'
 import { supabase } from './lib/supabase'
-import Landing    from './pages/Landing'
-import Auth       from './pages/Auth'
-import ClientApp  from './pages/ClientApp'
+import Landing from './pages/Landing'
+import Auth from './pages/Auth'
+import ClientApp from './pages/ClientApp'
 import ProviderApp from './pages/ProviderApp'
 
 function AuthCallback() {
@@ -23,8 +23,8 @@ function AuthCallback() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,var(--green),var(--blue))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 16px', animation: 'pulse 1.5s infinite' }}>⚡</div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '.7px' }}>Connexion en cours…</div>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,var(--green),var(--blue))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 16px' }}>⚡</div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Connexion en cours…</div>
       </div>
     </div>
   )
@@ -35,8 +35,8 @@ function ProtectedRoute({ children, requiredRole }) {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,var(--green),var(--blue))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 16px', animation: 'pulse 1.5s infinite' }}>⚡</div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '.7px' }}>Chargement FlashMat…</div>
+        <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'linear-gradient(135deg,var(--green),var(--blue))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, margin: '0 auto 16px' }}>⚡</div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Chargement FlashMat…</div>
       </div>
     </div>
   )
@@ -52,10 +52,10 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <Routes>
-          <Route path="/"              element={<Landing />} />
-          <Route path="/auth"          element={<Auth />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/app/client/*"  element={
+          <Route path="/app/client/*" element={
             <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
           } />
           <Route path="/app/provider/*" element={
@@ -69,17 +69,14 @@ export default function App() {
 }
 ```
 
-4. **Sauvegarde** → Ctrl+S
-5. **Ferme** Notepad
+Ensuite **Ctrl+S** pour sauvegarder et ferme Notepad.
 
----
-
-Ensuite dans PowerShell :
+Puis dans PowerShell :
 ```
 git add .
 ```
 ```
-git commit -m "Fix auth redirect"
+git commit -m "Fix App.jsx"
 ```
 ```
 git push
