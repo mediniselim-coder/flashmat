@@ -245,11 +245,3 @@ export default function Landing() {
     </div>
   )
 }
-```
-
-**Commit changes** → **Commit changes** → puis dans PowerShell :
-```
-git pull
-```
-```
-npm run dev
