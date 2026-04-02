@@ -189,7 +189,7 @@ return (
 
         {pane === 'vehicles' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes véhicules</div></div></div>
+          <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes véhicules</div><div className={styles.pageSub}>Vos véhicules enregistrés</div></div><button className="btn btn-green" onClick={() => setAddVehicleModal(true)}>+ Ajouter un véhicule</button></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
                 {[{make:'Honda Civic',year:2019,plate:'AAB 1234',badge:'Principal',badgeCls:'badge-green',score:87,oil:22,brakes:90,battery:91},
