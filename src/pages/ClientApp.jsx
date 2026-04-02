@@ -137,7 +137,7 @@ return (
                 </div>
               </div>
             </div>
-            <div className={styles.pad}>
+           <div className={styles.pad}>
               <div style={{display:'flex',gap:8,marginBottom:12}}>
                 <input className="form-input" placeholder="🔍  Rechercher un service, quartier…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{flex:1,fontSize:14}} />
                 {searchQ && <button className="btn" onClick={() => setSearchQ('')}>✕</button>}
@@ -147,6 +147,9 @@ return (
                   <button key={c} className={`btn ${searchCat===c?'btn-green':''}`} onClick={() => setSearchCat(c)}>{l}</button>
                 ))}
               </div>
+              {!provLoading && filtered.length > 0 && (
+                <ProviderMap providers={filtered} onSelect={() => setBookingModal(true)} />
+              )}
               {provLoading ? (
                 <div style={{textAlign:'center',padding:60}}>
                   <div className="spinner" style={{width:32,height:32,margin:'0 auto 12px'}}/>
