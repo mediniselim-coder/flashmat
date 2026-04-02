@@ -49,13 +49,3 @@ export default function ProviderMap({ providers, onSelect }) {
     </div>
   )
 }
-```
-
-5. **Commit changes** → **Commit changes**
-
-Ensuite dans PowerShell :
-```
-git pull
-```
-```
-npm run dev
