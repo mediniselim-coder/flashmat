@@ -10,26 +10,23 @@ export default function AddVehicleModal({ onClose, onAdd }) {
   const [selectedMake, setSelectedMake] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
   const [selectedYear, setSelectedYear] = useState('')
+  const [selectedTrim, setSelectedTrim] = useState('')
   const [plate, setPlate] = useState('')
   const [color, setColor] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => { fetchMakes() }, [])
 
-async function fetchMakes() {
-    const { data } = await supabase
-      .from('vehicles_catalog')
-      .select('make')
-      .order('make')
-      .limit(1000)
-    const unique = [...new Set(data?.map(d => d.make))]
-    setMakes(unique)
+  async function fetchMakes() {
+    const { data } = await supabase.rpc('get_distinct_makes')
+    setMakes(data?.map(d => d.make) || [])
   }
 
- async function fetchModels(make) {
+  async function fetchModels(make) {
     setSelectedMake(make)
     setSelectedModel('')
     setSelectedYear('')
+    setSelectedTrim('')
     const { data } = await supabase
       .from('vehicles_catalog')
       .select('model')
@@ -43,12 +40,14 @@ async function fetchMakes() {
   async function fetchYears(model) {
     setSelectedModel(model)
     setSelectedYear('')
+    setSelectedTrim('')
     const { data } = await supabase
       .from('vehicles_catalog')
       .select('year, body_type, engine, trim')
       .eq('make', selectedMake)
       .eq('model', model)
       .order('year', { ascending: false })
+      .order('trim')
       .limit(500)
     setYears(data || [])
   }
@@ -81,8 +80,8 @@ async function fetchMakes() {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div className="modal-title" style={{ marginBottom: 0 }}>🚗 Ajouter un véhicule</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>✕</button>
+          <div className="modal-title" style={{ marginBottom: 0 }}>Ajouter un vehicule</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>X</button>
         </div>
 
         <div className="form-group">
@@ -95,9 +94,9 @@ async function fetchMakes() {
 
         {models.length > 0 && (
           <div className="form-group">
-            <label className="form-label">Modèle</label>
+            <label className="form-label">Modele</label>
             <select className="form-select" value={selectedModel} onChange={e => fetchYears(e.target.value)}>
-              <option value="">Choisir un modèle...</option>
+              <option value="">Choisir un modele...</option>
               {models.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
@@ -105,10 +104,14 @@ async function fetchMakes() {
 
         {years.length > 0 && (
           <div className="form-group">
-            <label className="form-label">Année</label>
+            <label className="form-label">Annee et version</label>
             <select className="form-select" value={selectedYear} onChange={e => setSelectedYear(e.target.value)}>
-              <option value="">Choisir une année...</option>
-             {years.map((y, i) => <option key={i} value={y.year}>{y.year}{y.trim ? ` — ${y.trim}` : ''} — {y.body_type}</option>)}
+              <option value="">Choisir une annee...</option>
+              {years.map((y, i) => (
+                <option key={i} value={y.year}>
+                  {y.year}{y.trim ? ` - ${y.trim}` : ''} - {y.body_type}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -120,14 +123,14 @@ async function fetchMakes() {
           </div>
           <div className="form-group">
             <label className="form-label">Couleur (optionnel)</label>
-            <input className="form-input" placeholder="Ex: Blanc nacré" value={color} onChange={e => setColor(e.target.value)} />
+            <input className="form-input" placeholder="Ex: Blanc nacre" value={color} onChange={e => setColor(e.target.value)} />
           </div>
         </div>
 
         <div className="modal-actions">
           <button className="btn" onClick={onClose}>Annuler</button>
           <button className="btn btn-green btn-lg" onClick={handleSubmit} disabled={!selectedMake || !selectedModel || !selectedYear || loading}>
-            {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : '✅ Ajouter le véhicule'}
+            {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Ajouter le vehicule'}
           </button>
         </div>
       </div>
