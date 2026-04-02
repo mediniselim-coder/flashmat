@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -46,6 +46,7 @@ export default function ClientApp() {
       .from('providers_list')
       .select('*')
       .order('rating', { ascending: false })
+      .limit(100)
     setProviders(data || [])
     setProvLoading(false)
   }
