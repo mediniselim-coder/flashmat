@@ -26,14 +26,14 @@ const TICKER = [
 ]
 
 const PROVIDERS = [
-  { name: 'Garage Los Santos',     icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews: 312, open: true,  dist: '0.8km' },
-  { name: 'CS Lave Auto Décarie',  icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 198, open: true,  dist: '1.2km' },
-  { name: 'Dubé Pneu et Mécan.',   icon: '🔩', type: 'Pneus',       rating: 4.3, reviews: 256, open: true,  dist: '2.1km' },
-  { name: 'Garage Méca. MK',       icon: '🔧', type: 'Mécanique',   rating: 4.9, reviews: 145, open: false, dist: '1.8km' },
-  { name: 'Remorquage Elite 24/7', icon: '🚛', type: 'Remorquage',  rating: 4.6, reviews: 432, open: true,  dist: 'Mobile' },
-  { name: 'Lave-Auto 365',         icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 210, open: true,  dist: '2.4km' },
-  { name: 'JA Automobile',         icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews:  89, open: true,  dist: '3.2km' },
-  { name: 'Speedy Glass Montréal', icon: '🪟', type: 'Vitres auto', rating: 4.5, reviews: 521, open: true,  dist: '1.5km' },
+  { name: 'Garage Los Santos',     slug: 'garage-los-santos',        icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews: 312, open: true,  dist: '0.8km' },
+  { name: 'CS Lave Auto Décarie',  slug: 'cs-lave-auto-decarie',     icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 198, open: true,  dist: '1.2km' },
+  { name: 'Dubé Pneu et Mécan.',   slug: 'dube-pneu-et-mecan',       icon: '🔩', type: 'Pneus',       rating: 4.3, reviews: 256, open: true,  dist: '2.1km' },
+  { name: 'Garage Méca. MK',       slug: 'garage-meca-mk',           icon: '🔧', type: 'Mécanique',   rating: 4.9, reviews: 145, open: false, dist: '1.8km' },
+  { name: 'Remorquage Elite 24/7', slug: 'remorquage-elite-24-7',    icon: '🚛', type: 'Remorquage',  rating: 4.6, reviews: 432, open: true,  dist: 'Mobile' },
+  { name: 'Lave-Auto 365',         slug: 'lave-auto-365',            icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 210, open: true,  dist: '2.4km' },
+  { name: 'JA Automobile',         slug: 'ja-automobile',            icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews:  89, open: true,  dist: '3.2km' },
+  { name: 'Speedy Glass Montréal', slug: 'speedy-glass-montreal',    icon: '🪟', type: 'Vitres auto', rating: 4.5, reviews: 521, open: true,  dist: '1.5km' },
 ]
 
 const TABS = [
@@ -45,8 +45,8 @@ const TABS = [
 
 export default function Landing() {
   const navigate = useNavigate()
-  const [tab, setTab]         = useState('plaque')
-  const [query, setQuery]     = useState('')
+  const [tab, setTab]           = useState('plaque')
+  const [query, setQuery]       = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
 
   const activeTab = TABS.find(t => t.key === tab)
@@ -69,19 +69,16 @@ export default function Landing() {
         <div className={styles.logo} onClick={() => navigate('/')}>
           <img src="/logo.jpg" alt="FlashMat" style={{ height: 40, objectFit: 'contain' }} />
         </div>
-
         <div className={styles.navLinks}>
           <span onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}>Services</span>
           <span onClick={() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' })}>Fournisseurs</span>
           <span onClick={() => navigate('/app/marketplace')}>Marketplace</span>
           <span onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}>Rejoindre</span>
         </div>
-
         <div className={styles.navRight}>
           <button className="btn btn-outline" onClick={() => navigate('/auth?role=provider')}>Espace Fournisseur</button>
           <button className="btn btn-green" onClick={() => navigate('/auth')}>Connexion / S'inscrire</button>
         </div>
-
         <button className={styles.hamburger} onClick={() => setMenuOpen(true)}>☰</button>
       </nav>
 
@@ -90,12 +87,8 @@ export default function Landing() {
         <div className={styles.mobileMenuOverlay} onClick={() => setMenuOpen(false)}>
           <div className={styles.mobileMenu} onClick={e => e.stopPropagation()}>
             <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain', marginBottom: 8 }} />
-            <button className="btn btn-green btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth'); setMenuOpen(false) }}>
-              🚗 Portail Client — Se connecter
-            </button>
-            <button className="btn btn-outline btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth?role=provider'); setMenuOpen(false) }}>
-              🏪 Portail Fournisseur
-            </button>
+            <button className="btn btn-green btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth'); setMenuOpen(false) }}>🚗 Portail Client — Se connecter</button>
+            <button className="btn btn-outline btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth?role=provider'); setMenuOpen(false) }}>🏪 Portail Fournisseur</button>
             <button className={styles.mobileMenuItem} onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }}>🔧 Nos services</button>
             <button className={styles.mobileMenuItem} onClick={() => { document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }}>⭐ Fournisseurs vedettes</button>
             <button className={styles.mobileMenuItem} onClick={() => { navigate('/app/marketplace'); setMenuOpen(false) }}>🛒 Marketplace</button>
@@ -110,18 +103,15 @@ export default function Landing() {
           <span className={styles.badgeDot} />
           The MarketPlace for Auto Tech · Montréal · 280+ Fournisseurs
         </div>
-
         <h1 className={styles.h1}>
           Le Hub<br />
           <span className={styles.outline}>Auto</span> de<br />
           <span className={styles.accent}>Montréal</span>
         </h1>
-
         <p className={styles.sub}>
           Réservez, suivez, achetez — tout ce dont votre voiture a besoin à Montréal, en un seul endroit.
           Recherche par immatriculation, FlashScore™, alertes intelligentes.
         </p>
-
         <div className={styles.searchWrap}>
           <div className={styles.searchTabs}>
             {TABS.map(t => (
@@ -135,7 +125,6 @@ export default function Landing() {
             <button type="submit" className={styles.searchBtn}>Rechercher →</button>
           </form>
         </div>
-
         <div className={styles.chips}>
           {['🔧 Mécanique', '🚿 Lave-auto', '🔩 Pneus', '🚛 Remorquage 24/7', '🪟 Vitres', '🎨 Carrosserie', '♻️ Casse auto'].map(c => (
             <button key={c} className={styles.chip} onClick={() => quickSearch(c.split(' ').slice(1).join(' '))}>{c}</button>
@@ -183,7 +172,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
         <div className={styles.provScroll}>
           {PROVIDERS.map(p => (
-            <div key={p.name} className={styles.provCard} onClick={() => navigate('/auth')}>
+            <div key={p.name} className={styles.provCard} onClick={() => navigate(`/provider/${p.slug}`)}>
               <div className={styles.provAvatar}>{p.icon}</div>
               <div className={styles.provName}>{p.name}</div>
               <div className={styles.provType}>{p.type}</div>
@@ -221,7 +210,6 @@ export default function Landing() {
             </div>
             <button className="btn btn-green btn-lg" onClick={e => { e.stopPropagation(); navigate('/auth') }}>Commencer gratuitement →</button>
           </div>
-
           <div className={`${styles.portalCard} ${styles.pcProvider}`} onClick={() => navigate('/auth?role=provider')}>
             <div className={styles.pcNum}>02</div>
             <div className={styles.pcTitle}>Portail Fournisseur</div>
@@ -257,3 +245,11 @@ export default function Landing() {
     </div>
   )
 }
+```
+
+**Commit changes** → **Commit changes** → puis dans PowerShell :
+```
+git pull
+```
+```
+npm run dev
