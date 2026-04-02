@@ -69,14 +69,3 @@ export default function App() {
 }
 ```
 
-Ensuite **Ctrl+S** pour sauvegarder et ferme Notepad.
-
-Puis dans PowerShell :
-```
-git add .
-```
-```
-git commit -m "Fix App.jsx"
-```
-```
-git push
