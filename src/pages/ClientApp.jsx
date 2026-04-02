@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
+import AddVehicleModal from '../components/AddVehicleModal'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -26,7 +27,10 @@ const SEARCH_CATS = [
 ]
 
 export default function ClientApp() {
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, user } = useAuth()
+  const [myVehicles, setMyVehicles] = useState([])
+  const [addVehicleModal, setAddVehicleModal] = useState(false)
+  useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
   const { toast } = useToast()
   const navigate = useNavigate()
   const [pane, setPane] = useState('dashboard')
@@ -324,6 +328,7 @@ return (
 
       {bookingModal && <BookingModal providers={filtered} onClose={() => setBookingModal(false)} onConfirm={() => { setBookingModal(false); toast('✅ Réservation confirmée!','success') }} />}
       <FlashAI portal="client" userName={name} />
+      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [v, ...prev]); setAddVehicleModal(false) }} />}
     </div>
   )
 }
