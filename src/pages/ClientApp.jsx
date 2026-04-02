@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
+import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
 import styles from './AppShell.module.css'
 
