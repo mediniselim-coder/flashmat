@@ -128,8 +128,16 @@ return (
             <div style={{ position:'relative', height: myVehicles.length === 0 ? 340 : 220, overflow:'hidden', background:'linear-gradient(135deg, #0f1e3d 0%, #1e3a8a 60%, #1e40af 100%)' }}>
               {/* Glow */}
               <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(22,199,132,.18), transparent 65%)', top:-100, right:-50, pointerEvents:'none' }} />
-              {/* Car SVG illustration */}
-              <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', fontSize: myVehicles.length === 0 ? 160 : 120, lineHeight:1, opacity:.18, userSelect:'none', pointerEvents:'none' }}>🚗</div>
+              {/* Sports car silhouette */}
+              <svg viewBox="0 0 900 300" style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:'90%', maxWidth:700, opacity:.13, pointerEvents:'none' }} fill="white">
+                <path d="M820,210 L820,195 C820,195 800,170 770,162 L720,150 C700,145 680,120 650,105 C620,90 560,78 500,76 C440,74 370,82 320,95 C280,105 240,130 210,145 L130,160 C100,165 80,185 75,195 L75,210 Z"/>
+                <ellipse cx="200" cy="210" rx="48" ry="48"/>
+                <ellipse cx="200" cy="210" rx="28" ry="28" fill="#1e3a8a"/>
+                <ellipse cx="680" cy="210" rx="48" ry="48"/>
+                <ellipse cx="680" cy="210" rx="28" ry="28" fill="#1e3a8a"/>
+                <path d="M310,145 C330,120 380,100 440,96 C500,92 570,95 610,108 C640,118 660,138 670,148 Z" fill="rgba(255,255,255,.3)"/>
+                <path d="M75,195 L820,195" stroke="rgba(22,199,132,.6)" strokeWidth="1.5" fill="none"/>
+              </svg>
               {/* Content */}
               <div style={{ position:'relative', zIndex:2, padding:'32px 28px 28px', height:'100%', display:'flex', flexDirection:'column', justifyContent: myVehicles.length === 0 ? 'space-between' : 'flex-end' }}>
                 {myVehicles.length === 0 ? (
