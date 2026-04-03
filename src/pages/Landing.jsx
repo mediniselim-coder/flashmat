@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom'
 import styles from './Landing.module.css'
 
 const SERVICES = [
-  { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 47 },
-  { id: 'wash',     name: 'Lave-auto',    icon: '🚿', count: 32 },
-  { id: 'tire',     name: 'Pneus',        icon: '🔩', count: 28 },
-  { id: 'body',     name: 'Carrosserie',  icon: '🎨', count: 19 },
-  { id: 'glass',    name: 'Vitres auto',  icon: '🪟', count: 15 },
-  { id: 'tuning',   name: 'Performance',  icon: '🏎️', count: 11 },
-  { id: 'parts',    name: 'Pièces auto',  icon: '⚙️', count: 24 },
-  { id: 'parking',  name: 'Stationnement',icon: '🅿️', count: 38 },
-  { id: 'tow',      name: 'Remorquage',   icon: '🚛', count: 22 },
+  { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 59 },
+  { id: 'wash',     name: 'Lave-auto',    icon: '🚿', count: 28 },
+  { id: 'tire',     name: 'Pneus',        icon: '🔩', count: 19 },
+  { id: 'body',     name: 'Carrosserie',  icon: '🎨', count: 15 },
+  { id: 'glass',    name: 'Vitres auto',  icon: '🪟', count: 12 },
+  { id: 'tuning',   name: 'Performance',  icon: '🏎️', count: 10 },
+  { id: 'parts',    name: 'Pièces auto',  icon: '⚙️', count: 18 },
+  { id: 'parking',  name: 'Stationnement',icon: '🅿️', count: 22 },
+  { id: 'tow',      name: 'Remorquage',   icon: '🚛', count: 17 },
   { id: 'junk',     name: 'Casses auto',  icon: '♻️', count:  9 },
 ]
 
@@ -108,7 +108,7 @@ export default function Landing() {
       <section className={styles.hero}>
         <div className={styles.heroBadge}>
           <span className={styles.badgeDot} />
-          The MarketPlace for Auto Tech · Montréal · 280+ Fournisseurs
+          The MarketPlace for Auto Tech · Montréal · 200+ Fournisseurs
         </div>
         <h1 className={styles.h1}>
           Le Hub<br />
@@ -141,7 +141,7 @@ export default function Landing() {
 
       {/* STATS BAND */}
       <div className={styles.statsBand}>
-        {[['280+', 'Fournisseurs MTL'], ['14k', 'Clients actifs'], ['4.7★', 'Note moyenne'], ['10', 'Types de services'], ['24h', 'Support & urgences']].map(([v, l]) => (
+        {[['200+', 'Fournisseurs MTL'], ['14k', 'Clients actifs'], ['4.7★', 'Note moyenne'], ['10', 'Types de services'], ['24h', 'Support & urgences']].map(([v, l]) => (
           <div key={l} className={styles.sbi}>
             <div className={styles.sbiVal}>{v}</div>
             <div className={styles.sbiLabel}>{l}</div>
