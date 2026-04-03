@@ -40,7 +40,7 @@ export default function ClientApp() {
   const [providers, setProviders] = useState([])
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
-  const [searchCat, setSearchCat] = useState('all')
+  const [searchCat, setSearchCat] = useState(location.state?.searchCat || 'all')
 
   const name = profile?.full_name || 'Alex'
 

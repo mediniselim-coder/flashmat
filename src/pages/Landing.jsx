@@ -154,8 +154,8 @@ export default function Landing() {
           </form>
         </div>
         <div className={styles.chips}>
-          {['🔧 Mécanique', '🚿 Lave-auto', '🔩 Pneus', '🚛 Remorquage 24/7', '🪟 Vitres', '🎨 Carrosserie', '♻️ Casse auto'].map(c => (
-            <button key={c} className={styles.chip} onClick={() => quickSearch(c.split(' ').slice(1).join(' '))}>{c}</button>
+          {[['🔧 Mécanique','mechanic'],['🚿 Lave-auto','wash'],['🔩 Pneus','tire'],['🚛 Remorquage 24/7','tow'],['🪟 Vitres','glass'],['🎨 Carrosserie','body'],['♻️ Casse auto','junk']].map(([label, cat]) => (
+            <button key={cat} className={styles.chip} onClick={() => navigate('/app/client', { state: { pane: 'search', searchCat: cat } })}>{label}</button>
           ))}
         </div>
       </section>
@@ -185,7 +185,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin à <span>Montréal</span></h2>
         <div className={styles.svcGrid}>
           {SERVICES.map(s => (
-            <div key={s.id} className={styles.svcCard} onClick={() => quickSearch(s.name)}>
+            <div key={s.id} className={styles.svcCard} onClick={() => navigate('/app/client', { state: { pane: 'search', searchCat: s.id } })}>
               <span className={styles.svcIcon}>{s.icon}</span>
               <div className={styles.svcName}>{s.name}</div>
               <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
