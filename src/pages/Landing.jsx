@@ -38,18 +38,25 @@ const PROVIDERS = [
 ]
 
 const TABS = [
-  { key: 'plaque',      label: '🔍 Par plaque QC',  ph: 'Ex: AAB 1234 — Honda Civic…' },
-  { key: 'service',     label: '🔧 Par service',     ph: 'Ex: mécanique, lave-auto, pneus…' },
-  { key: 'quartier',    label: '📍 Par quartier',    ph: 'Ex: Plateau, NDG, Rosemont, CDN…' },
-  { key: 'fournisseur', label: '🏪 Fournisseur',     ph: 'Ex: Garage Los Santos, CS Lave Auto…' },
+  { key: 'service',     label: '🔧 Par service',    ph: 'Ex: mécanique, vidange, pneus, carrosserie…' },
+  { key: 'quartier',   label: '📍 Par quartier',   ph: 'Ex: Plateau, NDG, Rosemont, Côte-des-Neiges…' },
+  { key: 'fournisseur',label: '🏪 Fournisseur',    ph: 'Ex: Garage Los Santos, CS Lave Auto…' },
+]
+
+const RATING_FILTERS = [
+  { key: 0,   label: 'Tous' },
+  { key: 4.0, label: '⭐ 4.0+' },
+  { key: 4.5, label: '⭐ 4.5+' },
+  { key: 4.8, label: '⭐ 4.8+' },
 ]
 
 export default function Landing() {
   const navigate = useNavigate()
-  const [tab, setTab]           = useState('plaque')
+  const [tab, setTab]           = useState('service')
   const [query, setQuery]       = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [filterTerm, setFilterTerm] = useState('')
+  const [minRating, setMinRating] = useState(0)
   const [dbProviders, setDbProviders] = useState([])
   const [dbLoading, setDbLoading] = useState(false)
 
@@ -86,7 +93,10 @@ export default function Landing() {
       .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
   }
 
-  const displayProviders = filterTerm ? dbProviders : PROVIDERS
+  const displayProviders = (filterTerm ? dbProviders : PROVIDERS).filter(p => {
+    if (minRating === 'open') return p.open === true || p.is_open === true || p.is_open === 'true'
+    return (p.rating || 0) >= minRating
+  })
   const scrollRef = useRef(null)
   function scrollProviders(dir) {
     scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
@@ -94,7 +104,6 @@ export default function Landing() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.glow} />
 
       {/* NAV */}
       <nav className={styles.nav}>
@@ -131,6 +140,9 @@ export default function Landing() {
 
       {/* HERO */}
       <section className={styles.hero}>
+        <div className={styles.heroOrb1} />
+        <div className={styles.heroOrb2} />
+        <div className={styles.heroGrid} />
         <div className={styles.heroBadge}>
           <span className={styles.badgeDot} />
           The MarketPlace for Auto Tech · Montréal · 200+ Fournisseurs
@@ -193,6 +205,7 @@ export default function Landing() {
               <span className={styles.svcIcon}>{s.icon}</span>
               <div className={styles.svcName}>{s.name}</div>
               <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
+              <span className={styles.svcArrow}>→</span>
             </div>
           ))}
         </div>
@@ -202,12 +215,18 @@ export default function Landing() {
       <section className={styles.section} id="providers" style={{ paddingTop: 0 }}>
         <div className={styles.eyebrow}>● Fournisseurs vedettes</div>
         <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
-        {filterTerm && (
-          <div style={{ textAlign: 'center', marginBottom: 12, fontSize: 13, color: 'var(--ink2)' }}>
-            {dbLoading ? 'Recherche…' : `${displayProviders.length} résultat${displayProviders.length !== 1 ? 's' : ''} pour «\u00a0${filterTerm}\u00a0»`}
-            <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕ Effacer</button>
-          </div>
-        )}
+        <div className={styles.provFilters}>
+          {RATING_FILTERS.map(f => (
+            <button key={f.key} className={`${styles.filterBtn} ${minRating === f.key ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(f.key)}>{f.label}</button>
+          ))}
+          <button className={`${styles.filterBtn} ${minRating === 'open' ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(minRating === 'open' ? 0 : 'open')}>● Ouvert</button>
+          {filterTerm && (
+            <span style={{ fontSize: 12, color: 'var(--ink3)', marginLeft: 4 }}>
+              {dbLoading ? 'Recherche…' : `${displayProviders.length} résultat${displayProviders.length !== 1 ? 's' : ''} pour «\u00a0${filterTerm}\u00a0»`}
+              <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕</button>
+            </span>
+          )}
+        </div>
         <div style={{ position: 'relative' }}>
           <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
           <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
