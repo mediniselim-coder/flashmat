@@ -24,7 +24,7 @@ export default function BookingModal({ providers, onClose, onConfirm }) {
   const [notes, setNotes]     = useState('')
   const [loading, setLoading] = useState(false)
 
-  const openProviders = providers.filter(p => p.is_open)
+  const openProviders = providers.filter(p => p.is_open === true || p.is_open === 'true')
 
   function confirm() {
     setLoading(true)
