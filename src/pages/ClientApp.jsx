@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
@@ -33,7 +33,8 @@ export default function ClientApp() {
   useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
   const { toast } = useToast()
   const navigate = useNavigate()
-  const [pane, setPane] = useState('dashboard')
+  const location = useLocation()
+  const [pane, setPane] = useState(location.state?.pane || 'dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
   const [providers, setProviders] = useState([])
