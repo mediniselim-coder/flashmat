@@ -217,7 +217,7 @@ export default function Landing() {
             const reviews = p.reviews || 0
             const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
             return (
-              <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate('/app/client', { state: { pane: 'search' } })}>
+              <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
                 <div className={styles.provAvatar}>{icon}</div>
                 <div className={styles.provName}>{p.name}</div>
                 <div className={styles.provType}>{type}</div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -131,24 +131,30 @@ const DAYS_FR = { Mon: 'Lundi', Tue: 'Mardi', Wed: 'Mercredi', Thu: 'Jeudi', Fri
 
 export default function ProviderProfile() {
   const { slug } = useParams()
+  const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
   const [provider, setProvider] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState(false)
 
+  function normalizeDbProvider(data, slug) {
+    return { ...data, slug, logo: data.icon || '🔧', coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data.services || [] }
+  }
+
   useEffect(() => {
     const demo = DEMO_PROVIDERS[slug]
-    if (demo) { setProvider(demo); setLoading(false) }
-    else {
-      // Try to find in providers_list using first keyword from slug
-      const keyword = slug.split('-').filter(s => s.length > 2)[0] || slug.split('-')[0]
-      supabase.from('providers_list').select('*').ilike('name', `%${keyword}%`).limit(1)
-        .then(({ data }) => {
-          if (data?.[0]) setProvider({ ...data[0], slug, coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data[0].services || [] })
-          setLoading(false)
-        })
-    }
+    if (demo) { setProvider(demo); setLoading(false); return }
+
+    const exactName = searchParams.get('n')
+    const query = exactName
+      ? supabase.from('providers_list').select('*').eq('name', exactName).limit(1)
+      : supabase.from('providers_list').select('*').ilike('name', `%${slug.split('-').filter(s => s.length > 2)[0] || slug.split('-')[0]}%`).limit(1)
+
+    query.then(({ data }) => {
+      if (data?.[0]) setProvider(normalizeDbProvider(data[0], slug))
+      setLoading(false)
+    })
   }, [slug])
 
   if (loading) return (
