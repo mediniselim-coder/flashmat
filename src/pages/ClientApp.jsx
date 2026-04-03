@@ -124,19 +124,71 @@ return (
 
         {pane === 'dashboard' && (
           <div>
-            <div className={styles.pageHdr}>
-              <div><div className={styles.pageTitle}>Bonjour, {name} 👋</div><div className={styles.pageSub}>Bienvenue sur FlashMat</div></div>
-              <button className="btn btn-green" onClick={() => setBookingModal(true)}>+ Réserver un service</button>
+            {/* HERO CAR BANNER */}
+            <div style={{ position:'relative', height: myVehicles.length === 0 ? 340 : 220, overflow:'hidden', background:'linear-gradient(135deg, #0f1e3d 0%, #1e3a8a 60%, #1e40af 100%)' }}>
+              {/* Glow */}
+              <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(22,199,132,.18), transparent 65%)', top:-100, right:-50, pointerEvents:'none' }} />
+              {/* Car SVG illustration */}
+              <div style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', fontSize: myVehicles.length === 0 ? 160 : 120, lineHeight:1, opacity:.18, userSelect:'none', pointerEvents:'none' }}>🚗</div>
+              {/* Content */}
+              <div style={{ position:'relative', zIndex:2, padding:'32px 28px 28px', height:'100%', display:'flex', flexDirection:'column', justifyContent: myVehicles.length === 0 ? 'space-between' : 'flex-end' }}>
+                {myVehicles.length === 0 ? (
+                  <>
+                    <div>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'rgba(22,199,132,.8)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:10 }}>● FlashMat · Montréal</div>
+                      <div style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:800, color:'#fff', lineHeight:1.1, letterSpacing:'-.5px', marginBottom:8 }}>
+                        Bonjour, {name} 👋
+                      </div>
+                      <div style={{ fontSize:14, color:'rgba(255,255,255,.6)', lineHeight:1.6, maxWidth:320 }}>
+                        Commencez par ajouter votre véhicule pour accéder à tous vos services auto.
+                      </div>
+                    </div>
+                    <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={() => setAddVehicleModal(true)}>
+                      🚗 Ajouter mon véhicule →
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+                    <div>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'rgba(22,199,132,.8)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:6 }}>● Mes véhicules</div>
+                      <div style={{ fontFamily:'var(--display)', fontSize:22, fontWeight:800, color:'#fff', letterSpacing:'-.5px' }}>
+                        {myVehicles[0].make} {myVehicles[0].model} {myVehicles[0].year}
+                      </div>
+                      {myVehicles[0].plate && <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'rgba(255,255,255,.5)', marginTop:4 }}>{myVehicles[0].plate}</div>}
+                    </div>
+                    <button className="btn" style={{ background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', color:'#fff', fontSize:12 }} onClick={() => setAddVehicleModal(true)}>
+                      + Ajouter
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+
             <div className={styles.pad}>
+              {/* QUICK ACTIONS */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:20 }}>
+                {[
+                  { icon:'📅', label:'Réserver', sub:'un service', action: () => setBookingModal(true), color:'var(--green)' },
+                  { icon:'🗺️', label:'Trouver', sub:'un fournisseur', action: () => go('search'), color:'var(--blue)' },
+                  { icon:'🛒', label:'Marketplace', sub:'pièces auto', action: () => go('marketplace'), color:'var(--amber)' },
+                ].map(q => (
+                  <button key={q.label} onClick={q.action}
+                    style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 12px', cursor:'pointer', textAlign:'left', transition:'all .18s', boxShadow:'var(--shadow)' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = q.color}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                    <div style={{ fontSize:22, marginBottom:6 }}>{q.icon}</div>
+                    <div style={{ fontWeight:700, fontSize:13, color:'var(--ink)' }}>{q.label}</div>
+                    <div style={{ fontSize:11, color:'var(--ink3)' }}>{q.sub}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* STATS */}
               <div className={styles.statsGrid}>
                 <div className="stat-card sc-green"><div className="stat-lbl">Fournisseurs MTL</div><div className="stat-val">{providers.length}</div><div className="stat-sub">disponibles</div></div>
-                <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">87<span style={{fontSize:14}}>%</span></div><div className="stat-sub">Honda Civic</div></div>
-                <div className="stat-card sc-amber"><div className="stat-lbl">Prochain service</div><div className="stat-val">7j</div><div className="stat-sub">Vidange — 6 avr.</div></div>
-                <div className="stat-card sc-purple"><div className="stat-lbl">Véhicules</div><div className="stat-val">{myVehicles.length}</div><div className="stat-sub">{myVehicles.length === 0 ? 'Aucun véhicule' : myVehicles.slice(0,2).map(v => v.model).join(' · ')}</div></div>
-              </div>
-              <div style={{textAlign:'center',marginTop:20}}>
-                <button className="btn btn-green btn-lg" onClick={() => go('search')}>🗺️ Trouver un fournisseur →</button>
+                <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">87<span style={{fontSize:14}}>%</span></div><div className="stat-sub">{myVehicles[0] ? `${myVehicles[0].make} ${myVehicles[0].model}` : 'Ajoutez un véhicule'}</div></div>
+                <div className="stat-card sc-amber"><div className="stat-lbl">Prochain service</div><div className="stat-val">{myVehicles.length ? '7j' : '—'}</div><div className="stat-sub">{myVehicles.length ? 'Vidange recommandée' : 'Ajoutez un véhicule'}</div></div>
+                <div className="stat-card sc-purple"><div className="stat-lbl">Mes véhicules</div><div className="stat-val">{myVehicles.length}</div><div className="stat-sub">{myVehicles.length === 0 ? 'Aucun véhicule' : myVehicles.slice(0,2).map(v => v.model).join(' · ')}</div></div>
               </div>
             </div>
           </div>
