@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import styles from './Landing.module.css'
@@ -87,6 +87,10 @@ export default function Landing() {
   }
 
   const displayProviders = filterTerm ? dbProviders : PROVIDERS
+  const scrollRef = useRef(null)
+  function scrollProviders(dir) {
+    scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
+  }
 
   return (
     <div className={styles.page}>
@@ -204,7 +208,10 @@ export default function Landing() {
             <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕ Effacer</button>
           </div>
         )}
-        <div className={styles.provScroll}>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+          <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+        <div className={styles.provScroll} ref={scrollRef}>
           {dbLoading && filterTerm && (
             <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
           )}
@@ -230,6 +237,7 @@ export default function Landing() {
               </div>
             )
           })}
+        </div>
         </div>
       </section>
 
