@@ -334,7 +334,7 @@ return (
         </nav>
       </div>
 
-      {bookingModal && <BookingModal providers={filtered} onClose={() => setBookingModal(false)} onConfirm={() => { setBookingModal(false); toast('✅ Réservation confirmée!','success') }} />}
+      {bookingModal && <BookingModal providers={providers} onClose={() => setBookingModal(false)} onConfirm={() => { setBookingModal(false); toast('✅ Réservation confirmée!','success') }} />}
       <FlashAI portal="client" userName={name} />
       {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [v, ...prev]); setAddVehicleModal(false) }} />}
     </div>
