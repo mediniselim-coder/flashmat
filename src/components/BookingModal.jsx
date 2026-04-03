@@ -26,6 +26,13 @@ export default function BookingModal({ providers, onClose, onConfirm }) {
 
   const openProviders = providers.filter(p => p.is_open === true || p.is_open === 'true')
 
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('[BookingModal] Total providers:', providers.length)
+    console.log('[BookingModal] Open providers:', openProviders.length)
+    if (providers.length > 0) console.log('[BookingModal] First provider:', providers[0])
+  }
+
   function confirm() {
     setLoading(true)
     setTimeout(() => {
