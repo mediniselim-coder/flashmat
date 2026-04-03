@@ -24,7 +24,7 @@ export default function BookingModal({ providers, onClose, onConfirm }) {
   const [notes, setNotes]     = useState('')
   const [loading, setLoading] = useState(false)
 
-  const openProviders = providers.filter(p => p.open)
+  const openProviders = providers.filter(p => p.is_open)
 
   function confirm() {
     setLoading(true)
@@ -118,7 +118,7 @@ export default function BookingModal({ providers, onClose, onConfirm }) {
                   <div style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--bg2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{p.icon}</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{p.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--ink2)' }}>{p.typeLabel} · {p.dist} · ⭐{p.rating}</div>
+                    <div style={{ fontSize: 10, color: 'var(--ink2)' }}>{p.type_label} · {p.distance || 'MTL'} · ⭐{p.rating}</div>
                   </div>
                   <span className="badge badge-green">Ouvert</span>
                 </div>
@@ -173,7 +173,7 @@ export default function BookingModal({ providers, onClose, onConfirm }) {
               {[
                 ['Service',      service?.label],
                 ['Fournisseur',  provider?.name],
-                ['Adresse',      provider?.addr],
+                ['Adresse',      provider?.address],
                 ['Véhicule',     vehicle],
                 ['Date & Heure', `${date || 'À confirmer'} · ${time}`],
                 ['Prix estimé',  service?.price],
