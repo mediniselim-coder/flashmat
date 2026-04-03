@@ -3,16 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import FlashAI from '../components/FlashAI'
+import Marketplace from '../components/Marketplace'
 import styles from './AppShell.module.css'
 
 const NAV = [
-  { id: 'p-dashboard', icon: '⚡', label: 'Tableau de bord' },
-  { id: 'p-tasks',     icon: '✅', label: 'Tâches du jour',   badge: 5 },
-  { id: 'p-bookings',  icon: '📅', label: 'Réservations',     badge: 8 },
-  { id: 'p-schedule',  icon: '🗓️', label: 'Calendrier' },
-  { id: 'p-clients',   icon: '👥', label: 'Clients' },
-  { id: 'p-promos',    icon: '📣', label: 'Promotions' },
-  { id: 'p-profile',   icon: '🏪', label: 'Profil atelier' },
+  { id: 'p-dashboard',   icon: '⚡', label: 'Tableau de bord' },
+  { id: 'p-tasks',       icon: '✅', label: 'Tâches du jour',  badge: 5 },
+  { id: 'p-bookings',    icon: '📅', label: 'Réservations',    badge: 8 },
+  { id: 'p-schedule',    icon: '🗓️', label: 'Calendrier' },
+  { id: 'p-clients',     icon: '👥', label: 'Clients' },
+  { id: 'p-marketplace', icon: '🛒', label: 'Marketplace' },
+  { id: 'p-promos',      icon: '📣', label: 'Promotions' },
+  { id: 'p-profile',     icon: '🏪', label: 'Profil atelier' },
 ]
 
 const QUEUE = [
@@ -293,6 +295,9 @@ export default function ProviderApp() {
             </div>
           </div>
         )}
+
+        {/* ── MARKETPLACE ── */}
+        {pane === 'p-marketplace' && <Marketplace portal="provider" />}
 
         {/* ── PROFILE ── */}
         {pane === 'p-profile' && (

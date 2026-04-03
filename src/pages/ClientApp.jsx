@@ -7,6 +7,7 @@ import FlashAI from '../components/FlashAI'
 import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
+import Marketplace from '../components/Marketplace'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -252,18 +253,7 @@ return (
           </div>
         )}
 
-        {pane === 'marketplace' && (
-          <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Marketplace</div></div><button className="btn btn-green" onClick={() => toast('Bientôt disponible! 📦','success')}>+ Publier</button></div>
-            <div className={styles.pad}>
-              <div style={{textAlign:'center',padding:60,color:'var(--ink3)'}}>
-                <div style={{fontSize:40,marginBottom:12}}>🛒</div>
-                <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,marginBottom:8}}>Marketplace bientôt disponible</div>
-                <div style={{fontSize:13}}>Achat et vente de pièces entre Montréalais</div>
-              </div>
-            </div>
-          </div>
-        )}
+        {pane === 'marketplace' && <Marketplace portal="client" />}
 
         {pane === 'flashscore' && (
           <div>
