@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import styles from './Landing.module.css'
 
 const SERVICES = [
@@ -49,8 +50,22 @@ export default function Landing() {
   const [query, setQuery]       = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [filterTerm, setFilterTerm] = useState('')
+  const [dbProviders, setDbProviders] = useState([])
+  const [dbLoading, setDbLoading] = useState(false)
 
   const activeTab = TABS.find(t => t.key === tab)
+
+  useEffect(() => {
+    if (!filterTerm) { setDbProviders([]); return }
+    setDbLoading(true)
+    supabase
+      .from('providers_list')
+      .select('*')
+      .or(`name.ilike.%${filterTerm}%,type_label.ilike.%${filterTerm}%`)
+      .order('rating', { ascending: false })
+      .limit(30)
+      .then(({ data }) => { setDbProviders(data || []); setDbLoading(false) })
+  }, [filterTerm])
 
   function handleSearch(e) {
     e.preventDefault()
@@ -63,9 +78,15 @@ export default function Landing() {
     setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
-  const filteredProviders = filterTerm
-    ? PROVIDERS.filter(p => p.type.toLowerCase().includes(filterTerm) || p.name.toLowerCase().includes(filterTerm))
-    : PROVIDERS
+  function slugify(name) {
+    return (name || '').toLowerCase()
+      .replace(/[àáâã]/g, 'a').replace(/[éèêë]/g, 'e')
+      .replace(/[îï]/g, 'i').replace(/[ôö]/g, 'o')
+      .replace(/[ùûü]/g, 'u').replace(/ç/g, 'c')
+      .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
+  }
+
+  const displayProviders = filterTerm ? dbProviders : PROVIDERS
 
   return (
     <div className={styles.page}>
@@ -179,23 +200,36 @@ export default function Landing() {
         <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
         {filterTerm && (
           <div style={{ textAlign: 'center', marginBottom: 12, fontSize: 13, color: 'var(--ink2)' }}>
-            {filteredProviders.length} résultat{filteredProviders.length !== 1 ? 's' : ''} pour «&nbsp;{filterTerm}&nbsp;»
+            {dbLoading ? 'Recherche…' : `${displayProviders.length} résultat${displayProviders.length !== 1 ? 's' : ''} pour «\u00a0${filterTerm}\u00a0»`}
             <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕ Effacer</button>
           </div>
         )}
         <div className={styles.provScroll}>
-          {filteredProviders.map(p => (
-            <div key={p.name} className={styles.provCard} onClick={() => navigate(`/provider/${p.slug}`)}>
-              <div className={styles.provAvatar}>{p.icon}</div>
-              <div className={styles.provName}>{p.name}</div>
-              <div className={styles.provType}>{p.type}</div>
-              <div className={styles.provRating}>
-                <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(p.rating))}</span> {p.rating} ({p.reviews})
+          {dbLoading && filterTerm && (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
+          )}
+          {!dbLoading && displayProviders.map(p => {
+            const isDb = !!p.type_label
+            const slug = isDb ? slugify(p.name) : p.slug
+            const icon = p.icon || '🔧'
+            const type = isDb ? p.type_label : p.type
+            const rating = p.rating || 0
+            const reviews = p.reviews || 0
+            const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
+            return (
+              <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}`)}>
+                <div className={styles.provAvatar}>{icon}</div>
+                <div className={styles.provName}>{p.name}</div>
+                <div className={styles.provType}>{type}</div>
+                <div className={styles.provRating}>
+                  <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+                </div>
+                <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? '● Ouvert' : '● Fermé'}</span>
+                {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
+                {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
               </div>
-              <span className={`badge ${p.open ? 'badge-green' : 'badge-amber'}`}>{p.open ? '● Ouvert' : '● Fermé'}</span>
-              <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </section>
 
