@@ -128,15 +128,41 @@ return (
             <div style={{ position:'relative', height: myVehicles.length === 0 ? 340 : 220, overflow:'hidden', background:'linear-gradient(135deg, #0f1e3d 0%, #1e3a8a 60%, #1e40af 100%)' }}>
               {/* Glow */}
               <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(22,199,132,.18), transparent 65%)', top:-100, right:-50, pointerEvents:'none' }} />
-              {/* Sports car silhouette */}
-              <svg viewBox="0 0 900 300" style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:'90%', maxWidth:700, opacity:.13, pointerEvents:'none' }} fill="white">
-                <path d="M820,210 L820,195 C820,195 800,170 770,162 L720,150 C700,145 680,120 650,105 C620,90 560,78 500,76 C440,74 370,82 320,95 C280,105 240,130 210,145 L130,160 C100,165 80,185 75,195 L75,210 Z"/>
-                <ellipse cx="200" cy="210" rx="48" ry="48"/>
-                <ellipse cx="200" cy="210" rx="28" ry="28" fill="#1e3a8a"/>
-                <ellipse cx="680" cy="210" rx="48" ry="48"/>
-                <ellipse cx="680" cy="210" rx="28" ry="28" fill="#1e3a8a"/>
-                <path d="M310,145 C330,120 380,100 440,96 C500,92 570,95 610,108 C640,118 660,138 670,148 Z" fill="rgba(255,255,255,.3)"/>
-                <path d="M75,195 L820,195" stroke="rgba(22,199,132,.6)" strokeWidth="1.5" fill="none"/>
+              {/* Porsche 911 silhouette */}
+              <svg viewBox="0 0 1000 320" preserveAspectRatio="xMidYMax meet" style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:'95%', maxWidth:800, opacity:.15, pointerEvents:'none' }} fill="white">
+                {/* Body */}
+                <path d="
+                  M 55,258
+                  L 55,242 C 60,236 75,230 95,228
+                  L 185,224
+                  C 210,222 238,212 262,196
+                  C 282,182 302,162 326,148
+                  C 348,135 378,122 418,116
+                  L 532,110
+                  C 572,109 610,112 642,120
+                  C 672,128 695,142 710,158
+                  C 722,171 728,188 730,204
+                  L 760,210
+                  C 790,214 830,224 858,234
+                  C 880,242 900,250 910,256
+                  L 910,258 Z
+                "/>
+                {/* Windshield highlight */}
+                <path d="M 326,148 C 348,135 378,122 418,116 L 500,113 L 490,135 C 460,140 420,148 390,158 C 368,166 350,178 340,188 Z" fill="rgba(30,58,138,.6)"/>
+                {/* Front wheel arch */}
+                <circle cx="210" cy="258" r="62"/>
+                <circle cx="210" cy="258" r="42" fill="#1e3a8a"/>
+                <circle cx="210" cy="258" r="18" fill="white"/>
+                {/* Rear wheel arch — bigger (911 style) */}
+                <circle cx="720" cy="258" r="72"/>
+                <circle cx="720" cy="258" r="50" fill="#1e3a8a"/>
+                <circle cx="720" cy="258" r="22" fill="white"/>
+                {/* Ground shadow line */}
+                <ellipse cx="490" cy="265" rx="440" ry="8" fill="rgba(0,0,0,.25)"/>
+                {/* Rear spoiler */}
+                <path d="M 728,158 L 760,150 L 762,158 L 730,166 Z"/>
+                {/* Side window */}
+                <path d="M 340,188 C 362,170 392,156 430,150 L 530,146 L 525,165 C 490,168 450,172 418,178 C 392,183 368,194 355,204 Z" fill="rgba(30,58,138,.5)"/>
               </svg>
               {/* Content */}
               <div style={{ position:'relative', zIndex:2, padding:'32px 28px 28px', height:'100%', display:'flex', flexDirection:'column', justifyContent: myVehicles.length === 0 ? 'space-between' : 'flex-end' }}>
