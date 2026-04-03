@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import styles from './Landing.module.css'
+import NavBar from '../components/NavBar'
 
 const SERVICES = [
   { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 59 },
@@ -54,7 +55,6 @@ export default function Landing() {
   const navigate = useNavigate()
   const [tab, setTab]           = useState('service')
   const [query, setQuery]       = useState('')
-  const [menuOpen, setMenuOpen] = useState(false)
   const [filterTerm, setFilterTerm] = useState('')
   const [minRating, setMinRating] = useState(0)
   const [dbProviders, setDbProviders] = useState([])
@@ -80,11 +80,6 @@ export default function Landing() {
     setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
-  function quickSearch(term) {
-    setFilterTerm(term.toLowerCase())
-    setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
-  }
-
   function slugify(name) {
     return (name || '').toLowerCase()
       .replace(/[àáâã]/g, 'a').replace(/[éèêë]/g, 'e')
@@ -97,6 +92,7 @@ export default function Landing() {
     if (minRating === 'open') return p.open === true || p.is_open === true || p.is_open === 'true'
     return (p.rating || 0) >= minRating
   })
+
   const scrollRef = useRef(null)
   function scrollProviders(dir) {
     scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
@@ -105,38 +101,8 @@ export default function Landing() {
   return (
     <div className={styles.page}>
 
-      {/* NAV */}
-      <nav className={styles.nav}>
-        <div className={styles.logo} onClick={() => navigate('/')}>
-          <img src="/logo.jpg" alt="FlashMat" style={{ height: 40, objectFit: 'contain' }} />
-        </div>
-        <div className={styles.navLinks}>
-          <span onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}>Services</span>
-          <span onClick={() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' })}>Fournisseurs</span>
-          <span onClick={() => navigate('/app/marketplace')}>Marketplace</span>
-          <span onClick={() => document.getElementById('portals')?.scrollIntoView({ behavior: 'smooth' })}>Rejoindre</span>
-        </div>
-        <div className={styles.navRight}>
-          <button className="btn btn-outline" onClick={() => navigate('/auth?role=provider')}>Espace Fournisseur</button>
-          <button className="btn btn-green" onClick={() => navigate('/auth')}>Connexion / S'inscrire</button>
-        </div>
-        <button className={styles.hamburger} onClick={() => setMenuOpen(true)}>☰</button>
-      </nav>
-
-      {/* MOBILE MENU */}
-      {menuOpen && (
-        <div className={styles.mobileMenuOverlay} onClick={() => setMenuOpen(false)}>
-          <div className={styles.mobileMenu} onClick={e => e.stopPropagation()}>
-            <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain', marginBottom: 8 }} />
-            <button className="btn btn-green btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth'); setMenuOpen(false) }}>🚗 Portail Client — Se connecter</button>
-            <button className="btn btn-outline btn-lg" style={{ width: '100%' }} onClick={() => { navigate('/auth?role=provider'); setMenuOpen(false) }}>🏪 Portail Fournisseur</button>
-            <button className={styles.mobileMenuItem} onClick={() => { document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }}>🔧 Nos services</button>
-            <button className={styles.mobileMenuItem} onClick={() => { document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }); setMenuOpen(false) }}>⭐ Fournisseurs vedettes</button>
-            <button className={styles.mobileMenuItem} onClick={() => { navigate('/app/marketplace'); setMenuOpen(false) }}>🛒 Marketplace</button>
-            <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--ink3)', fontSize: 13, marginTop: 4, cursor: 'pointer' }}>Fermer ✕</button>
-          </div>
-        </div>
-      )}
+      {/* NAV — composant réutilisable avec popup profil */}
+      <NavBar activePage="home" />
 
       {/* HERO */}
       <section className={styles.hero}>
@@ -201,7 +167,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin à <span>Montréal</span></h2>
         <div className={styles.svcGrid}>
           {SERVICES.map(s => (
-            <div key={s.id} className={styles.svcCard} onClick={() => navigate('/app/client', { state: { pane: 'search', searchCat: s.id } })}>
+            <div key={s.id} className={styles.svcCard} onClick={() => navigate('/services', { state: { cat: s.id } })}>
               <span className={styles.svcIcon}>{s.icon}</span>
               <div className={styles.svcName}>{s.name}</div>
               <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
@@ -230,33 +196,33 @@ export default function Landing() {
         <div style={{ position: 'relative' }}>
           <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
           <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
-        <div className={styles.provScroll} ref={scrollRef}>
-          {dbLoading && filterTerm && (
-            <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
-          )}
-          {!dbLoading && displayProviders.map(p => {
-            const isDb = !!p.type_label
-            const slug = isDb ? slugify(p.name) : p.slug
-            const icon = p.icon || '🔧'
-            const type = isDb ? p.type_label : p.type
-            const rating = p.rating || 0
-            const reviews = p.reviews || 0
-            const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
-            return (
-              <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
-                <div className={styles.provAvatar}>{icon}</div>
-                <div className={styles.provName}>{p.name}</div>
-                <div className={styles.provType}>{type}</div>
-                <div className={styles.provRating}>
-                  <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+          <div className={styles.provScroll} ref={scrollRef}>
+            {dbLoading && filterTerm && (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
+            )}
+            {!dbLoading && displayProviders.map(p => {
+              const isDb = !!p.type_label
+              const slug = isDb ? slugify(p.name) : p.slug
+              const icon = p.icon || '🔧'
+              const type = isDb ? p.type_label : p.type
+              const rating = p.rating || 0
+              const reviews = p.reviews || 0
+              const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
+              return (
+                <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
+                  <div className={styles.provAvatar}>{icon}</div>
+                  <div className={styles.provName}>{p.name}</div>
+                  <div className={styles.provType}>{type}</div>
+                  <div className={styles.provRating}>
+                    <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+                  </div>
+                  <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? '● Ouvert' : '● Fermé'}</span>
+                  {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
+                  {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
                 </div>
-                <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? '● Ouvert' : '● Fermé'}</span>
-                {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
-                {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
         </div>
       </section>
 
