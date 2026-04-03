@@ -110,20 +110,33 @@ export default function Marketplace({ portal = 'client' }) {
                 onMouseEnter={e => e.currentTarget.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'}
                 onMouseLeave={e => e.currentTarget.style.boxShadow='var(--shadow)'}>
 
-                {/* CARD HEADER */}
-                <div style={{ background:'linear-gradient(135deg, var(--bg3), var(--bg2))', padding:'20px 16px 16px', borderBottom:'1px solid var(--border)', display:'flex', gap:12, alignItems:'flex-start' }}>
-                  <div style={{ width:52, height:52, borderRadius:12, background:'var(--bg2)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0 }}>{l.icon}</div>
-                  <div style={{ flex:1, minWidth:0 }}>
-                    <div style={{ fontWeight:700, fontSize:14, lineHeight:1.3, marginBottom:4 }}>{l.title}</div>
-                    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                      <span className="badge badge-gray">{l.category}</span>
-                      <span className="badge" style={{ background:'rgba(37,99,235,.1)', color:'var(--blue)', border:'1px solid rgba(37,99,235,.2)' }}>{l.condition}</span>
+                {/* CARD PHOTO or ICON HEADER */}
+                {l.image_url ? (
+                  <div style={{ height:160, overflow:'hidden', borderBottom:'1px solid var(--border)', position:'relative' }}>
+                    <img src={l.image_url} alt={l.title} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    <div style={{ position:'absolute', top:8, left:8, display:'flex', gap:4 }}>
+                      <span className="badge badge-gray" style={{ backdropFilter:'blur(6px)', background:'rgba(0,0,0,.45)', color:'#fff', border:'none' }}>{l.category}</span>
+                      <span className="badge" style={{ backdropFilter:'blur(6px)', background:'rgba(37,99,235,.7)', color:'#fff', border:'none' }}>{l.condition}</span>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div style={{ background:'linear-gradient(135deg, var(--bg3), var(--bg2))', padding:'20px 16px 16px', borderBottom:'1px solid var(--border)', display:'flex', gap:12, alignItems:'flex-start' }}>
+                    <div style={{ width:52, height:52, borderRadius:12, background:'var(--bg2)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0 }}>{l.icon}</div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontWeight:700, fontSize:14, lineHeight:1.3, marginBottom:4 }}>{l.title}</div>
+                      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                        <span className="badge badge-gray">{l.category}</span>
+                        <span className="badge" style={{ background:'rgba(37,99,235,.1)', color:'var(--blue)', border:'1px solid rgba(37,99,235,.2)' }}>{l.condition}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* CARD BODY */}
                 <div style={{ padding:'14px 16px' }}>
+                  {l.image_url && (
+                    <div style={{ fontWeight:700, fontSize:14, lineHeight:1.3, marginBottom:8 }}>{l.title}</div>
+                  )}
                   {l.description && (
                     <div style={{ fontSize:12, color:'var(--ink2)', marginBottom:10, lineHeight:1.5 }}>
                       {expanded === l.id ? l.description : l.description.slice(0, 80) + (l.description.length > 80 ? '…' : '')}
