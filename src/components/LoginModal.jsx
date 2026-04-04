@@ -16,8 +16,14 @@ export default function LoginModal({ onClose }) {
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
   useEffect(() => {
-    function handlePendingClientSearchRedirect() {
+    function handlePostLoginRedirect() {
       try {
+        const postLoginRedirect = window.sessionStorage.getItem('flashmat-post-login-redirect')
+        if (postLoginRedirect) {
+          window.sessionStorage.removeItem('flashmat-post-login-redirect')
+          navigate(postLoginRedirect)
+          return true
+        }
         const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
         if (!raw) return false
         const pending = JSON.parse(raw)
@@ -34,7 +40,7 @@ export default function LoginModal({ onClose }) {
     return () => {
       window.dispatchEvent(new CustomEvent('flashmat-login-modal-close'))
       if (shouldRedirectAfterClose) {
-        handlePendingClientSearchRedirect()
+        handlePostLoginRedirect()
       }
     }
   }, [navigate, shouldRedirectAfterClose])

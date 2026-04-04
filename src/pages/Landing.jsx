@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
 
@@ -53,6 +54,7 @@ const RATING_FILTERS = [
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
   const [tab, setTab]           = useState('service')
   const [query, setQuery]       = useState('')
   const [filterTerm, setFilterTerm] = useState('')
@@ -98,6 +100,19 @@ export default function Landing() {
     scrollRef.current?.scrollBy({ left: dir * 320, behavior: 'smooth' })
   }
 
+  function openVehicleHub() {
+    if (user && profile?.role === 'client') {
+      navigate('/app/client?pane=vehicles')
+      return
+    }
+    if (user && profile?.role === 'provider') {
+      navigate('/app/provider')
+      return
+    }
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/app/client?pane=vehicles')
+    navigate('/?login=1')
+  }
+
   return (
     <div className={styles.page}>
 
@@ -113,6 +128,41 @@ export default function Landing() {
           <span className={styles.badgeDot} />
           The MarketPlace for Auto Tech · Montréal · 200+ Fournisseurs
         </div>
+        <div className={styles.heroCarStage}>
+          <div className={styles.heroCarGlow} />
+          <div className={styles.heroCarArt} aria-hidden="true">
+            <svg viewBox="0 0 860 290" className={styles.heroCarSvg}>
+              <defs>
+                <linearGradient id="carBody" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#7aa7ff" />
+                  <stop offset="100%" stopColor="#20335f" />
+                </linearGradient>
+              </defs>
+              <ellipse cx="430" cy="250" rx="335" ry="10" fill="rgba(37,99,235,.12)" />
+              <path d="M102 205 L118 154 C126 129 141 113 171 105 L302 72 C336 49 389 34 465 34 C562 34 639 56 720 117 L770 133 C788 140 803 154 810 169 L821 205 L777 205 C776 166 746 137 706 137 C666 137 636 166 635 205 L302 205 C301 166 271 137 231 137 C191 137 160 166 159 205 Z" fill="url(#carBody)" />
+              <path d="M307 80 C340 56 389 45 455 45 C535 45 603 60 671 111 L570 111 C550 84 525 70 487 66 L390 66 C359 66 337 71 307 80 Z" fill="#ffffff" />
+              <path d="M375 69 H482 C513 72 533 84 551 111 H351 C358 86 366 75 375 69 Z" fill="#f8fbff" />
+              <path d="M561 111 H673 C693 111 708 116 721 127 H579 C571 121 565 116 561 111 Z" fill="#eef5ff" />
+              <path d="M178 121 C199 102 223 92 265 88 L236 127 Z" fill="#ffffff" />
+              <circle cx="232" cy="203" r="47" fill="#273144" />
+              <circle cx="232" cy="203" r="33" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".95" />
+              <circle cx="707" cy="203" r="47" fill="#273144" />
+              <circle cx="707" cy="203" r="33" fill="none" stroke="#ffffff" strokeWidth="3" opacity=".95" />
+              <circle cx="232" cy="203" r="6" fill="#dfe8ff" />
+              <circle cx="707" cy="203" r="6" fill="#dfe8ff" />
+              <g stroke="#ffffff" strokeWidth="2" opacity=".95">
+                <path d="M232 170 V236" />
+                <path d="M199 203 H265" />
+                <path d="M209 181 L255 225" />
+                <path d="M255 181 L209 225" />
+                <path d="M707 170 V236" />
+                <path d="M674 203 H740" />
+                <path d="M684 181 L730 225" />
+                <path d="M730 181 L684 225" />
+              </g>
+            </svg>
+          </div>
+        </div>
         <h1 className={styles.h1}>
           Le Hub<br />
           <span className={styles.outline}>Auto</span> de<br />
@@ -122,6 +172,10 @@ export default function Landing() {
           Réservez, suivez, achetez — tout ce dont votre voiture a besoin à Montréal, en un seul endroit.
           Recherche par immatriculation, FlashScore™, alertes intelligentes.
         </p>
+        <button className={styles.vehicleAdder} onClick={openVehicleHub}>
+          <span className={styles.vehicleAdderText}>Ajouter votre voiture...</span>
+          <span className={styles.vehicleAdderPlus}>+</span>
+        </button>
         <div className={styles.searchWrap}>
           <div className={styles.searchTabs}>
             {TABS.map(t => (
