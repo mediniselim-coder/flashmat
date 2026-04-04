@@ -35,13 +35,16 @@ export default function ClientApp() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
-  const [pane, setPane] = useState(location.state?.pane || 'dashboard')
+  const routeParams = new URLSearchParams(location.search)
+  const routePane = routeParams.get('pane')
+  const routeCat = routeParams.get('cat')
+  const [pane, setPane] = useState(routePane || location.state?.pane || 'dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
   const [providers, setProviders] = useState([])
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
-  const [searchCat, setSearchCat] = useState(location.state?.searchCat || 'all')
+  const [searchCat, setSearchCat] = useState(routeCat || location.state?.searchCat || 'all')
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const name = profile?.full_name || 'Alex'
@@ -53,6 +56,15 @@ export default function ClientApp() {
       setPane('marketplace')
     }
   }, [location.pathname])
+
+  useEffect(() => {
+    if (routePane) {
+      setPane(routePane)
+    }
+    if (routeCat) {
+      setSearchCat(routeCat)
+    }
+  }, [routePane, routeCat])
 
   async function fetchProviders() {
     setProvLoading(true)
