@@ -607,6 +607,41 @@ function detectCase(text) {
 
   const urgentOverrides = [
     {
+      anyTerms: [
+        'roule toute seule',
+        'freine toute seule',
+        'accelere toute seule',
+        'avance toute seule',
+        'la voiture freine toute seule',
+        'la voiture roule toute seule',
+        'la voiture accelere toute seule',
+      ],
+      response: {
+        ...DEFAULT_CASE,
+        probableIssue: 'Probleme de securite critique sur l acceleration ou le freinage',
+        confidence: 'Elevee',
+        urgency: 'Urgent - ne pas conduire',
+        estimate: 'Remorquage et diagnostic de securite recommandes',
+        duration: 'A verifier immediatement',
+        priceNote: 'Une voiture qui roule, accelere ou freine toute seule peut presenter un probleme grave lie a la pedale, au freinage, a l accelerateur, a l electronique ou a un blocage mecanique.',
+        durationNote: 'Le plus prudent est de ne pas continuer a rouler et de faire inspecter le vehicule des que possible.',
+        searchCat: 'mechanic',
+        summary: 'Ce symptome ne correspond pas a une usure normale de plaquettes. C est un cas de securite critique qui doit etre traite immediatement avant toute autre utilisation du vehicule.',
+        guidanceTitle: 'Quoi faire maintenant',
+        guidanceItems: [
+          'N utilisez pas le vehicule tant que le probleme n est pas verifie.',
+          'Si le comportement se produit en roulant, arretez vous des que possible dans un endroit securitaire.',
+          'Faites remorquer le vehicule si vous n avez pas confiance dans le freinage ou l acceleration.',
+          'Quand vous appelez, dites: la voiture roule ou freine toute seule, j ai besoin d un diagnostic de securite urgent.',
+        ],
+        matches: [
+          { name: 'Garage Mecanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd hui 13h10', price: 'Diagnostic securite urgent', tags: ['Urgent', 'Freinage', 'Disponible'] },
+          { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd hui 14h00', price: 'Inspection prioritaire', tags: ['Securite', 'Rapide', 'Proche'] },
+          { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd hui 15h20', price: 'Controle complet', tags: ['Diagnostic', 'Urgent', 'Fiable'] },
+        ],
+      },
+    },
+    {
       terms: ['demarre pas'],
       anyTerms: ['aucune lumiere', 'aucune lampe', 'aucun voyant', 'rien allume', 'rien s allume', 'pas de courant', 'plus de courant'],
       response: {
@@ -665,7 +700,7 @@ function detectCase(text) {
   ]
 
   const override = urgentOverrides.find((item) =>
-    item.terms.every((term) => normalized.includes(term))
+    (!item.terms || item.terms.every((term) => normalized.includes(term)))
     && (!item.anyTerms || item.anyTerms.some((term) => normalized.includes(term)))
   )
 
