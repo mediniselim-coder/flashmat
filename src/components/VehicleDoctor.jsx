@@ -18,7 +18,43 @@ const QUICK_CASES = [
 
 const CASE_LIBRARY = [
   {
+    id: 'oil-change',
+    type: 'maintenance',
+    symptoms: [
+      { terms: ['vidange'], weight: 7 },
+      { terms: ['huile'], weight: 5 },
+      { terms: ['changement', 'huile'], weight: 6 },
+      { terms: ['quand', 'vidange'], weight: 7 },
+      { terms: ['quand', 'huile'], weight: 6 },
+      { terms: ['entretien'], weight: 3 },
+      { terms: ['rav4'], weight: 2 },
+      { terms: ['2021'], weight: 1 },
+    ],
+    probableIssue: 'Conseil de vidange et d’entretien courant',
+    confidence: 'Élevée',
+    urgency: 'À planifier selon le kilométrage',
+    estimate: 'En général tous les 8 000 à 10 000 km',
+    duration: 'Environ tous les 6 à 12 mois',
+    priceNote: 'Si vous faites surtout de la ville, du froid, de petits trajets ou beaucoup de trafic, faites-la plus tôt, souvent vers 5 000 à 8 000 km.',
+    durationNote: 'Pour un RAV4 2021, vérifiez aussi le dernier entretien fait et l’indicateur de maintenance au tableau de bord.',
+    searchCat: 'mechanic',
+    summary: 'Pour une personne qui veut juste savoir quoi faire: une vidange sert à garder le moteur bien lubrifié. Si vous ne connaissez pas l’historique exact, le plus prudent est de vérifier la dernière vidange et de viser un entretien régulier plutôt que d’attendre un problème.',
+    guidanceTitle: 'Ce que vous devez savoir',
+    guidanceItems: [
+      'Si la dernière vidange date de plus de 6 à 12 mois, il est raisonnable de la planifier.',
+      'Si l’auto a roulé environ 8 000 à 10 000 km depuis la dernière vidange, il est souvent temps de la faire.',
+      'Si vous faites surtout de courts trajets, du trafic ou l’hiver, faites-la plus tôt.',
+      'Quand vous prenez rendez-vous, vous pouvez simplement demander: vidange d’huile + vérification de base.',
+    ],
+    matches: [
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h30', price: 'Vidange dès $89', tags: ['Vidange', 'Inspection rapide', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 16h00', price: 'Vidange dès $95', tags: ['Entretien', 'Avis élevés', 'Réservation express'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h30', price: 'Vidange dès $85', tags: ['Entretien', 'Contrôle de base', 'Fiable'] },
+    ],
+  },
+  {
     id: 'brakes',
+    type: 'repair',
     symptoms: [
       { terms: ['frein'], weight: 4 },
       { terms: ['freine'], weight: 4 },
@@ -51,6 +87,7 @@ const CASE_LIBRARY = [
   },
   {
     id: 'battery',
+    type: 'repair',
     symptoms: [
       { terms: ['batterie'], weight: 5 },
       { terms: ['demarre pas'], weight: 6 },
@@ -82,6 +119,7 @@ const CASE_LIBRARY = [
   },
   {
     id: 'tires',
+    type: 'repair',
     symptoms: [
       { terms: ['pneu'], weight: 4 },
       { terms: ['pneus'], weight: 4 },
@@ -112,6 +150,7 @@ const CASE_LIBRARY = [
   },
   {
     id: 'overheat',
+    type: 'repair',
     symptoms: [
       { terms: ['chauffe'], weight: 5 },
       { terms: ['temperature'], weight: 4 },
@@ -142,6 +181,7 @@ const CASE_LIBRARY = [
 ]
 
 const DEFAULT_CASE = {
+  type: 'repair',
   probableIssue: 'Inspection mécanique générale recommandée',
   confidence: 'Moyenne',
   urgency: 'À planifier selon le symptôme',
@@ -210,6 +250,9 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const diagnosis = useMemo(() => (submitted ? detectCase(submitted) : null), [submitted])
   const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
+  const resultEyebrowLabel = diagnosis?.type === 'maintenance'
+    ? 'Conseil entretien FlashMat'
+    : 'Diagnostic automatique FlashMat'
 
   useEffect(() => {
     return () => {
@@ -365,7 +408,11 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 <div className={styles.statLabel}>Prix en temps réel</div>
                 <div className={styles.statValue}>{diagnosis?.estimate || '—'}</div>
                 <div className={styles.statSub}>
-                  {diagnosis ? 'Fourchette basée sur le problème probable' : 'Lancez le diagnostic pour une estimation'}
+                  {diagnosis?.type === 'maintenance'
+                    ? 'Repère simple pour savoir quand planifier le service'
+                    : diagnosis
+                      ? 'Fourchette basée sur le problème probable'
+                      : 'Lancez le diagnostic pour une estimation'}
                 </div>
               </div>
               <div className={styles.statCard}>
@@ -385,7 +432,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
           >
             <div className={styles.resultTop}>
               <div>
-                <div className={styles.resultEyebrow}>Diagnostic automatique FlashMat</div>
+                <div className={styles.resultEyebrow}>{resultEyebrowLabel}</div>
                 <h3 className={styles.resultTitle}>
                   {diagnosis ? diagnosis.probableIssue : 'Prêt à analyser votre véhicule'}
                 </h3>
@@ -419,20 +466,31 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <div className={styles.metricGrid}>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>Prix estimé</div>
+                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Quand le faire' : 'Prix estimé'}</div>
                 <div className={styles.metricValue}>{diagnosis?.estimate || '—'}</div>
                 <div className={styles.metricSub}>
                   {diagnosis?.priceNote || 'L’estimation apparaîtra après l’analyse'}
                 </div>
               </div>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>Temps de réparation</div>
+                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Repère dans le temps' : 'Temps de réparation'}</div>
                 <div className={styles.metricValue}>{diagnosis?.duration || '—'}</div>
                 <div className={styles.metricSub}>
                   {diagnosis?.durationNote || 'La durée estimée apparaîtra après l’analyse'}
                 </div>
               </div>
             </div>
+
+            {diagnosis?.guidanceItems?.length ? (
+              <div className={styles.guidanceCard}>
+                <div className={styles.guidanceTitle}>{diagnosis.guidanceTitle || 'À retenir'}</div>
+                <div className={styles.guidanceList}>
+                  {diagnosis.guidanceItems.map((item) => (
+                    <div key={item} className={styles.guidanceItem}>{item}</div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             <div className={styles.matchSection}>
               <div className={styles.matchHeader}>
