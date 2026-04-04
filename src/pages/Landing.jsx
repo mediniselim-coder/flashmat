@@ -103,6 +103,13 @@ export default function Landing() {
 
       {/* NAV — composant réutilisable avec popup profil */}
       <NavBar activePage="home" />
+      <div className={styles.ticker}>
+        <div className={styles.tickerTrack}>
+          {[...TICKER, ...TICKER].map((t, i) => (
+            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>âš¡</strong> {t}</span>
+          ))}
+        </div>
+      </div>
 
       {/* HERO */}
       <section className={styles.hero}>
