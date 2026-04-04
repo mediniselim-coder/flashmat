@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { createFlashFixRequest } from '../lib/flashfix'
+import { supabase } from '../lib/supabase'
 import NavBar from '../components/NavBar'
 
 const QUICK_CASES = [
@@ -19,8 +20,8 @@ const FLASHFIX_CASES = [
     summary: 'Intervention mobile pour booster, tester la batterie ou verifier l alimentation principale.',
     reassurance: 'Bon choix si la voiture reste immobile chez vous ou au stationnement et que vous voulez repartir vite.',
     options: [
-      { id: 'battery-boost', title: 'Boost batterie mobile', eta: '15-25 min', price: '40-60$', providerType: 'Mecano mobile' },
-      { id: 'battery-diagnostic', title: 'Diagnostic batterie + boost', eta: '20-30 min', price: '55-75$', providerType: 'Mecano mobile' },
+      { id: 'battery-boost', title: 'Boost batterie mobile', eta: '15-25 min', price: '40-60$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'battery-diagnostic', title: 'Diagnostic batterie + boost', eta: '20-30 min', price: '55-75$', providerType: 'Mecano mobile', category: 'mechanic' },
     ],
   },
   {
@@ -30,8 +31,8 @@ const FLASHFIX_CASES = [
     summary: 'Aide rapide pour remise en route, changement de roue ou remorquage securitaire si necessaire.',
     reassurance: 'Le systeme priorise une solution simple si la situation est stable, sinon il oriente vers un remorquage.',
     options: [
-      { id: 'tire-roadside', title: 'Aide pneu mobile', eta: '20-30 min', price: '50-80$', providerType: 'Service routier' },
-      { id: 'tire-tow', title: 'Remorquage vers garage partenaire', eta: '25-35 min', price: '79$+', providerType: 'Remorquage' },
+      { id: 'tire-roadside', title: 'Aide pneu mobile', eta: '20-30 min', price: '50-80$', providerType: 'Service routier', category: 'tire' },
+      { id: 'tire-tow', title: 'Remorquage vers garage partenaire', eta: '25-35 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
     ],
   },
   {
@@ -41,8 +42,8 @@ const FLASHFIX_CASES = [
     summary: 'Verification sur place pour distinguer batterie, alimentation, demarreur ou besoin de remorquage.',
     reassurance: 'Utile quand vous n etes pas sure de la cause et que vous voulez eviter de changer une piece au hasard.',
     options: [
-      { id: 'nostart-diagnostic', title: 'Diagnostic demarrage sur place', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile' },
-      { id: 'nostart-tow', title: 'Remorquage intelligent', eta: '25-40 min', price: '79$+', providerType: 'Remorquage' },
+      { id: 'nostart-diagnostic', title: 'Diagnostic demarrage sur place', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'nostart-tow', title: 'Remorquage intelligent', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
     ],
   },
   {
@@ -52,10 +53,17 @@ const FLASHFIX_CASES = [
     summary: 'Inspection securite avant de reprendre la route, ou transport vers atelier si la conduite semble risquee.',
     reassurance: 'Le bon reflexe quand vous voulez savoir si vous pouvez repartir sans danger.',
     options: [
-      { id: 'noise-check', title: 'Inspection securite rapide', eta: '20-30 min', price: '60-90$', providerType: 'Mecano mobile' },
-      { id: 'noise-tow', title: 'Transport securitaire vers atelier', eta: '25-40 min', price: '79$+', providerType: 'Remorquage' },
+      { id: 'noise-check', title: 'Inspection securite rapide', eta: '20-30 min', price: '60-90$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'noise-tow', title: 'Transport securitaire vers atelier', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
     ],
   },
+]
+
+const FALLBACK_PROVIDERS = [
+  { name: 'Garage Los Santos', type: 'mechanic', type_label: 'Mecanique', distance: '0.8 km', rating: '4.8', phone: '(514) 374-2829', address: 'Montreal', is_open: true },
+  { name: 'Garage Mecanique MK', type: 'mechanic', type_label: 'Mecanique', distance: '1.8 km', rating: '4.9', phone: '(514) 555-0147', address: 'Montreal', is_open: true },
+  { name: 'Dubé Pneu et Mecan.', type: 'tire', type_label: 'Pneus', distance: '2.1 km', rating: '4.3', phone: '(514) 555-0133', address: 'Montreal', is_open: true },
+  { name: 'FlashTow Montreal', type: 'tow', type_label: 'Remorquage', distance: '2.4 km', rating: '4.7', phone: '(514) 555-0121', address: 'Montreal', is_open: true },
 ]
 
 function normalize(value) {
@@ -83,6 +91,32 @@ function resolveFlashFixCase(description, quickCase) {
   return scored[0]?.score > 0 ? scored[0].item : null
 }
 
+function parseDistanceKm(value) {
+  const normalized = String(value || '').replace(',', '.')
+  const match = normalized.match(/(\d+(?:\.\d+)?)/)
+  return match ? Number(match[1]) : 99
+}
+
+function inferArrivalWindow(distanceKm) {
+  if (distanceKm <= 1) return '10-15 min'
+  if (distanceKm <= 2.5) return '15-25 min'
+  if (distanceKm <= 4) return '20-30 min'
+  return '25-40 min'
+}
+
+function buildProviderProfile(provider, option) {
+  const distanceKm = parseDistanceKm(provider.distance)
+  return {
+    title: provider.type_label || option.providerType || 'Provider FlashFix',
+    vehicle: option.providerType === 'Remorquage' ? 'Camion de service FlashFix' : 'Unite mobile FlashFix',
+    rating: provider.rating || '4.8',
+    phone: provider.phone || '(514) 555-0100',
+    arrivalWindow: option.eta || inferArrivalWindow(distanceKm),
+    distance: provider.distance || `${distanceKm} km`,
+    address: provider.address || 'Montreal',
+  }
+}
+
 export default function FlashFixUrgence() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
@@ -90,9 +124,61 @@ export default function FlashFixUrgence() {
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('Montreal')
   const [selectedOptionId, setSelectedOptionId] = useState('')
+  const [geoLabel, setGeoLabel] = useState('Recherche de votre position...')
+  const [geoStatus, setGeoStatus] = useState('loading')
+  const [providers, setProviders] = useState(FALLBACK_PROVIDERS)
 
   const resolvedCase = useMemo(() => resolveFlashFixCase(description, quickCase), [description, quickCase])
   const selectedOption = resolvedCase?.options.find((option) => option.id === selectedOptionId) || null
+  const matchedProvider = useMemo(() => {
+    if (!selectedOption) return null
+
+    const openProviders = providers.filter((provider) => provider.is_open === true || provider.is_open === 'true')
+    const categoryMatches = openProviders.filter((provider) => provider.type === selectedOption.category)
+    const pool = categoryMatches.length > 0 ? categoryMatches : openProviders.length > 0 ? openProviders : providers
+
+    if (pool.length === 0) return null
+
+    return [...pool].sort((left, right) => parseDistanceKm(left.distance) - parseDistanceKm(right.distance))[0]
+  }, [providers, selectedOption])
+
+  useEffect(() => {
+    async function fetchProviders() {
+      const { data } = await supabase
+        .from('providers_list')
+        .select('*')
+        .order('rating', { ascending: false })
+        .limit(100)
+
+      if (Array.isArray(data) && data.length > 0) {
+        setProviders(data)
+      }
+    }
+
+    fetchProviders()
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGeoStatus('unavailable')
+      setGeoLabel('Localisation automatique non disponible')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const autoLocation = `Position detectee (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`
+        setLocation(autoLocation)
+        setGeoStatus('ready')
+        setGeoLabel('Position detectee automatiquement')
+      },
+      () => {
+        setGeoStatus('denied')
+        setGeoLabel('Autorisez la localisation ou entrez votre adresse')
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 },
+    )
+  }, [])
 
   function chooseQuickCase(label) {
     setQuickCase(label)
@@ -108,12 +194,16 @@ export default function FlashFixUrgence() {
   function launchFlashFixRequest() {
     if (!resolvedCase || !selectedOption) return
 
+    const providerProfile = matchedProvider ? buildProviderProfile(matchedProvider, selectedOption) : null
+
     createFlashFixRequest({
       channel: 'flashfix',
       issueLabel: resolvedCase.label,
       description: description || resolvedCase.label,
       location: location || 'Position a confirmer',
       selectedOption,
+      providerName: matchedProvider?.name || null,
+      providerProfile,
       customerName: profile?.full_name || user?.email?.split('@')[0] || 'Client FlashMat',
     })
 
@@ -165,7 +255,7 @@ export default function FlashFixUrgence() {
             <div style={{ fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 1 - Diagnostic rapide</div>
             <h2 style={{ fontSize: 30, lineHeight: 1.05, margin: '0 0 10px', color: '#111827', fontWeight: 800 }}>Que se passe-t-il avec la voiture ?</h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.75, margin: '0 0 18px' }}>
-              Pas besoin d un grand ecran complexe ici. Le client decrit simplement la panne, choisit un cas frequent et FlashFix fait le reste.
+              FlashFix detecte la position du client, cherche un provider ouvert a cote, puis lance la demande avec le bon service.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
@@ -204,15 +294,18 @@ export default function FlashFixUrgence() {
                 style={{ width: '100%', borderRadius: 16, border: '1px solid #dbe2ea', padding: 14, fontSize: 14, boxSizing: 'border-box', color: '#111827' }}
               />
             </div>
+            <div style={{ marginTop: 10, fontSize: 12, color: geoStatus === 'ready' ? '#059669' : '#64748b', lineHeight: 1.6 }}>
+              {geoLabel}
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
               <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, padding: 14 }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Mode</div>
-                <div style={{ fontWeight: 800, color: '#111827' }}>Texte rapide</div>
+                <div style={{ fontWeight: 800, color: '#111827' }}>Position auto + texte</div>
               </div>
               <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, padding: 14 }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Suite</div>
-                <div style={{ fontWeight: 800, color: '#111827' }}>Provider notifie</div>
+                <div style={{ fontWeight: 800, color: '#111827' }}>Provider proche notifie</div>
               </div>
             </div>
           </div>
@@ -275,14 +368,24 @@ export default function FlashFixUrgence() {
                     <div style={{ fontWeight: 700 }}>{location || 'Montreal'}</div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14 }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Dispatch</div>
-                    <div style={{ fontWeight: 700 }}>Provider mobile alerte</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Provider proche</div>
+                    <div style={{ fontWeight: 700 }}>{matchedProvider?.name || 'Recherche automatique'}</div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14 }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Suivi</div>
-                    <div style={{ fontWeight: 700 }}>Etat visible dans l app</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Arrivee</div>
+                    <div style={{ fontWeight: 700 }}>{matchedProvider ? (selectedOption?.eta || buildProviderProfile(matchedProvider, selectedOption).arrivalWindow) : 'A confirmer'}</div>
                   </div>
                 </div>
+
+                {matchedProvider && (
+                  <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Dispatch automatique FlashMat</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{matchedProvider.name}</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,.72)', lineHeight: 1.65 }}>
+                      {matchedProvider.type_label || selectedOption.providerType} · {matchedProvider.distance || 'Montreal'} · ⭐ {matchedProvider.rating || '4.8'}
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="button"
