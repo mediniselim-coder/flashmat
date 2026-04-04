@@ -71,6 +71,15 @@ function getTimelineLabel(step) {
   return labels[step] || step
 }
 
+function getClientSafeFlashFixEventLabel(eventLabel, status) {
+  if (status === 'accepted') return 'Un provider FlashFix a accepte la demande'
+  if (status === 'en_route') return 'Votre provider FlashFix est en route'
+  if (status === 'onsite') return 'Votre provider FlashFix est arrive sur place'
+  if (status === 'completed') return 'Intervention FlashFix terminee'
+  if (status === 'refused') return 'La demande est en nouvelle attribution'
+  return eventLabel
+}
+
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
@@ -598,7 +607,8 @@ return (
                         <div style={{width:34,height:34,borderRadius:8,background:'var(--red-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>🚨</div>
                         <div style={{flex:1}}>
                           <div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{event.label}</div>
-                          <div style={{fontSize:11,color:'var(--ink2)'}}>{event.issueLabel}{event.providerName ? ` · ${event.providerName}` : ''}</div>
+                          <div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{getClientSafeFlashFixEventLabel(event.label, event.status)}</div>
+                          <div style={{fontSize:11,color:'var(--ink2)'}}>{event.issueLabel}</div>
                           <div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(event.at)}</div>
                         </div>
                         <span className={`badge ${meta.cls}`}>{meta.label}</span>
@@ -638,7 +648,7 @@ return (
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3, minmax(0,1fr))',gap:10}}>
                     <div style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
                       <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Provider</div>
-                      <div style={{fontWeight:700,fontSize:14}}>{activeFlashFixRequests[0].providerName || 'Recherche en cours'}</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{activeFlashFixRequests[0].status === 'pending' ? 'Recherche en cours' : 'Attribue par FlashMat'}</div>
                     </div>
                     <div style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
                       <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Option</div>
@@ -673,16 +683,16 @@ return (
                           <span className="badge badge-amber">ETA {request.selectedOption?.eta || 'a confirmer'}</span>
                         </div>
                         <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',fontSize:11,color:'var(--ink2)'}}>
-                          <span>{request.providerName ? `Provider: ${request.providerName}` : 'En attente d un provider disponible'}</span>
+                          <span>{request.status === 'pending' ? 'Recherche d un provider FlashFix disponible' : 'Provider FlashFix assigne en arriere-plan'}</span>
                           <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
                         </div>
                         {request.providerProfile && request.status !== 'pending' && (
                           <div style={{marginTop:12,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:12,display:'grid',gridTemplateColumns:'56px 1fr auto',gap:12,alignItems:'center'}}>
-                            <div style={{width:56,height:56,borderRadius:16,background:'var(--blue-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🔧</div>
+                            <div style={{width:56,height:56,borderRadius:16,background:'var(--blue-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🚚</div>
                             <div>
-                              <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>{request.providerName}</div>
-                              <div style={{fontSize:11,color:'var(--ink2)'}}>{request.providerProfile.title} · {request.providerProfile.vehicle}</div>
-                              <div style={{fontSize:11,color:'var(--ink2)'}}>⭐ {request.providerProfile.rating} · {request.providerProfile.phone}</div>
+                              <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>Intervention FlashFix en cours</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>Le provider reste masque jusqu a la fin de la mission</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>Suivez simplement l ETA et les etapes de la demande</div>
                             </div>
                             <span className="badge badge-green">{request.providerProfile.arrivalWindow}</span>
                           </div>
@@ -712,7 +722,7 @@ return (
                         </div>
                         {latestEvent && (
                           <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)',fontSize:11,color:'var(--ink2)'}}>
-                            Derniere mise a jour: {latestEvent.label}
+                            Derniere mise a jour: {getClientSafeFlashFixEventLabel(latestEvent.label, request.status)}
                           </div>
                         )}
                       </div>

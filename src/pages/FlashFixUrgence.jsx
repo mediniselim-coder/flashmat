@@ -10,6 +10,9 @@ const QUICK_CASES = [
   'Pneu creve sur le bord de la route',
   'Voiture qui ne demarre plus',
   'Bruit suspect avant de reprendre la route',
+  'Surchauffe moteur',
+  'Portieres verrouillees avec cles dedans',
+  'Besoin de remorquage rapide',
 ]
 
 const FLASHFIX_CASES = [
@@ -55,6 +58,37 @@ const FLASHFIX_CASES = [
     options: [
       { id: 'noise-check', title: 'Inspection securite rapide', eta: '20-30 min', price: '60-90$', providerType: 'Mecano mobile', category: 'mechanic' },
       { id: 'noise-tow', title: 'Transport securitaire vers atelier', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'overheat',
+    label: 'Surchauffe moteur',
+    keywords: ['chauffe', 'temperature', 'surchauffe', 'radiateur', 'refroidissement', 'moteur chauffe'],
+    summary: 'Intervention de securite si le moteur chauffe, avec verification du circuit de refroidissement ou remorquage.',
+    reassurance: 'Important si vous voulez eviter d endommager le moteur en roulant davantage.',
+    options: [
+      { id: 'overheat-check', title: 'Inspection refroidissement sur place', eta: '20-30 min', price: '70-110$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'overheat-tow', title: 'Remorquage securitaire', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'lockout',
+    label: 'Portieres verrouillees avec cles dedans',
+    keywords: ['cles', 'cle', 'verrouille', 'portiere', 'porte barree', 'enferme dehors'],
+    summary: 'Assistance rapide pour deverrouiller le vehicule sans intervention mecanique lourde.',
+    reassurance: 'Le service vise un acces rapide et propre quand le probleme est seulement l acces au vehicule.',
+    options: [
+      { id: 'lockout-unlock', title: 'Deverrouillage mobile', eta: '15-25 min', price: '45-70$', providerType: 'Assistance routiere', category: 'tow' },
+    ],
+  },
+  {
+    id: 'urgent-tow',
+    label: 'Besoin de remorquage rapide',
+    keywords: ['remorquage', 'remorquer', 'tow', 'transport garage'],
+    summary: 'Prise en charge directe pour transporter le vehicule vers un garage partenaire ou un lieu securitaire.',
+    reassurance: 'Le plus simple si vous savez deja que la voiture ne doit pas repartir sur place.',
+    options: [
+      { id: 'urgent-tow-dispatch', title: 'Remorquage prioritaire', eta: '20-35 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
     ],
   },
 ]
@@ -123,6 +157,7 @@ export default function FlashFixUrgence() {
   const [quickCase, setQuickCase] = useState('')
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('Montreal')
+  const [locationDetails, setLocationDetails] = useState('')
   const [selectedOptionId, setSelectedOptionId] = useState('')
   const [geoLabel, setGeoLabel] = useState('Recherche de votre position...')
   const [geoStatus, setGeoStatus] = useState('loading')
@@ -167,14 +202,14 @@ export default function FlashFixUrgence() {
 
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        const autoLocation = `Position detectee (${coords.latitude.toFixed(4)}, ${coords.longitude.toFixed(4)})`
+        const autoLocation = `Position GPS (${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)})`
         setLocation(autoLocation)
         setGeoStatus('ready')
-        setGeoLabel('Position detectee automatiquement')
+        setGeoLabel('Position GPS detectee automatiquement en arriere-plan')
       },
       () => {
         setGeoStatus('denied')
-        setGeoLabel('Autorisez la localisation ou entrez votre adresse')
+        setGeoLabel('Autorisez la localisation pour une position exacte, puis ajoutez un complement si besoin')
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 },
     )
@@ -200,7 +235,7 @@ export default function FlashFixUrgence() {
       channel: 'flashfix',
       issueLabel: resolvedCase.label,
       description: description || resolvedCase.label,
-      location: location || 'Position a confirmer',
+      location: [location, locationDetails].filter(Boolean).join(' · ') || 'Position a confirmer',
       selectedOption,
       providerName: matchedProvider?.name || null,
       providerProfile,
@@ -255,7 +290,7 @@ export default function FlashFixUrgence() {
             <div style={{ fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 1 - Diagnostic rapide</div>
             <h2 style={{ fontSize: 30, lineHeight: 1.05, margin: '0 0 10px', color: '#111827', fontWeight: 800 }}>Que se passe-t-il avec la voiture ?</h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.75, margin: '0 0 18px' }}>
-              FlashFix detecte la position du client, cherche un provider ouvert a cote, puis lance la demande avec le bon service.
+              FlashFix detecte la position du client en arriere-plan, confirme le bon service, puis envoie la demande au provider le plus adapte sans exposer son identite au client.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
@@ -290,7 +325,13 @@ export default function FlashFixUrgence() {
               <input
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
-                placeholder="Position automatique ou adresse"
+                placeholder="Position GPS automatique"
+                style={{ width: '100%', borderRadius: 16, border: '1px solid #dbe2ea', padding: 14, fontSize: 14, boxSizing: 'border-box', color: '#111827' }}
+              />
+              <input
+                value={locationDetails}
+                onChange={(event) => setLocationDetails(event.target.value)}
+                placeholder="Complement precise: appartement, etage, stationnement, numero de borne..."
                 style={{ width: '100%', borderRadius: 16, border: '1px solid #dbe2ea', padding: 14, fontSize: 14, boxSizing: 'border-box', color: '#111827' }}
               />
             </div>
@@ -301,11 +342,11 @@ export default function FlashFixUrgence() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>
               <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, padding: 14 }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Mode</div>
-                <div style={{ fontWeight: 800, color: '#111827' }}>Position auto + texte</div>
+                <div style={{ fontWeight: 800, color: '#111827' }}>GPS auto + precision client</div>
               </div>
               <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 18, padding: 14 }}>
                 <div style={{ fontSize: 11, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Suite</div>
-                <div style={{ fontWeight: 800, color: '#111827' }}>Provider proche notifie</div>
+                <div style={{ fontWeight: 800, color: '#111827' }}>Dispatch FlashMat prive</div>
               </div>
             </div>
           </div>
@@ -365,11 +406,11 @@ export default function FlashFixUrgence() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginTop: 14 }}>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14 }}>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Adresse</div>
-                    <div style={{ fontWeight: 700 }}>{location || 'Montreal'}</div>
+                    <div style={{ fontWeight: 700 }}>{geoStatus === 'ready' ? 'Position GPS confirmee' : 'Position en verification'}</div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14 }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Provider proche</div>
-                    <div style={{ fontWeight: 700 }}>{matchedProvider?.name || 'Recherche automatique'}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Matching</div>
+                    <div style={{ fontWeight: 700 }}>{matchedProvider ? 'Provider FlashMat trouve' : 'Recherche automatique'}</div>
                   </div>
                   <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14 }}>
                     <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Arrivee</div>
@@ -377,12 +418,18 @@ export default function FlashFixUrgence() {
                   </div>
                 </div>
 
-                {matchedProvider && (
+                <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Confidentialite provider</div>
+                  <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', lineHeight: 1.65 }}>
+                    FlashMat garde l identite du provider en interne. Le client voit le service, le prix, l ETA et le suivi, mais pas les coordonnees du garage ou du mecanicien.
+                  </div>
+                </div>
+
+                {locationDetails && (
                   <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 14, border: '1px solid rgba(255,255,255,0.08)' }}>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Dispatch automatique FlashMat</div>
-                    <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{matchedProvider.name}</div>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,.72)', lineHeight: 1.65 }}>
-                      {matchedProvider.type_label || selectedOption.providerType} · {matchedProvider.distance || 'Montreal'} · ⭐ {matchedProvider.rating || '4.8'}
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,.58)', textTransform: 'uppercase', letterSpacing: 1.1, marginBottom: 6 }}>Precision partagee au provider</div>
+                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,.8)', lineHeight: 1.65 }}>
+                      {locationDetails}
                     </div>
                   </div>
                 )}
@@ -402,9 +449,9 @@ export default function FlashFixUrgence() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 18 }}>
           {[
-            ['Provider', 'Recoit la panne, l adresse, le prix et accepte ou refuse rapidement.'],
-            ['Client', 'Voit ensuite le statut de la mission dans l app sans confusion.'],
-            ['Necessaire', 'Ici on garde seulement ce qui aide a declencher une vraie intervention urgente.'],
+            ['Services urgence', 'Batterie, pneu, demarrage, bruit suspect, surchauffe, deverrouillage et remorquage rapide.'],
+            ['Client', 'Voit le service, le prix, le delai et le suivi, sans voir le provider reel.'],
+            ['FlashMat', 'Fait le matching du provider en arriere-plan avec la bonne categorie de service.'],
           ].map(([title, text]) => (
             <div key={title} style={{ background: '#fff', borderRadius: 20, padding: 18, border: '1px solid #e5e7eb', boxShadow: '0 10px 28px rgba(15, 23, 42, 0.04)' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{title}</div>
