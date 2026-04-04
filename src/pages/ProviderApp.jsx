@@ -62,6 +62,7 @@ export default function ProviderApp() {
 
   const name = profile?.full_name || 'Garage Los Santos'
   function go(id) { setPane(id); setSidebar(false) }
+  function goHome() { setSidebar(false); navigate('/') }
 
   const filteredClients = CLIENTS.filter(c => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
 
@@ -72,7 +73,7 @@ export default function ProviderApp() {
       {/* SIDEBAR */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sbHeader}>
-          <div className={styles.sbLogo}>
+          <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
             <div className={styles.sbHex}>FM</div>
             <div className={styles.sbLogoText}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
           </div>
@@ -116,7 +117,7 @@ export default function ProviderApp() {
       <div className={styles.main}>
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
-          <div className={styles.sbLogoText} style={{fontSize:17}}>Flash<span style={{color:'var(--green)'}}>Mat</span> <span style={{fontSize:10,color:'var(--blue)',fontFamily:'var(--mono)'}}>FOURNISSEUR</span></div>
+          <div className={styles.sbLogoText} onClick={goHome} style={{fontSize:17,cursor:'pointer'}}>Flash<span style={{color:'var(--green)'}}>Mat</span> <span style={{fontSize:10,color:'var(--blue)',fontFamily:'var(--mono)'}}>FOURNISSEUR</span></div>
           <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => toast('Nouvelle réservation ajoutée 📅','success')}>+ RDV</button>
         </div>
 

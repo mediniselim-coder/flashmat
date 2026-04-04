@@ -74,6 +74,7 @@ export default function ClientApp() {
   })
 
   function go(id) { setPane(id); setSidebar(false) }
+  function goHome() { setSidebar(false); navigate('/') }
 
   function slugify(name) {
     return name.toLowerCase()
@@ -88,7 +89,7 @@ return (
 
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sbHeader}>
-          <div className={styles.sbLogo}>
+          <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
             <div className={styles.sbHex}>FM</div>
             <div className={styles.sbLogoText}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
           </div>
@@ -130,7 +131,7 @@ return (
       <div className={styles.main}>
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
-          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:17}}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
+          <div onClick={goHome} style={{fontFamily:'var(--display)',fontWeight:800,fontSize:17,cursor:'pointer'}}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
           <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => setBookingModal(true)}>+ Réserver</button>
         </div>
 
