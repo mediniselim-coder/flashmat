@@ -106,7 +106,7 @@ export default function Landing() {
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
           {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>âš¡</strong> {t}</span>
+            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>•</strong> {t}</span>
           ))}
         </div>
       </div>
