@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import styles from './VehicleDoctor.module.css'
@@ -124,12 +124,26 @@ function detectCase(text) {
 export default function VehicleDoctor({ compact = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const resultRef = useRef(null)
+  const analyzeTimeoutRef = useRef(null)
+  const highlightTimeoutRef = useRef(null)
   const [inputMode, setInputMode] = useState('text')
-  const [draft, setDraft] = useState('Ma voiture grince quand je freine et la pédale vibre un peu.')
-  const [submitted, setSubmitted] = useState('Ma voiture grince quand je freine et la pédale vibre un peu.')
+  const [draft, setDraft] = useState('')
+  const [submitted, setSubmitted] = useState('')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [hasFreshResult, setHasFreshResult] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('Décrivez le symptôme puis lancez le diagnostic.')
 
-  const diagnosis = useMemo(() => detectCase(submitted), [submitted])
+  const diagnosis = useMemo(() => (submitted ? detectCase(submitted) : null), [submitted])
   const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
+  const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(analyzeTimeoutRef.current)
+      window.clearTimeout(highlightTimeoutRef.current)
+    }
+  }, [])
 
   function openMatchingSearch(category) {
     const target = `/app/client?pane=search&cat=${encodeURIComponent(category)}`
@@ -143,8 +157,30 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
   function analyze(nextDraft) {
     const value = (nextDraft || draft).trim()
-    if (!value) return
-    setSubmitted(value)
+    if (!value) {
+      setStatusMessage('Décrivez un symptôme pour lancer le diagnostic.')
+      return
+    }
+
+    window.clearTimeout(analyzeTimeoutRef.current)
+    window.clearTimeout(highlightTimeoutRef.current)
+
+    setDraft(value)
+    setIsAnalyzing(true)
+    setHasFreshResult(false)
+    setStatusMessage('Analyse du symptôme en cours...')
+
+    analyzeTimeoutRef.current = window.setTimeout(() => {
+      setSubmitted(value)
+      setIsAnalyzing(false)
+      setHasFreshResult(true)
+      setStatusMessage('Diagnostic prêt. Consultez le résultat et les garages suggérés.')
+      resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+
+      highlightTimeoutRef.current = window.setTimeout(() => {
+        setHasFreshResult(false)
+      }, 1800)
+    }, 450)
   }
 
   const wrapperClass = compact ? `${styles.section} ${styles.sectionCompact}` : styles.section
@@ -213,13 +249,18 @@ export default function VehicleDoctor({ compact = false, userName }) {
             </div>
 
             <div className={styles.actions}>
-              <button type="button" className={styles.primaryBtn} onClick={() => analyze()}>
-                Lancer le diagnostic
+              <button
+                type="button"
+                className={`${styles.primaryBtn} ${isAnalyzing ? styles.primaryBtnDisabled : ''}`}
+                onClick={() => analyze()}
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? 'Analyse en cours...' : 'Lancer le diagnostic'}
               </button>
               <button
                 type="button"
                 className={styles.secondaryBtn}
-                onClick={() => openMatchingSearch(diagnosis.searchCat)}
+                onClick={() => openMatchingSearch(effectiveSearchCat)}
               >
                 Voir les garages disponibles
               </button>
@@ -249,45 +290,74 @@ export default function VehicleDoctor({ compact = false, userName }) {
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statLabel}>Prix en temps réel</div>
-                <div className={styles.statValue}>{diagnosis.estimate}</div>
-                <div className={styles.statSub}>Fourchette basée sur le problème probable</div>
+                <div className={styles.statValue}>{diagnosis?.estimate || '—'}</div>
+                <div className={styles.statSub}>
+                  {diagnosis ? 'Fourchette basée sur le problème probable' : 'Lancez le diagnostic pour une estimation'}
+                </div>
               </div>
               <div className={styles.statCard}>
                 <div className={styles.statLabel}>Réservation rapide</div>
-                <div className={styles.statValue}>3 garages</div>
-                <div className={styles.statSub}>Proches, disponibles, déjà filtrés</div>
+                <div className={styles.statValue}>{diagnosis ? '3 garages' : '—'}</div>
+                <div className={styles.statSub}>
+                  {diagnosis ? 'Proches, disponibles, déjà filtrés' : 'Des suggestions apparaîtront après analyse'}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className={styles.result}>
+          <div
+            ref={resultRef}
+            className={`${styles.result} ${hasFreshResult ? styles.resultHighlight : ''}`}
+            tabIndex={-1}
+          >
             <div className={styles.resultTop}>
               <div>
                 <div className={styles.resultEyebrow}>Diagnostic automatique FlashMat</div>
-                <h3 className={styles.resultTitle}>{diagnosis.probableIssue}</h3>
+                <h3 className={styles.resultTitle}>
+                  {diagnosis ? diagnosis.probableIssue : 'Prêt à analyser votre véhicule'}
+                </h3>
               </div>
-              <div className={styles.confidence}>Confiance {diagnosis.confidence}</div>
+              <div className={styles.confidence}>
+                {diagnosis ? `Confiance ${diagnosis.confidence}` : 'Aucun diagnostic'}
+              </div>
             </div>
 
-            <p className={styles.summary}>{diagnosis.summary}</p>
-
-            <div className={styles.badgeRow}>
-              <span className={`${styles.badge} ${diagnosis.urgency.toLowerCase().includes('urgent') || diagnosis.urgency.toLowerCase().includes('rapidement') ? styles.badgeWarn : styles.badgeSafe}`}>
-                {diagnosis.urgency}
+            <div className={styles.statusRow}>
+              <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
+                {isAnalyzing ? 'Analyse...' : 'Diagnostic prêt'}
               </span>
-              <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching à Montréal</span>
+              <span className={styles.statusText}>{statusMessage}</span>
             </div>
+
+            <p className={styles.summary}>
+              {diagnosis
+                ? diagnosis.summary
+                : 'Décrivez un bruit, une vibration, un voyant ou un comportement étrange, puis cliquez sur le bouton pour obtenir une estimation.'}
+            </p>
+
+            {diagnosis ? (
+              <div className={styles.badgeRow}>
+                <span className={`${styles.badge} ${diagnosis.urgency.toLowerCase().includes('urgent') || diagnosis.urgency.toLowerCase().includes('rapidement') ? styles.badgeWarn : styles.badgeSafe}`}>
+                  {diagnosis.urgency}
+                </span>
+                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching à Montréal</span>
+              </div>
+            ) : null}
 
             <div className={styles.metricGrid}>
               <div className={styles.metricCard}>
                 <div className={styles.metricLabel}>Prix estimé</div>
-                <div className={styles.metricValue}>{diagnosis.estimate}</div>
-                <div className={styles.metricSub}>{diagnosis.priceNote}</div>
+                <div className={styles.metricValue}>{diagnosis?.estimate || '—'}</div>
+                <div className={styles.metricSub}>
+                  {diagnosis?.priceNote || 'L’estimation apparaîtra après l’analyse'}
+                </div>
               </div>
               <div className={styles.metricCard}>
                 <div className={styles.metricLabel}>Temps de réparation</div>
-                <div className={styles.metricValue}>{diagnosis.duration}</div>
-                <div className={styles.metricSub}>{diagnosis.durationNote}</div>
+                <div className={styles.metricValue}>{diagnosis?.duration || '—'}</div>
+                <div className={styles.metricSub}>
+                  {diagnosis?.durationNote || 'La durée estimée apparaîtra après l’analyse'}
+                </div>
               </div>
             </div>
 
@@ -298,7 +368,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
               </div>
 
               <div className={styles.matchList}>
-                {diagnosis.matches.map((match) => (
+                {diagnosis ? diagnosis.matches.map((match) => (
                   <div key={match.name} className={styles.matchCard}>
                     <div className={styles.matchTop}>
                       <div>
@@ -318,13 +388,17 @@ export default function VehicleDoctor({ compact = false, userName }) {
                       <button
                         type="button"
                         className={styles.reserveBtn}
-                        onClick={() => openMatchingSearch(diagnosis.searchCat)}
+                        onClick={() => openMatchingSearch(effectiveSearchCat)}
                       >
                         Réserver
                       </button>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className={styles.emptyState}>
+                    Lancez un diagnostic pour voir les garages les plus pertinents.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -332,7 +406,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <button
                 type="button"
                 className={styles.ctaPrimary}
-                onClick={() => openMatchingSearch(diagnosis.searchCat)}
+                onClick={() => openMatchingSearch(effectiveSearchCat)}
               >
                 {ctaLabel}
               </button>
