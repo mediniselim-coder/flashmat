@@ -54,7 +54,7 @@ export default function FlashFixUrgence() {
         </h1>
         <p style={{ color: '#fecaca', fontSize: 16, maxWidth: 720, margin: '0 auto 28px', lineHeight: 1.7 }}>
           Le bouton urgence FlashMat sert à demander une intervention rapide, à domicile ou sur la route.
-          L’idée: une expérience simple, rapide et rassurante, style Uber Eats, mais pour l’automobile.
+          L’idée: une expérience simple, rapide et rassurante pour obtenir de l aide automobile sans vous déplacer.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
           <button
@@ -126,3 +126,4 @@ export default function FlashFixUrgence() {
     </div>
   )
 }
+
