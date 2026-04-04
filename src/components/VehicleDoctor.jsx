@@ -19,7 +19,21 @@ const QUICK_CASES = [
 const CASE_LIBRARY = [
   {
     id: 'brakes',
-    keywords: ['frein', 'freine', 'grince', 'plaquette', 'bruit metallique', 'brake'],
+    symptoms: [
+      { terms: ['frein'], weight: 4 },
+      { terms: ['freine'], weight: 4 },
+      { terms: ['freinage'], weight: 4 },
+      { terms: ['plaquette'], weight: 5 },
+      { terms: ['plaquettes'], weight: 5 },
+      { terms: ['disque'], weight: 4 },
+      { terms: ['grince'], weight: 3 },
+      { terms: ['grincement'], weight: 3 },
+      { terms: ['couine'], weight: 3 },
+      { terms: ['pedale', 'vibre'], weight: 5 },
+      { terms: ['bruit', 'frein'], weight: 5 },
+      { terms: ['bruit metallique'], weight: 4 },
+      { terms: ['brake'], weight: 4 },
+    ],
     probableIssue: 'Plaquettes de frein usées',
     confidence: 'Élevée',
     urgency: 'À traiter rapidement',
@@ -37,7 +51,20 @@ const CASE_LIBRARY = [
   },
   {
     id: 'battery',
-    keywords: ['batterie', 'demarre pas', 'demarrage', 'booster', 'alternateur', 'courant'],
+    symptoms: [
+      { terms: ['batterie'], weight: 5 },
+      { terms: ['demarre pas'], weight: 6 },
+      { terms: ['ne demarre pas'], weight: 6 },
+      { terms: ['demarrage'], weight: 4 },
+      { terms: ['booster'], weight: 5 },
+      { terms: ['alternateur'], weight: 5 },
+      { terms: ['courant'], weight: 3 },
+      { terms: ['faible', 'batterie'], weight: 5 },
+      { terms: ['le matin', 'demarre'], weight: 4 },
+      { terms: ['starter'], weight: 4 },
+      { terms: ['clique'], weight: 3 },
+      { terms: ['clic'], weight: 3 },
+    ],
     probableIssue: 'Batterie faible ou alternateur à vérifier',
     confidence: 'Moyenne à élevée',
     urgency: 'À planifier aujourd’hui',
@@ -55,7 +82,19 @@ const CASE_LIBRARY = [
   },
   {
     id: 'tires',
-    keywords: ['pneu', 'crevaison', 'air', 'pression', 'jante'],
+    symptoms: [
+      { terms: ['pneu'], weight: 4 },
+      { terms: ['pneus'], weight: 4 },
+      { terms: ['crevaison'], weight: 6 },
+      { terms: ['air'], weight: 2 },
+      { terms: ['pression'], weight: 4 },
+      { terms: ['jante'], weight: 3 },
+      { terms: ['perd', 'air'], weight: 6 },
+      { terms: ['fuite', 'air'], weight: 6 },
+      { terms: ['a plat'], weight: 6 },
+      { terms: ['gonfler'], weight: 3 },
+      { terms: ['valve'], weight: 4 },
+    ],
     probableIssue: 'Fuite lente ou crevaison sur un pneu',
     confidence: 'Élevée',
     urgency: 'À faire avant un long trajet',
@@ -73,7 +112,18 @@ const CASE_LIBRARY = [
   },
   {
     id: 'overheat',
-    keywords: ['chauffe', 'temperature', 'surchauffe', 'radiateur', 'liquide'],
+    symptoms: [
+      { terms: ['chauffe'], weight: 5 },
+      { terms: ['temperature'], weight: 4 },
+      { terms: ['surchauffe'], weight: 6 },
+      { terms: ['radiateur'], weight: 5 },
+      { terms: ['liquide'], weight: 2 },
+      { terms: ['refroidissement'], weight: 5 },
+      { terms: ['aiguille', 'monte'], weight: 6 },
+      { terms: ['moteur', 'chauffe'], weight: 6 },
+      { terms: ['ventilateur'], weight: 3 },
+      { terms: ['thermostat'], weight: 3 },
+    ],
     probableIssue: 'Surchauffe liée au liquide de refroidissement',
     confidence: 'Moyenne',
     urgency: 'Urgent si l’aiguille monte vite',
@@ -114,11 +164,34 @@ function detectCase(text) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
 
-  const match = CASE_LIBRARY.find((candidate) =>
-    candidate.keywords.some((keyword) => normalized.includes(keyword))
-  )
+  const scoredCases = CASE_LIBRARY
+    .map((candidate) => {
+      const score = candidate.symptoms.reduce((total, symptom) => {
+        const matched = symptom.terms.every((term) => normalized.includes(term))
+        return matched ? total + symptom.weight : total
+      }, 0)
 
-  return match || DEFAULT_CASE
+      return { candidate, score }
+    })
+    .sort((left, right) => right.score - left.score)
+
+  const [bestMatch, nextMatch] = scoredCases
+
+  if (!bestMatch || bestMatch.score < 4) {
+    return DEFAULT_CASE
+  }
+
+  if (nextMatch && bestMatch.score - nextMatch.score <= 1) {
+    return {
+      ...DEFAULT_CASE,
+      probableIssue: 'Plusieurs causes possibles à vérifier',
+      confidence: 'Faible à moyenne',
+      urgency: 'Diagnostic conseillé avant réparation',
+      summary: 'Les symptômes décrits pointent vers plusieurs pistes possibles. FlashMat recommande un diagnostic mécanique pour confirmer la vraie cause avant de réserver une réparation ciblée.',
+    }
+  }
+
+  return bestMatch.candidate
 }
 
 export default function VehicleDoctor({ compact = false, userName }) {
