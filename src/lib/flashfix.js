@@ -1,5 +1,6 @@
 const FLASHFIX_REQUESTS_KEY = 'flashmat-flashfix-requests'
 export const FLASHFIX_UPDATED_EVENT = 'flashmat:flashfix-updated'
+export const FLASHFIX_TIMELINE = ['pending', 'accepted', 'en_route', 'onsite', 'completed']
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
@@ -42,6 +43,7 @@ export function createFlashFixRequest(payload) {
     id: `ffx-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     status: 'pending',
     providerName: null,
+    providerProfile: null,
     createdAt: nowIso(),
     updatedAt: nowIso(),
     events: [makeEvent('Demande FlashFix envoyee', 'client')],
@@ -67,13 +69,14 @@ export function updateFlashFixRequest(requestId, updater) {
   return next.find((request) => request.id === requestId) || null
 }
 
-export function providerRespondToFlashFix(requestId, action, providerName) {
+export function providerRespondToFlashFix(requestId, action, providerName, providerProfile = null) {
   return updateFlashFixRequest(requestId, (request) => {
     if (action === 'accept') {
       return {
         ...request,
         status: 'accepted',
         providerName,
+        providerProfile: providerProfile || request.providerProfile,
         events: [...(request.events || []), makeEvent(`${providerName} a accepte la demande`, 'provider')],
       }
     }
@@ -82,12 +85,13 @@ export function providerRespondToFlashFix(requestId, action, providerName) {
       ...request,
       status: 'refused',
       providerName,
+      providerProfile: providerProfile || request.providerProfile,
       events: [...(request.events || []), makeEvent(`${providerName} a refuse la demande`, 'provider')],
     }
   })
 }
 
-export function advanceFlashFixRequest(requestId, nextStatus, providerName) {
+export function advanceFlashFixRequest(requestId, nextStatus, providerName, providerProfile = null) {
   const statusLabels = {
     en_route: `${providerName} est en route`,
     onsite: `${providerName} est arrive sur place`,
@@ -98,6 +102,7 @@ export function advanceFlashFixRequest(requestId, nextStatus, providerName) {
     ...request,
     status: nextStatus,
     providerName: providerName || request.providerName,
+    providerProfile: providerProfile || request.providerProfile,
     events: [...(request.events || []), makeEvent(statusLabels[nextStatus] || 'Mise a jour FlashFix', 'provider')],
   }))
 }
@@ -113,4 +118,13 @@ export function getFlashFixStatusMeta(status) {
   }
 
   return map[status] || { label: 'En cours', cls: 'badge-gray' }
+}
+
+export function getFlashFixStageProgress(status) {
+  const currentIndex = FLASHFIX_TIMELINE.indexOf(status)
+  return FLASHFIX_TIMELINE.map((step, index) => ({
+    step,
+    done: currentIndex >= index,
+    current: currentIndex === index,
+  }))
 }

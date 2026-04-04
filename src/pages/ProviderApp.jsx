@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
-import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
+import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -58,6 +58,18 @@ function formatFlashFixTime(value) {
   }
 }
 
+function getTimelineLabel(step) {
+  const labels = {
+    pending: 'Demande',
+    accepted: 'Acceptee',
+    en_route: 'En route',
+    onsite: 'Sur place',
+    completed: 'Terminee',
+  }
+
+  return labels[step] || step
+}
+
 export default function ProviderApp() {
   const { profile } = useAuth()
   const { toast }            = useToast()
@@ -100,7 +112,13 @@ export default function ProviderApp() {
   }, [])
 
   function acceptFlashFixRequest(requestId) {
-    providerRespondToFlashFix(requestId, 'accept', name)
+    providerRespondToFlashFix(requestId, 'accept', name, {
+      title: 'Mecano mobile certifie',
+      vehicle: 'Ford Transit FlashFix',
+      rating: '4.9',
+      phone: '(514) 555-0199',
+      arrivalWindow: '15-25 min',
+    })
     toast('Demande FlashFix acceptée', 'success')
   }
 
@@ -110,7 +128,13 @@ export default function ProviderApp() {
   }
 
   function advanceFlashFixStatus(requestId, nextStatus) {
-    advanceFlashFixRequest(requestId, nextStatus, name)
+    advanceFlashFixRequest(requestId, nextStatus, name, {
+      title: 'Mecano mobile certifie',
+      vehicle: 'Ford Transit FlashFix',
+      rating: '4.9',
+      phone: '(514) 555-0199',
+      arrivalWindow: nextStatus === 'completed' ? 'Arrivee completee' : '15-25 min',
+    })
     const labels = {
       en_route: 'Le provider est maintenant en route',
       onsite: 'Le provider est arrivé sur place',
@@ -271,11 +295,37 @@ export default function ProviderApp() {
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Réservations</div><div className={styles.pageSub}>{PROVIDER_BOOKINGS.length} aujourd'hui · {pendingFlashFix.length} urgence(s) FlashFix en attente</div></div></div>
             <div className={styles.pad}>
+              {pendingFlashFix.length > 0 && (
+                <div style={{background:'linear-gradient(135deg,#111827 0%, #7c2d12 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',marginBottom:12}}>
+                    <div>
+                      <div style={{fontSize:11,letterSpacing:1.4,textTransform:'uppercase',color:'rgba(255,255,255,.72)',marginBottom:6}}>Dispatch urgence</div>
+                      <div style={{fontFamily:'var(--display)',fontSize:22,fontWeight:800,lineHeight:1.1}}>{pendingFlashFix.length} mission(s) a traiter</div>
+                    </div>
+                    <span className="badge badge-amber">Urgence live</span>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3, minmax(0,1fr))',gap:10}}>
+                    <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Plus proche mission</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].location || 'Montreal'}</div>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Service</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].selectedOption?.title || 'FlashFix'}</div>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Prix</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].selectedOption?.price || 'A confirmer'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {flashFixQueue.length > 0 && (
                 <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
                   {flashFixQueue.map((request) => {
                     const meta = getFlashFixStatusMeta(request.status)
                     const latestEvent = request.events?.[request.events.length - 1]
+                    const timeline = getFlashFixStageProgress(request.status)
                     return (
                       <div key={request.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
                         <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:10}}>
@@ -296,6 +346,16 @@ export default function ProviderApp() {
                           <span>{request.providerName ? `Assigné à ${request.providerName}` : 'Aucun provider assigné pour le moment'}</span>
                           <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
                         </div>
+                        {request.providerProfile && (
+                          <div style={{marginBottom:12,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:12,display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,alignItems:'center'}}>
+                            <div>
+                              <div style={{fontSize:13,fontWeight:700,color:'var(--ink)'}}>{request.providerProfile.title}</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>{request.providerProfile.vehicle} · ⭐ {request.providerProfile.rating}</div>
+                            </div>
+                            <span className="badge badge-blue">{request.providerProfile.arrivalWindow}</span>
+                            <span className="badge badge-gray">{request.providerProfile.phone}</span>
+                          </div>
+                        )}
                         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                           {request.status === 'pending' && (
                             <>
@@ -312,6 +372,29 @@ export default function ProviderApp() {
                           {request.status === 'onsite' && (
                             <button className="btn btn-green" onClick={() => advanceFlashFixStatus(request.id, 'completed')}>Terminer l intervention</button>
                           )}
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(5, minmax(0,1fr))',gap:8,marginTop:12}}>
+                          {timeline.map((item) => (
+                            <div key={item.step} style={{textAlign:'center'}}>
+                              <div style={{
+                                width:28,
+                                height:28,
+                                borderRadius:999,
+                                margin:'0 auto 6px',
+                                display:'flex',
+                                alignItems:'center',
+                                justifyContent:'center',
+                                fontSize:11,
+                                fontWeight:800,
+                                color:item.done ? '#fff' : 'var(--ink3)',
+                                background:item.current ? 'var(--blue)' : item.done ? 'var(--green)' : 'var(--bg3)',
+                                border:item.current ? 'none' : '1px solid var(--border)',
+                              }}>
+                                {item.done ? '•' : ''}
+                              </div>
+                              <div style={{fontSize:10,color:item.current ? 'var(--ink)' : 'var(--ink3)',fontWeight:item.current ? 700 : 500}}>{getTimelineLabel(item.step)}</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )

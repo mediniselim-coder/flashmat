@@ -149,6 +149,21 @@ export default function FlashFixUrgence() {
       </section>
 
       <section style={{ maxWidth: 1240, margin: '0 auto', padding: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 20 }}>
+          {[
+            ['1', 'Diagnostic', 'Docteur Automobile comprend le besoin'],
+            ['2', 'Choix', 'Le client voit le bon service et le prix'],
+            ['3', 'Dispatch', 'Le provider recoit et accepte ou refuse'],
+            ['4', 'Suivi', 'Le client suit l intervention dans l app'],
+          ].map(([step, title, text]) => (
+            <div key={step} style={{ background: '#fff', borderRadius: 18, padding: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #eee' }}>
+              <div style={{ width: 30, height: 30, borderRadius: 999, background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, marginBottom: 10 }}>{step}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#111827', marginBottom: 6 }}>{title}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.7, color: '#6b7280' }}>{text}</div>
+            </div>
+          ))}
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: '1.05fr .95fr', gap: 20 }}>
           <div style={{ background: '#fff', borderRadius: 22, padding: 22, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 1 - Docteur Automobile</div>
@@ -206,6 +221,23 @@ export default function FlashFixUrgence() {
                 <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, marginBottom: 14 }}>
                   <div style={{ fontSize: 16, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{resolvedCase.label}</div>
                   <div style={{ fontSize: 14, lineHeight: 1.7, color: '#6b7280' }}>{resolvedCase.summary}</div>
+                </div>
+                <div style={{ background: 'linear-gradient(135deg, #111827 0%, #1d4ed8 100%)', borderRadius: 18, padding: 16, color: '#fff', marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, letterSpacing: 1.4, textTransform: 'uppercase', color: 'rgba(255,255,255,.72)', marginBottom: 8 }}>Apercu mission</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
+                    <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: 12 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginBottom: 4 }}>Position</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>{location || 'Montreal'}</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: 12 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginBottom: 4 }}>Dispatch</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>Provider mobile notifie</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 12, padding: 12 }}>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,.6)', marginBottom: 4 }}>Suivi</div>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>Timeline dans l app</div>
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 10, fontWeight: 700 }}>Choisis une option</div>

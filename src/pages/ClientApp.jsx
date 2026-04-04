@@ -9,7 +9,7 @@ import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import VehicleDoctor from '../components/VehicleDoctor'
-import { FLASHFIX_UPDATED_EVENT, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
+import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -57,6 +57,18 @@ function formatFlashFixTime(value) {
   } catch {
     return value
   }
+}
+
+function getTimelineLabel(step) {
+  const labels = {
+    pending: 'Demande',
+    accepted: 'Acceptee',
+    en_route: 'En route',
+    onsite: 'Sur place',
+    completed: 'Terminee',
+  }
+
+  return labels[step] || step
 }
 
 export default function ClientApp() {
@@ -614,11 +626,37 @@ return (
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes réservations</div></div><button className="btn btn-green" onClick={() => setBookingModal(true)}>+ Nouvelle</button></div>
             <div className={styles.pad}>
+              {activeFlashFixRequests.length > 0 && (
+                <div style={{background:'linear-gradient(135deg,#0f172a 0%, #1d4ed8 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:12}}>
+                    <div>
+                      <div style={{fontSize:11,letterSpacing:1.4,textTransform:'uppercase',color:'rgba(255,255,255,.72)',marginBottom:6}}>FlashFix en direct</div>
+                      <div style={{fontFamily:'var(--display)',fontSize:22,fontWeight:800,lineHeight:1.1}}>{activeFlashFixRequests[0].issueLabel}</div>
+                    </div>
+                    <span className={`badge ${getFlashFixStatusMeta(activeFlashFixRequests[0].status).cls}`}>{getFlashFixStatusMeta(activeFlashFixRequests[0].status).label}</span>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(3, minmax(0,1fr))',gap:10}}>
+                    <div style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Provider</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{activeFlashFixRequests[0].providerName || 'Recherche en cours'}</div>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Option</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{activeFlashFixRequests[0].selectedOption?.title || 'FlashFix'}</div>
+                    </div>
+                    <div style={{background:'rgba(255,255,255,.08)',border:'1px solid rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>ETA</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{activeFlashFixRequests[0].selectedOption?.eta || 'a confirmer'}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
               {flashFixRequests.length > 0 && (
                 <div style={{ display: 'grid', gap: 12, marginBottom: 18 }}>
                   {flashFixRequests.filter((request) => request.channel === 'flashfix').map((request) => {
                     const meta = getFlashFixStatusMeta(request.status)
                     const latestEvent = request.events?.[request.events.length - 1]
+                    const timeline = getFlashFixStageProgress(request.status)
                     return (
                       <div key={request.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
                         <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:10}}>
@@ -637,6 +675,40 @@ return (
                         <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',fontSize:11,color:'var(--ink2)'}}>
                           <span>{request.providerName ? `Provider: ${request.providerName}` : 'En attente d un provider disponible'}</span>
                           <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
+                        </div>
+                        {request.providerProfile && request.status !== 'pending' && (
+                          <div style={{marginTop:12,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:12,display:'grid',gridTemplateColumns:'56px 1fr auto',gap:12,alignItems:'center'}}>
+                            <div style={{width:56,height:56,borderRadius:16,background:'var(--blue-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🔧</div>
+                            <div>
+                              <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>{request.providerName}</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>{request.providerProfile.title} · {request.providerProfile.vehicle}</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>⭐ {request.providerProfile.rating} · {request.providerProfile.phone}</div>
+                            </div>
+                            <span className="badge badge-green">{request.providerProfile.arrivalWindow}</span>
+                          </div>
+                        )}
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(5, minmax(0,1fr))',gap:8,marginTop:12}}>
+                          {timeline.map((item) => (
+                            <div key={item.step} style={{textAlign:'center'}}>
+                              <div style={{
+                                width:28,
+                                height:28,
+                                borderRadius:999,
+                                margin:'0 auto 6px',
+                                display:'flex',
+                                alignItems:'center',
+                                justifyContent:'center',
+                                fontSize:11,
+                                fontWeight:800,
+                                color:item.done ? '#fff' : 'var(--ink3)',
+                                background:item.current ? 'var(--blue)' : item.done ? 'var(--green)' : 'var(--bg3)',
+                                border:item.current ? 'none' : '1px solid var(--border)',
+                              }}>
+                                {item.done ? '•' : ''}
+                              </div>
+                              <div style={{fontSize:10,color:item.current ? 'var(--ink)' : 'var(--ink3)',fontWeight:item.current ? 700 : 500}}>{getTimelineLabel(item.step)}</div>
+                            </div>
+                          ))}
                         </div>
                         {latestEvent && (
                           <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)',fontSize:11,color:'var(--ink2)'}}>
