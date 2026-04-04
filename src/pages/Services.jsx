@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../hooks/useAuth'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 
 const SERVICES = [
@@ -87,40 +86,9 @@ const SERVICES = [
 ]
 
 export default function Services() {
-  const { user, profile } = useAuth()
-  const location = useLocation()
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
-  const [active, setActive] = useState(location.state?.cat || null)
-
-  const isClientLoggedIn = Boolean(user && profile?.role === 'client')
-  const isProviderLoggedIn = Boolean(user && profile?.role === 'provider')
-
-  useEffect(() => {
-    if (location.state?.cat) {
-      setActive(location.state.cat)
-    }
-  }, [location.state])
-
-  function goToClientSearch(service) {
-    if (isClientLoggedIn) {
-      const params = new URLSearchParams({
-        pane: 'search',
-        tab: 'service',
-        cat: service.id,
-        q: service.name,
-      })
-      navigate(`/app/client?${params.toString()}`)
-      return
-    }
-
-    if (isProviderLoggedIn) {
-      navigate('/app/provider')
-      return
-    }
-
-    navigate('/auth')
-  }
+  const [active, setActive] = useState(null)
 
   const filtered = SERVICES.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -196,7 +164,7 @@ export default function Services() {
                 ))}
               </ul>
               <button
-                onClick={e => { e.stopPropagation(); goToClientSearch(s) }}
+                onClick={e => { e.stopPropagation(); navigate('/auth') }}
                 style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: active === s.id ? '#22c55e' : '#f0fdf4', color: active === s.id ? '#fff' : '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
               >
                 Trouver un fournisseur →
