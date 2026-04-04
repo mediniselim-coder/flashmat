@@ -156,11 +156,42 @@ function parseDistanceKm(value) {
   return match ? Number(match[1]) : 99
 }
 
+function slugifyProviderName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+}
+
 function inferArrivalWindow(distanceKm) {
   if (distanceKm <= 1) return '10-15 min'
   if (distanceKm <= 2.5) return '15-25 min'
   if (distanceKm <= 4) return '20-30 min'
   return '25-40 min'
+}
+
+function providerSupportsCategory(provider, category) {
+  const type = normalize(provider.type || '')
+  const typeLabel = normalize(provider.type_label || '')
+  const serviceTerms = Array.isArray(provider.services)
+    ? provider.services.map((service) => normalize(service))
+    : []
+
+  const pools = [type, typeLabel, ...serviceTerms]
+
+  const categoryTerms = {
+    mechanic: ['mecanique', 'mechanic', 'diagnostic', 'freins', 'vidange', 'suspension', 'climatisation'],
+    wash: ['lave-auto', 'lavage', 'wash', 'detailing', 'nettoyage'],
+    tow: ['remorquage', 'tow', 'depannage', 'assistance routiere'],
+    tire: ['pneu', 'pneus', 'tire', 'alignement', 'balancement'],
+  }
+
+  const wantedTerms = categoryTerms[category] || [category]
+  return pools.some((pool) => wantedTerms.some((term) => pool.includes(term)))
 }
 
 function buildProviderProfile(provider, option) {
@@ -173,6 +204,8 @@ function buildProviderProfile(provider, option) {
     arrivalWindow: option.eta || inferArrivalWindow(distanceKm),
     distance: provider.distance || `${distanceKm} km`,
     address: provider.address || 'Montreal',
+    providerId: provider.id || null,
+    providerSlug: provider.slug || slugifyProviderName(provider.name),
   }
 }
 
@@ -194,7 +227,7 @@ export default function FlashFixUrgence() {
     if (!selectedOption) return null
 
     const openProviders = providers.filter((provider) => provider.is_open === true || provider.is_open === 'true')
-    const categoryMatches = openProviders.filter((provider) => provider.type === selectedOption.category)
+    const categoryMatches = openProviders.filter((provider) => providerSupportsCategory(provider, selectedOption.category))
     const pool = categoryMatches.length > 0 ? categoryMatches : openProviders.length > 0 ? openProviders : providers
 
     if (pool.length === 0) return null
@@ -264,6 +297,8 @@ export default function FlashFixUrgence() {
       selectedOption,
       providerName: matchedProvider?.name || null,
       providerProfile,
+      providerId: matchedProvider?.id || null,
+      providerSlug: matchedProvider?.slug || slugifyProviderName(matchedProvider?.name),
       customerName: profile?.full_name || user?.email?.split('@')[0] || 'Client FlashMat',
     })
 
