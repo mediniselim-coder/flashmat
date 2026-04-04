@@ -13,7 +13,7 @@ function timeAgo(ts) {
   return `${Math.floor(diff/86400)}j`
 }
 
-export default function Marketplace({ portal = 'client' }) {
+export default function Marketplace({ portal = 'client', openComposer = false }) {
   const { user, profile } = useAuth()
   const [listings, setListings]     = useState([])
   const [loading, setLoading]       = useState(true)
@@ -25,6 +25,10 @@ export default function Marketplace({ portal = 'client' }) {
   const [expanded, setExpanded]     = useState(null)
 
   useEffect(() => { fetchListings() }, [])
+
+  useEffect(() => {
+    setShowModal(openComposer)
+  }, [openComposer])
 
   async function fetchListings() {
     setLoading(true)

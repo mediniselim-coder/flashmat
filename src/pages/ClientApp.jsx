@@ -407,7 +407,7 @@ return (
           </div>
         )}
 
-        {pane === 'marketplace' && <Marketplace portal="client" />}
+        {pane === 'marketplace' && <Marketplace portal="client" openComposer={location.pathname === '/app/marketplace'} />}
 
         {pane === 'flashscore' && (
           <div>
