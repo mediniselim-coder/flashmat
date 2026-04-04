@@ -32,7 +32,7 @@ export default function NavBar({ activePage }) {
 
   function openMarketplace() {
     if (!user || !profile) {
-      navigate('/auth')
+      setLoginOpen(true)
       return
     }
 
