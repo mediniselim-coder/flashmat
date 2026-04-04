@@ -25,7 +25,7 @@ export default function AutoDoctor() {
       <NavBar activePage="doctor" />
 
       <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', color: '#fff', padding: '64px 32px 48px', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#22c55e', marginBottom: 12, fontWeight: 600 }}>● Docteur auto</div>
+        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#22c55e', marginBottom: 12, fontWeight: 600 }}>● Docteur Automobile</div>
         <h1 style={{ fontSize: 42, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.2 }}>
           Posez vos questions auto<br />
           <span style={{ color: '#22c55e' }}>simplement</span>
@@ -39,7 +39,7 @@ export default function AutoDoctor() {
           onClick={() => document.getElementById('doctor-tool')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           style={{ padding: '12px 18px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
         >
-          Utiliser le docteur auto ↓
+          Utiliser le Docteur Automobile ↓
         </button>
       </div>
 

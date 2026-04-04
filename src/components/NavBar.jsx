@@ -93,7 +93,7 @@ export default function NavBar({ activePage }) {
         <div style={{ display: 'flex', gap: 32 }}>
           <span style={navLinkStyle('home')} onClick={() => navigate('/')}>Accueil</span>
           <span style={navLinkStyle('services')} onClick={() => navigate('/services')}>Services</span>
-          <span style={navLinkStyle('doctor')} onClick={() => navigate('/doctor')}>Docteur auto</span>
+          <span style={navLinkStyle('doctor')} onClick={() => navigate('/doctor')}>Docteur Automobile</span>
           <span style={navLinkStyle('marketplace')} onClick={openMarketplace}>Marketplace</span>
         </div>
 

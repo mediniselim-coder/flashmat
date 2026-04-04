@@ -1006,7 +1006,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
           <div className={styles.compactHeader}>
             <div>
               <div className={styles.eyebrow}>FlashMat Diagnostic IA</div>
-              <h2 className={styles.compactTitle}>Votre docteur pour voiture</h2>
+              <h2 className={styles.compactTitle}>Votre Docteur Automobile</h2>
               <p className={styles.compactSub}>
                 Décrivez le symptôme, ajoutez bientôt une photo ou un audio, et FlashMat propose un problème probable,
                 un prix estimé, une durée et les garages disponibles les plus pertinents.
@@ -1020,7 +1020,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
           <div>
             {!compact ? (
               <>
-                <div className={styles.eyebrow}>FlashMat Doctor</div>
+                <div className={styles.eyebrow}>Docteur Automobile</div>
                 <h2 className={styles.title}>
                   Le docteur <span>pour voiture</span>
                 </h2>
