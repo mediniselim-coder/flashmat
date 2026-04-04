@@ -28,7 +28,7 @@ const SEARCH_CATS = [
 ]
 
 export default function ClientApp() {
-  const { profile, user } = useAuth()
+  const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
   const [addVehicleModal, setAddVehicleModal] = useState(false)
   useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
@@ -42,6 +42,7 @@ export default function ClientApp() {
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(location.state?.searchCat || 'all')
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const name = profile?.full_name || 'Alex'
 
@@ -75,6 +76,15 @@ export default function ClientApp() {
 
   function go(id) { setPane(id); setSidebar(false) }
   function goHome() { setSidebar(false); navigate('/') }
+  function goFromProfileMenu(id) {
+    setProfileMenuOpen(false)
+    go(id)
+  }
+  async function handleSignOut() {
+    setProfileMenuOpen(false)
+    await signOut()
+    navigate('/')
+  }
 
   function slugify(name) {
     return name.toLowerCase()
@@ -86,6 +96,7 @@ export default function ClientApp() {
 return (
     <div className={styles.shell}>
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
+      {profileMenuOpen && <div className={styles.overlay} onClick={() => setProfileMenuOpen(false)} />}
 
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sbHeader}>
@@ -114,16 +125,43 @@ return (
           </div>
         </nav>
         <div className={styles.sbBottom}>
-          <div
-            className={styles.userChip}
-            onClick={e => {
-              e.preventDefault()
-              e.stopPropagation()
-            }}
-          >
-            <div className={`${styles.avatar} ${styles.avatarGreen}`}>{name.slice(0,2).toUpperCase()}</div>
-            <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>client · montréal</div></div>
-            <span style={{marginLeft:'auto',color:'var(--ink3)',fontSize:11}}>←</span>
+          <div className={styles.profileMenuWrap}>
+            {profileMenuOpen && (
+              <div className={styles.profileMenu}>
+                <div className={styles.profileMenuHeader}>
+                  <div className={styles.profileMenuName}>{name}</div>
+                  <div className={styles.profileMenuRole}>Profil Client</div>
+                </div>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}>
+                  <span>📊</span><span>Tableau de bord</span>
+                </button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('vehicles')}>
+                  <span>🚗</span><span>Mes véhicules</span>
+                </button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('bookings')}>
+                  <span>📅</span><span>Mes réservations</span>
+                </button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('marketplace')}>
+                  <span>🛒</span><span>Marketplace</span>
+                </button>
+                <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}>
+                  <span>ℹ️</span><span>Aide & support</span>
+                </button>
+                <div className={styles.profileMenuDivider} />
+                <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}>
+                  <span>🚪</span><span>Se déconnecter</span>
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              className={styles.userChip}
+              onClick={() => setProfileMenuOpen(open => !open)}
+            >
+              <div className={`${styles.avatar} ${styles.avatarGreen}`}>{name.slice(0,2).toUpperCase()}</div>
+              <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>client · montréal</div></div>
+              <span style={{marginLeft:'auto',color:'var(--ink3)',fontSize:11}}>{profileMenuOpen ? '↓' : '←'}</span>
+            </button>
           </div>
         </div>
       </aside>
