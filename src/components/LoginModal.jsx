@@ -71,6 +71,10 @@ export default function LoginModal({ onClose }) {
   async function demoLogin(demoRole) {
     setLoading(true)
     try {
+      window.sessionStorage.setItem(
+        'flashmat-post-login-redirect',
+        demoRole === 'provider' ? '/app/provider' : '/app/client'
+      )
       await signIn({
         email: demoRole === 'provider' ? 'demo.provider@flashmat.ca' : 'demo.client@flashmat.ca',
         password: 'demo123456'
