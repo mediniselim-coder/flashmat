@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 
 const SERVICES = [
@@ -87,6 +88,7 @@ const SERVICES = [
 
 export default function Services() {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
   const [search, setSearch] = useState('')
   const [active, setActive] = useState(null)
 
@@ -95,7 +97,11 @@ export default function Services() {
       pane: 'search',
       cat: categoryId,
     }))
-    navigate(`/app/client?pane=search&cat=${encodeURIComponent(categoryId)}`)
+    if (user && profile?.role === 'client') {
+      navigate(`/app/client?pane=search&cat=${encodeURIComponent(categoryId)}`)
+      return
+    }
+    navigate('/services?login=1')
   }
 
   const filtered = SERVICES.filter(s =>

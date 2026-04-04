@@ -1,16 +1,43 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 
 export default function LoginModal({ onClose }) {
   const { signIn, signUp } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [mode, setMode] = useState('login')
   const [role, setRole] = useState('client')
   const [loading, setLoading] = useState(false)
+  const [shouldRedirectAfterClose, setShouldRedirectAfterClose] = useState(false)
   const [form, setForm] = useState({ email: '', password: '', fullName: '', confirmPassword: '' })
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
+
+  useEffect(() => {
+    function handlePendingClientSearchRedirect() {
+      try {
+        const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
+        if (!raw) return false
+        const pending = JSON.parse(raw)
+        if (!pending?.cat) return false
+        navigate(`/app/client?pane=search&cat=${encodeURIComponent(pending.cat)}`)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+
+    return () => {
+      window.dispatchEvent(new CustomEvent('flashmat-login-modal-close'))
+      if (shouldRedirectAfterClose) {
+        handlePendingClientSearchRedirect()
+      }
+    }
+  }, [navigate, shouldRedirectAfterClose])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -25,6 +52,7 @@ export default function LoginModal({ onClose }) {
         await signIn({ email: form.email, password: form.password })
         toast('Connexion réussie ! 🎉', 'success')
       }
+      setShouldRedirectAfterClose(true)
       onClose()
     } catch (err) {
       toast(err.message || 'Une erreur est survenue', 'error')
@@ -41,6 +69,7 @@ export default function LoginModal({ onClose }) {
         password: 'demo123456'
       })
       toast('Connexion réussie ! 🎉', 'success')
+      setShouldRedirectAfterClose(true)
       onClose()
     } catch {
       toast('Compte démo non disponible', 'error')

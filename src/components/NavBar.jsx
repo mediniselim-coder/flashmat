@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './LoginModal'
 
 export default function NavBar({ activePage }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, profile, signOut } = useAuth()
   const [popupOpen, setPopupOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
@@ -20,6 +21,30 @@ export default function NavBar({ activePage }) {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
+
+  useEffect(() => {
+    function handleLoginModalOpen() {
+      setLoginOpen(true)
+    }
+
+    function handleLoginModalClose() {
+      setLoginOpen(false)
+    }
+
+    window.addEventListener('flashmat-login-modal-open', handleLoginModalOpen)
+    window.addEventListener('flashmat-login-modal-close', handleLoginModalClose)
+    return () => {
+      window.removeEventListener('flashmat-login-modal-open', handleLoginModalOpen)
+      window.removeEventListener('flashmat-login-modal-close', handleLoginModalClose)
+    }
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (params.get('login') === '1' && !user) {
+      setLoginOpen(true)
+    }
+  }, [location.search, user])
 
   async function handleSignOut() {
     await signOut()
