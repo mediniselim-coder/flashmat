@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
+import VehicleDoctor from '../components/VehicleDoctor'
 
 const SERVICES = [
   { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 59 },
@@ -158,6 +159,8 @@ export default function Landing() {
           </div>
         ))}
       </div>
+
+      <VehicleDoctor />
 
       {/* TICKER */}
       <div className={styles.ticker}>

@@ -8,6 +8,7 @@ import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
+import VehicleDoctor from '../components/VehicleDoctor'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -368,6 +369,10 @@ return (
                     <div style={{ fontSize:11, color:'var(--ink3)' }}>{q.sub}</div>
                   </button>
                 ))}
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <VehicleDoctor compact userName={name} />
               </div>
 
               {/* STATS */}
