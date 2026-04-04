@@ -738,6 +738,199 @@ function detectCase(text) {
   return bestMatch.candidate
 }
 
+const STABLE_CASE_GUARDS = {
+  brakes: {
+    strongTerms: ['plaquette', 'plaquettes', 'grince', 'grincement', 'couine', 'disque', 'pedale vibre', 'bruit frein', 'bruit metallique', 'brake'],
+    rejectTerms: ['toute seule', 'tout seul'],
+  },
+  battery: {
+    strongTerms: ['batterie', 'booster', 'alternateur', 'clic', 'clique', 'demarre pas', 'ne demarre pas', 'pas de courant', 'aucune lumiere', 'aucun voyant'],
+  },
+  headlight: {
+    strongTerms: ['phare', 'phares', 'ampoule', 'eclairage', 'feu', 'fusible'],
+  },
+  overheat: {
+    strongTerms: ['chauffe', 'surchauffe', 'temperature', 'radiateur', 'refroidissement', 'aiguille monte', 'ventilateur', 'thermostat'],
+  },
+}
+
+function normalizeVehicleDoctorInput(value) {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function inputIncludesAny(text, phrases = []) {
+  return phrases.some((phrase) => text.includes(phrase))
+}
+
+function inputIncludesAll(text, phrases = []) {
+  return phrases.every((phrase) => text.includes(phrase))
+}
+
+function getVehicleDoctorCase(id) {
+  return CASE_LIBRARY.find((candidate) => candidate.id === id) || DEFAULT_CASE
+}
+
+function buildConservativeFallback() {
+  return {
+    ...DEFAULT_CASE,
+    probableIssue: 'Diagnostic encore incertain',
+    confidence: 'Faible a moyenne',
+    urgency: 'A preciser avant de reparer',
+    priceNote: 'Mieux vaut confirmer la cause avant de remplacer des pieces',
+    durationNote: 'Le garage pourra confirmer la vraie cause avec une inspection ciblee',
+    summary: 'Le symptome decrit ne permet pas encore d isoler une panne fiable. FlashMat prefere rester prudent plutot que donner une mauvaise reponse.',
+    guidanceTitle: 'Pour une meilleure reponse',
+    guidanceItems: [
+      'Dites ce que fait la voiture: bruit, odeur, voyant, vibration, fuite ou panne.',
+      'Precisez quand le probleme arrive: au demarrage, en roulant, au freinage, a chaud ou a froid.',
+      'Indiquez ce qui ne fonctionne plus: phare, clim, batterie, vitre, porte, pneus, moteur ou freins.',
+      'Si le comportement semble dangereux, ne roulez pas et faites verifier le vehicule rapidement.',
+    ],
+  }
+}
+
+function detectCaseStable(text) {
+  const normalized = normalizeVehicleDoctorInput(text)
+  const conservativeFallback = buildConservativeFallback()
+
+  if (!normalized) {
+    return conservativeFallback
+  }
+
+  const urgentOverrides = [
+    {
+      anyTerms: [
+        'roule toute seule',
+        'freine toute seule',
+        'accelere toute seule',
+        'avance toute seule',
+        'la voiture freine toute seule',
+        'la voiture roule toute seule',
+        'la voiture accelere toute seule',
+      ],
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Probleme de securite critique sur l acceleration ou le freinage',
+        confidence: 'Elevee',
+        urgency: 'Urgent - ne pas conduire',
+        estimate: 'Remorquage et diagnostic de securite recommandes',
+        duration: 'A verifier immediatement',
+        summary: 'Ce symptome ne correspond pas a une usure normale de plaquettes. C est un cas de securite critique qui doit etre traite immediatement.',
+      },
+    },
+    {
+      allTerms: ['demarre pas'],
+      anyTerms: ['aucune lumiere', 'aucune lampe', 'aucun voyant', 'rien allume', 'rien s allume', 'pas de courant', 'plus de courant'],
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Batterie dechargee ou alimentation electrique principale a verifier',
+        confidence: 'Elevee',
+        urgency: 'A faire verifier rapidement',
+        estimate: 'Test batterie, bornes et systeme de demarrage',
+        duration: 'Souvent 30 min a 1 h',
+        summary: 'Si rien ne s allume au tableau de bord et que la voiture ne demarre pas, il faut d abord penser a la batterie ou a l alimentation electrique.',
+      },
+    },
+    {
+      allTerms: ['odeur', 'essence'],
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Odeur d essence a faire verifier immediatement',
+        confidence: 'Elevee',
+        urgency: 'Urgent',
+        estimate: 'Controle alimentation carburant',
+        duration: 'Des que possible',
+      },
+    },
+    {
+      allTerms: ['voyant', 'clignote'],
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Voyant moteur clignotant a faire verifier rapidement',
+        confidence: 'Elevee',
+        urgency: 'Urgent',
+        estimate: 'Diagnostic electronique immediat',
+        duration: 'Des que possible',
+      },
+    },
+  ]
+
+  const override = urgentOverrides.find((item) =>
+    (!item.allTerms || inputIncludesAll(normalized, item.allTerms))
+    && (!item.anyTerms || inputIncludesAny(normalized, item.anyTerms))
+  )
+
+  if (override) {
+    return override.response
+  }
+
+  const asksForOilChangeInfo = inputIncludesAny(normalized, ['quand', 'combien de temps', 'combien de km', 'entretien', 'maintenance'])
+    && inputIncludesAny(normalized, ['vidange', 'huile', 'changement huile'])
+
+  if (asksForOilChangeInfo) {
+    return getVehicleDoctorCase('oil-change')
+  }
+
+  const scoredCases = CASE_LIBRARY
+    .map((candidate) => {
+      const matchedSymptoms = candidate.symptoms.filter((symptom) => inputIncludesAll(normalized, symptom.terms))
+      let score = matchedSymptoms.reduce((total, symptom) => total + symptom.weight, 0)
+      const strongMatches = matchedSymptoms.filter((symptom) => symptom.weight >= 5).length
+      const guard = STABLE_CASE_GUARDS[candidate.id]
+
+      if (guard?.strongTerms && !inputIncludesAny(normalized, guard.strongTerms)) {
+        score -= 5
+      }
+
+      if (guard?.rejectTerms && inputIncludesAny(normalized, guard.rejectTerms)) {
+        score -= 8
+      }
+
+      if (matchedSymptoms.length > 0 && strongMatches === 0) {
+        score -= 2
+      }
+
+      return {
+        candidate,
+        score,
+        matchedSymptomsCount: matchedSymptoms.length,
+        strongMatches,
+      }
+    })
+    .filter((candidate) => candidate.score > 0)
+    .sort((left, right) => right.score - left.score)
+
+  const [bestMatch, nextMatch] = scoredCases
+
+  if (!bestMatch) {
+    return conservativeFallback
+  }
+
+  const notSpecificEnough = bestMatch.score < 6 || (bestMatch.matchedSymptomsCount < 2 && bestMatch.strongMatches < 1)
+
+  if (notSpecificEnough) {
+    return conservativeFallback
+  }
+
+  if (nextMatch && bestMatch.score - nextMatch.score <= 2) {
+    return {
+      ...conservativeFallback,
+      probableIssue: 'Plusieurs causes possibles a verifier',
+      confidence: 'Faible a moyenne',
+      urgency: 'Diagnostic conseille avant reparation',
+      summary: 'Les symptomes decrits pointent vers plusieurs pistes possibles. FlashMat prefere recommander un diagnostic cible plutot que donner une panne trop precise.',
+    }
+  }
+
+  return bestMatch.candidate
+}
+
 export default function VehicleDoctor({ compact = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
@@ -751,7 +944,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const [hasFreshResult, setHasFreshResult] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Décrivez le symptôme puis lancez le diagnostic.')
 
-  const diagnosis = useMemo(() => (submitted ? detectCase(submitted) : null), [submitted])
+  const diagnosis = useMemo(() => (submitted ? detectCaseStable(submitted) : null), [submitted])
   const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
