@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase'
 import NavBar from '../components/NavBar'
 
 const QUICK_CASES = [
+  'Besoin d un mecanicien a domicile',
+  'Lavage auto a domicile',
   'Batterie morte a domicile',
   'Pneu creve sur le bord de la route',
   'Voiture qui ne demarre plus',
@@ -16,6 +18,28 @@ const QUICK_CASES = [
 ]
 
 const FLASHFIX_CASES = [
+  {
+    id: 'mobile-mechanic',
+    label: 'Besoin d un mecanicien a domicile',
+    keywords: ['mecanicien', 'mecanique', 'diagnostic', 'inspection', 'reparation'],
+    summary: 'Demande de mecanicien mobile pour verifier un probleme general ou effectuer une petite reparation sur place.',
+    reassurance: 'Pratique si vous voulez une intervention mecanique rapide sans passer d abord au garage.',
+    options: [
+      { id: 'mechanic-home-diagnostic', title: 'Diagnostic mecanique a domicile', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'mechanic-home-repair', title: 'Petite reparation sur place', eta: '25-40 min', price: '90$+', providerType: 'Mecano mobile', category: 'mechanic' },
+    ],
+  },
+  {
+    id: 'mobile-wash',
+    label: 'Lavage auto a domicile',
+    keywords: ['lavage', 'laver', 'wash', 'nettoyage', 'interieur', 'exterieur'],
+    summary: 'Service mobile de lavage ou detailing leger directement a domicile ou au travail.',
+    reassurance: 'Le bon choix si vous voulez un service propre, pratique et reserve via FlashMat.',
+    options: [
+      { id: 'wash-exterior', title: 'Lavage exterieur mobile', eta: '20-30 min', price: '35-55$', providerType: 'Lavage mobile', category: 'wash' },
+      { id: 'wash-full', title: 'Lavage interieur + exterieur', eta: '35-60 min', price: '65-110$', providerType: 'Detailing mobile', category: 'wash' },
+    ],
+  },
   {
     id: 'battery-home',
     label: 'Batterie morte a domicile',
@@ -96,6 +120,7 @@ const FLASHFIX_CASES = [
 const FALLBACK_PROVIDERS = [
   { name: 'Garage Los Santos', type: 'mechanic', type_label: 'Mecanique', distance: '0.8 km', rating: '4.8', phone: '(514) 374-2829', address: 'Montreal', is_open: true },
   { name: 'Garage Mecanique MK', type: 'mechanic', type_label: 'Mecanique', distance: '1.8 km', rating: '4.9', phone: '(514) 555-0147', address: 'Montreal', is_open: true },
+  { name: 'FlashWash Mobile', type: 'wash', type_label: 'Lavage auto', distance: '1.2 km', rating: '4.7', phone: '(514) 555-0162', address: 'Montreal', is_open: true },
   { name: 'Dubé Pneu et Mecan.', type: 'tire', type_label: 'Pneus', distance: '2.1 km', rating: '4.3', phone: '(514) 555-0133', address: 'Montreal', is_open: true },
   { name: 'FlashTow Montreal', type: 'tow', type_label: 'Remorquage', distance: '2.4 km', rating: '4.7', phone: '(514) 555-0121', address: 'Montreal', is_open: true },
 ]
@@ -290,7 +315,7 @@ export default function FlashFixUrgence() {
             <div style={{ fontSize: 12, letterSpacing: 1.6, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 1 - Diagnostic rapide</div>
             <h2 style={{ fontSize: 30, lineHeight: 1.05, margin: '0 0 10px', color: '#111827', fontWeight: 800 }}>Que se passe-t-il avec la voiture ?</h2>
             <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.75, margin: '0 0 18px' }}>
-              FlashFix detecte la position du client en arriere-plan, confirme le bon service, puis envoie la demande au provider le plus adapte sans exposer son identite au client.
+              FlashFix detecte la position du client en arriere-plan, confirme le bon service, puis envoie la demande au provider le plus adapte sans exposer son identite au client. Le flow couvre maintenant mecanicien, lavage et remorquage.
             </p>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
@@ -357,7 +382,7 @@ export default function FlashFixUrgence() {
               <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 20, padding: 20 }}>
                 <h3 style={{ fontSize: 28, lineHeight: 1.05, margin: '0 0 10px', fontWeight: 800 }}>Pret a vous aider</h3>
                 <p style={{ margin: 0, color: 'rgba(255,255,255,0.74)', lineHeight: 1.75, fontSize: 14 }}>
-                  Decrivez la panne ou choisissez un cas rapide. FlashFix affichera ensuite l intervention la plus logique, le prix et le temps d arrivee.
+                  Decrivez le besoin ou choisissez un cas rapide. FlashFix affichera ensuite le bon service, le prix et le temps d arrivee.
                 </p>
               </div>
             ) : (
@@ -449,7 +474,7 @@ export default function FlashFixUrgence() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16, marginTop: 18 }}>
           {[
-            ['Services urgence', 'Batterie, pneu, demarrage, bruit suspect, surchauffe, deverrouillage et remorquage rapide.'],
+            ['Services FlashFix', 'Mecanicien mobile, lavage auto mobile, remorquage, batterie, pneu, surchauffe et autres demandes utiles.'],
             ['Client', 'Voit le service, le prix, le delai et le suivi, sans voir le provider reel.'],
             ['FlashMat', 'Fait le matching du provider en arriere-plan avec la bonne categorie de service.'],
           ].map(([title, text]) => (
