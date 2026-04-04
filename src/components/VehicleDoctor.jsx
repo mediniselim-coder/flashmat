@@ -172,6 +172,13 @@ const CASE_LIBRARY = [
       { terms: ['batterie'], weight: 5 },
       { terms: ['demarre pas'], weight: 6 },
       { terms: ['ne demarre pas'], weight: 6 },
+      { terms: ['aucune lumiere'], weight: 8 },
+      { terms: ['aucune lampe'], weight: 8 },
+      { terms: ['aucun voyant'], weight: 8 },
+      { terms: ['rien allume'], weight: 8 },
+      { terms: ['rien s allume'], weight: 8 },
+      { terms: ['pas de courant'], weight: 7 },
+      { terms: ['plus de courant'], weight: 7 },
       { terms: ['demarrage'], weight: 4 },
       { terms: ['booster'], weight: 5 },
       { terms: ['alternateur'], weight: 5 },
@@ -600,6 +607,34 @@ function detectCase(text) {
 
   const urgentOverrides = [
     {
+      terms: ['demarre pas'],
+      anyTerms: ['aucune lumiere', 'aucune lampe', 'aucun voyant', 'rien allume', 'rien s allume', 'pas de courant', 'plus de courant'],
+      response: {
+        ...DEFAULT_CASE,
+        probableIssue: 'Batterie dechargee ou alimentation electrique principale a verifier',
+        confidence: 'Elevee',
+        urgency: 'A faire verifier rapidement',
+        estimate: 'Test batterie, bornes et systeme de demarrage',
+        duration: 'Souvent 30 min a 1 h',
+        priceNote: 'Quand la voiture ne demarre pas et qu aucune lumiere ne s allume, la batterie est souvent tres faible, debranchee ou le courant principal n arrive plus correctement.',
+        durationNote: 'Un garage peut verifier la batterie, les bornes, les fusibles principaux et l alimentation du demarreur.',
+        searchCat: 'mechanic',
+        summary: 'Si rien ne s allume au tableau de bord et que la voiture ne demarre pas, il faut d abord penser a la batterie ou a un probleme d alimentation electrique avant de chercher une panne mecanique generale.',
+        guidanceTitle: 'Quoi faire maintenant',
+        guidanceItems: [
+          'Verifiez si les bornes de batterie sont desserrees ou tres oxydees.',
+          'Si vous avez acces a des cables ou a un booster, un survoltage peut confirmer si la batterie est en cause.',
+          'Si rien ne s allume du tout, evitez d insister longtemps sur le demarreur.',
+          'Quand vous appelez, dites: la voiture ne demarre pas et aucune lumiere ne s allume, je veux un test batterie et alimentation.',
+        ],
+        matches: [
+          { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd hui 11h40', price: 'Test batterie rapide', tags: ['Batterie', 'Demarrage', 'Disponible'] },
+          { name: 'Garage Mecanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd hui 14h00', price: 'Diagnostic electrique', tags: ['Electrique', 'Batterie', 'Reservation express'] },
+          { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourd hui 16h15', price: 'Verification courant', tags: ['Petit budget', 'Disponible', 'Proche'] },
+        ],
+      },
+    },
+    {
       terms: ['odeur', 'essence'],
       response: {
         ...DEFAULT_CASE,
@@ -631,6 +666,7 @@ function detectCase(text) {
 
   const override = urgentOverrides.find((item) =>
     item.terms.every((term) => normalized.includes(term))
+    && (!item.anyTerms || item.anyTerms.some((term) => normalized.includes(term)))
   )
 
   if (override) {
