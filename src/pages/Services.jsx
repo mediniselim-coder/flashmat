@@ -164,7 +164,10 @@ export default function Services() {
                 ))}
               </ul>
               <button
-                onClick={e => { e.stopPropagation(); navigate('/auth') }}
+                onClick={e => {
+                  e.stopPropagation()
+                  navigate('/app/client', { state: { pane: 'search', searchCat: s.id } })
+                }}
                 style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: active === s.id ? '#22c55e' : '#f0fdf4', color: active === s.id ? '#fff' : '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
               >
                 Trouver un fournisseur →
