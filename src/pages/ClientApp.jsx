@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
@@ -33,8 +33,8 @@ export default function ClientApp() {
   const [addVehicleModal, setAddVehicleModal] = useState(false)
   useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
   const { toast } = useToast()
-  const navigate = useNavigate()
   const location = useLocation()
+  const navigate = useNavigate()
   const [pane, setPane] = useState(location.state?.pane || 'dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
@@ -46,6 +46,38 @@ export default function ClientApp() {
   const name = profile?.full_name || 'Alex'
 
   useEffect(() => { fetchProviders() }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    const requestedPane = params.get('pane')
+    const requestedQ = params.get('q')
+    const requestedCat = params.get('cat')
+    const requestedTab = params.get('tab')
+
+    if (requestedPane === 'search') {
+      setPane('search')
+    }
+
+    if (requestedQ !== null) {
+      setSearchQ(requestedQ)
+    }
+
+    if (requestedCat && SEARCH_CATS.some(([id]) => id === requestedCat)) {
+      setSearchCat(requestedCat)
+      return
+    }
+
+    if (requestedTab === 'service' && requestedQ) {
+      const normalizedQ = requestedQ.trim().toLowerCase()
+      const matchedCategory = SEARCH_CATS.find(([, label]) =>
+        label.toLowerCase().includes(normalizedQ)
+      )
+
+      if (matchedCategory) {
+        setSearchCat(matchedCategory[0])
+      }
+    }
+  }, [location.search])
 
   async function fetchProviders() {
     setProvLoading(true)
