@@ -98,7 +98,13 @@ export default function ProviderApp() {
           </div>
         </nav>
         <div className={styles.sbBottom}>
-          <div className={styles.userChip}>
+          <div
+            className={styles.userChip}
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
             <div className={`${styles.avatar} ${styles.avatarBlue}`}>GL</div>
             <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>fournisseur · montréal</div></div>
             <span style={{ marginLeft: 'auto', color: 'var(--ink3)', fontSize: 11 }}>←</span>

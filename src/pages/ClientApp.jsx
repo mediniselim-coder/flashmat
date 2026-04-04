@@ -113,7 +113,13 @@ return (
           </div>
         </nav>
         <div className={styles.sbBottom}>
-          <div className={styles.userChip}>
+          <div
+            className={styles.userChip}
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+          >
             <div className={`${styles.avatar} ${styles.avatarGreen}`}>{name.slice(0,2).toUpperCase()}</div>
             <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>client · montréal</div></div>
             <span style={{marginLeft:'auto',color:'var(--ink3)',fontSize:11}}>←</span>
