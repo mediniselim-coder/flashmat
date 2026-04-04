@@ -1,122 +1,133 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { createFlashFixRequest } from '../lib/flashfix'
 import NavBar from '../components/NavBar'
+import VehicleDoctor from '../components/VehicleDoctor'
 
-const USER_FLOW = [
-  {
-    step: '1',
-    title: 'Le client clique',
-    text: 'Un bouton urgence visible dans FlashMat pour demander de l aide immédiatement.',
-    detail: 'CTA: FlashFix - Besoin d aide maintenant',
-  },
-  {
-    step: '2',
-    title: 'Description rapide',
-    text: 'Le client choisit batterie morte, pneu creve, voiture ne demarre pas, bruit suspect, ou envoie une photo ou un audio.',
-    detail: 'Objectif: zero friction',
-  },
-  {
-    step: '3',
-    title: 'Geolocalisation',
-    text: 'Position automatique ou saisie manuelle pour envoyer le bon mecanicien au bon endroit.',
-    detail: 'Route, parking, maison',
-  },
-  {
-    step: '4',
-    title: 'Prix instantane',
-    text: 'Le client voit une fourchette claire avant de confirmer.',
-    detail: 'Ex: boost batterie 40-60$, pneu 50-80$',
-  },
-  {
-    step: '5',
-    title: 'Matching instantane',
-    text: 'FlashMat affiche les mecaniciens disponibles proches avec ETA, note et prix.',
-    detail: 'Comme un dispatch intelligent',
-  },
-  {
-    step: '6',
-    title: 'Confirmation',
-    text: 'Paiement integre et suivi en temps reel jusqu a l arrivee du mecanicien.',
-    detail: 'Experience simple et rassurante',
-  },
-]
-
-const PROVIDER_FLOW = [
-  'Notification urgence avec type de panne et localisation client',
-  'Le mecanicien voit prix, distance et niveau d urgence',
-  'Il accepte ou refuse la mission en quelques secondes',
-  'Intervention rapide sur place puis paiement automatique via FlashMat',
-]
-
-const SERVICE_BLOCKS = [
-  {
-    title: 'Intervention rapide',
-    tone: '#991b1b',
-    bg: '#fef2f2',
-    items: ['Boost batterie', 'Pneu creve', 'Deverrouillage voiture', 'Petite reparation sur place'],
-  },
-  {
-    title: 'Remorquage intelligent',
-    tone: '#92400e',
-    bg: '#fffbeb',
-    items: ['Si le probleme est grave', 'Redirection garage partenaire', 'Continuer vers reparation complete', 'Support coordonne'],
-  },
-  {
-    title: 'Special Montreal',
-    tone: '#1d4ed8',
-    bg: '#eff6ff',
-    items: ['Batterie morte en hiver', 'Voiture bloquee dans la neige', 'Demarrage difficile', 'Intervention locale rapide'],
-  },
-]
-
-const VALUE_PROPS = [
-  { title: 'Rapide', text: 'Intervention ciblee en 15 a 30 min quand c est possible.' },
-  { title: 'Prix clair', text: 'Le client voit une estimation avant confirmation.' },
-  { title: 'Confiance', text: 'Le matching s appuie sur la note et le profil FlashMat.' },
-  { title: 'Tout-en-un', text: 'Diagnostic, intervention urgente, puis reparation complete si necessaire.' },
-]
-
-const BUSINESS_MODEL = [
-  'Commission FlashMat sur chaque mission',
-  'Frais urgence additionnel',
-  'Abonnement premium pour clients frequents',
-]
-
-const MVP_STEPS = [
-  'Formulaire ou demande simplifiee',
-  'Liste de mecaniciens partenaires',
-  'Dispatch manuel au debut',
-  'Paiement Stripe',
-]
-
-const VISION_ITEMS = [
-  'IA pour predire la meilleure intervention',
-  'Flotte de mecaniciens FlashMat',
-  'Partenariats avec assureurs et assistance routiere',
-]
-
-const SAMPLE_CASES = [
+const QUICK_CASES = [
   'Batterie morte a domicile',
   'Pneu creve sur le bord de la route',
   'Voiture qui ne demarre plus',
   'Bruit suspect avant de reprendre la route',
 ]
 
+const FLASHFIX_CASES = [
+  {
+    id: 'battery-home',
+    label: 'Batterie morte a domicile',
+    keywords: ['batterie', 'booster', 'boost', 'courant', 'ne demarre pas', 'demarre plus'],
+    summary: 'Le vehicule semble avoir besoin d un boost, d un test batterie ou d une verification de l alimentation principale.',
+    options: [
+      { id: 'battery-boost', title: 'Boost batterie mobile', eta: '15-25 min', price: '40-60$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'battery-diagnostic', title: 'Diagnostic batterie + boost', eta: '20-30 min', price: '55-75$', providerType: 'Mecano mobile', category: 'mechanic' },
+    ],
+  },
+  {
+    id: 'flat-tire',
+    label: 'Pneu creve sur le bord de la route',
+    keywords: ['pneu', 'creve', 'air', 'pression', 'jante'],
+    summary: 'Une intervention rapide peut viser un changement de roue, une remise en route securitaire ou un remorquage si la situation est risquee.',
+    options: [
+      { id: 'tire-roadside', title: 'Aide pneu mobile', eta: '20-30 min', price: '50-80$', providerType: 'Service routier', category: 'tow' },
+      { id: 'tire-tow', title: 'Remorquage vers garage partenaire', eta: '25-35 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'no-start',
+    label: 'Voiture qui ne demarre plus',
+    keywords: ['ne demarre pas', 'demarre plus', 'starter', 'clic', 'batterie'],
+    summary: 'Le systeme recommande une verification rapide pour distinguer batterie, alimentation, demarreur ou besoin de remorquage.',
+    options: [
+      { id: 'nostart-diagnostic', title: 'Diagnostic demarrage sur place', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'nostart-tow', title: 'Remorquage intelligent', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'suspicious-noise',
+    label: 'Bruit suspect avant de reprendre la route',
+    keywords: ['bruit', 'suspect', 'claque', 'grince', 'frein', 'vibre', 'cogne'],
+    summary: 'Le probleme ne doit pas etre minimise. FlashFix peut proposer une inspection mobile ou une prise en charge vers un garage si la conduite semble risquee.',
+    options: [
+      { id: 'noise-check', title: 'Inspection securite rapide', eta: '20-30 min', price: '60-90$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'noise-tow', title: 'Transport securitaire vers atelier', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+]
+
+function normalize(value) {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function resolveFlashFixCase(description, quickCase) {
+  if (quickCase) {
+    return FLASHFIX_CASES.find((item) => item.label === quickCase) || null
+  }
+
+  const normalized = normalize(description)
+  if (!normalized.trim()) return null
+
+  const scored = FLASHFIX_CASES
+    .map((item) => ({
+      item,
+      score: item.keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? 1 : 0), 0),
+    }))
+    .sort((left, right) => right.score - left.score)
+
+  return scored[0]?.score > 0 ? scored[0].item : null
+}
+
 export default function FlashFixUrgence() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const [quickCase, setQuickCase] = useState('')
+  const [description, setDescription] = useState('')
+  const [location, setLocation] = useState('Montréal')
+  const [selectedOptionId, setSelectedOptionId] = useState('')
 
-  function routeToUrgence(categoryId = 'tow') {
-    window.sessionStorage.setItem('flashmat-pending-service-search', JSON.stringify({
-      pane: 'search',
-      cat: categoryId,
-    }))
+  const resolvedCase = useMemo(() => resolveFlashFixCase(description, quickCase), [description, quickCase])
+  const selectedOption = resolvedCase?.options.find((option) => option.id === selectedOptionId) || null
 
-    if (user && profile?.role === 'client') {
-      navigate(`/app/client?pane=search&cat=${encodeURIComponent(categoryId)}`)
+  useEffect(() => {
+    if (!resolvedCase) {
+      setSelectedOptionId('')
       return
     }
 
+    const currentExists = resolvedCase.options.some((option) => option.id === selectedOptionId)
+    if (!currentExists) {
+      setSelectedOptionId(resolvedCase.options[0]?.id || '')
+    }
+  }, [resolvedCase, selectedOptionId])
+
+  function chooseQuickCase(label) {
+    setQuickCase(label)
+    setDescription(label)
+    const matchedCase = FLASHFIX_CASES.find((item) => item.label === label)
+    setSelectedOptionId(matchedCase?.options[0]?.id || '')
+  }
+
+  function launchFlashFixRequest() {
+    if (!resolvedCase || !selectedOption) return
+
+    createFlashFixRequest({
+      channel: 'flashfix',
+      issueLabel: resolvedCase.label,
+      description: description || resolvedCase.label,
+      location: location || 'Position a confirmer',
+      selectedOption,
+      customerName: profile?.full_name || user?.email?.split('@')[0] || 'Client FlashMat',
+    })
+
+    if (user && profile?.role === 'client') {
+      navigate('/app/client?pane=bookings')
+      return
+    }
+
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/app/client?pane=bookings')
     navigate('/services?login=1')
   }
 
@@ -124,203 +135,138 @@ export default function FlashFixUrgence() {
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)' }}>
       <NavBar activePage="urgence" />
 
-      <section style={{ background: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)', color: '#fff', padding: '64px 32px 52px', textAlign: 'center' }}>
+      <section style={{ background: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%)', color: '#fff', padding: '64px 32px 48px', textAlign: 'center' }}>
         <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: '#fca5a5', marginBottom: 12, fontWeight: 700 }}>● FlashFix Urgence</div>
-        <h1 style={{ fontSize: 46, fontWeight: 800, margin: '0 0 16px', lineHeight: 1.08 }}>
-          L Uber des reparations
+        <h1 style={{ fontSize: 44, fontWeight: 800, margin: '0 0 16px', lineHeight: 1.08 }}>
+          Tu es en panne.
           <br />
-          <span style={{ color: '#fca5a5' }}>auto d urgence</span>
+          <span style={{ color: '#fca5a5' }}>Tu cliques. Quelqu un arrive.</span>
         </h1>
-        <p style={{ color: '#fecaca', fontSize: 16, maxWidth: 760, margin: '0 auto 28px', lineHeight: 1.75 }}>
-          Un bouton urgence dans FlashMat. Le client clique, explique le probleme, partage sa position,
-          voit le prix, puis un mecanicien mobile ou un service routier vient directement a lui.
+        <p style={{ color: '#fecaca', fontSize: 16, maxWidth: 760, margin: '0 auto', lineHeight: 1.75 }}>
+          Le client passe par FlashFix, decrit le probleme ou choisit un cas rapide, recoit les bonnes options,
+          lance la demande, puis suit l intervention dans l app pendant que le provider accepte ou refuse comme sur une plateforme temps reel.
         </p>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-          <button
-            type="button"
-            onClick={() => routeToUrgence('tow')}
-            style={{ padding: '13px 18px', borderRadius: 12, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
-          >
-            FlashFix - Besoin d aide maintenant
-          </button>
-          <button
-            type="button"
-            onClick={() => routeToUrgence('mechanic')}
-            style={{ padding: '13px 18px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.24)', background: 'rgba(255,255,255,0.08)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-          >
-            Trouver un mecano mobile
-          </button>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-          {SAMPLE_CASES.map((item) => (
-            <span key={item} style={{ border: '1px solid rgba(255,255,255,0.18)', background: 'rgba(255,255,255,0.08)', color: '#fff', borderRadius: 999, padding: '8px 12px', fontSize: 12, fontWeight: 600 }}>
-              {item}
-            </span>
-          ))}
-        </div>
       </section>
 
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 32px 0' }}>
-        <div style={{ background: '#fff', borderRadius: 22, padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', marginBottom: 12, fontWeight: 700 }}>Concept simple</div>
-          <h2 style={{ fontSize: 30, lineHeight: 1.15, margin: '0 0 10px', color: '#111827' }}>
-            Tu es en panne.
-            <br />
-            <span style={{ color: '#dc2626' }}>Tu cliques. Quelqu un arrive.</span>
-          </h2>
-          <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.75, margin: 0 }}>
-            FlashFix transforme l urgence auto en parcours ultra simple: demande, matching, intervention,
-            paiement et suivi dans le meme univers FlashMat.
-          </p>
-        </div>
-      </section>
+      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.05fr .95fr', gap: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 22, padding: 22, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 1 - Docteur Automobile</div>
+            <VehicleDoctor compact userName={profile?.full_name || 'client'} />
+          </div>
 
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 32px 0' }}>
-        <div style={{ marginBottom: 16, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', fontWeight: 700 }}>Parcours utilisateur</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 18 }}>
-          {USER_FLOW.map((item) => (
-            <div key={item.step} style={{ background: '#fff', borderRadius: 20, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 999, background: '#fee2e2', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, marginBottom: 14 }}>
-                {item.step}
-              </div>
-              <div style={{ fontSize: 17, fontWeight: 700, color: '#111827', marginBottom: 8 }}>{item.title}</div>
-              <div style={{ fontSize: 14, lineHeight: 1.7, color: '#6b7280', marginBottom: 10 }}>{item.text}</div>
-              <div style={{ fontSize: 12, color: '#991b1b', fontWeight: 700 }}>{item.detail}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 32px 0' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.15fr .85fr', gap: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 22, padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 12, fontWeight: 700 }}>Cote mecanicien</div>
-            <h3 style={{ fontSize: 28, lineHeight: 1.15, margin: '0 0 12px', color: '#111827' }}>
-              Une app partenaire simple
-            </h3>
-            <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.75, margin: '0 0 18px' }}>
-              Le provider recoit une notif urgence, voit la distance, le prix, la localisation et le type de panne,
-              puis accepte ou refuse la mission.
+          <div style={{ background: '#fff', borderRadius: 22, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', marginBottom: 10, fontWeight: 700 }}>Etape 2 - Commande urgente</div>
+            <h2 style={{ fontSize: 28, lineHeight: 1.15, margin: '0 0 10px', color: '#111827' }}>FlashFix - Besoin d aide maintenant</h2>
+            <p style={{ color: '#6b7280', fontSize: 15, lineHeight: 1.7, margin: '0 0 16px' }}>
+              Decris le probleme ou clique sur un cas rapide. FlashMat te propose ensuite les bonnes options, avec prix, ETA et type de provider.
             </p>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {PROVIDER_FLOW.map((item) => (
-                <div key={item} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 14, padding: 14 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: 999, background: '#111827', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-                    ✓
-                  </div>
-                  <div style={{ fontSize: 14, lineHeight: 1.7, color: '#374151' }}>{item}</div>
-                </div>
-              ))}
-            </div>
-          </div>
 
-          <div style={{ background: '#111827', borderRadius: 22, padding: 28, color: '#fff', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
-            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#fca5a5', marginBottom: 12, fontWeight: 700 }}>Prix instantane</div>
-            <div style={{ display: 'grid', gap: 12 }}>
-              {[
-                ['Boost batterie', '40-60$'],
-                ['Changement pneu', '50-80$'],
-                ['Deverrouillage voiture', '45-70$'],
-                ['Diagnostic rapide sur place', '60-95$'],
-              ].map(([label, price]) => (
-                <div key={label} style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 16, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: 14, fontWeight: 700 }}>{label}</span>
-                  <span style={{ fontSize: 14, fontWeight: 800, color: '#fca5a5' }}>{price}</span>
-                </div>
+            <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+              {QUICK_CASES.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => chooseQuickCase(item)}
+                  style={{
+                    textAlign: 'left',
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    border: quickCase === item ? '2px solid #ef4444' : '1px solid #e5e7eb',
+                    background: quickCase === item ? '#fef2f2' : '#fff',
+                    color: '#111827',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item}
+                </button>
               ))}
             </div>
-            <div style={{ marginTop: 16, fontSize: 13, lineHeight: 1.7, color: '#cbd5e1' }}>
-              Transparence directe pour rassurer le client avant confirmation.
+
+            <div style={{ display: 'grid', gap: 12 }}>
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Ex: la voiture ne demarre pas, je suis dans mon stationnement a Montreal"
+                style={{ width: '100%', minHeight: 110, borderRadius: 14, border: '1px solid #d1d5db', padding: 14, fontSize: 14, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }}
+              />
+              <input
+                value={location}
+                onChange={(event) => setLocation(event.target.value)}
+                placeholder="Position automatique ou adresse"
+                style={{ width: '100%', borderRadius: 14, border: '1px solid #d1d5db', padding: 14, fontSize: 14, boxSizing: 'border-box' }}
+              />
             </div>
+
+            {resolvedCase ? (
+              <div style={{ marginTop: 18 }}>
+                <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 10, fontWeight: 700 }}>Infos utiles</div>
+                <div style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 16, padding: 16, marginBottom: 14 }}>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{resolvedCase.label}</div>
+                  <div style={{ fontSize: 14, lineHeight: 1.7, color: '#6b7280' }}>{resolvedCase.summary}</div>
+                </div>
+
+                <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 10, fontWeight: 700 }}>Choisis une option</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {resolvedCase.options.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => setSelectedOptionId(option.id)}
+                      style={{
+                        textAlign: 'left',
+                        padding: 16,
+                        borderRadius: 16,
+                        border: selectedOptionId === option.id ? '2px solid #22c55e' : '1px solid #e5e7eb',
+                        background: selectedOptionId === option.id ? '#f0fdf4' : '#fff',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800, color: '#111827' }}>{option.title}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: '#16a34a' }}>{option.price}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ background: '#eff6ff', color: '#1d4ed8', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 700 }}>ETA {option.eta}</span>
+                        <span style={{ background: '#f3f4f6', color: '#374151', borderRadius: 999, padding: '6px 10px', fontSize: 12, fontWeight: 700 }}>{option.providerType}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={launchFlashFixRequest}
+                  disabled={!selectedOption}
+                  style={{ marginTop: 16, width: '100%', padding: '14px 18px', borderRadius: 14, border: 'none', background: selectedOption ? '#ef4444' : '#fca5a5', color: '#fff', fontSize: 14, fontWeight: 800, cursor: selectedOption ? 'pointer' : 'not-allowed' }}
+                >
+                  Lancer la demande au provider
+                </button>
+              </div>
+            ) : (
+              <div style={{ marginTop: 18, background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 14, padding: 16, color: '#9a3412', fontSize: 14, lineHeight: 1.7 }}>
+                Decris le probleme ou choisis un cas rapide pour recevoir les options de service et lancer la demande.
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 32px 0' }}>
-        <div style={{ marginBottom: 16, fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', fontWeight: 700 }}>Services FlashFix</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 18 }}>
-          {SERVICE_BLOCKS.map((block) => (
-            <div key={block.title} style={{ background: block.bg, borderRadius: 20, padding: 24, border: '1px solid rgba(0,0,0,0.04)' }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: block.tone, marginBottom: 12 }}>{block.title}</div>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {block.items.map((item) => (
-                  <div key={item} style={{ fontSize: 14, lineHeight: 1.7, color: '#374151' }}>
-                    • {item}
-                  </div>
-                ))}
-              </div>
+      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '0 32px 56px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 18 }}>
+          {[
+            ['Provider', 'Recoit une notification urgence avec type de panne, prix, distance et localisation client.'],
+            ['Acceptation', 'Le provider accepte ou refuse la demande directement depuis l app, comme un dispatch instantane.'],
+            ['Suivi client', 'Le client suit ensuite l etat: acceptee, en route, sur place, terminee.'],
+            ['Tout dans l app', 'FlashMat devient le point central entre diagnostic, intervention et suivi.'],
+          ].map(([title, text]) => (
+            <div key={title} style={{ background: '#fff', borderRadius: 20, padding: 22, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 17, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{title}</div>
+              <div style={{ fontSize: 14, lineHeight: 1.7, color: '#6b7280' }}>{text}</div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 32px 0' }}>
-        <div style={{ background: '#fff', borderRadius: 22, padding: 28, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#dc2626', marginBottom: 12, fontWeight: 700 }}>Ce qui rend FlashFix unique</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-            {VALUE_PROPS.map((item) => (
-              <div key={item.title} style={{ background: '#f8fafc', border: '1px solid #e5e7eb', borderRadius: 16, padding: 18 }}>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#111827', marginBottom: 8 }}>{item.title}</div>
-                <div style={{ fontSize: 14, lineHeight: 1.7, color: '#6b7280' }}>{item.text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section style={{ maxWidth: 1240, margin: '0 auto', padding: '28px 32px 56px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-          <div style={{ background: '#fff', borderRadius: 22, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 12, fontWeight: 700 }}>Business model</div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              {BUSINESS_MODEL.map((item) => (
-                <div key={item} style={{ fontSize: 14, lineHeight: 1.7, color: '#374151' }}>• {item}</div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: '#fff', borderRadius: 22, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 12, fontWeight: 700 }}>MVP simple</div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              {MVP_STEPS.map((item, index) => (
-                <div key={item} style={{ fontSize: 14, lineHeight: 1.7, color: '#374151' }}>{index + 1}. {item}</div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: '#fff', borderRadius: 22, padding: 24, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#111827', marginBottom: 12, fontWeight: 700 }}>Vision avancee</div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              {VISION_ITEMS.map((item) => (
-                <div key={item} style={{ fontSize: 14, lineHeight: 1.7, color: '#374151' }}>• {item}</div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ background: '#111827', borderRadius: 22, padding: 28, color: '#fff', marginTop: 20 }}>
-          <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#fca5a5', marginBottom: 10, fontWeight: 700 }}>Resume ultra clair</div>
-          <h3 style={{ fontSize: 30, lineHeight: 1.15, margin: '0 0 12px' }}>
-            FlashFix =
-            <br />
-            <span style={{ color: '#fca5a5' }}>Tu es en panne - tu cliques - quelqu un arrive.</span>
-          </h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 18 }}>
-            <button
-              type="button"
-              onClick={() => routeToUrgence('tow')}
-              style={{ padding: '12px 16px', borderRadius: 10, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
-            >
-              Lancer FlashFix maintenant
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/doctor')}
-              style={{ padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.16)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
-            >
-              Passer par le Docteur Automobile
-            </button>
-          </div>
         </div>
       </section>
     </div>

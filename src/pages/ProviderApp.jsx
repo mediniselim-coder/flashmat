@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
+import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -42,6 +43,21 @@ const PROVIDER_BOOKINGS = [
   { client: 'Patrick R.',   service: 'Recharge AC',      vehicle: 'Ford F-150',  datetime: "Auj. · 14h30",   price: '$120', status: 'scheduled', label: 'Planifié',  cls: 'badge-blue'  },
 ]
 
+function formatFlashFixTime(value) {
+  if (!value) return 'Maintenant'
+
+  try {
+    return new Date(value).toLocaleString('fr-CA', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return value
+  }
+}
+
 export default function ProviderApp() {
   const { profile } = useAuth()
   const { toast }            = useToast()
@@ -59,12 +75,49 @@ export default function ProviderApp() {
   const [promoSvc, setPromoSvc] = useState('Vidange')
   const [promoVal, setPromoVal] = useState('20%')
   const [clientQ, setClientQ]   = useState('')
+  const [flashFixRequests, setFlashFixRequests] = useState([])
 
   const name = profile?.full_name || 'Garage Los Santos'
+  const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
+  const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
   function go(id) { setPane(id); setSidebar(false) }
   function goHome() { setSidebar(false); navigate('/') }
 
   const filteredClients = CLIENTS.filter(c => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+
+  useEffect(() => {
+    function syncFlashFixRequests() {
+      setFlashFixRequests(readFlashFixRequests())
+    }
+
+    syncFlashFixRequests()
+    window.addEventListener('storage', syncFlashFixRequests)
+    window.addEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
+    return () => {
+      window.removeEventListener('storage', syncFlashFixRequests)
+      window.removeEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
+    }
+  }, [])
+
+  function acceptFlashFixRequest(requestId) {
+    providerRespondToFlashFix(requestId, 'accept', name)
+    toast('Demande FlashFix acceptée', 'success')
+  }
+
+  function refuseFlashFixRequest(requestId) {
+    providerRespondToFlashFix(requestId, 'refuse', name)
+    toast('Demande FlashFix refusée', 'success')
+  }
+
+  function advanceFlashFixStatus(requestId, nextStatus) {
+    advanceFlashFixRequest(requestId, nextStatus, name)
+    const labels = {
+      en_route: 'Le provider est maintenant en route',
+      onsite: 'Le provider est arrivé sur place',
+      completed: 'Intervention FlashFix terminée',
+    }
+    toast(labels[nextStatus] || 'Mise à jour envoyée', 'success')
+  }
 
   return (
     <div className={styles.shell}>
@@ -216,8 +269,55 @@ export default function ProviderApp() {
         {/* ── BOOKINGS ── */}
         {pane === 'p-bookings' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Réservations</div><div className={styles.pageSub}>{PROVIDER_BOOKINGS.length} aujourd'hui</div></div></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Réservations</div><div className={styles.pageSub}>{PROVIDER_BOOKINGS.length} aujourd'hui · {pendingFlashFix.length} urgence(s) FlashFix en attente</div></div></div>
             <div className={styles.pad}>
+              {flashFixQueue.length > 0 && (
+                <div style={{ display: 'grid', gap: 12, marginBottom: 16 }}>
+                  {flashFixQueue.map((request) => {
+                    const meta = getFlashFixStatusMeta(request.status)
+                    const latestEvent = request.events?.[request.events.length - 1]
+                    return (
+                      <div key={request.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:10}}>
+                          <div>
+                            <div style={{fontFamily:'var(--display)',fontSize:16,fontWeight:800,marginBottom:4}}>{request.issueLabel}</div>
+                            <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>{request.description}</div>
+                          </div>
+                          <span className={`badge ${meta.cls}`}>{meta.label}</span>
+                        </div>
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
+                          <span className="badge badge-gray">{request.customerName || 'Client FlashMat'}</span>
+                          <span className="badge badge-blue">{request.location || 'Position à confirmer'}</span>
+                          <span className="badge badge-green">{request.selectedOption?.title || 'Service FlashFix'}</span>
+                          <span className="badge badge-amber">{request.selectedOption?.price || 'Prix à confirmer'}</span>
+                          <span className="badge badge-gray">ETA {request.selectedOption?.eta || 'à confirmer'}</span>
+                        </div>
+                        <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',fontSize:11,color:'var(--ink2)',marginBottom:12}}>
+                          <span>{request.providerName ? `Assigné à ${request.providerName}` : 'Aucun provider assigné pour le moment'}</span>
+                          <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
+                        </div>
+                        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                          {request.status === 'pending' && (
+                            <>
+                              <button className="btn btn-green" onClick={() => acceptFlashFixRequest(request.id)}>Accepter</button>
+                              <button className="btn" onClick={() => refuseFlashFixRequest(request.id)}>Refuser</button>
+                            </>
+                          )}
+                          {request.status === 'accepted' && (
+                            <button className="btn btn-blue" onClick={() => advanceFlashFixStatus(request.id, 'en_route')}>Je pars maintenant</button>
+                          )}
+                          {request.status === 'en_route' && (
+                            <button className="btn btn-amber" onClick={() => advanceFlashFixStatus(request.id, 'onsite')}>Je suis sur place</button>
+                          )}
+                          {request.status === 'onsite' && (
+                            <button className="btn btn-green" onClick={() => advanceFlashFixStatus(request.id, 'completed')}>Terminer l intervention</button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
               <div className="panel" style={{overflowX:'auto'}}>
                 <table>
                   <thead><tr><th>Client</th><th>Service</th><th>Véhicule</th><th>Date & Heure</th><th>Prix</th><th>Statut</th><th></th></tr></thead>

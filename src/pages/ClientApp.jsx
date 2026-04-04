@@ -9,6 +9,7 @@ import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import VehicleDoctor from '../components/VehicleDoctor'
+import { FLASHFIX_UPDATED_EVENT, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -43,6 +44,21 @@ function clearPendingServiceSearch() {
   window.sessionStorage.removeItem('flashmat-pending-service-search')
 }
 
+function formatFlashFixTime(value) {
+  if (!value) return 'Maintenant'
+
+  try {
+    return new Date(value).toLocaleString('fr-CA', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return value
+  }
+}
+
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
@@ -65,10 +81,39 @@ export default function ClientApp() {
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [flashFixRequests, setFlashFixRequests] = useState([])
 
   const name = profile?.full_name || 'Alex'
+  const activeFlashFixRequests = flashFixRequests.filter((request) => request.channel === 'flashfix' && request.status !== 'completed')
+  const latestFlashFixEvents = flashFixRequests
+    .filter((request) => request.channel === 'flashfix')
+    .flatMap((request) =>
+      (request.events || []).map((event) => ({
+        ...event,
+        requestId: request.id,
+        issueLabel: request.issueLabel,
+        status: request.status,
+        providerName: request.providerName,
+      })),
+    )
+    .sort((left, right) => new Date(right.at).getTime() - new Date(left.at).getTime())
+    .slice(0, 6)
 
   useEffect(() => { fetchProviders() }, [])
+
+  useEffect(() => {
+    function syncFlashFixRequests() {
+      setFlashFixRequests(readFlashFixRequests())
+    }
+
+    syncFlashFixRequests()
+    window.addEventListener('storage', syncFlashFixRequests)
+    window.addEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
+    return () => {
+      window.removeEventListener('storage', syncFlashFixRequests)
+      window.removeEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
+    }
+  }, [])
 
   useEffect(() => {
     if (location.pathname === '/app/marketplace') {
@@ -532,6 +577,24 @@ return (
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Alertes</div></div></div>
             <div className={styles.pad}>
+              {latestFlashFixEvents.length > 0 && (
+                <div className="panel" style={{ marginBottom: 14 }}>
+                  {latestFlashFixEvents.map((event, index, arr) => {
+                    const meta = getFlashFixStatusMeta(event.status)
+                    return (
+                      <div key={event.id} style={{display:'flex',gap:10,padding:'12px 14px',borderBottom:index<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
+                        <div style={{width:34,height:34,borderRadius:8,background:'var(--red-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>🚨</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{event.label}</div>
+                          <div style={{fontSize:11,color:'var(--ink2)'}}>{event.issueLabel}{event.providerName ? ` · ${event.providerName}` : ''}</div>
+                          <div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(event.at)}</div>
+                        </div>
+                        <span className={`badge ${meta.cls}`}>{meta.label}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
               <div className="panel">
                 {[{icon:'✅',bg:'var(--green-bg)',title:'Votre voiture est prête!',sub:'Garage Los Santos — Honda Civic',time:"Aujourd'hui 14h04",badge:'Nouveau',badgeCls:'badge-green'},
                   {icon:'🏷️',bg:'var(--green-bg)',title:'Promo: 20% sur vidange!',sub:'Code OIL20 · Valide 1–5 avr.',time:'Hier 10h30',badge:'Nouveau',badgeCls:'badge-green'},
@@ -551,11 +614,47 @@ return (
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes réservations</div></div><button className="btn btn-green" onClick={() => setBookingModal(true)}>+ Nouvelle</button></div>
             <div className={styles.pad}>
-              <div style={{textAlign:'center',padding:40,color:'var(--ink3)'}}>
-                <div style={{fontSize:40,marginBottom:12}}>📅</div>
-                <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucune réservation pour l'instant</div>
-                <button className="btn btn-green btn-lg" onClick={() => go('search')}>Trouver un fournisseur →</button>
-              </div>
+              {flashFixRequests.length > 0 && (
+                <div style={{ display: 'grid', gap: 12, marginBottom: 18 }}>
+                  {flashFixRequests.filter((request) => request.channel === 'flashfix').map((request) => {
+                    const meta = getFlashFixStatusMeta(request.status)
+                    const latestEvent = request.events?.[request.events.length - 1]
+                    return (
+                      <div key={request.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
+                        <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:10}}>
+                          <div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>{request.issueLabel}</div>
+                            <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>{request.description}</div>
+                          </div>
+                          <span className={`badge ${meta.cls}`}>{meta.label}</span>
+                        </div>
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
+                          <span className="badge badge-gray">{request.location || 'Position a confirmer'}</span>
+                          <span className="badge badge-blue">{request.selectedOption?.title || 'Option FlashFix'}</span>
+                          <span className="badge badge-green">{request.selectedOption?.price || 'Prix a confirmer'}</span>
+                          <span className="badge badge-amber">ETA {request.selectedOption?.eta || 'a confirmer'}</span>
+                        </div>
+                        <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',fontSize:11,color:'var(--ink2)'}}>
+                          <span>{request.providerName ? `Provider: ${request.providerName}` : 'En attente d un provider disponible'}</span>
+                          <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
+                        </div>
+                        {latestEvent && (
+                          <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid var(--border)',fontSize:11,color:'var(--ink2)'}}>
+                            Derniere mise a jour: {latestEvent.label}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              {flashFixRequests.length === 0 && (
+                <div style={{textAlign:'center',padding:40,color:'var(--ink3)'}}>
+                  <div style={{fontSize:40,marginBottom:12}}>📅</div>
+                  <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucune réservation pour l'instant</div>
+                  <button className="btn btn-green btn-lg" onClick={() => go('search')}>Trouver un fournisseur →</button>
+                </div>
+              )}
             </div>
           </div>
         )}
