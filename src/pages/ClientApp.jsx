@@ -132,6 +132,9 @@ return (
                   <div className={styles.profileMenuName}>{name}</div>
                   <div className={styles.profileMenuRole}>Profil Client</div>
                 </div>
+                <button className={styles.profileMenuItem} onClick={goHome}>
+                  <span>🏠</span><span>Accueil</span>
+                </button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}>
                   <span>📊</span><span>Tableau de bord</span>
                 </button>
