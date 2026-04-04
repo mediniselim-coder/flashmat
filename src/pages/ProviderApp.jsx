@@ -43,7 +43,7 @@ const PROVIDER_BOOKINGS = [
 ]
 
 export default function ProviderApp() {
-  const { profile, signOut } = useAuth()
+  const { profile } = useAuth()
   const { toast }            = useToast()
   const navigate             = useNavigate()
 

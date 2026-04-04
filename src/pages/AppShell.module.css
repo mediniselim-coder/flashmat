@@ -38,7 +38,7 @@
 .nBadgeBlue { background: var(--blue); }
 
 .sbBottom { margin-top: auto; padding: 10px; border-top: 1px solid var(--border); }
-.userChip { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 7px; background: var(--bg3); cursor: pointer; border: 1px solid var(--border); transition: all .15s; }
+.userChip { display: flex; align-items: center; gap: 9px; padding: 9px; border-radius: 7px; background: var(--bg3); cursor: default; border: 1px solid var(--border); transition: all .15s; }
 .userChip:hover { border-color: var(--green); }
 .avatar { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 12px; flex-shrink: 0; }
 .avatarGreen { background: var(--green-bg); color: var(--green); }

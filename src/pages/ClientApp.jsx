@@ -28,7 +28,7 @@ const SEARCH_CATS = [
 ]
 
 export default function ClientApp() {
-  const { profile, signOut, user } = useAuth()
+  const { profile, user } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
   const [addVehicleModal, setAddVehicleModal] = useState(false)
   useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
