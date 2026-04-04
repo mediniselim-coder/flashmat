@@ -6,6 +6,7 @@ import NavBar from '../components/NavBar'
 import VehicleDoctor from '../components/VehicleDoctor'
 
 const SERVICES = [
+  { id: 'flashfix',  name: 'FlashFix',     icon: '🚨', count: 8 },
   { id: 'mechanic', name: 'Mécanique',    icon: '🔧', count: 59 },
   { id: 'wash',     name: 'Lave-auto',    icon: '🚿', count: 28 },
   { id: 'tire',     name: 'Pneus',        icon: '🔩', count: 19 },
@@ -148,6 +149,16 @@ export default function Landing() {
             <button key={cat} className={styles.chip} onClick={() => navigate('/app/client', { state: { pane: 'search', searchCat: cat } })}>{label}</button>
           ))}
         </div>
+        <div style={{ marginTop: 18 }}>
+          <button
+            type="button"
+            className="btn btn-lg"
+            onClick={() => navigate('/urgence')}
+            style={{ background: '#ef4444', color: '#fff', borderColor: '#ef4444', boxShadow: '0 12px 28px rgba(239,68,68,0.22)' }}
+          >
+            FlashFix Urgence 24/7 →
+          </button>
+        </div>
       </section>
 
       {/* STATS BAND */}
@@ -177,7 +188,7 @@ export default function Landing() {
         <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin à <span>Montréal</span></h2>
         <div className={styles.svcGrid}>
           {SERVICES.map(s => (
-            <div key={s.id} className={styles.svcCard} onClick={() => navigate('/services', { state: { cat: s.id } })}>
+            <div key={s.id} className={styles.svcCard} onClick={() => navigate(s.id === 'flashfix' ? '/urgence' : '/services', s.id === 'flashfix' ? undefined : { state: { cat: s.id } })}>
               <span className={styles.svcIcon}>{s.icon}</span>
               <div className={styles.svcName}>{s.name}</div>
               <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>

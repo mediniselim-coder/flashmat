@@ -5,6 +5,14 @@ import NavBar from '../components/NavBar'
 
 const SERVICES = [
   {
+    id: 'flashfix',
+    name: 'FlashFix Urgence',
+    icon: '🚨',
+    desc: 'Un mécano mobile ou un service d urgence vient à vous rapidement, à domicile ou sur la route.',
+    items: ['Mécano mobile', 'Batterie à booster', 'Pneu crevé', 'Intervention rapide'],
+    count: 8,
+  },
+  {
     id: 'mechanic',
     name: 'Mécanique générale',
     icon: '🔧',
@@ -137,7 +145,7 @@ export default function Services() {
 
       {/* STATS */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 48, padding: '24px 32px', background: '#fff', borderBottom: '1px solid #f0f0f0', flexWrap: 'wrap' }}>
-        {[['10', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7★', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
+        {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7★', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
           <div key={l} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{v}</div>
             <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{l}</div>
@@ -180,9 +188,13 @@ export default function Services() {
               <button
                 onClick={e => {
                   e.stopPropagation()
-                  goToFilteredSearch(s.id)
+                    if (s.id === 'flashfix') {
+                      navigate('/urgence')
+                      return
+                    }
+                    goToFilteredSearch(s.id)
                 }}
-                style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: active === s.id ? '#22c55e' : '#f0fdf4', color: active === s.id ? '#fff' : '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
+                style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: s.id === 'flashfix' ? '#ef4444' : active === s.id ? '#22c55e' : '#f0fdf4', color: s.id === 'flashfix' || active === s.id ? '#fff' : '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
               >
                 Trouver un fournisseur →
               </button>

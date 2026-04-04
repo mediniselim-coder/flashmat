@@ -99,6 +99,22 @@ export default function NavBar({ activePage }) {
 
         {/* DROITE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            onClick={() => navigate('/urgence')}
+            style={{
+              padding: '9px 14px',
+              borderRadius: 999,
+              border: 'none',
+              background: activePage === 'urgence' ? '#991b1b' : '#ef4444',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 700,
+              boxShadow: '0 10px 24px rgba(239,68,68,0.22)',
+            }}
+          >
+            FlashFix Urgence
+          </button>
           {user && profile ? (
             /* CONNECTÉ — icône profil + popup */
             <div ref={popupRef} style={{ position: 'relative' }}>

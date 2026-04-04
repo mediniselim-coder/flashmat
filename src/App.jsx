@@ -10,6 +10,7 @@ import ProviderApp from "./pages/ProviderApp"
 import ProviderProfile from "./pages/ProviderProfile"
 import Services from "./pages/Services"
 import AutoDoctor from "./pages/AutoDoctor"
+import FlashFixUrgence from "./pages/FlashFixUrgence"
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/services" element={<Services />} />
           <Route path="/doctor" element={<AutoDoctor />} />
+          <Route path="/urgence" element={<FlashFixUrgence />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />
           <Route path="/app/marketplace" element={
