@@ -2,19 +2,61 @@ import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
+const AUTH_CACHE_KEY = 'flashmat-auth-cache'
+
+function readAuthCache() {
+  if (typeof window === 'undefined') return { user: null, profile: null }
+  try {
+    const raw = window.localStorage.getItem(AUTH_CACHE_KEY)
+    if (!raw) return { user: null, profile: null }
+    const parsed = JSON.parse(raw)
+    return {
+      user: parsed?.user ?? null,
+      profile: parsed?.profile ?? null,
+    }
+  } catch {
+    return { user: null, profile: null }
+  }
+}
+
+function writeAuthCache(user, profile) {
+  if (typeof window === 'undefined') return
+  try {
+    if (!user && !profile) {
+      window.localStorage.removeItem(AUTH_CACHE_KEY)
+      return
+    }
+    window.localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user, profile }))
+  } catch {
+    // Ignore storage failures and keep the in-memory state.
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(null)
-  const [profile, setProfile] = useState(null)
+  const cachedAuth            = readAuthCache()
+  const [user, setUser]       = useState(cachedAuth.user)
+  const [profile, setProfile] = useState(cachedAuth.profile)
   const [loading, setLoading] = useState(true)
   const explicitSignOutRef    = useRef(false)
 
   useEffect(() => {
     // Get current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
+      if (session?.user) {
+        setUser(session.user)
+        fetchProfile(session.user.id, session.user)
+        return
+      }
+
+      if (!explicitSignOutRef.current && cachedAuth.user) {
+        setLoading(false)
+        return
+      }
+
+      setUser(null)
+      setProfile(null)
+      writeAuthCache(null, null)
+      setLoading(false)
     })
 
     // Listen for auth changes
@@ -24,8 +66,15 @@ export function AuthProvider({ children }) {
       }
 
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { setProfile(null); setLoading(false) }
+      if (session?.user) {
+        writeAuthCache(session.user, profile ?? cachedAuth.profile ?? null)
+        fetchProfile(session.user.id, session.user)
+      }
+      else {
+        setProfile(null)
+        writeAuthCache(null, null)
+        setLoading(false)
+      }
 
       if (_event === 'SIGNED_OUT') {
         explicitSignOutRef.current = false
@@ -35,13 +84,15 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId) {
+  async function fetchProfile(userId, authUser = user ?? cachedAuth.user ?? null) {
     const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
-    setProfile(data)
+    const nextProfile = data ?? profile ?? cachedAuth.profile ?? null
+    setProfile(nextProfile)
+    writeAuthCache(authUser, nextProfile)
     setLoading(false)
   }
 
@@ -77,6 +128,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
+    writeAuthCache(null, null)
   }
 
   return (
