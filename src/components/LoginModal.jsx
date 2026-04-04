@@ -16,8 +16,15 @@ export default function LoginModal({ onClose }) {
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
   useEffect(() => {
-    function handlePendingClientSearchRedirect() {
+    function handlePostLoginRedirect() {
       try {
+        const postLoginRedirect = window.sessionStorage.getItem('flashmat-post-login-redirect')
+        if (postLoginRedirect) {
+          window.sessionStorage.removeItem('flashmat-post-login-redirect')
+          navigate(postLoginRedirect)
+          return true
+        }
+
         const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
         if (!raw) return false
         const pending = JSON.parse(raw)
@@ -34,7 +41,7 @@ export default function LoginModal({ onClose }) {
     return () => {
       window.dispatchEvent(new CustomEvent('flashmat-login-modal-close'))
       if (shouldRedirectAfterClose) {
-        handlePendingClientSearchRedirect()
+        handlePostLoginRedirect()
       }
     }
   }, [navigate, shouldRedirectAfterClose])
@@ -45,12 +52,12 @@ export default function LoginModal({ onClose }) {
     try {
       if (mode === 'signup') {
         if (form.password !== form.confirmPassword) throw new Error('Les mots de passe ne correspondent pas')
-        if (form.password.length < 6) throw new Error('Le mot de passe doit avoir au moins 6 caractères')
+        if (form.password.length < 6) throw new Error('Le mot de passe doit avoir au moins 6 caracteres')
         await signUp({ email: form.email, password: form.password, fullName: form.fullName, role })
-        toast('Compte créé ! Bienvenue 🎉', 'success')
+        toast('Compte cree ! Bienvenue', 'success')
       } else {
         await signIn({ email: form.email, password: form.password })
-        toast('Connexion réussie ! 🎉', 'success')
+        toast('Connexion reussie !', 'success')
       }
       setShouldRedirectAfterClose(true)
       onClose()
@@ -68,11 +75,11 @@ export default function LoginModal({ onClose }) {
         email: demoRole === 'provider' ? 'demo.provider@flashmat.ca' : 'demo.client@flashmat.ca',
         password: 'demo123456'
       })
-      toast('Connexion réussie ! 🎉', 'success')
+      toast('Connexion reussie !', 'success')
       setShouldRedirectAfterClose(true)
       onClose()
     } catch {
-      toast('Compte démo non disponible', 'error')
+      toast('Compte de demonstration non disponible', 'error')
     } finally {
       setLoading(false)
     }
@@ -80,7 +87,6 @@ export default function LoginModal({ onClose }) {
 
   return (
     <>
-      {/* OVERLAY */}
       <div
         onClick={onClose}
         style={{
@@ -90,7 +96,6 @@ export default function LoginModal({ onClose }) {
         }}
       />
 
-      {/* MODAL */}
       <div style={{
         position: 'fixed', top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
@@ -103,8 +108,6 @@ export default function LoginModal({ onClose }) {
         animation: 'slideUp 0.25s ease',
         maxHeight: '90vh', overflowY: 'auto',
       }}>
-
-        {/* BOUTON FERMER */}
         <button
           onClick={onClose}
           style={{
@@ -114,25 +117,29 @@ export default function LoginModal({ onClose }) {
             width: 32, height: 32, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
-        >✕</button>
+        >
+          ×
+        </button>
 
-        {/* LOGO */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
           <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
         </div>
 
         <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6, letterSpacing: -0.5 }}>
-          {mode === 'login' ? 'Bon retour 👋' : 'Créer un compte'}
+          {mode === 'login' ? 'Bon retour' : 'Creer un compte'}
         </h2>
         <p style={{ fontSize: 14, color: 'var(--ink2, #666)', marginBottom: 20 }}>
-          {mode === 'login' ? 'Connectez-vous à votre espace FlashMat' : 'Rejoignez le hub automobile de Montréal'}
+          {mode === 'login' ? 'Connectez-vous a votre espace FlashMat' : 'Rejoignez le hub automobile de Montreal'}
         </p>
 
-        {/* DEMO */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: '#999', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: 0.4 }}>Accès rapide démo :</span>
-          <button onClick={() => demoLogin('client')} style={demoBtnStyle}>🚗 Client démo</button>
-          <button onClick={() => demoLogin('provider')} style={demoBtnStyle}>🏪 Fournisseur démo</button>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 11, color: '#999', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>
+            Acces rapide
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button onClick={() => demoLogin('client')} style={demoBtnStyle}>Client</button>
+            <button onClick={() => demoLogin('provider')} style={demoBtnStyle}>Fournisseur</button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0', fontSize: 11, color: '#999', fontFamily: 'monospace' }}>
@@ -141,13 +148,12 @@ export default function LoginModal({ onClose }) {
           <div style={{ flex: 1, height: 1, background: 'var(--border, #eee)' }} />
         </div>
 
-        {/* ROLE (signup) */}
         {mode === 'signup' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
             {[
-              { r: 'client',   emoji: '🚗', title: 'Je suis client',      sub: 'Je cherche des services auto' },
-              { r: 'provider', emoji: '🏪', title: 'Je suis fournisseur', sub: "J'offre des services auto" },
-            ].map(({ r, emoji, title, sub }) => (
+              { r: 'client', title: 'Je suis client', sub: 'Je cherche des services auto' },
+              { r: 'provider', title: 'Je suis fournisseur', sub: "J'offre des services auto" },
+            ].map(({ r, title, sub }) => (
               <button
                 key={r}
                 onClick={() => setRole(r)}
@@ -158,7 +164,6 @@ export default function LoginModal({ onClose }) {
                   borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                 }}
               >
-                <span style={{ fontSize: 22 }}>{emoji}</span>
                 <div>
                   <strong style={{ display: 'block', fontSize: 13, marginBottom: 2 }}>{title}</strong>
                   <small style={{ fontSize: 10, color: '#888' }}>{sub}</small>
@@ -168,30 +173,54 @@ export default function LoginModal({ onClose }) {
           </div>
         )}
 
-        {/* FORMULAIRE */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {mode === 'signup' && (
             <div className="form-group">
               <label className="form-label">Nom complet</label>
-              <input className="form-input" type="text" placeholder="Alex Martin" required
-                value={form.fullName} onChange={e => set('fullName', e.target.value)} />
+              <input
+                className="form-input"
+                type="text"
+                placeholder="Alex Martin"
+                required
+                value={form.fullName}
+                onChange={e => set('fullName', e.target.value)}
+              />
             </div>
           )}
           <div className="form-group">
             <label className="form-label">Adresse email</label>
-            <input className="form-input" type="email" placeholder="vous@email.com" required
-              value={form.email} onChange={e => set('email', e.target.value)} />
+            <input
+              className="form-input"
+              type="email"
+              placeholder="vous@email.com"
+              required
+              value={form.email}
+              onChange={e => set('email', e.target.value)}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Mot de passe</label>
-            <input className="form-input" type="password" placeholder="••••••••" required minLength={6}
-              value={form.password} onChange={e => set('password', e.target.value)} />
+            <input
+              className="form-input"
+              type="password"
+              placeholder="••••••••"
+              required
+              minLength={6}
+              value={form.password}
+              onChange={e => set('password', e.target.value)}
+            />
           </div>
           {mode === 'signup' && (
             <div className="form-group">
               <label className="form-label">Confirmer le mot de passe</label>
-              <input className="form-input" type="password" placeholder="••••••••" required
-                value={form.confirmPassword} onChange={e => set('confirmPassword', e.target.value)} />
+              <input
+                className="form-input"
+                type="password"
+                placeholder="••••••••"
+                required
+                value={form.confirmPassword}
+                onChange={e => set('confirmPassword', e.target.value)}
+              />
             </div>
           )}
           <button
@@ -204,18 +233,17 @@ export default function LoginModal({ onClose }) {
               marginTop: 8, opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Chargement…' : mode === 'login' ? 'Se connecter →' : 'Créer mon compte →'}
+            {loading ? 'Chargement...' : mode === 'login' ? 'Se connecter ->' : 'Creer mon compte ->'}
           </button>
         </form>
 
-        {/* SWITCH MODE */}
         <div style={{ textAlign: 'center', marginTop: 18, fontSize: 13, color: '#666' }}>
           {mode === 'login' ? (
             <span>Pas encore de compte ?{' '}
               <button onClick={() => setMode('signup')} style={switchBtnStyle}>S'inscrire gratuitement</button>
             </span>
           ) : (
-            <span>Déjà un compte ?{' '}
+            <span>Deja un compte ?{' '}
               <button onClick={() => setMode('login')} style={switchBtnStyle}>Se connecter</button>
             </span>
           )}
@@ -231,9 +259,15 @@ export default function LoginModal({ onClose }) {
 }
 
 const demoBtnStyle = {
-  background: 'var(--bg3, #f5f5f5)', border: '1px solid var(--border, #eee)',
-  borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 600,
-  cursor: 'pointer', color: 'var(--ink, #1a1a1a)',
+  background: 'var(--bg3, #f5f5f5)',
+  border: '1px solid var(--border, #eee)',
+  borderRadius: 10,
+  padding: '10px 12px',
+  fontSize: 13,
+  fontWeight: 700,
+  cursor: 'pointer',
+  color: 'var(--ink, #1a1a1a)',
+  width: '100%',
 }
 
 const switchBtnStyle = {
