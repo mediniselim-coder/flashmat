@@ -128,41 +128,103 @@ return (
             <div style={{ position:'relative', height: myVehicles.length === 0 ? 340 : 220, overflow:'hidden', background:'linear-gradient(135deg, #0f1e3d 0%, #1e3a8a 60%, #1e40af 100%)' }}>
               {/* Glow */}
               <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(22,199,132,.18), transparent 65%)', top:-100, right:-50, pointerEvents:'none' }} />
-              {/* Porsche 911 silhouette */}
-              <svg viewBox="0 0 1000 320" preserveAspectRatio="xMidYMax meet" style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:'95%', maxWidth:800, opacity:.15, pointerEvents:'none' }} fill="white">
-                {/* Body */}
-                <path d="
-                  M 55,258
-                  L 55,242 C 60,236 75,230 95,228
-                  L 185,224
-                  C 210,222 238,212 262,196
-                  C 282,182 302,162 326,148
-                  C 348,135 378,122 418,116
-                  L 532,110
-                  C 572,109 610,112 642,120
-                  C 672,128 695,142 710,158
-                  C 722,171 728,188 730,204
-                  L 760,210
-                  C 790,214 830,224 858,234
-                  C 880,242 900,250 910,256
-                  L 910,258 Z
+              {/* Porsche 911 (992) silhouette — accurate side profile */}
+              <svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax meet"
+                style={{ position:'absolute', bottom:0, left:'50%', transform:'translateX(-50%)', width:'100%', maxWidth:860, pointerEvents:'none' }}>
+                <defs>
+                  <linearGradient id="carGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(255,255,255,0.08)"/>
+                    <stop offset="50%" stopColor="rgba(255,255,255,0.18)"/>
+                    <stop offset="100%" stopColor="rgba(255,255,255,0.06)"/>
+                  </linearGradient>
+                </defs>
+                {/* === BODY === */}
+                <path fill="url(#carGrad)" d="
+                  M 60,300
+                  L 60,278
+                  C 65,268 80,258 105,254
+                  L 160,250
+                  C 178,248 200,244 222,236
+                  C 248,226 268,212 290,196
+                  C 312,180 334,162 358,148
+                  C 382,134 414,122 452,116
+                  L 548,110
+                  C 598,108 648,110 692,116
+                  C 730,122 758,132 776,144
+                  C 792,155 800,168 804,180
+                  C 808,192 808,206 806,218
+                  L 840,222
+                  C 868,226 900,232 928,240
+                  C 952,247 970,255 982,262
+                  C 990,268 994,276 994,284
+                  L 994,300
+                  Z
                 "/>
-                {/* Windshield highlight */}
-                <path d="M 326,148 C 348,135 378,122 418,116 L 500,113 L 490,135 C 460,140 420,148 390,158 C 368,166 350,178 340,188 Z" fill="rgba(30,58,138,.6)"/>
-                {/* Front wheel arch */}
-                <circle cx="210" cy="258" r="62"/>
-                <circle cx="210" cy="258" r="42" fill="#1e3a8a"/>
-                <circle cx="210" cy="258" r="18" fill="white"/>
-                {/* Rear wheel arch — bigger (911 style) */}
-                <circle cx="720" cy="258" r="72"/>
-                <circle cx="720" cy="258" r="50" fill="#1e3a8a"/>
-                <circle cx="720" cy="258" r="22" fill="white"/>
-                {/* Ground shadow line */}
-                <ellipse cx="490" cy="265" rx="440" ry="8" fill="rgba(0,0,0,.25)"/>
-                {/* Rear spoiler */}
-                <path d="M 728,158 L 760,150 L 762,158 L 730,166 Z"/>
-                {/* Side window */}
-                <path d="M 340,188 C 362,170 392,156 430,150 L 530,146 L 525,165 C 490,168 450,172 418,178 C 392,183 368,194 355,204 Z" fill="rgba(30,58,138,.5)"/>
+                {/* === WINDSHIELD (tinted) === */}
+                <path fill="rgba(15,30,77,0.55)" d="
+                  M 358,148
+                  C 382,134 414,122 452,116
+                  L 510,112
+                  L 500,136
+                  C 468,140 438,148 412,160
+                  C 390,170 372,184 360,196
+                  Z
+                "/>
+                {/* === SIDE WINDOW === */}
+                <path fill="rgba(15,30,77,0.45)" d="
+                  M 364,192
+                  C 382,178 408,166 440,158
+                  L 540,150
+                  L 536,170
+                  C 504,172 470,176 444,184
+                  C 420,191 400,202 386,214
+                  Z
+                "/>
+                {/* === REAR QUARTER WINDOW === */}
+                <path fill="rgba(15,30,77,0.4)" d="
+                  M 544,150 L 596,146 C 622,145 648,148 666,154
+                  C 676,158 682,164 682,172
+                  L 680,186
+                  C 660,184 632,180 604,178
+                  L 540,174 Z
+                "/>
+                {/* === WHEEL ARCH CUTOUTS (subtract by drawing bg color) === */}
+                {/* Front wheel */}
+                <circle cx="250" cy="300" r="78" fill="#0f1e3d"/>
+                {/* Rear wheel — wider flare */}
+                <circle cx="840" cy="300" r="86" fill="#0f1e3d"/>
+                {/* === WHEELS === */}
+                {/* Front */}
+                <circle cx="250" cy="300" r="74" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="3"/>
+                <circle cx="250" cy="300" r="50" fill="rgba(255,255,255,0.07)"/>
+                <circle cx="250" cy="300" r="18" fill="rgba(255,255,255,0.2)"/>
+                {[0,60,120,180,240,300].map(a => (
+                  <line key={a} x1={250} y1={300}
+                    x2={250 + 48*Math.cos(a*Math.PI/180)}
+                    y2={300 + 48*Math.sin(a*Math.PI/180)}
+                    stroke="rgba(255,255,255,0.18)" strokeWidth="4"/>
+                ))}
+                {/* Rear */}
+                <circle cx="840" cy="300" r="82" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.25)" strokeWidth="3"/>
+                <circle cx="840" cy="300" r="56" fill="rgba(255,255,255,0.07)"/>
+                <circle cx="840" cy="300" r="20" fill="rgba(255,255,255,0.2)"/>
+                {[0,60,120,180,240,300].map(a => (
+                  <line key={a} x1={840} y1={300}
+                    x2={840 + 54*Math.cos(a*Math.PI/180)}
+                    y2={300 + 54*Math.sin(a*Math.PI/180)}
+                    stroke="rgba(255,255,255,0.18)" strokeWidth="4"/>
+                ))}
+                {/* === REAR SPOILER === */}
+                <rect x="988" y="172" width="42" height="6" rx="2" fill="rgba(255,255,255,0.18)"/>
+                <rect x="1026" y="172" width="4" height="28" rx="2" fill="rgba(255,255,255,0.15)"/>
+                {/* === HEADLIGHT === */}
+                <ellipse cx="80" cy="262" rx="16" ry="8" fill="rgba(255,255,255,0.35)"/>
+                {/* === TAIL LIGHT === */}
+                <rect x="988" y="252" width="6" height="28" rx="2" fill="rgba(22,199,132,0.6)"/>
+                {/* === GROUND LINE === */}
+                <line x1="60" y1="300" x2="994" y2="300" stroke="rgba(22,199,132,0.3)" strokeWidth="1"/>
+                {/* === GROUND SHADOW === */}
+                <ellipse cx="527" cy="308" rx="460" ry="10" fill="rgba(0,0,0,0.3)"/>
               </svg>
               {/* Content */}
               <div style={{ position:'relative', zIndex:2, padding:'32px 28px 28px', height:'100%', display:'flex', flexDirection:'column', justifyContent: myVehicles.length === 0 ? 'space-between' : 'flex-end' }}>
