@@ -47,6 +47,12 @@ export default function ClientApp() {
 
   useEffect(() => { fetchProviders() }, [])
 
+  useEffect(() => {
+    if (location.pathname === '/app/marketplace') {
+      setPane('marketplace')
+    }
+  }, [location.pathname])
+
   async function fetchProviders() {
     setProvLoading(true)
     const { data } = await supabase
