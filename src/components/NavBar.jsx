@@ -30,6 +30,20 @@ export default function NavBar({ activePage }) {
   const isProvider = profile?.role === 'provider'
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
 
+  function openMarketplace() {
+    if (!user || !profile) {
+      navigate('/auth')
+      return
+    }
+
+    if (profile.role === 'provider') {
+      navigate('/app/provider')
+      return
+    }
+
+    navigate('/app/marketplace')
+  }
+
   const navLinkStyle = (page) => ({
     cursor: 'pointer', fontSize: 14, fontWeight: 500,
     color: activePage === page ? '#1a1a1a' : '#555',
@@ -54,7 +68,7 @@ export default function NavBar({ activePage }) {
         <div style={{ display: 'flex', gap: 32 }}>
           <span style={navLinkStyle('home')} onClick={() => navigate('/')}>Accueil</span>
           <span style={navLinkStyle('services')} onClick={() => navigate('/services')}>Services</span>
-          <span style={navLinkStyle('marketplace')} onClick={() => navigate('/app/marketplace')}>Marketplace</span>
+          <span style={navLinkStyle('marketplace')} onClick={openMarketplace}>Marketplace</span>
         </div>
 
         {/* DROITE */}
