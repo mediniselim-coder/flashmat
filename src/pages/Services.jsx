@@ -90,6 +90,14 @@ export default function Services() {
   const [search, setSearch] = useState('')
   const [active, setActive] = useState(null)
 
+  function goToFilteredSearch(categoryId) {
+    window.sessionStorage.setItem('flashmat-pending-service-search', JSON.stringify({
+      pane: 'search',
+      cat: categoryId,
+    }))
+    navigate(`/app/client?pane=search&cat=${encodeURIComponent(categoryId)}`)
+  }
+
   const filtered = SERVICES.filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.desc.toLowerCase().includes(search.toLowerCase())
@@ -166,7 +174,7 @@ export default function Services() {
               <button
                 onClick={e => {
                   e.stopPropagation()
-                  navigate(`/app/client?pane=search&cat=${encodeURIComponent(s.id)}`)
+                  goToFilteredSearch(s.id)
                 }}
                 style={{ width: '100%', padding: '10px', borderRadius: 8, border: 'none', background: active === s.id ? '#22c55e' : '#f0fdf4', color: active === s.id ? '#fff' : '#16a34a', fontWeight: 600, fontSize: 13, cursor: 'pointer', transition: 'all 0.2s' }}
               >

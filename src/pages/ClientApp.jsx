@@ -27,6 +27,21 @@ const SEARCH_CATS = [
   ['tow','🚛 Remorquage'],['parts','⚙️ Pièces'],['parking','🅿️ Parking'],
 ]
 
+function readPendingServiceSearch() {
+  try {
+    const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    return parsed?.cat ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function clearPendingServiceSearch() {
+  window.sessionStorage.removeItem('flashmat-pending-service-search')
+}
+
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
@@ -38,13 +53,16 @@ export default function ClientApp() {
   const routeParams = new URLSearchParams(location.search)
   const routePane = routeParams.get('pane')
   const routeCat = routeParams.get('cat')
-  const [pane, setPane] = useState(routePane || location.state?.pane || 'dashboard')
+  const pendingSearch = readPendingServiceSearch()
+  const initialPane = routePane || pendingSearch?.pane || location.state?.pane || 'dashboard'
+  const initialSearchCat = routeCat || pendingSearch?.cat || location.state?.searchCat || 'all'
+  const [pane, setPane] = useState(initialPane)
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
   const [providers, setProviders] = useState([])
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
-  const [searchCat, setSearchCat] = useState(routeCat || location.state?.searchCat || 'all')
+  const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
 
   const name = profile?.full_name || 'Alex'
@@ -63,8 +81,15 @@ export default function ClientApp() {
     }
     if (routeCat) {
       setSearchCat(routeCat)
+      clearPendingServiceSearch()
+      return
     }
-  }, [routePane, routeCat])
+    if (location.pathname.startsWith('/app/client') && pendingSearch?.cat) {
+      setPane(pendingSearch.pane || 'search')
+      setSearchCat(pendingSearch.cat)
+      clearPendingServiceSearch()
+    }
+  }, [location.pathname, pendingSearch, routePane, routeCat])
 
   async function fetchProviders() {
     setProvLoading(true)
