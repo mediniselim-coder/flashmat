@@ -215,7 +215,7 @@ export default function NavBar({ activePage }) {
             </button>
 
             <button type="button" style={styles.logoButton} onClick={() => navigateTo('/')}>
-              <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 34 : 40, objectFit: 'contain' }} />
+              <img src="/logo-dark.png" alt="FlashMat" style={{ height: isCompact ? 34 : 40, objectFit: 'contain' }} />
             </button>
           </div>
 

@@ -190,7 +190,7 @@ export default function ClientApp() {
         <div className={styles.sbHeader}>
           {/* LOGO — image au lieu de FM texte */}
           <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
-            <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
+            <img src="/logo-dark.png" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
           </div>
           <span className={`${styles.sbMode} ${styles.modeClient}`}>CLIENT</span>
         </div>
@@ -242,7 +242,7 @@ export default function ClientApp() {
       <div className={styles.main}>
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
-          <img src="/logo.jpg" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
+          <img src="/logo-dark.png" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
           <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => openBooking()}>+ Réserver</button>
         </div>
 
