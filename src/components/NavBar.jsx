@@ -96,6 +96,7 @@ export default function NavBar({ activePage }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
   const rootRef = useRef(null)
 
   const isProvider = profile?.role === 'provider'
@@ -133,6 +134,15 @@ export default function NavBar({ activePage }) {
     const params = new URLSearchParams(location.search)
     if (params.get('login') === '1' && !user) setLoginOpen(true)
   }, [location.search, user])
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   function closeFloatingUi() {
     setMenuOpen(false)
@@ -184,11 +194,13 @@ export default function NavBar({ activePage }) {
   }, [isProvider, navigate, profile, user])
 
   const activePanel = PRIMARY_ITEMS.find((item) => item.id === panelOpen) || null
+  const isCompact = viewportWidth < 1180
+  const isMobile = viewportWidth < 860
 
   return (
     <>
       <div ref={rootRef} style={styles.root}>
-        <nav style={styles.nav}>
+        <nav style={{ ...styles.nav, padding: isCompact ? '0 14px' : '0 20px', gap: isCompact ? 14 : 24 }}>
           <div style={styles.leftGroup}>
             <button
               type="button"
@@ -203,12 +215,13 @@ export default function NavBar({ activePage }) {
             </button>
 
             <button type="button" style={styles.logoButton} onClick={() => navigateTo('/')}>
-              <img src="/logo.jpg" alt="FlashMat" style={{ height: 40, objectFit: 'contain' }} />
+              <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 34 : 40, objectFit: 'contain' }} />
             </button>
           </div>
 
-          <div style={styles.centerGroup}>
-            {PRIMARY_ITEMS.map((item) => {
+          <div style={{ ...styles.centerGroup, gap: isCompact ? 10 : 18 }}>
+            {PRIMARY_ITEMS.map((item, index) => {
+              if (isMobile && index > 2) return null
               const Icon = item.icon
               return (
                 <AppIconButton
@@ -225,8 +238,8 @@ export default function NavBar({ activePage }) {
           </div>
 
           <div style={styles.rightGroup}>
-            <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? styles.urgentButtonActive : styles.urgentButton}>
-              FlashFix Urgence
+            <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? { ...styles.urgentButtonActive, padding: isCompact ? '10px 14px' : '12px 16px' } : { ...styles.urgentButton, padding: isCompact ? '10px 14px' : '12px 16px' }}>
+              {isMobile ? 'Urgence' : 'FlashFix Urgence'}
             </button>
 
             {user && profile ? (
@@ -241,7 +254,7 @@ export default function NavBar({ activePage }) {
                   }}
                 >
                   <span style={styles.accountAvatar}>{displayName.slice(0, 1).toUpperCase()}</span>
-                  <span style={styles.accountText}>{displayName}</span>
+                  {!isMobile && <span style={styles.accountText}>{displayName}</span>}
                 </button>
 
                 {profileOpen && (
@@ -263,10 +276,10 @@ export default function NavBar({ activePage }) {
               <>
                 <button type="button" onClick={() => setLoginOpen(true)} style={styles.loginLink}>
                   <UserIcon />
-                  <span>Login</span>
+                  {!isMobile && <span>Login</span>}
                 </button>
                 <button type="button" onClick={() => setLoginOpen(true)} style={styles.signupButton}>
-                  Sign Up
+                  {isMobile ? 'Join' : 'Sign Up'}
                 </button>
               </>
             )}
@@ -277,32 +290,32 @@ export default function NavBar({ activePage }) {
       {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
 
       {menuOpen && (
-        <div style={styles.drawer}>
+        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? 'min(360px, 86vw)' : 'min(390px, 32vw)', borderRadius: isMobile ? '0' : '0 28px 28px 0', top: isMobile ? 0 : 72, padding: isCompact ? '22px 20px 20px' : '28px 28px 24px' }}>
           <div style={styles.drawerHeader}>
-            <img src="/logo.jpg" alt="FlashMat" style={{ height: 62, objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 52 : 62, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
           </div>
           <div style={styles.drawerIntro}>
             <div style={styles.drawerEyebrow}>Navigation FlashMat</div>
-            <div style={styles.drawerTitle}>Entrez dans l’univers auto FlashMat</div>
-            <div style={styles.drawerText}>
-              Accédez rapidement aux services, aux providers, au marketplace et au parcours client sans quitter l’identité visuelle du site.
+            <div style={{ ...styles.drawerTitle, fontSize: isCompact ? 22 : 30, maxWidth: 280 }}>Simple. Rapide. Très FlashMat.</div>
+            <div style={{ ...styles.drawerText, fontSize: isCompact ? 14 : 15, maxWidth: isCompact ? 280 : 320 }}>
+              Les raccourcis essentiels, dans une mise en page plus calme, plus légère et plus lisible.
             </div>
           </div>
-          <div style={styles.drawerLinks}>
+          <div style={{ ...styles.drawerLinks, gap: isCompact ? 10 : 12 }}>
             {MENU_SECTIONS.map((item) => (
-              <button key={item.label} type="button" style={styles.drawerLink} onClick={() => navigateTo(item.to)}>
+              <button key={item.label} type="button" style={{ ...styles.drawerLink, fontSize: isCompact ? 18 : 22, padding: isCompact ? '13px 14px' : '16px 18px' }} onClick={() => navigateTo(item.to)}>
                 {item.label}
               </button>
             ))}
           </div>
           <div style={styles.drawerFooter}>
-            <div style={styles.drawerAccountCard}>
+            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 18 : 22 }}>
               <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
-              <div style={styles.drawerAccountTitle}>
+              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 18 : 22 }}>
                 {user ? `Connecté en tant que ${displayName}` : 'Connectez-vous pour réserver, diagnostiquer et suivre vos services'}
               </div>
-              <div style={styles.drawerAccountText}>
+              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 13 : 14 }}>
                 {user
                   ? (isProvider ? 'Accédez à votre espace fournisseur et à vos outils FlashMat.' : 'Retrouvez vos véhicules, réservations et diagnostics en un endroit.')
                   : 'Le compte FlashMat vous donne accès au Docteur Automobile, aux réservations et à votre espace personnel.'}
@@ -338,6 +351,7 @@ export default function NavBar({ activePage }) {
             item={activePanel}
             onNavigate={navigateTo}
             onClose={() => setPanelOpen(null)}
+            compact={isCompact}
           />
         </div>
       )}
@@ -371,17 +385,17 @@ function HoverLabel({ visible, label }) {
   )
 }
 
-function AppPanel({ item, onNavigate, onClose }) {
+function AppPanel({ item, onNavigate, onClose, compact = false }) {
   return (
-    <div style={styles.panelCard}>
-      <div style={styles.panelGrid}>
+    <div style={{ ...styles.panelCard, width: compact ? 'min(1180px, calc(100vw - 28px))' : 'min(1680px, calc(100vw - 48px))', padding: compact ? 22 : 28 }}>
+      <div style={{ ...styles.panelGrid, gridTemplateColumns: compact ? '1fr .92fr' : '1.05fr 1fr', gap: compact ? 20 : 28 }}>
         <div>
           <div style={styles.panelEyebrow}>FlashMat Hub</div>
-          <h2 style={styles.panelTitle}>{item.title}</h2>
-          <p style={styles.panelSubtitle}>{item.subtitle}</p>
-          <div style={styles.linkGrid}>
+          <h2 style={{ ...styles.panelTitle, fontSize: compact ? 38 : 56, maxWidth: compact ? 440 : 580 }}>{item.title}</h2>
+          <p style={{ ...styles.panelSubtitle, fontSize: compact ? 15 : 18, maxWidth: compact ? 470 : 640 }}>{item.subtitle}</p>
+          <div style={{ ...styles.linkGrid, gap: compact ? 6 : 10 }}>
             {item.links.map((link) => (
-              <button key={link.label} type="button" style={styles.panelLink} onClick={() => onNavigate(link.to)}>
+              <button key={link.label} type="button" style={{ ...styles.panelLink, fontSize: compact ? 14 : 16, padding: compact ? '8px 0' : '10px 0' }} onClick={() => onNavigate(link.to)}>
                 {link.label}
               </button>
             ))}
@@ -389,17 +403,17 @@ function AppPanel({ item, onNavigate, onClose }) {
         </div>
 
         <div>
-          <div style={styles.searchShell}>
-            <input readOnly value="" placeholder={item.searchPlaceholder} style={styles.searchInput} />
+          <div style={{ ...styles.searchShell, marginBottom: compact ? 16 : 20 }}>
+            <input readOnly value="" placeholder={item.searchPlaceholder} style={{ ...styles.searchInput, height: compact ? 48 : 56, fontSize: compact ? 15 : 18 }} />
             <button type="button" style={styles.searchButton} onClick={() => onNavigate(item.links[0]?.to || '/')}>
               <SearchIcon />
             </button>
           </div>
-          <div style={styles.visualCard}>
+          <div style={{ ...styles.visualCard, minHeight: compact ? 220 : 290 }}>
             <div style={styles.visualGlow} />
-            <div style={styles.visualText}>
+            <div style={{ ...styles.visualText, minHeight: compact ? 220 : 290, padding: compact ? 20 : 28 }}>
               <div style={styles.visualBadge}>{item.accent}</div>
-              <button type="button" style={styles.visualCta} onClick={() => onNavigate(item.links[0]?.to || '/')}>
+              <button type="button" style={{ ...styles.visualCta, padding: compact ? '12px 18px' : '14px 22px', fontSize: compact ? 14 : 15 }} onClick={() => onNavigate(item.links[0]?.to || '/')}>
                 {item.cta}
                 <MapPinIcon />
               </button>
@@ -407,7 +421,7 @@ function AppPanel({ item, onNavigate, onClose }) {
           </div>
         </div>
       </div>
-      <button type="button" onClick={onClose} style={styles.panelClose}>Fermer</button>
+      <button type="button" onClick={onClose} style={{ ...styles.panelClose, marginTop: compact ? 14 : 18 }}>Fermer</button>
     </div>
   )
 }
@@ -468,7 +482,7 @@ const styles = {
   },
   leftGroup: { display: 'flex', alignItems: 'center', gap: 14 },
   centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 },
-  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 },
+  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 },
   menuButton: {
     position: 'relative',
     width: 46,
@@ -741,7 +755,7 @@ const styles = {
     right: 0,
     display: 'flex',
     justifyContent: 'center',
-    padding: '0 24px',
+    padding: '0 14px',
     zIndex: 121,
     pointerEvents: 'none',
   },
