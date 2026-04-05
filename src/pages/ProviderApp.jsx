@@ -72,13 +72,13 @@ function getTimelineLabel(step) {
   return labels[step] || step
 }
 
-async function uploadProviderPhoto(file, userId) {
-  const ext = file.name.split('.').pop()
-  const path = `provider-gallery/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const { error } = await supabase.storage.from('marketplace').upload(path, file, { upsert: false })
-  if (error) throw error
-  const { data } = supabase.storage.from('marketplace').getPublicUrl(path)
-  return data.publicUrl
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('Impossible de lire le fichier'))
+    reader.readAsDataURL(file)
+  })
 }
 
 export default function ProviderApp() {
@@ -142,23 +142,25 @@ export default function ProviderApp() {
         ...baseIdentity,
       })
 
-      const exactName = profile?.full_name || 'Garage Los Santos'
-      const email = profile?.email || user?.email
-      const query = email
-        ? supabase.from('providers_list').select('*').or(`email.eq.${email},name.eq.${exactName}`).limit(1)
-        : supabase.from('providers_list').select('*').eq('name', exactName).limit(1)
-      const { data } = await query
+      const { data } = user?.id
+        ? await supabase
+          .from('providers')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle()
+        : { data: null }
 
-      if (data?.[0]) {
+      if (data) {
         nextForm = mergeProviderProfile({
-          ...data[0],
-          providerEmail: data[0].email,
-          editableHours: data[0].editableHours || data[0].hours,
+          ...data,
+          name: data.shop_name,
+          providerEmail: profile?.email || user?.email,
+          editableHours: providerProfileForm.editableHours,
         })
       }
 
       setProviderProfileForm({
-        name: nextForm.name || exactName,
+        name: nextForm.name || profile?.full_name || 'Garage Los Santos',
         address: nextForm.address || '',
         phone: nextForm.phone || '',
         email: nextForm.email || profile?.email || user?.email || '',
@@ -182,7 +184,7 @@ export default function ProviderApp() {
     if (!file) return
 
     try {
-      const photoUrl = await uploadProviderPhoto(file, user?.id || 'provider')
+      const photoUrl = await fileToDataUrl(file)
       setProviderProfileForm((current) => ({ ...current, coverPhoto: photoUrl }))
       toast('Photo couverture ajoutee', 'success')
     } catch (error) {
@@ -195,7 +197,7 @@ export default function ProviderApp() {
     if (files.length === 0) return
 
     try {
-      const photos = await Promise.all(files.map((file) => uploadProviderPhoto(file, user?.id || 'provider')))
+      const photos = await Promise.all(files.map((file) => fileToDataUrl(file)))
       setProviderProfileForm((current) => ({ ...current, galleryPhotos: photos }))
       toast('Galerie atelier mise a jour', 'success')
     } catch (error) {
@@ -297,63 +299,26 @@ export default function ProviderApp() {
       }
 
       const providerRecord = {
-        name: providerProfileForm.name,
+        id: user?.id,
+        shop_name: providerProfileForm.name,
         address: providerProfileForm.address,
         phone: providerProfileForm.phone,
-        email: providerProfileForm.email || matchEmail,
         description: providerProfileForm.description,
         services: providerProfileForm.services,
-        hours: publicHours,
-        editableHours: providerProfileForm.editableHours,
-        cover_photo: providerProfileForm.coverPhoto,
-        gallery_photos: providerProfileForm.galleryPhotos,
-        type: typeMeta.type,
-        type_label: typeMeta.type_label,
+        rating: 5,
+        reviews: 0,
+        is_open: true,
       }
 
-      let existingProvider = null
-
-      if (matchEmail) {
-        const { data: providerByEmail, error: providerSearchError } = await supabase
-          .from('providers_list')
-          .select('id, email, name')
-          .eq('email', matchEmail)
-          .limit(1)
-
-        if (providerSearchError) throw providerSearchError
-        existingProvider = providerByEmail?.[0] || null
+      if (!user?.id) {
+        throw new Error('Utilisateur provider introuvable')
       }
 
-      if (!existingProvider && providerProfileForm.name) {
-        const { data: providerByName, error: providerNameSearchError } = await supabase
-          .from('providers_list')
-          .select('id, email, name')
-          .eq('name', providerProfileForm.name)
-          .limit(1)
+      const { error: providerUpsertError } = await supabase
+        .from('providers')
+        .upsert(providerRecord, { onConflict: 'id' })
 
-        if (providerNameSearchError) throw providerNameSearchError
-        existingProvider = providerByName?.[0] || null
-      }
-
-      if (existingProvider?.id) {
-        const { error: providerUpdateError } = await supabase
-          .from('providers_list')
-          .update(providerRecord)
-          .eq('id', existingProvider.id)
-
-        if (providerUpdateError) throw providerUpdateError
-      } else {
-        const { error: providerInsertError } = await supabase
-          .from('providers_list')
-          .insert({
-            ...providerRecord,
-            rating: 0,
-            reviews: 0,
-            is_open: true,
-          })
-
-        if (providerInsertError) throw providerInsertError
-      }
+      if (providerUpsertError) throw providerUpsertError
 
       window.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
       toast('Profil atelier sauvegarde', 'success')
