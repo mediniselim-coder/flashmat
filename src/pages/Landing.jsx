@@ -62,9 +62,23 @@ export default function Landing() {
   const [filterTerm, setFilterTerm] = useState('')
   const [minRating, setMinRating] = useState(0)
   const [dbProviders, setDbProviders] = useState([])
+  const [featuredProviders, setFeaturedProviders] = useState([])
   const [dbLoading, setDbLoading] = useState(false)
 
   const activeTab = TABS.find(t => t.key === tab)
+
+  useEffect(() => {
+    setDbLoading(true)
+    supabase
+      .from('providers')
+      .select('*')
+      .order('rating', { ascending: false })
+      .limit(100)
+      .then(({ data }) => {
+        setFeaturedProviders((data || []).map((provider) => mergeProviderProfile(provider)).filter((provider) => provider.publicReady))
+        setDbLoading(false)
+      })
+  }, [])
 
   useEffect(() => {
     if (!filterTerm) { setDbProviders([]); return }
@@ -116,7 +130,8 @@ export default function Landing() {
       .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
   }
 
-  const displayProviders = (filterTerm ? dbProviders : PROVIDERS).filter(p => {
+  const homepageProviders = featuredProviders.length > 0 ? featuredProviders : PROVIDERS
+  const displayProviders = (filterTerm ? dbProviders : homepageProviders).filter(p => {
     if (minRating === 'open') return p.open === true || p.is_open === true || p.is_open === 'true'
     return (p.rating || 0) >= minRating
   })

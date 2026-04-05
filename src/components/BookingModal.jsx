@@ -163,6 +163,11 @@ export default function BookingModal({
         {step === 3 && (
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--ink3)', marginBottom: 16 }}>Date, heure et vehicule</div>
+            {vehicles.length === 0 && (
+              <div style={{background:'var(--amber-bg)',border:'1px solid rgba(245,158,11,.25)',borderRadius:12,padding:'12px 14px',fontSize:12,color:'var(--ink2)',marginBottom:14}}>
+                Ajoutez d abord un vehicule dans votre profil client pour confirmer une reservation.
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">Vehicule</label>
               <select className="form-select" value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
