@@ -321,7 +321,7 @@ export default function NavBar({ activePage }) {
               {user ? (
                 <div style={styles.drawerAccountActions}>
                   <button type="button" onClick={() => navigateTo(isProvider ? '/app/provider' : '/app/client')} style={styles.drawerPrimaryCta}>
-                    Ouvrir mon espace
+                    Mon espace
                   </button>
                   <button type="button" onClick={handleSignOut} style={styles.drawerSecondaryCta}>
                     Se déconnecter
@@ -713,13 +713,17 @@ const styles = {
   },
   drawerAccountActions: {
     display: 'flex',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 10,
     marginTop: 14,
     flexWrap: 'nowrap',
+    width: '100%',
   },
   drawerPrimaryCta: {
-    flex: 1,
+    flex: '1 1 0',
+    minWidth: 0,
     border: 'none',
     borderRadius: 999,
     padding: '11px 14px',
@@ -730,7 +734,8 @@ const styles = {
     whiteSpace: 'nowrap',
   },
   drawerSecondaryCta: {
-    flex: 1,
+    flex: '1 1 0',
+    minWidth: 0,
     border: '1px solid rgba(255,255,255,0.22)',
     borderRadius: 999,
     padding: '11px 14px',
