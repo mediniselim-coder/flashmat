@@ -282,6 +282,13 @@ export default function NavBar({ activePage }) {
             <img src="/logo.jpg" alt="FlashMat" style={{ height: 62, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
           </div>
+          <div style={styles.drawerIntro}>
+            <div style={styles.drawerEyebrow}>Navigation FlashMat</div>
+            <div style={styles.drawerTitle}>Entrez dans l’univers auto FlashMat</div>
+            <div style={styles.drawerText}>
+              Accédez rapidement aux services, aux providers, au marketplace et au parcours client sans quitter l’identité visuelle du site.
+            </div>
+          </div>
           <div style={styles.drawerLinks}>
             {MENU_SECTIONS.map((item) => (
               <button key={item.label} type="button" style={styles.drawerLink} onClick={() => navigateTo(item.to)}>
@@ -289,17 +296,39 @@ export default function NavBar({ activePage }) {
               </button>
             ))}
           </div>
-          {!user && (
-            <div style={styles.drawerFooter}>
-              <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerLogin}>
-                <UserIcon />
-                <span>Login</span>
-              </button>
-              <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerSignup}>
-                Sign Up
-              </button>
+          <div style={styles.drawerFooter}>
+            <div style={styles.drawerAccountCard}>
+              <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
+              <div style={styles.drawerAccountTitle}>
+                {user ? `Connecté en tant que ${displayName}` : 'Connectez-vous pour réserver, diagnostiquer et suivre vos services'}
+              </div>
+              <div style={styles.drawerAccountText}>
+                {user
+                  ? (isProvider ? 'Accédez à votre espace fournisseur et à vos outils FlashMat.' : 'Retrouvez vos véhicules, réservations et diagnostics en un endroit.')
+                  : 'Le compte FlashMat vous donne accès au Docteur Automobile, aux réservations et à votre espace personnel.'}
+              </div>
+              {user ? (
+                <div style={styles.drawerAccountActions}>
+                  <button type="button" onClick={() => navigateTo(isProvider ? '/app/provider' : '/app/client')} style={styles.drawerPrimaryCta}>
+                    Ouvrir mon espace
+                  </button>
+                  <button type="button" onClick={handleSignOut} style={styles.drawerSecondaryCta}>
+                    Se déconnecter
+                  </button>
+                </div>
+              ) : (
+                <div style={styles.drawerAccountActions}>
+                  <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerLogin}>
+                    <UserIcon />
+                    <span>Login</span>
+                  </button>
+                  <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerSignup}>
+                    Sign Up
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
@@ -573,26 +602,138 @@ const styles = {
   scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
   drawer: {
     position: 'fixed',
-    top: 86,
-    left: 22,
-    width: 320,
-    minHeight: 620,
+    top: 72,
+    left: 0,
+    bottom: 0,
+    width: 'min(420px, 92vw)',
     background: '#ffffff',
-    borderRadius: 24,
-    border: '1px solid rgba(26,58,143,0.08)',
-    boxShadow: '0 32px 70px rgba(4,18,32,0.28)',
+    borderRadius: '0 28px 28px 0',
+    borderRight: '1px solid rgba(26,58,143,0.08)',
+    boxShadow: '24px 0 70px rgba(4,18,32,0.22)',
     zIndex: 121,
-    padding: 28,
+    padding: '28px 28px 24px',
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden',
   },
-  drawerHeader: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginBottom: 36 },
-  drawerClose: { border: 'none', background: 'transparent', color: '#47617b', fontWeight: 700, fontSize: 13, padding: 0 },
-  drawerLinks: { display: 'grid', gap: 26, marginTop: 14 },
-  drawerLink: { border: 'none', background: 'transparent', textAlign: 'left', color: '#17314a', fontSize: 18, fontWeight: 700, padding: 0 },
-  drawerFooter: { marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
-  drawerLogin: { display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent', color: '#17314a', fontWeight: 700, fontSize: 16 },
-  drawerSignup: { border: 'none', borderRadius: 999, padding: '14px 28px', background: '#07253d', color: '#fff', fontSize: 16, fontWeight: 800 },
+  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, marginBottom: 28 },
+  drawerClose: {
+    border: '1px solid rgba(26,58,143,0.1)',
+    background: '#f4f8fd',
+    color: '#47617b',
+    fontWeight: 700,
+    fontSize: 13,
+    padding: '10px 14px',
+    borderRadius: 999,
+  },
+  drawerIntro: { marginBottom: 28 },
+  drawerEyebrow: {
+    fontSize: 11,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    color: '#6f8ba7',
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+  drawerTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 30,
+    lineHeight: 1.05,
+    color: '#17314a',
+    marginBottom: 12,
+    letterSpacing: '-0.03em',
+  },
+  drawerText: {
+    color: '#617a92',
+    fontSize: 15,
+    lineHeight: 1.7,
+    maxWidth: 320,
+  },
+  drawerLinks: { display: 'grid', gap: 12, marginTop: 8 },
+  drawerLink: {
+    border: '1px solid rgba(26,58,143,0.08)',
+    background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+    textAlign: 'left',
+    color: '#17314a',
+    fontSize: 22,
+    fontWeight: 700,
+    padding: '16px 18px',
+    borderRadius: 18,
+    boxShadow: '0 10px 24px rgba(26,58,143,0.05)',
+  },
+  drawerFooter: { marginTop: 'auto', paddingTop: 22 },
+  drawerAccountCard: {
+    background: 'linear-gradient(135deg, #082237 0%, #103454 62%, #2f81be 100%)',
+    color: '#fff',
+    borderRadius: 24,
+    padding: 22,
+    boxShadow: '0 18px 38px rgba(8,34,55,0.22)',
+  },
+  drawerAccountEyebrow: {
+    fontSize: 11,
+    letterSpacing: 1.8,
+    textTransform: 'uppercase',
+    color: 'rgba(220,239,255,0.72)',
+    fontWeight: 800,
+    marginBottom: 10,
+  },
+  drawerAccountTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 22,
+    lineHeight: 1.12,
+    marginBottom: 10,
+  },
+  drawerAccountText: {
+    color: 'rgba(236,247,255,0.8)',
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  drawerAccountActions: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 18,
+    flexWrap: 'wrap',
+  },
+  drawerPrimaryCta: {
+    border: 'none',
+    borderRadius: 999,
+    padding: '12px 18px',
+    background: '#ffffff',
+    color: '#103454',
+    fontSize: 14,
+    fontWeight: 800,
+  },
+  drawerSecondaryCta: {
+    border: '1px solid rgba(255,255,255,0.22)',
+    borderRadius: 999,
+    padding: '12px 18px',
+    background: 'transparent',
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 700,
+  },
+  drawerLogin: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 999,
+    background: 'transparent',
+    color: '#fff',
+    fontWeight: 700,
+    fontSize: 14,
+    padding: '12px 16px',
+  },
+  drawerSignup: {
+    border: 'none',
+    borderRadius: 999,
+    padding: '12px 20px',
+    background: '#ffffff',
+    color: '#082237',
+    fontSize: 14,
+    fontWeight: 800,
+  },
   panelWrap: {
     position: 'fixed',
     top: 92,
