@@ -273,15 +273,10 @@ export default function NavBar({ activePage }) {
                 )}
               </div>
             ) : (
-              <>
-                <button type="button" onClick={() => setLoginOpen(true)} style={styles.loginLink}>
-                  <UserIcon />
-                  {!isMobile && <span>Login</span>}
-                </button>
-                <button type="button" onClick={() => setLoginOpen(true)} style={styles.signupButton}>
-                  {isMobile ? 'Join' : 'Sign Up'}
-                </button>
-              </>
+              <button type="button" onClick={() => setLoginOpen(true)} style={styles.authButton}>
+                <UserIcon />
+                <span>{isMobile ? 'Connexion' : 'Login / Sign Up'}</span>
+              </button>
             )}
           </div>
         </nav>
@@ -612,6 +607,19 @@ const styles = {
     fontSize: 14,
     fontWeight: 800,
     boxShadow: '0 12px 26px rgba(16,151,216,0.28)',
+  },
+  authButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    border: '1px solid rgba(142,196,234,0.16)',
+    borderRadius: 999,
+    padding: '11px 16px',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#ecf7ff',
+    fontSize: 13,
+    fontWeight: 700,
+    whiteSpace: 'nowrap',
   },
   accountButton: {
     display: 'inline-flex',
