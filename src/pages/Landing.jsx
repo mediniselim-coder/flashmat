@@ -107,8 +107,7 @@ export default function Landing() {
 
   function handleSearch(e) {
     e.preventDefault()
-    setFilterTerm(query.toLowerCase())
-    setTimeout(() => document.getElementById('providers')?.scrollIntoView({ behavior: 'smooth' }), 50)
+    setFilterTerm(query.trim().toLowerCase())
   }
 
   function slugify(name) {
@@ -123,6 +122,55 @@ export default function Landing() {
     if (minRating === 'open') return p.open === true || p.is_open === true || p.is_open === 'true'
     return (p.rating || 0) >= minRating
   })
+
+  const normalizedFilter = filterTerm.trim().toLowerCase()
+  const providerSearchBase = normalizedFilter ? dbProviders : featuredProviders
+  const heroProviderMatches = providerSearchBase
+    .filter((provider) => {
+      if (!normalizedFilter) return false
+      const haystack = [
+        provider.name,
+        provider.type_label,
+        provider.address,
+        ...(provider.services || []),
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(normalizedFilter)
+    })
+    .slice(0, 4)
+
+  const heroServiceMatches = SERVICES
+    .filter((service) => normalizedFilter && service.name.toLowerCase().includes(normalizedFilter))
+    .slice(0, 4)
+
+  const heroQuickResults = (
+    tab === 'service'
+      ? [
+          ...heroServiceMatches.map((service) => ({
+            key: `service-${service.id}`,
+            eyebrow: 'Service',
+            title: service.name,
+            meta: `${service.count}+ options disponibles`,
+            action: () => navigate('/services', { state: { cat: service.id } }),
+          })),
+          ...heroProviderMatches.map((provider) => ({
+            key: `provider-${provider.id || provider.name}`,
+            eyebrow: 'Provider',
+            title: provider.name,
+            meta: provider.type_label || provider.address || 'Disponible sur FlashMat',
+            action: () => navigate(`/provider/${provider.id || slugify(provider.name)}`),
+          })),
+        ]
+      : heroProviderMatches.map((provider) => ({
+          key: `provider-${provider.id || provider.name}`,
+          eyebrow: tab === 'quartier' ? 'Quartier' : 'Provider',
+          title: provider.name,
+          meta: provider.address || provider.type_label || 'Disponible sur FlashMat',
+          action: () => navigate(`/provider/${provider.id || slugify(provider.name)}`),
+        }))
+  ).slice(0, 4)
 
   const scrollRef = useRef(null)
   function scrollProviders(dir) {
@@ -190,9 +238,41 @@ export default function Landing() {
                 ))}
               </div>
               <form className={styles.searchBox} onSubmit={handleSearch}>
-                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={activeTab.ph} className={styles.searchInput} />
+                <input
+                  value={query}
+                  onChange={e => {
+                    const value = e.target.value
+                    setQuery(value)
+                    setFilterTerm(value.trim().toLowerCase())
+                  }}
+                  placeholder={activeTab.ph}
+                  className={styles.searchInput}
+                />
                 <button type="submit" className={styles.searchBtn}>Rechercher →</button>
               </form>
+              {(dbLoading || normalizedFilter) && (
+                <div className={styles.searchResults}>
+                  <div className={styles.searchResultsHeader}>
+                    <span>Recherche FlashMat</span>
+                    {normalizedFilter ? <span>{heroQuickResults.length} rÃ©sultat{heroQuickResults.length > 1 ? 's' : ''}</span> : <span>Saisissez un terme</span>}
+                  </div>
+                  {dbLoading ? (
+                    <div className={styles.searchResultEmpty}>Recherche en coursâ€¦</div>
+                  ) : heroQuickResults.length ? (
+                    <div className={styles.searchResultsList}>
+                      {heroQuickResults.map((result) => (
+                        <button key={result.key} type="button" className={styles.searchResultItem} onClick={result.action}>
+                          <span className={styles.searchResultEyebrow}>{result.eyebrow}</span>
+                          <strong className={styles.searchResultTitle}>{result.title}</strong>
+                          <span className={styles.searchResultMeta}>{result.meta}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.searchResultEmpty}>Aucun rÃ©sultat direct. Essayez un service, un provider ou un quartier.</div>
+                  )}
+                </div>
+              )}
             </div>
             <div className={styles.chips}>
               {[['🔧 Mécanique','mechanic'],['🚿 Lave-auto','wash'],['🔩 Pneus','tire'],['🚛 Remorquage 24/7','tow'],['🪟 Vitres','glass'],['🎨 Carrosserie','body'],['♻️ Casse auto','junk']].map(([label, cat]) => (
