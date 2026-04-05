@@ -1123,20 +1123,11 @@ function detectCaseStable(text) {
   return bestMatch.candidate
 }
 
-function shouldUseAiFallback(input, localDiagnosis) {
+function shouldTryAiDiagnosis(input, localDiagnosis) {
   if (!ANTHROPIC_API_KEY || !input || input.trim().length < 18 || !localDiagnosis) {
     return false
   }
-
-  const probableIssue = String(localDiagnosis.probableIssue || '').toLowerCase()
-  const confidence = String(localDiagnosis.confidence || '').toLowerCase()
-
-  return (
-    probableIssue.includes('inspection mecanique generale')
-    || probableIssue.includes('diagnostic encore incertain')
-    || probableIssue.includes('plusieurs pistes')
-    || confidence.includes('faible')
-  )
+  return true
 }
 
 function parseAiJsonBlock(rawText) {
@@ -1252,15 +1243,14 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const [inputMode, setInputMode] = useState('text')
   const [draft, setDraft] = useState('')
   const [diagnosis, setDiagnosis] = useState(null)
-  const [diagnosisSource, setDiagnosisSource] = useState('rules')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasFreshResult, setHasFreshResult] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Décrivez le symptôme puis lancez le diagnostic.')
   const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
-    ? (diagnosisSource === 'ai' ? 'Conseil entretien IA FlashMat' : 'Conseil entretien FlashMat')
-    : (diagnosisSource === 'ai' ? 'Diagnostic IA assiste FlashMat' : 'Diagnostic automatique FlashMat')
+    ? 'Conseil entretien FlashMat'
+    : 'Diagnostic automatique FlashMat'
 
   useEffect(() => {
     return () => {
@@ -1300,14 +1290,12 @@ export default function VehicleDoctor({ compact = false, userName }) {
     analyzeTimeoutRef.current = window.setTimeout(async () => {
       const localDiagnosis = detectCaseStable(value)
       let finalDiagnosis = localDiagnosis
-      let finalSource = 'rules'
       let finalStatus = 'Diagnostic prêt. Consultez le résultat et les garages suggérés.'
 
       setDiagnosis(localDiagnosis)
-      setDiagnosisSource('rules')
 
-      if (shouldUseAiFallback(value, localDiagnosis)) {
-        setStatusMessage('Analyse IA en cours pour affiner le diagnostic...')
+      if (shouldTryAiDiagnosis(value, localDiagnosis)) {
+        setStatusMessage('Analyse approfondie du sympt�me en cours...')
 
         try {
           const aiDiagnosis = await fetchAnthropicDiagnosis(value, localDiagnosis)
@@ -1315,21 +1303,19 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
           if (aiDiagnosis) {
             finalDiagnosis = aiDiagnosis
-            finalSource = 'ai'
-            finalStatus = 'Diagnostic IA prêt. Vérifiez la synthèse et les actions conseillées.'
+            finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
           } else {
-            finalStatus = 'Diagnostic local prêt. Le fallback IA n a pas renvoyé de réponse exploitable.'
+            finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
           }
         } catch {
           if (latestAnalysisRef.current !== analysisId) return
-          finalStatus = 'Diagnostic local prêt. Le service IA est indisponible pour le moment.'
+          finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
         }
       }
 
       if (latestAnalysisRef.current !== analysisId) return
 
       setDiagnosis(finalDiagnosis)
-      setDiagnosisSource(finalSource)
       setIsAnalyzing(false)
       setHasFreshResult(true)
       setStatusMessage(finalStatus)
@@ -1350,7 +1336,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
         {compact ? (
           <div className={styles.compactHeader}>
             <div>
-              <div className={styles.eyebrow}>FlashMat Diagnostic IA</div>
+              <div className={styles.eyebrow}>FlashMat Diagnostic</div>
               <h2 className={styles.compactTitle}>Votre Docteur Automobile</h2>
               <p className={styles.compactSub}>
                 Décrivez le symptôme, ajoutez bientôt une photo ou un audio, et FlashMat propose un problème probable,
@@ -1402,7 +1388,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                   {inputMode === 'photo' && 'Le mode photo peut déjà lancer le diagnostic après description du symptôme.'}
                   {inputMode === 'audio' && 'Le mode audio est prévu dans le flow: la note vocale alimentera le diagnostic.'}
                 </span>
-                <strong>Montréal · IA + estimation + matching</strong>
+                <strong>Montr�al � estimation + matching</strong>
               </div>
             </div>
 
@@ -1491,13 +1477,6 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <span className={styles.statusText}>{statusMessage}</span>
             </div>
 
-            {diagnosis && (
-              <div className={styles.badgeRow}>
-                <span className={`${styles.badge} ${styles.badgeInfo}`}>
-                  {diagnosisSource === 'ai' ? 'Réponse affinée par IA' : 'Réponse basée sur les cas FlashMat'}
-                </span>
-              </div>
-            )}
 
             <p className={styles.summary}>
               {diagnosis
