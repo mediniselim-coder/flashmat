@@ -45,6 +45,31 @@ const PROVIDER_BOOKINGS = [
   { client: 'Patrick R.',   service: 'Recharge AC',      vehicle: 'Ford F-150',  datetime: "Auj. · 14h30",   price: '$120', status: 'scheduled', label: 'Planifié',  cls: 'badge-blue'  },
 ]
 
+function getProviderDraftStorageKey(user, profile) {
+  return `flashmat-provider-profile-draft:${user?.id || profile?.email || 'anonymous'}`
+}
+
+function readProviderDraft(user, profile) {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = window.localStorage.getItem(getProviderDraftStorageKey(user, profile))
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function writeProviderDraft(user, profile, payload) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(getProviderDraftStorageKey(user, profile), JSON.stringify(payload))
+  } catch {
+    // Ignore storage failures and keep the in-memory state.
+  }
+}
+
 function formatFlashFixTime(value) {
   if (!value) return 'Maintenant'
 
@@ -137,9 +162,11 @@ export default function ProviderApp() {
   useEffect(() => {
     async function loadProviderProfile() {
       const baseIdentity = { email: profile?.email || user?.email, name: profile?.full_name || 'Garage Los Santos' }
+      const localDraft = readProviderDraft(user, profile)
       let nextForm = mergeProviderProfile({
         ...providerProfileForm,
         ...baseIdentity,
+        ...(localDraft || {}),
       })
 
       const { data } = user?.id
@@ -280,6 +307,8 @@ export default function ProviderApp() {
 
     saveProviderOverride({ email: providerProfileForm.email, name: providerProfileForm.name }, payload)
     saveProviderOverride({ email: profile?.email || user?.email, name: profile?.full_name || providerProfileForm.name }, payload)
+    writeProviderDraft(user, profile, payload)
+    setProviderProfileForm((current) => ({ ...current, ...payload }))
 
     try {
       setIsSavingProfile(true)
@@ -323,7 +352,7 @@ export default function ProviderApp() {
       window.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
       toast('Profil atelier sauvegarde', 'success')
     } catch (error) {
-      toast(error.message || 'Impossible de sauvegarder le profil atelier', 'error')
+      toast(error.message || 'Profil sauvegarde localement, mais la synchronisation distante a echoue', 'error')
     } finally {
       setIsSavingProfile(false)
     }
