@@ -145,6 +145,8 @@ export default function Landing() {
 
       {/* HERO */}
       <section className={styles.hero}>
+        <div className={styles.heroMedia} />
+        <div className={styles.heroMediaOverlay} />
         <div className={styles.heroOrb1} />
         <div className={styles.heroOrb2} />
         <div className={styles.heroGrid} />
