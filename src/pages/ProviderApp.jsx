@@ -751,6 +751,17 @@ export default function ProviderApp() {
                   {profileSaveNotice}
                 </div>
               )}
+              <div style={{display:'flex',justifyContent:'flex-end',marginBottom:14}}>
+                <button
+                  type="button"
+                  className="btn btn-green"
+                  style={{minWidth:160,justifyContent:'center'}}
+                  onClick={() => { void saveProviderProfileChanges() }}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder le profil'}
+                </button>
+              </div>
               <div className={styles.g2}>
                 <div>
                   <div className="panel">
@@ -840,6 +851,17 @@ export default function ProviderApp() {
                     </div>
                   </div>
                 </div>
+              </div>
+              <div style={{display:'flex',justifyContent:'flex-end',marginTop:18}}>
+                <button
+                  type="button"
+                  className="btn btn-green"
+                  style={{minWidth:180,justifyContent:'center'}}
+                  onClick={() => { void saveProviderProfileChanges() }}
+                  disabled={isSavingProfile}
+                >
+                  {isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder maintenant'}
+                </button>
               </div>
             </div>
           </div>
