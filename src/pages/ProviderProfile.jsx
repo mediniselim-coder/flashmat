@@ -114,7 +114,7 @@ export default function ProviderProfile() {
     const exactName = searchParams.get('n')
     const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
     window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
-    window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+    navigate('/?login=1')
   }
 
   async function handleBookingConfirm(payload) {
