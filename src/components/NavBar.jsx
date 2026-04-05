@@ -10,10 +10,11 @@ const PRIMARY_ITEMS = [
     shortLabel: 'Services',
     icon: ServicesIcon,
     title: 'Services FlashMat',
-    subtitle: 'Tous les services auto de votre plateforme dans un popup plus app et plus utile.',
+    subtitle: 'Prenez rendez-vous plus vite pour l entretien, les pneus, le lavage ou la carrosserie.',
     searchPlaceholder: 'Rechercher un service...',
     cta: 'Voir les services',
     accent: 'Services et entretien',
+    image: '/nav-services.jpg',
     links: [
       { label: 'Mecanique generale', to: '/services' },
       { label: 'Pneus et alignement', to: '/services/providers?cat=tire' },
@@ -33,6 +34,7 @@ const PRIMARY_ITEMS = [
     searchPlaceholder: 'Rechercher un garage ou un provider...',
     cta: 'Voir les providers',
     accent: 'Garages et ateliers',
+    image: '/nav-providers.jpg',
     links: [
       { label: 'Tous les providers', to: '/services/providers' },
       { label: 'Garages vedettes', to: '/services/providers?cat=mechanic' },
@@ -52,6 +54,7 @@ const PRIMARY_ITEMS = [
     searchPlaceholder: 'Décrire un symptôme ou un code OBD...',
     cta: 'Ouvrir le docteur',
     accent: 'Diagnostic et matching',
+    image: '/nav-doctor.jpg',
     links: [
       { label: 'Lancer un diagnostic', to: '/doctor' },
       { label: 'Cas urgents FlashFix', to: '/urgence' },
@@ -69,6 +72,7 @@ const PRIMARY_ITEMS = [
     searchPlaceholder: 'Rechercher une pièce ou une annonce...',
     cta: 'Ouvrir le marketplace',
     accent: 'Pièces et annonces',
+    image: '/nav-marketplace.jpg',
     links: [
       { label: 'Toutes les annonces', to: '/marketplace' },
       { label: 'Marketplace client', to: '/app/marketplace' },
@@ -409,31 +413,31 @@ function HoverLabel({ visible, label }) {
 
 function AppPanel({ item, onNavigate, onClose, compact = false }) {
   return (
-    <div style={{ ...styles.panelCard, width: compact ? 'min(1180px, calc(100vw - 28px))' : 'min(1680px, calc(100vw - 48px))', padding: compact ? 22 : 28 }}>
-      <div style={{ ...styles.panelGrid, gridTemplateColumns: compact ? '1fr .92fr' : '1.05fr 1fr', gap: compact ? 20 : 28 }}>
-        <div>
+    <div style={{ ...styles.panelCard, width: compact ? 'min(1180px, calc(100vw - 28px))' : 'min(1680px, calc(100vw - 48px))', padding: compact ? 26 : 30 }}>
+      <div style={{ ...styles.panelGrid, gridTemplateColumns: compact ? '1fr .94fr' : '1.02fr 1fr', gap: compact ? 24 : 34 }}>
+        <div style={{ padding: compact ? '6px 2px 4px' : '10px 4px 10px' }}>
           <div style={styles.panelEyebrow}>FlashMat Hub</div>
-          <h2 style={{ ...styles.panelTitle, fontSize: compact ? 38 : 56, maxWidth: compact ? 440 : 580 }}>{item.title}</h2>
-          <p style={{ ...styles.panelSubtitle, fontSize: compact ? 15 : 18, maxWidth: compact ? 470 : 640 }}>{item.subtitle}</p>
-          <div style={{ ...styles.linkGrid, gap: compact ? 6 : 10 }}>
+          <h2 style={{ ...styles.panelTitle, fontSize: compact ? 36 : 58, maxWidth: compact ? 470 : 620 }}>{item.title}</h2>
+          <p style={{ ...styles.panelSubtitle, fontSize: compact ? 15 : 17, maxWidth: compact ? 500 : 620 }}>{item.subtitle}</p>
+          <div style={{ ...styles.linkGrid, gap: compact ? 8 : 12 }}>
             {item.links.map((link) => (
-              <button key={link.label} type="button" style={{ ...styles.panelLink, fontSize: compact ? 14 : 16, padding: compact ? '8px 0' : '10px 0' }} onClick={() => onNavigate(link.to)}>
+              <button key={link.label} type="button" style={{ ...styles.panelLink, fontSize: compact ? 14 : 16, padding: compact ? '9px 0' : '11px 0' }} onClick={() => onNavigate(link.to)}>
                 {link.label}
               </button>
             ))}
           </div>
         </div>
 
-        <div>
-          <div style={{ ...styles.searchShell, marginBottom: compact ? 16 : 20 }}>
+        <div style={{ paddingTop: compact ? 4 : 6 }}>
+          <div style={{ ...styles.searchShell, marginBottom: compact ? 20 : 24 }}>
             <input readOnly value="" placeholder={item.searchPlaceholder} style={{ ...styles.searchInput, height: compact ? 48 : 56, fontSize: compact ? 15 : 18 }} />
             <button type="button" style={styles.searchButton} onClick={() => onNavigate(item.links[0]?.to || '/')}>
               <SearchIcon />
             </button>
           </div>
-          <div style={{ ...styles.visualCard, minHeight: compact ? 220 : 290 }}>
-            <div style={styles.visualGlow} />
-            <div style={{ ...styles.visualText, minHeight: compact ? 220 : 290, padding: compact ? 20 : 28 }}>
+          <div style={{ ...styles.visualCard, minHeight: compact ? 250 : 292, backgroundImage: `linear-gradient(180deg, rgba(8, 34, 55, 0.08) 0%, rgba(8, 34, 55, 0.34) 100%), url(${item.image})` }}>
+            <div style={styles.visualShade} />
+            <div style={{ ...styles.visualText, minHeight: compact ? 250 : 292, padding: compact ? 20 : 24 }}>
               <div style={styles.visualBadge}>{item.accent}</div>
               <button type="button" style={{ ...styles.visualCta, padding: compact ? '12px 18px' : '14px 22px', fontSize: compact ? 14 : 15 }} onClick={() => onNavigate(item.links[0]?.to || '/')}>
                 {item.cta}
@@ -830,11 +834,11 @@ const styles = {
     pointerEvents: 'auto',
   },
   panelGrid: { display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 28, alignItems: 'start' },
-  panelEyebrow: { fontSize: 12, letterSpacing: 2.4, textTransform: 'uppercase', color: '#5a78a1', fontWeight: 800, marginBottom: 12 },
-  panelTitle: { fontFamily: 'var(--display)', fontSize: 56, lineHeight: 1.02, letterSpacing: '-0.04em', color: '#1b2940', marginBottom: 18, maxWidth: 580 },
-  panelSubtitle: { maxWidth: 640, color: '#5b6f86', fontSize: 18, lineHeight: 1.7, marginBottom: 26 },
-  linkGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 },
-  panelLink: { border: 'none', background: 'transparent', color: '#243b55', fontSize: 16, textAlign: 'left', padding: '10px 0' },
+  panelEyebrow: { fontSize: 12, letterSpacing: 2.4, textTransform: 'uppercase', color: '#5a78a1', fontWeight: 800, marginBottom: 16 },
+  panelTitle: { fontFamily: 'var(--display)', fontSize: 56, lineHeight: 1.02, letterSpacing: '-0.045em', color: '#1b2940', marginBottom: 20, maxWidth: 580 },
+  panelSubtitle: { maxWidth: 640, color: '#5b6f86', fontSize: 18, lineHeight: 1.72, marginBottom: 34 },
+  linkGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, columnGap: 34 },
+  panelLink: { border: 'none', background: 'transparent', color: '#2b4663', fontSize: 16, textAlign: 'left', padding: '10px 0', fontWeight: 500 },
   searchShell: {
     display: 'grid', gridTemplateColumns: '1fr 56px', borderRadius: 16, overflow: 'hidden',
     border: '1px solid rgba(26,58,143,0.14)', background: '#ffffff',
@@ -842,10 +846,10 @@ const styles = {
   },
   searchInput: { border: 'none', outline: 'none', padding: '0 18px', height: 56, fontSize: 18, color: '#21354d', background: 'transparent' },
   searchButton: { border: 'none', background: '#082237', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
-  visualCard: { position: 'relative', minHeight: 290, borderRadius: 24, overflow: 'hidden', background: 'linear-gradient(135deg, #103454 0%, #1d537f 48%, #58afe4 100%)' },
-  visualGlow: { position: 'absolute', inset: 0, background: 'radial-gradient(circle at top right, rgba(255,255,255,0.3), transparent 40%), radial-gradient(circle at bottom left, rgba(90,184,240,0.3), transparent 36%)' },
+  visualCard: { position: 'relative', minHeight: 290, borderRadius: 24, overflow: 'hidden', backgroundSize: 'cover', backgroundPosition: 'center' },
+  visualShade: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,24,39,0.08) 0%, rgba(6,24,39,0.24) 36%, rgba(6,24,39,0.42) 100%)' },
   visualText: { position: 'relative', zIndex: 1, minHeight: 290, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 28 },
-  visualBadge: { alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 13, fontWeight: 700 },
+  visualBadge: { alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 13, fontWeight: 700, backdropFilter: 'blur(8px)' },
   visualCta: { alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 10, border: 'none', borderRadius: 16, padding: '14px 22px', background: '#ffffff', color: '#17314a', fontSize: 15, fontWeight: 700, boxShadow: '0 12px 28px rgba(4,18,32,0.18)' },
   panelClose: { marginTop: 18, border: 'none', background: 'transparent', color: '#506a86', fontSize: 14, fontWeight: 700 },
   profilePopup: { position: 'absolute', right: 0, top: 56, width: 280, borderRadius: 18, overflow: 'hidden', background: '#0b2740', border: '1px solid rgba(120,180,220,0.12)', boxShadow: '0 24px 42px rgba(4,18,32,0.32)' },
