@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 
@@ -96,9 +96,20 @@ const SERVICES = [
 
 export default function Services() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, profile } = useAuth()
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(location.state?.cat || '')
   const [active, setActive] = useState(null)
+
+  function openFlashFix() {
+    if (user && profile?.role === 'client') {
+      navigate('/urgence')
+      return
+    }
+
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/urgence')
+    navigate('/urgence?login=1')
+  }
 
   function goToFilteredSearch(categoryId) {
     window.sessionStorage.setItem('flashmat-pending-service-search', JSON.stringify({
@@ -189,7 +200,7 @@ export default function Services() {
                 onClick={e => {
                   e.stopPropagation()
                     if (s.id === 'flashfix') {
-                      navigate('/urgence')
+                      openFlashFix()
                       return
                     }
                     goToFilteredSearch(s.id)

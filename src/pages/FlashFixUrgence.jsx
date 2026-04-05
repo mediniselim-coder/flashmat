@@ -212,6 +212,7 @@ function buildProviderProfile(provider, option) {
 export default function FlashFixUrgence() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const canUseFlashFix = user && profile?.role === 'client'
   const [quickCase, setQuickCase] = useState('')
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('Montreal')
@@ -252,6 +253,12 @@ export default function FlashFixUrgence() {
   }, [])
 
   useEffect(() => {
+    if (!canUseFlashFix) {
+      setGeoStatus('locked')
+      setGeoLabel('Connectez votre profil client pour activer la localisation precise et envoyer la demande.')
+      return
+    }
+
     if (typeof window === 'undefined' || !navigator.geolocation) {
       setGeoStatus('unavailable')
       setGeoLabel('Localisation automatique non disponible')
@@ -271,7 +278,12 @@ export default function FlashFixUrgence() {
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 },
     )
-  }, [])
+  }, [canUseFlashFix])
+
+  function openLoginForFlashFix() {
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/urgence')
+    window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+  }
 
   function chooseQuickCase(label) {
     setQuickCase(label)
@@ -286,6 +298,10 @@ export default function FlashFixUrgence() {
 
   function launchFlashFixRequest() {
     if (!resolvedCase || !selectedOption) return
+    if (!canUseFlashFix) {
+      openLoginForFlashFix()
+      return
+    }
 
     const providerProfile = matchedProvider ? buildProviderProfile(matchedProvider, selectedOption) : null
 
@@ -353,6 +369,22 @@ export default function FlashFixUrgence() {
               FlashFix detecte la position du client en arriere-plan, confirme le bon service, puis envoie la demande au provider le plus adapte sans exposer son identite au client. Le flow couvre maintenant mecanicien, lavage et remorquage.
             </p>
 
+            {!canUseFlashFix && (
+              <div style={{ background: '#fff7ed', border: '1px solid #fdba74', borderRadius: 18, padding: 16, marginBottom: 16 }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: '#9a3412', marginBottom: 6 }}>Connexion client requise</div>
+                <div style={{ fontSize: 14, lineHeight: 1.7, color: '#7c2d12', marginBottom: 12 }}>
+                  FlashFix demande un profil client connecte pour confirmer la localisation exacte, les details du vehicule et le suivi de mission dans l application.
+                </div>
+                <button
+                  type="button"
+                  onClick={openLoginForFlashFix}
+                  style={{ padding: '11px 16px', borderRadius: 12, border: 'none', background: '#ef4444', color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}
+                >
+                  Se connecter pour lancer FlashFix
+                </button>
+              </div>
+            )}
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
               {QUICK_CASES.map((item) => (
                 <button
@@ -380,18 +412,21 @@ export default function FlashFixUrgence() {
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 placeholder="Ex: la voiture ne demarre pas, je suis dans mon stationnement a Montreal"
+                disabled={!canUseFlashFix}
                 style={{ width: '100%', minHeight: 130, borderRadius: 18, border: '1px solid #dbe2ea', padding: 16, fontSize: 15, lineHeight: 1.6, resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box', color: '#111827' }}
               />
               <input
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
                 placeholder="Position GPS automatique"
+                disabled={!canUseFlashFix}
                 style={{ width: '100%', borderRadius: 16, border: '1px solid #dbe2ea', padding: 14, fontSize: 14, boxSizing: 'border-box', color: '#111827' }}
               />
               <input
                 value={locationDetails}
                 onChange={(event) => setLocationDetails(event.target.value)}
                 placeholder="Complement precise: appartement, etage, stationnement, numero de borne..."
+                disabled={!canUseFlashFix}
                 style={{ width: '100%', borderRadius: 16, border: '1px solid #dbe2ea', padding: 14, fontSize: 14, boxSizing: 'border-box', color: '#111827' }}
               />
             </div>
@@ -500,7 +535,7 @@ export default function FlashFixUrgence() {
                   disabled={!selectedOption}
                   style={{ marginTop: 16, width: '100%', padding: '15px 18px', borderRadius: 16, border: 'none', background: selectedOption ? 'linear-gradient(135deg,#ef4444,#dc2626)' : '#fca5a5', color: '#fff', fontSize: 15, fontWeight: 800, cursor: selectedOption ? 'pointer' : 'not-allowed', boxShadow: selectedOption ? '0 18px 34px rgba(239,68,68,0.24)' : 'none' }}
                 >
-                  Lancer la demande au provider
+                  {canUseFlashFix ? 'Lancer la demande au provider' : 'Se connecter pour continuer'}
                 </button>
               </>
             )}

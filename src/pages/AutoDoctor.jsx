@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 import VehicleDoctor from '../components/VehicleDoctor'
 
@@ -19,6 +20,13 @@ const INFO_CARDS = [
 
 export default function AutoDoctor() {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
+  const canUseDoctor = user && profile?.role === 'client'
+
+  function openLoginForDoctor() {
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/doctor')
+    window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)' }}>
@@ -36,10 +44,16 @@ export default function AutoDoctor() {
         </p>
         <button
           type="button"
-          onClick={() => document.getElementById('doctor-tool')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onClick={() => {
+            if (canUseDoctor) {
+              document.getElementById('doctor-tool')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              return
+            }
+            openLoginForDoctor()
+          }}
           style={{ padding: '12px 18px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
         >
-          Utiliser le Docteur Automobile ↓
+          {canUseDoctor ? 'Utiliser le Docteur Automobile ↓' : 'Connexion client requise'}
         </button>
       </div>
 
@@ -53,7 +67,25 @@ export default function AutoDoctor() {
       </div>
 
       <div id="doctor-tool" style={{ maxWidth: 1240, margin: '0 auto', padding: '40px 32px 56px' }}>
-        <VehicleDoctor />
+        {canUseDoctor ? (
+          <VehicleDoctor />
+        ) : (
+          <div style={{ background: '#fff', borderRadius: 24, padding: 30, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb' }}>
+            <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#22c55e', marginBottom: 10, fontWeight: 700 }}>Acces protege</div>
+            <h2 style={{ fontSize: 32, lineHeight: 1.08, margin: '0 0 12px', color: '#111827' }}>Connectez votre profil client pour lancer un diagnostic</h2>
+            <p style={{ fontSize: 15, lineHeight: 1.75, color: '#6b7280', margin: '0 0 18px', maxWidth: 760 }}>
+              Le Docteur Automobile est lie au profil client pour conserver vos demandes, vos vehicules et vos futures reservations. La page reste visible publiquement, mais l analyse n est disponible qu apres connexion.
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button type="button" onClick={openLoginForDoctor} style={{ padding: '12px 18px', borderRadius: 10, border: 'none', background: '#22c55e', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                Se connecter comme client
+              </button>
+              <button type="button" onClick={() => navigate('/services')} style={{ padding: '12px 18px', borderRadius: 10, border: '1px solid #d1d5db', background: '#fff', color: '#111827', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                Voir les services
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 32px 56px' }}>

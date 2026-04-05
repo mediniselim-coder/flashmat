@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate, useNavigate } from "react-router-dom"
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom"
 import { useEffect } from "react"
 import { AuthProvider, useAuth } from "./hooks/useAuth"
 import { ToastProvider } from "./hooks/useToast"
@@ -11,9 +11,11 @@ import ProviderProfile from "./pages/ProviderProfile"
 import Services from "./pages/Services"
 import AutoDoctor from "./pages/AutoDoctor"
 import FlashFixUrgence from "./pages/FlashFixUrgence"
+import PublicMarketplace from "./pages/PublicMarketplace"
 
 function AuthCallback() {
   const navigate = useNavigate()
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -24,16 +26,27 @@ function AuthCallback() {
       }
     })
   }, [navigate])
+
   return null
 }
 
 function ProtectedRoute({ children, requiredRole }) {
   const { user, profile, loading } = useAuth()
+  const location = useLocation()
+
   if (loading) return null
-  if (!user) return <Navigate to="/auth" replace />
+
+  if (!user) {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem("flashmat-post-login-redirect", `${location.pathname}${location.search}`)
+    }
+    return <Navigate to="/?login=1" replace />
+  }
+
   if (requiredRole && profile?.role !== requiredRole) {
     return <Navigate to={profile?.role === "provider" ? "/app/provider" : "/app/client"} replace />
   }
+
   return children
 }
 
@@ -48,17 +61,33 @@ export default function App() {
           <Route path="/services" element={<Services />} />
           <Route path="/doctor" element={<AutoDoctor />} />
           <Route path="/urgence" element={<FlashFixUrgence />} />
+          <Route path="/marketplace" element={<PublicMarketplace />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />
-          <Route path="/app/marketplace" element={
-            <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
-          } />
-          <Route path="/app/client/*" element={
-            <ProtectedRoute requiredRole="client"><ClientApp /></ProtectedRoute>
-          } />
-          <Route path="/app/provider/*" element={
-            <ProtectedRoute requiredRole="provider"><ProviderApp /></ProtectedRoute>
-          } />
+          <Route
+            path="/app/marketplace"
+            element={
+              <ProtectedRoute requiredRole="client">
+                <ClientApp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/client/*"
+            element={
+              <ProtectedRoute requiredRole="client">
+                <ClientApp />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/app/provider/*"
+            element={
+              <ProtectedRoute requiredRole="provider">
+                <ProviderApp />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </ToastProvider>

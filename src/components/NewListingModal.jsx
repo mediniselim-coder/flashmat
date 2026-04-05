@@ -40,6 +40,10 @@ export default function NewListingModal({ onClose, onCreated }) {
 
   async function submit(e) {
     e.preventDefault()
+    if (!user || !profile) {
+      setError('Connexion requise pour publier une annonce.')
+      return
+    }
     if (!form.title.trim() || !form.price) { setError('Titre et prix requis.'); return }
     setLoading(true); setError('')
     try {

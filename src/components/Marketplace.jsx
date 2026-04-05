@@ -27,8 +27,18 @@ export default function Marketplace({ portal = 'client', openComposer = false })
   useEffect(() => { fetchListings() }, [])
 
   useEffect(() => {
-    setShowModal(openComposer)
-  }, [openComposer])
+    setShowModal(Boolean(openComposer && user && profile))
+  }, [openComposer, profile, user])
+
+  function openComposerModal() {
+    if (!user || !profile) {
+      window.sessionStorage.setItem('flashmat-post-login-redirect', '/app/marketplace')
+      window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+      return
+    }
+
+    setShowModal(true)
+  }
 
   async function fetchListings() {
     setLoading(true)
@@ -63,7 +73,7 @@ export default function Marketplace({ portal = 'client', openComposer = false })
             {loading ? '…' : `${filtered.length} annonce${filtered.length!==1?'s':''} disponible${filtered.length!==1?'s':''}`}
           </div>
         </div>
-        <button className="btn btn-green" onClick={() => setShowModal(true)}>+ Publier une annonce</button>
+        <button className="btn btn-green" onClick={openComposerModal}>+ Publier une annonce</button>
       </div>
 
       {/* SEARCH + SORT */}
@@ -104,7 +114,7 @@ export default function Marketplace({ portal = 'client', openComposer = false })
               {search || cat !== 'Tous' ? 'Aucun résultat' : 'Aucune annonce pour l\'instant'}
             </div>
             <div style={{ fontSize:13, marginBottom:20 }}>Soyez le premier à publier!</div>
-            <button className="btn btn-green btn-lg" onClick={() => setShowModal(true)}>+ Publier une annonce</button>
+            <button className="btn btn-green btn-lg" onClick={openComposerModal}>+ Publier une annonce</button>
           </div>
         ) : (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:14 }}>
@@ -194,7 +204,7 @@ export default function Marketplace({ portal = 'client', openComposer = false })
         )}
       </div>
 
-      {showModal && (
+      {showModal && user && profile && (
         <NewListingModal
           onClose={() => setShowModal(false)}
           onCreated={listing => { setListings(prev => [listing, ...prev]); setShowModal(false) }}

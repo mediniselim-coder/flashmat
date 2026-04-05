@@ -56,17 +56,7 @@ export default function NavBar({ activePage }) {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
 
   function openMarketplace() {
-    if (!user || !profile) {
-      setLoginOpen(true)
-      return
-    }
-
-    if (profile.role === 'provider') {
-      navigate('/app/provider')
-      return
-    }
-
-    navigate('/app/marketplace')
+    navigate('/marketplace')
   }
 
   const navLinkStyle = (page) => ({

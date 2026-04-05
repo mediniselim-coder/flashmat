@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
-import VehicleDoctor from '../components/VehicleDoctor'
 
 const SERVICES = [
   { id: 'flashfix',  name: 'FlashFix',     icon: '🚨', count: 8 },
@@ -55,6 +55,7 @@ const RATING_FILTERS = [
 
 export default function Landing() {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
   const [tab, setTab]           = useState('service')
   const [query, setQuery]       = useState('')
   const [filterTerm, setFilterTerm] = useState('')
@@ -75,6 +76,16 @@ export default function Landing() {
       .limit(30)
       .then(({ data }) => { setDbProviders(data || []); setDbLoading(false) })
   }, [filterTerm])
+
+  function openDoctor() {
+    if (user && profile?.role === 'client') {
+      navigate('/doctor')
+      return
+    }
+
+    window.sessionStorage.setItem('flashmat-post-login-redirect', '/doctor')
+    navigate('/doctor?login=1')
+  }
 
   function handleSearch(e) {
     e.preventDefault()
@@ -146,7 +157,7 @@ export default function Landing() {
         </div>
         <div className={styles.chips}>
           {[['🔧 Mécanique','mechanic'],['🚿 Lave-auto','wash'],['🔩 Pneus','tire'],['🚛 Remorquage 24/7','tow'],['🪟 Vitres','glass'],['🎨 Carrosserie','body'],['♻️ Casse auto','junk']].map(([label, cat]) => (
-            <button key={cat} className={styles.chip} onClick={() => navigate('/app/client', { state: { pane: 'search', searchCat: cat } })}>{label}</button>
+            <button key={cat} className={styles.chip} onClick={() => navigate('/services', { state: { cat } })}>{label}</button>
           ))}
         </div>
         <div style={{ marginTop: 18 }}>
@@ -171,7 +182,27 @@ export default function Landing() {
         ))}
       </div>
 
-      <VehicleDoctor />
+      <section className={styles.section} style={{ paddingTop: 0 }}>
+        <div className={styles.eyebrow}>● Docteur Automobile</div>
+        <h2 className={styles.sectionTitle}>Des conseils auto clairs,<br />avec <span>connexion client</span></h2>
+        <div style={{ background: '#fff', borderRadius: 28, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', padding: '28px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, alignItems: 'center' }}>
+          <div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 10 }}>
+              Reserve aux clients connectes
+            </div>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, lineHeight: 1.05, color: 'var(--ink)' }}>
+              Parler au Docteur Automobile quand vous en avez vraiment besoin
+            </div>
+          </div>
+          <div style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
+            Posez vos questions d entretien, de panne ou de reservation seulement une fois connecte. FlashMat peut alors lier le diagnostic a votre profil, vos vehicules et vos prochaines reservations.
+            <div style={{ marginTop: 18, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-green btn-lg" onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
+              <button type="button" className="btn btn-outline btn-lg" onClick={() => navigate('/services')}>Voir les services</button>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* TICKER */}
       <div className={styles.ticker}>
