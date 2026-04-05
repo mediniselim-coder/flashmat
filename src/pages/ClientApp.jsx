@@ -162,7 +162,7 @@ export default function ClientApp() {
   async function fetchProviders() {
     setProvLoading(true)
     const { data } = await supabase
-      .from('providers_list')
+      .from('providers')
       .select('*')
       .order('rating', { ascending: false })
       .limit(100)

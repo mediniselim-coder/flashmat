@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
-import { mergeProviderProfile } from '../lib/providerProfiles'
+import { mergeProviderProfile, normalizeProviderRecord } from '../lib/providerProfiles'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -144,33 +144,45 @@ export default function ProviderProfile() {
 
   function normalizeDbProvider(data, slug) {
     return mergeProviderProfile({
-      ...data,
+      ...normalizeProviderRecord(data),
       slug,
-      logo: data.icon || '🔧',
+      logo: data.logo || data.icon || '🔧',
       coords: [45.5088, -73.5540],
       hours: data.hours || { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Ferme',Sun:'Ferme' },
       team: [],
       reviews_list: [],
       gallery: [],
       highlights: data.services || [],
-      providerEmail: data.email,
+      providerEmail: data.providerEmail || data.email,
     })
+  }
+
+  function slugifyProviderName(name) {
+    return String(name || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
   }
 
   useEffect(() => {
     const demo = DEMO_PROVIDERS[slug]
     if (demo) { setProvider(mergeProviderProfile(demo)); setLoading(false); return }
 
-    const exactName = searchParams.get('n')
-    const query = exactName
-      ? supabase.from('providers_list').select('*').eq('name', exactName).limit(1)
-      : supabase.from('providers_list').select('*').ilike('name', `%${slug.split('-').filter(s => s.length > 2)[0] || slug.split('-')[0]}%`).limit(1)
-
-    query.then(({ data }) => {
-      if (data?.[0]) setProvider(normalizeDbProvider(data[0], slug))
+    supabase.from('providers').select('*').order('rating', { ascending: false }).limit(200).then(({ data }) => {
+      const exactName = searchParams.get('n')
+      const match = (data || []).find((entry) => {
+        const providerName = entry.shop_name || entry.name
+        if (exactName) return providerName === exactName
+        return slugifyProviderName(providerName) === slug
+      })
+      if (match) setProvider(normalizeDbProvider(match, slug))
       setLoading(false)
     })
-  }, [slug])
+  }, [searchParams, slug])
 
   useEffect(() => {
     function syncProviderProfile() {

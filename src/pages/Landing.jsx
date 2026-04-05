@@ -70,7 +70,7 @@ export default function Landing() {
     if (!filterTerm) { setDbProviders([]); return }
     setDbLoading(true)
     supabase
-      .from('providers_list')
+      .from('providers')
       .select('*')
       .order('rating', { ascending: false })
       .limit(100)

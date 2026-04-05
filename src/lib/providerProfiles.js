@@ -40,6 +40,18 @@ const CATEGORY_LABELS = {
   tuning: 'Performance',
 }
 
+const CATEGORY_ICONS = {
+  mechanic: '🔧',
+  wash: '🚿',
+  tire: '🔩',
+  body: '🎨',
+  glass: '🪟',
+  tow: '🚛',
+  parts: '⚙️',
+  parking: '🅿️',
+  tuning: '🏎️',
+}
+
 export const DEFAULT_PROVIDER_HOURS = {
   Mon: { closed: false, open: '08:00', close: '17:00' },
   Tue: { closed: false, open: '08:00', close: '17:00' },
@@ -210,37 +222,66 @@ export function isProviderProfileComplete(provider) {
   )
 }
 
+export function normalizeProviderRecord(provider) {
+  if (!provider) return provider
+
+  const services = provider.services || []
+  const typeMeta = getPrimaryServiceType(services, provider.type || '')
+
+  return {
+    ...provider,
+    id: provider.id,
+    name: provider.name || provider.shop_name || '',
+    shop_name: provider.shop_name || provider.name || '',
+    type: provider.type || typeMeta.type,
+    type_label: provider.type_label || typeMeta.type_label,
+    icon: provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || '🔧',
+    logo: provider.logo || provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || '🔧',
+    address: provider.address || '',
+    phone: provider.phone || '',
+    description: provider.description || '',
+    services,
+    rating: Number(provider.rating ?? 5),
+    reviews: Number(provider.reviews ?? 0),
+    is_open: provider.is_open ?? true,
+    providerEmail: provider.providerEmail || provider.email || '',
+    coords: provider.coords || [45.5088, -73.554],
+    highlights: provider.highlights || services,
+  }
+}
+
 export function mergeProviderProfile(provider) {
-  const baseTypeMeta = getPrimaryServiceType(provider?.services || [], provider?.type || '')
-  const override = getProviderOverride(provider)
+  const normalizedProvider = normalizeProviderRecord(provider)
+  const baseTypeMeta = getPrimaryServiceType(normalizedProvider?.services || [], normalizedProvider?.type || '')
+  const override = getProviderOverride(normalizedProvider)
   if (!override) {
     return {
-      ...provider,
-      type: provider.type || baseTypeMeta.type,
-      type_label: provider.type_label || baseTypeMeta.type_label,
-      serviceCategories: getProviderServiceCategories(provider?.services || [], provider?.type || ''),
-      publicReady: isProviderProfileComplete(provider),
-      editableHours: normalizeProviderHours(provider.editableHours || provider.hours),
-      coverPhoto: provider.coverPhoto || provider.cover_photo || provider.cover || '',
-      galleryPhotos: provider.galleryPhotos || provider.gallery_photos || [],
-      hours: provider.hours && provider.hours.Mon ? provider.hours : hoursToDisplayMap(normalizeProviderHours(provider.hours)),
+      ...normalizedProvider,
+      type: normalizedProvider.type || baseTypeMeta.type,
+      type_label: normalizedProvider.type_label || baseTypeMeta.type_label,
+      serviceCategories: getProviderServiceCategories(normalizedProvider?.services || [], normalizedProvider?.type || ''),
+      publicReady: isProviderProfileComplete(normalizedProvider),
+      editableHours: normalizeProviderHours(normalizedProvider.editableHours || normalizedProvider.hours),
+      coverPhoto: normalizedProvider.coverPhoto || normalizedProvider.cover_photo || normalizedProvider.cover || '',
+      galleryPhotos: normalizedProvider.galleryPhotos || normalizedProvider.gallery_photos || [],
+      hours: normalizedProvider.hours && normalizedProvider.hours.Mon ? normalizedProvider.hours : hoursToDisplayMap(normalizeProviderHours(normalizedProvider.hours)),
     }
   }
 
-  const mergedHours = normalizeProviderHours(override.editableHours || provider.editableHours || provider.hours)
-  const mergedServices = override.services || provider.services || []
-  const mergedTypeMeta = getPrimaryServiceType(mergedServices, override.type || provider.type || '')
+  const mergedHours = normalizeProviderHours(override.editableHours || normalizedProvider.editableHours || normalizedProvider.hours)
+  const mergedServices = override.services || normalizedProvider.services || []
+  const mergedTypeMeta = getPrimaryServiceType(mergedServices, override.type || normalizedProvider.type || '')
   return {
-    ...provider,
+    ...normalizedProvider,
     ...override,
     services: mergedServices,
-    coverPhoto: override.coverPhoto || provider.coverPhoto || provider.cover_photo || provider.cover || '',
-    galleryPhotos: override.galleryPhotos || provider.galleryPhotos || provider.gallery_photos || [],
+    coverPhoto: override.coverPhoto || normalizedProvider.coverPhoto || normalizedProvider.cover_photo || normalizedProvider.cover || '',
+    galleryPhotos: override.galleryPhotos || normalizedProvider.galleryPhotos || normalizedProvider.gallery_photos || [],
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
-    type: override.type || provider.type || mergedTypeMeta.type,
-    type_label: override.type_label || provider.type_label || mergedTypeMeta.type_label,
-    serviceCategories: getProviderServiceCategories(mergedServices, override.type || provider.type || ''),
-    publicReady: isProviderProfileComplete({ ...provider, ...override, services: mergedServices }),
+    type: override.type || normalizedProvider.type || mergedTypeMeta.type,
+    type_label: override.type_label || normalizedProvider.type_label || mergedTypeMeta.type_label,
+    serviceCategories: getProviderServiceCategories(mergedServices, override.type || normalizedProvider.type || ''),
+    publicReady: isProviderProfileComplete({ ...normalizedProvider, ...override, services: mergedServices }),
   }
 }
