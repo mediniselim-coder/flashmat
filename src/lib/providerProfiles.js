@@ -1,4 +1,6 @@
 const STORAGE_KEY = 'flashmat-provider-overrides'
+const DESCRIPTION_META_PREFIX = '<!--FLASHMAT_PROVIDER_META:'
+const DESCRIPTION_META_SUFFIX = '-->'
 
 export const PROVIDER_SERVICE_OPTIONS = [
   { id: 'mechanic-general', label: 'Mecanique generale', icon: '🔧', category: 'mechanic' },
@@ -84,6 +86,59 @@ function writeRawOverrides(overrides) {
 
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides))
   win.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
+}
+
+function encodeProviderMeta(meta) {
+  try {
+    return encodeURIComponent(JSON.stringify(meta))
+  } catch {
+    return ''
+  }
+}
+
+function decodeProviderMeta(raw) {
+  try {
+    return JSON.parse(decodeURIComponent(raw))
+  } catch {
+    return {}
+  }
+}
+
+export function serializeProviderDescription(description, meta = {}) {
+  const cleanDescription = String(description || '').trim()
+  const encodedMeta = encodeProviderMeta(meta)
+
+  if (!encodedMeta) return cleanDescription
+
+  return `${cleanDescription}\n\n${DESCRIPTION_META_PREFIX}${encodedMeta}${DESCRIPTION_META_SUFFIX}`
+}
+
+export function extractProviderDescriptionMeta(description) {
+  const rawDescription = String(description || '')
+  const start = rawDescription.indexOf(DESCRIPTION_META_PREFIX)
+
+  if (start === -1) {
+    return {
+      description: rawDescription.trim(),
+      meta: {},
+    }
+  }
+
+  const end = rawDescription.indexOf(DESCRIPTION_META_SUFFIX, start)
+  const visibleDescription = rawDescription.slice(0, start).trim()
+
+  if (end === -1) {
+    return {
+      description: visibleDescription,
+      meta: {},
+    }
+  }
+
+  const encodedMeta = rawDescription.slice(start + DESCRIPTION_META_PREFIX.length, end)
+  return {
+    description: visibleDescription,
+    meta: decodeProviderMeta(encodedMeta),
+  }
 }
 
 export function getProviderOverrideKey(provider) {
@@ -225,8 +280,15 @@ export function isProviderProfileComplete(provider) {
 export function normalizeProviderRecord(provider) {
   if (!provider) return provider
 
+  const { description: visibleDescription, meta } = extractProviderDescriptionMeta(provider.description)
   const services = provider.services || []
   const typeMeta = getPrimaryServiceType(services, provider.type || '')
+  const normalizedHours = normalizeProviderHours(
+    provider.editableHours
+    || meta.editableHours
+    || meta.hours
+    || provider.hours,
+  )
 
   return {
     ...provider,
@@ -239,7 +301,7 @@ export function normalizeProviderRecord(provider) {
     logo: provider.logo || provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || '🔧',
     address: provider.address || '',
     phone: provider.phone || '',
-    description: provider.description || '',
+    description: visibleDescription,
     services,
     rating: Number(provider.rating ?? 5),
     reviews: Number(provider.reviews ?? 0),
@@ -247,6 +309,10 @@ export function normalizeProviderRecord(provider) {
     providerEmail: provider.providerEmail || provider.email || '',
     coords: provider.coords || [45.5088, -73.554],
     highlights: provider.highlights || services,
+    editableHours: normalizedHours,
+    hours: hoursToDisplayMap(normalizedHours),
+    coverPhoto: provider.coverPhoto || provider.cover_photo || provider.cover || meta.coverPhoto || '',
+    galleryPhotos: provider.galleryPhotos || provider.gallery_photos || meta.galleryPhotos || [],
   }
 }
 

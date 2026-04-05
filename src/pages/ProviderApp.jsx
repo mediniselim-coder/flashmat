@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
-import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride } from '../lib/providerProfiles'
+import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -341,7 +341,12 @@ export default function ProviderApp() {
         shop_name: providerProfileForm.name,
         address: providerProfileForm.address,
         phone: providerProfileForm.phone,
-        description: providerProfileForm.description,
+        description: serializeProviderDescription(providerProfileForm.description, {
+          editableHours: providerProfileForm.editableHours,
+          hours: publicHours,
+          coverPhoto: providerProfileForm.coverPhoto,
+          galleryPhotos: providerProfileForm.galleryPhotos,
+        }),
         services: providerProfileForm.services,
         rating: 5,
         reviews: 0,
