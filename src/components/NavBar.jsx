@@ -3,90 +3,89 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './LoginModal'
 
-const APP_ITEMS = [
-  {
-    id: 'home',
-    label: 'Accueil',
-    shortLabel: 'Accueil',
-    description: 'Retournez a la page d accueil FlashMat et aux acces rapides.',
-  },
+const PRIMARY_ITEMS = [
   {
     id: 'services',
     label: 'Services',
     shortLabel: 'Services',
-    description: 'Parcourez les services auto disponibles et les categories FlashMat.',
+    icon: ServicesIcon,
+    title: 'Services FlashMat',
+    subtitle: 'Tous les services auto de votre plateforme dans un popup plus app et plus utile.',
+    searchPlaceholder: 'Rechercher un service...',
+    cta: 'Voir les services',
+    accent: 'Services et entretien',
+    links: [
+      { label: 'Mecanique generale', to: '/services' },
+      { label: 'Pneus et alignement', to: '/services/providers?cat=tire' },
+      { label: 'Carrosserie', to: '/services/providers?cat=body' },
+      { label: 'Vitres et pare-brise', to: '/services/providers?cat=glass' },
+      { label: 'Remorquage', to: '/services/providers?cat=tow' },
+      { label: 'Parking', to: '/services/providers?cat=parking' },
+    ],
+  },
+  {
+    id: 'providers',
+    label: 'Providers',
+    shortLabel: 'Providers',
+    icon: ProvidersIcon,
+    title: 'Réseau de providers',
+    subtitle: 'Accédez rapidement aux ateliers, garages et spécialistes disponibles sur FlashMat.',
+    searchPlaceholder: 'Rechercher un garage ou un provider...',
+    cta: 'Voir les providers',
+    accent: 'Garages et ateliers',
+    links: [
+      { label: 'Tous les providers', to: '/services/providers' },
+      { label: 'Garages vedettes', to: '/services/providers?cat=mechanic' },
+      { label: 'Carrosserie', to: '/services/providers?cat=body' },
+      { label: 'Lavage et detailing', to: '/services/providers?cat=wash' },
+      { label: 'Marketplace fournisseur', to: '/marketplace' },
+      { label: 'Devenir fournisseur', to: '/auth?role=provider' },
+    ],
   },
   {
     id: 'doctor',
     label: 'Docteur Automobile',
     shortLabel: 'Docteur',
-    description: 'Lancez un diagnostic intelligent et trouvez le bon atelier plus vite.',
+    icon: DoctorIcon,
+    title: 'Docteur Automobile FlashMat',
+    subtitle: 'Diagnostic auto, matching atelier et parcours plus rapide vers le bon service.',
+    searchPlaceholder: 'Décrire un symptôme ou un code OBD...',
+    cta: 'Ouvrir le docteur',
+    accent: 'Diagnostic et matching',
+    links: [
+      { label: 'Lancer un diagnostic', to: '/doctor' },
+      { label: 'Cas urgents FlashFix', to: '/urgence' },
+      { label: 'Garages disponibles', to: '/services/providers' },
+      { label: 'Mon espace client', to: '/app/client' },
+    ],
   },
   {
     id: 'marketplace',
     label: 'Marketplace',
     shortLabel: 'Marketplace',
-    description: 'Explorez les pieces, offres et annonces publiees dans FlashMat.',
+    icon: MarketplaceIcon,
+    title: 'Marketplace FlashMat',
+    subtitle: 'Pièces, offres et circulation entre clients et fournisseurs dans le même univers.',
+    searchPlaceholder: 'Rechercher une pièce ou une annonce...',
+    cta: 'Ouvrir le marketplace',
+    accent: 'Pièces et annonces',
+    links: [
+      { label: 'Toutes les annonces', to: '/marketplace' },
+      { label: 'Marketplace client', to: '/app/marketplace' },
+      { label: 'Publier plus tard', to: '/marketplace' },
+      { label: 'Services liés', to: '/services' },
+    ],
   },
 ]
 
-const POPUP_SECTIONS = {
-  home: {
-    title: 'Navigation FlashMat',
-    subtitle: 'Gardez les acces actuels, mais dans une presentation type application.',
-    searchPlaceholder: 'Rechercher une page FlashMat...',
-    cta: 'Aller a l accueil',
-    visual: 'Vue centrale FlashMat',
-    links: [
-      { label: 'Accueil', to: '/' },
-      { label: 'Services', to: '/services' },
-      { label: 'Docteur Automobile', to: '/doctor' },
-      { label: 'Marketplace', to: '/marketplace' },
-      { label: 'FlashFix Urgence', to: '/urgence' },
-    ],
-  },
-  services: {
-    title: 'Quels services cherchez-vous ?',
-    subtitle: 'Retrouvez les categories deja presentes sur FlashMat, dans un popup plus app.',
-    searchPlaceholder: 'Rechercher un service...',
-    cta: 'Voir tous les services',
-    visual: 'Services et ateliers',
-    links: [
-      { label: 'Mecanique generale', to: '/services' },
-      { label: 'Pneus', to: '/services' },
-      { label: 'Carrosserie', to: '/services' },
-      { label: 'Climatisation', to: '/services' },
-      { label: 'Diagnostic electronique', to: '/services' },
-      { label: 'Parking et remorquage', to: '/services' },
-    ],
-  },
-  doctor: {
-    title: 'Docteur Automobile FlashMat',
-    subtitle: 'Accedez plus vite au diagnostic auto et aux garages pertinents.',
-    searchPlaceholder: 'Decrire un symptome ou un code OBD...',
-    cta: 'Ouvrir le docteur',
-    visual: 'Diagnostic et matching',
-    links: [
-      { label: 'Lancer un diagnostic', to: '/doctor' },
-      { label: 'Cas urgents', to: '/urgence' },
-      { label: 'Garages disponibles', to: '/services' },
-      { label: 'Mon espace client', to: '/app/client' },
-    ],
-  },
-  marketplace: {
-    title: 'Marketplace FlashMat',
-    subtitle: 'Achetez, vendez et retrouvez les sections marketplace sans changer le contenu.',
-    searchPlaceholder: 'Rechercher une piece ou une offre...',
-    cta: 'Ouvrir le marketplace',
-    visual: 'Pieces et annonces',
-    links: [
-      { label: 'Toutes les annonces', to: '/marketplace' },
-      { label: 'Publier une offre', to: '/marketplace' },
-      { label: 'Marketplace client', to: '/app/marketplace' },
-      { label: 'Services lies', to: '/services' },
-    ],
-  },
-}
+const MENU_SECTIONS = [
+  { label: 'Services', to: '/services' },
+  { label: 'Providers', to: '/services/providers' },
+  { label: 'Shop', to: '/marketplace' },
+  { label: 'Community', to: '/' },
+  { label: 'Pricing', to: '/services' },
+  { label: 'Contact', to: '/' },
+]
 
 export default function NavBar({ activePage }) {
   const navigate = useNavigate()
@@ -94,6 +93,7 @@ export default function NavBar({ activePage }) {
   const { user, profile, signOut } = useAuth()
   const [loginOpen, setLoginOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
   const rootRef = useRef(null)
@@ -105,7 +105,6 @@ export default function NavBar({ activePage }) {
     function handleClickOutside(event) {
       if (rootRef.current && !rootRef.current.contains(event.target)) {
         setProfileOpen(false)
-        setPanelOpen(null)
       }
     }
 
@@ -132,22 +131,28 @@ export default function NavBar({ activePage }) {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
-    if (params.get('login') === '1' && !user) {
-      setLoginOpen(true)
-    }
+    if (params.get('login') === '1' && !user) setLoginOpen(true)
   }, [location.search, user])
 
-  function navigateTo(path) {
+  function closeFloatingUi() {
+    setMenuOpen(false)
     setPanelOpen(null)
     setProfileOpen(false)
+  }
+
+  function navigateTo(path) {
+    closeFloatingUi()
     navigate(path)
   }
 
-  function openMarketplace() {
-    navigateTo('/marketplace')
+  function toggleMenu() {
+    setPanelOpen(null)
+    setProfileOpen(false)
+    setMenuOpen((current) => !current)
   }
 
   function togglePanel(id) {
+    setMenuOpen(false)
     setProfileOpen(false)
     setPanelOpen((current) => (current === id ? null : id))
   }
@@ -164,69 +169,59 @@ export default function NavBar({ activePage }) {
     if (isProvider) {
       return [
         { icon: <DashboardIcon />, label: 'Dashboard', action: () => navigateTo('/app/provider') },
-        { icon: <ServicesIcon />, label: 'Mes jobs', action: () => navigateTo('/app/provider') },
-        { icon: <LayersIcon />, label: 'Mes services', action: () => navigateTo('/app/provider') },
-        { icon: <StoreIcon />, label: 'Marketplace fournisseur', action: () => navigateTo('/app/provider') },
-        { icon: <HelpIcon />, label: 'Aide et support', action: () => setProfileOpen(false) },
+        { icon: <ProvidersIcon />, label: 'Profil atelier', action: () => navigateTo('/app/provider') },
+        { icon: <MarketplaceIcon />, label: 'Marketplace fournisseur', action: () => navigateTo('/app/provider') },
+        { icon: <DoctorIcon />, label: 'Support FlashMat', action: () => setProfileOpen(false) },
       ]
     }
 
     return [
       { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client') },
       { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client') },
-      { icon: <MapIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client') },
-      { icon: <StoreIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
-      { icon: <HelpIcon />, label: 'Aide et support', action: () => setProfileOpen(false) },
+      { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client') },
+      { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
     ]
   }, [isProvider, navigate, profile, user])
 
+  const activePanel = PRIMARY_ITEMS.find((item) => item.id === panelOpen) || null
+
   return (
     <>
-      <div ref={rootRef} style={{ position: 'sticky', top: 0, zIndex: 120 }}>
+      <div ref={rootRef} style={styles.root}>
         <nav style={styles.nav}>
           <div style={styles.leftGroup}>
             <button
               type="button"
-              style={styles.iconButton}
-              onMouseEnter={() => setHoveredIcon('home')}
+              style={menuOpen ? styles.menuButtonActive : styles.menuButton}
+              onMouseEnter={() => setHoveredIcon('menu')}
               onMouseLeave={() => setHoveredIcon(null)}
-              onClick={() => togglePanel('home')}
-              aria-label="Menu navigation"
+              onClick={toggleMenu}
+              aria-label="Ouvrir le menu FlashMat"
             >
               <MenuIcon />
-              <HoverLabel visible={hoveredIcon === 'home'} label="Navigation" />
+              <HoverLabel visible={hoveredIcon === 'menu'} label="Menu" />
             </button>
 
             <button type="button" style={styles.logoButton} onClick={() => navigateTo('/')}>
-              <img src="/logo.jpg" alt="FlashMat" style={{ height: 34, objectFit: 'contain' }} />
+              <img src="/logo.jpg" alt="FlashMat" style={{ height: 40, objectFit: 'contain' }} />
             </button>
           </div>
 
           <div style={styles.centerGroup}>
-            <AppIconButton
-              item={APP_ITEMS[1]}
-              isActive={activePage === 'services'}
-              hoveredIcon={hoveredIcon}
-              setHoveredIcon={setHoveredIcon}
-              onClick={() => togglePanel('services')}
-              icon={<LayersIcon />}
-            />
-            <AppIconButton
-              item={APP_ITEMS[2]}
-              isActive={activePage === 'doctor'}
-              hoveredIcon={hoveredIcon}
-              setHoveredIcon={setHoveredIcon}
-              onClick={() => togglePanel('doctor')}
-              icon={<MapIcon />}
-            />
-            <AppIconButton
-              item={APP_ITEMS[3]}
-              isActive={activePage === 'marketplace'}
-              hoveredIcon={hoveredIcon}
-              setHoveredIcon={setHoveredIcon}
-              onClick={() => togglePanel('marketplace')}
-              icon={<StoreIcon />}
-            />
+            {PRIMARY_ITEMS.map((item) => {
+              const Icon = item.icon
+              return (
+                <AppIconButton
+                  key={item.id}
+                  item={item}
+                  isActive={activePage === item.id || panelOpen === item.id}
+                  hoveredIcon={hoveredIcon}
+                  setHoveredIcon={setHoveredIcon}
+                  onClick={() => togglePanel(item.id)}
+                  icon={<Icon />}
+                />
+              )
+            })}
           </div>
 
           <div style={styles.rightGroup}>
@@ -240,6 +235,7 @@ export default function NavBar({ activePage }) {
                   type="button"
                   style={profileOpen ? styles.accountButtonActive : styles.accountButton}
                   onClick={() => {
+                    setMenuOpen(false)
                     setPanelOpen(null)
                     setProfileOpen((current) => !current)
                   }}
@@ -276,17 +272,46 @@ export default function NavBar({ activePage }) {
             )}
           </div>
         </nav>
-
-        {panelOpen && (
-          <div style={styles.panelOverlay}>
-            <AppPanel
-              item={POPUP_SECTIONS[panelOpen]}
-              onNavigate={(path) => navigateTo(path)}
-              onClose={() => setPanelOpen(null)}
-            />
-          </div>
-        )}
       </div>
+
+      {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
+
+      {menuOpen && (
+        <div style={styles.drawer}>
+          <div style={styles.drawerHeader}>
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: 62, objectFit: 'contain' }} />
+            <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
+          </div>
+          <div style={styles.drawerLinks}>
+            {MENU_SECTIONS.map((item) => (
+              <button key={item.label} type="button" style={styles.drawerLink} onClick={() => navigateTo(item.to)}>
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {!user && (
+            <div style={styles.drawerFooter}>
+              <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerLogin}>
+                <UserIcon />
+                <span>Login</span>
+              </button>
+              <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.drawerSignup}>
+                Sign Up
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activePanel && (
+        <div style={styles.panelWrap}>
+          <AppPanel
+            item={activePanel}
+            onNavigate={navigateTo}
+            onClose={() => setPanelOpen(null)}
+          />
+        </div>
+      )}
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
     </>
@@ -318,16 +343,13 @@ function HoverLabel({ visible, label }) {
 }
 
 function AppPanel({ item, onNavigate, onClose }) {
-  if (!item) return null
-
   return (
     <div style={styles.panelCard}>
       <div style={styles.panelGrid}>
         <div>
-          <div style={styles.panelEyebrow}>FlashMat Application</div>
+          <div style={styles.panelEyebrow}>FlashMat Hub</div>
           <h2 style={styles.panelTitle}>{item.title}</h2>
           <p style={styles.panelSubtitle}>{item.subtitle}</p>
-
           <div style={styles.linkGrid}>
             {item.links.map((link) => (
               <button key={link.label} type="button" style={styles.panelLink} onClick={() => onNavigate(link.to)}>
@@ -344,30 +366,25 @@ function AppPanel({ item, onNavigate, onClose }) {
               <SearchIcon />
             </button>
           </div>
-
           <div style={styles.visualCard}>
             <div style={styles.visualGlow} />
             <div style={styles.visualText}>
-              <div style={styles.visualBadge}>{item.visual}</div>
+              <div style={styles.visualBadge}>{item.accent}</div>
               <button type="button" style={styles.visualCta} onClick={() => onNavigate(item.links[0]?.to || '/')}>
                 {item.cta}
-                <span style={{ display: 'inline-flex' }}><MapPinIcon /></span>
+                <MapPinIcon />
               </button>
             </div>
           </div>
         </div>
       </div>
-
-      <button type="button" onClick={onClose} style={styles.panelClose}>
-        Fermer
-      </button>
+      <button type="button" onClick={onClose} style={styles.panelClose}>Fermer</button>
     </div>
   )
 }
 
 function PopupItem({ icon, label, onClick, danger = false }) {
   const [hover, setHover] = useState(false)
-
   return (
     <button
       type="button"
@@ -394,63 +411,55 @@ function Svg({ children, style }) {
   )
 }
 
-function MenuIcon() {
-  return <Svg><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></Svg>
-}
-function LayersIcon() {
-  return <Svg><path d="m12 4 7 4-7 4-7-4 7-4Z" /><path d="m5 12 7 4 7-4" /><path d="m5 16 7 4 7-4" /></Svg>
-}
-function MapIcon() {
-  return <Svg><path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2V6Z" /><path d="M9 4v14" /><path d="M15 6v14" /></Svg>
-}
-function StoreIcon() {
-  return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg>
-}
-function UserIcon() {
-  return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg>
-}
-function SearchIcon() {
-  return <Svg><circle cx="11" cy="11" r="6" /><path d="m20 20-4.35-4.35" /></Svg>
-}
-function MapPinIcon() {
-  return <Svg style={{ width: 16, height: 16 }}><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z" /><circle cx="12" cy="10" r="2.3" /></Svg>
-}
-function DashboardIcon() {
-  return <Svg><path d="M4 13h7V4H4v9Z" /><path d="M13 20h7v-7h-7v7Z" /><path d="M13 11h7V4h-7v7Z" /><path d="M4 20h7v-5H4v5Z" /></Svg>
-}
-function CarIcon() {
-  return <Svg><path d="M5 16h14" /><path d="m7 16 1-5h8l1 5" /><path d="M6 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="M18 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="m8 11 2-3h4l2 3" /></Svg>
-}
-function HelpIcon() {
-  return <Svg><path d="M9.1 9a3 3 0 1 1 5.8 1c-.5 1.3-1.9 1.8-2.4 2.5-.3.4-.4.7-.4 1.5" /><path d="M12 17h.01" /></Svg>
-}
-function LogoutIcon() {
-  return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Svg>
-}
+function MenuIcon() { return <Svg><path d="M4 7h16" /><path d="M4 12h16" /><path d="M4 17h16" /></Svg> }
+function ServicesIcon() { return <Svg><path d="M4 8h16" /><path d="M7 8V5" /><path d="M17 8V5" /><rect x="5" y="8" width="14" height="11" rx="2" /><path d="M9 12h6" /><path d="M9 15h4" /></Svg> }
+function ProvidersIcon() { return <Svg><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M16 12a2.5 2.5 0 1 0 0-5" /><path d="M3.5 19a4.5 4.5 0 0 1 9 0" /><path d="M14 19a4 4 0 0 1 6 0" /></Svg> }
+function DoctorIcon() { return <Svg><path d="M12 4v16" /><path d="M5 11h14" /><circle cx="12" cy="12" r="8" /></Svg> }
+function MarketplaceIcon() { return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg> }
+function UserIcon() { return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg> }
+function SearchIcon() { return <Svg><circle cx="11" cy="11" r="6" /><path d="m20 20-4.35-4.35" /></Svg> }
+function MapPinIcon() { return <Svg style={{ width: 16, height: 16 }}><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z" /><circle cx="12" cy="10" r="2.3" /></Svg> }
+function DashboardIcon() { return <Svg><path d="M4 13h7V4H4v9Z" /><path d="M13 20h7v-7h-7v7Z" /><path d="M13 11h7V4h-7v7Z" /><path d="M4 20h7v-5H4v5Z" /></Svg> }
+function CarIcon() { return <Svg><path d="M5 16h14" /><path d="m7 16 1-5h8l1 5" /><path d="M6 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="M18 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="m8 11 2-3h4l2 3" /></Svg> }
+function CalendarIcon() { return <Svg><path d="M8 3v4" /><path d="M16 3v4" /><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16" /></Svg> }
+function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Svg> }
 
 const styles = {
+  root: { position: 'sticky', top: 0, zIndex: 120 },
   nav: {
     height: 72,
     display: 'grid',
     gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
     gap: 24,
-    padding: '0 22px',
+    padding: '0 20px',
     background: 'linear-gradient(180deg, #07253d 0%, #082237 100%)',
     borderBottom: '1px solid rgba(120, 180, 220, 0.12)',
     boxShadow: '0 18px 38px rgba(4, 18, 32, 0.22)',
   },
-  leftGroup: { display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 },
-  centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 26 },
-  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, minWidth: 0 },
-  iconButton: {
+  leftGroup: { display: 'flex', alignItems: 'center', gap: 14 },
+  centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 },
+  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 },
+  menuButton: {
     position: 'relative',
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    border: '1px solid rgba(142, 196, 234, 0.14)',
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    border: '1px solid rgba(142, 196, 234, 0.16)',
     background: 'rgba(255,255,255,0.04)',
     color: '#f5fbff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuButtonActive: {
+    position: 'relative',
+    width: 46,
+    height: 46,
+    borderRadius: 14,
+    border: '1px solid rgba(90,184,240,0.22)',
+    background: 'rgba(90,184,240,0.12)',
+    color: '#ffffff',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -479,7 +488,6 @@ const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
   },
   hoverLabel: {
     position: 'absolute',
@@ -514,7 +522,6 @@ const styles = {
     color: '#fff',
     fontSize: 13,
     fontWeight: 800,
-    boxShadow: '0 12px 26px rgba(153,27,27,0.32)',
   },
   loginLink: {
     display: 'inline-flex',
@@ -557,198 +564,79 @@ const styles = {
     padding: '8px 10px 8px 8px',
   },
   accountAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: '50%',
+    width: 32, height: 32, borderRadius: '50%',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b9fd8 100%)',
-    display: 'inline-flex',
-    alignItems: 'center',
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    color: '#fff', fontSize: 13, fontWeight: 800,
+  },
+  accountText: { maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 700 },
+  scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
+  drawer: {
+    position: 'fixed',
+    top: 86,
+    left: 22,
+    width: 320,
+    minHeight: 620,
+    background: '#ffffff',
+    borderRadius: 24,
+    border: '1px solid rgba(26,58,143,0.08)',
+    boxShadow: '0 32px 70px rgba(4,18,32,0.28)',
+    zIndex: 121,
+    padding: 28,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  drawerHeader: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, marginBottom: 36 },
+  drawerClose: { border: 'none', background: 'transparent', color: '#47617b', fontWeight: 700, fontSize: 13, padding: 0 },
+  drawerLinks: { display: 'grid', gap: 26, marginTop: 14 },
+  drawerLink: { border: 'none', background: 'transparent', textAlign: 'left', color: '#17314a', fontSize: 18, fontWeight: 700, padding: 0 },
+  drawerFooter: { marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 },
+  drawerLogin: { display: 'inline-flex', alignItems: 'center', gap: 8, border: 'none', background: 'transparent', color: '#17314a', fontWeight: 700, fontSize: 16 },
+  drawerSignup: { border: 'none', borderRadius: 999, padding: '14px 28px', background: '#07253d', color: '#fff', fontSize: 16, fontWeight: 800 },
+  panelWrap: {
+    position: 'fixed',
+    top: 92,
+    left: 0,
+    right: 0,
+    display: 'flex',
     justifyContent: 'center',
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 800,
-  },
-  accountText: {
-    maxWidth: 110,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    fontSize: 13,
-    fontWeight: 700,
-  },
-  panelOverlay: {
-    padding: '18px 28px 0',
-    background: 'linear-gradient(180deg, rgba(7,37,61,0.95) 0%, rgba(7,37,61,0.88) 100%)',
-    borderBottom: '1px solid rgba(120,180,220,0.12)',
+    padding: '0 24px',
+    zIndex: 121,
+    pointerEvents: 'none',
   },
   panelCard: {
-    maxWidth: 1680,
-    margin: '0 auto',
+    width: 'min(1680px, calc(100vw - 48px))',
     background: '#f9fcff',
-    borderRadius: 22,
+    borderRadius: 28,
     border: '1px solid rgba(26,58,143,0.08)',
     boxShadow: '0 28px 60px rgba(4,18,32,0.28)',
     padding: 28,
+    pointerEvents: 'auto',
   },
-  panelGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1.05fr 1fr',
-    gap: 28,
-    alignItems: 'start',
-  },
-  panelEyebrow: {
-    fontSize: 12,
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    color: '#5a78a1',
-    fontWeight: 800,
-    marginBottom: 12,
-  },
-  panelTitle: {
-    fontFamily: 'var(--display)',
-    fontSize: 56,
-    lineHeight: 1.02,
-    letterSpacing: '-0.04em',
-    color: '#1b2940',
-    marginBottom: 18,
-    maxWidth: 580,
-  },
-  panelSubtitle: {
-    maxWidth: 640,
-    color: '#5b6f86',
-    fontSize: 18,
-    lineHeight: 1.7,
-    marginBottom: 26,
-  },
-  linkGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-    gap: 10,
-  },
-  panelLink: {
-    border: 'none',
-    background: 'transparent',
-    color: '#243b55',
-    fontSize: 16,
-    textAlign: 'left',
-    padding: '10px 0',
-  },
+  panelGrid: { display: 'grid', gridTemplateColumns: '1.05fr 1fr', gap: 28, alignItems: 'start' },
+  panelEyebrow: { fontSize: 12, letterSpacing: 2.4, textTransform: 'uppercase', color: '#5a78a1', fontWeight: 800, marginBottom: 12 },
+  panelTitle: { fontFamily: 'var(--display)', fontSize: 56, lineHeight: 1.02, letterSpacing: '-0.04em', color: '#1b2940', marginBottom: 18, maxWidth: 580 },
+  panelSubtitle: { maxWidth: 640, color: '#5b6f86', fontSize: 18, lineHeight: 1.7, marginBottom: 26 },
+  linkGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 },
+  panelLink: { border: 'none', background: 'transparent', color: '#243b55', fontSize: 16, textAlign: 'left', padding: '10px 0' },
   searchShell: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 56px',
-    borderRadius: 16,
-    overflow: 'hidden',
-    border: '1px solid rgba(26,58,143,0.14)',
-    background: '#ffffff',
-    boxShadow: '0 16px 32px rgba(26,58,143,0.08)',
-    marginBottom: 20,
+    display: 'grid', gridTemplateColumns: '1fr 56px', borderRadius: 16, overflow: 'hidden',
+    border: '1px solid rgba(26,58,143,0.14)', background: '#ffffff',
+    boxShadow: '0 16px 32px rgba(26,58,143,0.08)', marginBottom: 20,
   },
-  searchInput: {
-    border: 'none',
-    outline: 'none',
-    padding: '0 18px',
-    height: 56,
-    fontSize: 18,
-    color: '#21354d',
-    background: 'transparent',
-  },
-  searchButton: {
-    border: 'none',
-    background: '#082237',
-    color: '#fff',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  visualCard: {
-    position: 'relative',
-    minHeight: 280,
-    borderRadius: 20,
-    overflow: 'hidden',
-    background: 'linear-gradient(135deg, #0d2f4b 0%, #16466f 48%, #3b9fd8 100%)',
-  },
-  visualGlow: {
-    position: 'absolute',
-    inset: 0,
-    background: 'radial-gradient(circle at top right, rgba(255,255,255,0.28), transparent 40%), radial-gradient(circle at bottom left, rgba(90,184,240,0.3), transparent 36%)',
-  },
-  visualText: {
-    position: 'relative',
-    zIndex: 1,
-    minHeight: 280,
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: 28,
-  },
-  visualBadge: {
-    alignSelf: 'flex-start',
-    padding: '8px 14px',
-    borderRadius: 999,
-    background: 'rgba(255,255,255,0.16)',
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: 700,
-  },
-  visualCta: {
-    alignSelf: 'center',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 10,
-    border: 'none',
-    borderRadius: 14,
-    padding: '14px 20px',
-    background: '#ffffff',
-    color: '#17314a',
-    fontSize: 15,
-    fontWeight: 700,
-    boxShadow: '0 12px 28px rgba(4,18,32,0.18)',
-  },
-  panelClose: {
-    marginTop: 18,
-    border: 'none',
-    background: 'transparent',
-    color: '#506a86',
-    fontSize: 14,
-    fontWeight: 700,
-  },
-  profilePopup: {
-    position: 'absolute',
-    right: 0,
-    top: 56,
-    width: 280,
-    borderRadius: 18,
-    overflow: 'hidden',
-    background: '#0b2740',
-    border: '1px solid rgba(120,180,220,0.12)',
-    boxShadow: '0 24px 42px rgba(4,18,32,0.32)',
-  },
-  profileHeader: {
-    padding: 18,
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
-    background: 'linear-gradient(135deg, rgba(59,159,216,0.14), rgba(26,58,143,0.18))',
-  },
+  searchInput: { border: 'none', outline: 'none', padding: '0 18px', height: 56, fontSize: 18, color: '#21354d', background: 'transparent' },
+  searchButton: { border: 'none', background: '#082237', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' },
+  visualCard: { position: 'relative', minHeight: 290, borderRadius: 24, overflow: 'hidden', background: 'linear-gradient(135deg, #103454 0%, #1d537f 48%, #58afe4 100%)' },
+  visualGlow: { position: 'absolute', inset: 0, background: 'radial-gradient(circle at top right, rgba(255,255,255,0.3), transparent 40%), radial-gradient(circle at bottom left, rgba(90,184,240,0.3), transparent 36%)' },
+  visualText: { position: 'relative', zIndex: 1, minHeight: 290, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 28 },
+  visualBadge: { alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 13, fontWeight: 700 },
+  visualCta: { alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 10, border: 'none', borderRadius: 16, padding: '14px 22px', background: '#ffffff', color: '#17314a', fontSize: 15, fontWeight: 700, boxShadow: '0 12px 28px rgba(4,18,32,0.18)' },
+  panelClose: { marginTop: 18, border: 'none', background: 'transparent', color: '#506a86', fontSize: 14, fontWeight: 700 },
+  profilePopup: { position: 'absolute', right: 0, top: 56, width: 280, borderRadius: 18, overflow: 'hidden', background: '#0b2740', border: '1px solid rgba(120,180,220,0.12)', boxShadow: '0 24px 42px rgba(4,18,32,0.32)' },
+  profileHeader: { padding: 18, borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(59,159,216,0.14), rgba(26,58,143,0.18))' },
   profileTitle: { color: '#fff', fontWeight: 800, fontSize: 16, marginBottom: 4 },
   profileSubtitle: { color: '#90b7d9', fontSize: 12, fontWeight: 700 },
-  popupItem: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    border: 'none',
-    borderRadius: 12,
-    padding: '12px 12px',
-    textAlign: 'left',
-    fontSize: 14,
-    fontWeight: 600,
-  },
-  popupIcon: {
-    width: 18,
-    height: 18,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
+  popupItem: { width: '100%', display: 'flex', alignItems: 'center', gap: 12, border: 'none', borderRadius: 12, padding: '12px 12px', textAlign: 'left', fontSize: 14, fontWeight: 600 },
+  popupIcon: { width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   svg: { width: 20, height: 20, display: 'block' },
 }
