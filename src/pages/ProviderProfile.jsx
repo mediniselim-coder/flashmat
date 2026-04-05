@@ -309,11 +309,33 @@ export default function ProviderProfile() {
           <div className="panel">
             <div className="panel-hd"><div className="panel-title">🕐 Horaires d'ouverture</div></div>
             <div className="panel-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+              <div style={{ display: 'grid', gap: 0 }}>
                 {Object.entries(provider.hours || {}).map(([day, hours]) => (
-                  <div key={day} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid var(--border)', fontSize: 13 }}>
-                    <span style={{ fontWeight: 600 }}>{DAYS_FR[day] || day}</span>
-                    <span style={{ color: hours === 'Fermé' ? 'var(--red)' : 'var(--green)', fontFamily: 'var(--mono)', fontSize: 12 }}>{hours}</span>
+                  <div
+                    key={day}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(120px, 1fr) auto',
+                      alignItems: 'center',
+                      gap: 16,
+                      padding: '10px 0',
+                      borderBottom: '1px solid var(--border)',
+                      fontSize: 13,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{DAYS_FR[day] || day}</span>
+                    <span
+                      style={{
+                        color: String(hours).toLowerCase().includes('ferme') ? 'var(--red)' : 'var(--green)',
+                        fontFamily: 'var(--mono)',
+                        fontSize: 12,
+                        justifySelf: 'end',
+                        textAlign: 'right',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {hours}
+                    </span>
                   </div>
                 ))}
               </div>
