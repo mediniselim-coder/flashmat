@@ -5,7 +5,6 @@ import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
-import SiteFooter from '../components/SiteFooter'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
@@ -997,7 +996,6 @@ export default function ProviderApp() {
           </div>
         )}
 
-        <SiteFooter portal="provider" />
         {/* MOBILE BOTTOM NAV */}
         <nav className={styles.bottomNav}>
           {[['p-dashboard','⚡','Accueil'],['p-tasks','✅','Tâches'],['p-bookings','📅','Résa'],['p-clients','👥','Clients'],['p-promos','📣','Promos']].map(([id,icon,label]) => (
