@@ -8,40 +8,40 @@ import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 
 const SERVICES = [
-  { id: 'flashfix',  name: 'FlashFix',     icon: 'ðŸš¨', count: 8 },
-  { id: 'mechanic', name: 'MÃ©canique',    icon: 'ðŸ”§', count: 59 },
-  { id: 'wash',     name: 'Lave-auto',    icon: 'ðŸš¿', count: 28 },
-  { id: 'tire',     name: 'Pneus',        icon: 'ðŸ”©', count: 19 },
-  { id: 'body',     name: 'Carrosserie',  icon: 'ðŸŽ¨', count: 15 },
-  { id: 'glass',    name: 'Vitres auto',  icon: 'ðŸªŸ', count: 12 },
-  { id: 'tuning',   name: 'Performance',  icon: 'ðŸŽï¸', count: 10 },
-  { id: 'parts',    name: 'PiÃ¨ces auto',  icon: 'âš™ï¸', count: 18 },
-  { id: 'parking',  name: 'Stationnement',icon: 'ðŸ…¿ï¸', count: 22 },
-  { id: 'tow',      name: 'Remorquage',   icon: 'ðŸš›', count: 17 },
-  { id: 'junk',     name: 'Casses auto',  icon: 'â™»ï¸', count:  9 },
+  { id: 'flashfix',  name: 'FlashFix',      icon: 'FF', count: 8 },
+  { id: 'mechanic',  name: 'Mecanique',     icon: 'ME', count: 59 },
+  { id: 'wash',      name: 'Lave-auto',     icon: 'LV', count: 28 },
+  { id: 'tire',      name: 'Pneus',         icon: 'PN', count: 19 },
+  { id: 'body',      name: 'Carrosserie',   icon: 'CR', count: 15 },
+  { id: 'glass',     name: 'Vitres auto',   icon: 'VT', count: 12 },
+  { id: 'tuning',    name: 'Performance',   icon: 'PR', count: 10 },
+  { id: 'parts',     name: 'Pieces auto',   icon: 'PC', count: 18 },
+  { id: 'parking',   name: 'Stationnement', icon: 'PK', count: 22 },
+  { id: 'tow',       name: 'Remorquage',    icon: 'RW', count: 17 },
+  { id: 'junk',      name: 'Casses auto',   icon: 'CA', count: 9 },
 ]
 
 const TICKER = [
-  'Garage Los Santos â€” 20% sur vidange ce mois',
-  'DubÃ© Pneu â€” Pneus hiver dÃ¨s $64.99/unitÃ©',
-  'CS Lave Auto DÃ©carie â€” Lavage complet $39 ce weekend',
-  'JA Automobile â€” Freins $149, alignement offert',
-  'Lave-Auto 365 â€” Abonnement mensuel illimitÃ© $59',
-  'Speedy Glass â€” RÃ©pare le pare-brise sans franchise',
-  "Remorquage Elite â€” DÃ¨s $79 n'importe oÃ¹ MTL",
+  'Garage Los Santos - 20% sur vidange ce mois',
+  'Dube Pneu - Pneus hiver des $64.99/unite',
+  'CS Lave Auto Decarie - Lavage complet $39 ce weekend',
+  'JA Automobile - Freins $149, alignement offert',
+  'Lave-Auto 365 - Abonnement mensuel illimite $59',
+  'Speedy Glass - Repare le pare-brise sans franchise',
+  "Remorquage Elite - Des $79 n'importe ou MTL",
 ]
 
 const TABS = [
-  { key: 'service',     label: 'ðŸ”§ Par service',    ph: 'Ex: mÃ©canique, vidange, pneus, carrosserieâ€¦' },
-  { key: 'quartier',   label: 'ðŸ“ Par quartier',   ph: 'Ex: Plateau, NDG, Rosemont, CÃ´te-des-Neigesâ€¦' },
-  { key: 'fournisseur',label: 'ðŸª Fournisseur',    ph: 'Ex: Garage Los Santos, CS Lave Autoâ€¦' },
+  { key: 'service',      label: 'Par service',     ph: 'Ex: mecanique, vidange, pneus, carrosserie...' },
+  { key: 'quartier',     label: 'Par quartier',    ph: 'Ex: Plateau, NDG, Rosemont, Cote-des-Neiges...' },
+  { key: 'fournisseur',  label: 'Fournisseur',     ph: 'Ex: Garage Los Santos, CS Lave Auto...' },
 ]
 
 const RATING_FILTERS = [
   { key: 0,   label: 'Tous' },
-  { key: 4.0, label: 'â­ 4.0+' },
-  { key: 4.5, label: 'â­ 4.5+' },
-  { key: 4.8, label: 'â­ 4.8+' },
+  { key: 4.0, label: '4.0+' },
+  { key: 4.5, label: '4.5+' },
+  { key: 4.8, label: '4.8+' },
 ]
 
 export default function Landing() {
@@ -112,9 +112,9 @@ export default function Landing() {
 
   function slugify(name) {
     return (name || '').toLowerCase()
-      .replace(/[Ã Ã¡Ã¢Ã£]/g, 'a').replace(/[Ã©Ã¨ÃªÃ«]/g, 'e')
-      .replace(/[Ã®Ã¯]/g, 'i').replace(/[Ã´Ã¶]/g, 'o')
-      .replace(/[Ã¹Ã»Ã¼]/g, 'u').replace(/Ã§/g, 'c')
+      .replace(/[àáâã]/g, 'a').replace(/[éèêë]/g, 'e')
+      .replace(/[îï]/g, 'i').replace(/[ôö]/g, 'o')
+      .replace(/[ùûü]/g, 'u').replace(/ç/g, 'c')
       .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
   }
 
@@ -182,11 +182,11 @@ export default function Landing() {
 
       <NavBar activePage="home" />
 
-      {/* TICKER â€” une seule fois */}
+      {/* TICKER - une seule fois */}
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
           {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>âš¡</strong> {t}</span>
+            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>+</strong> {t}</span>
           ))}
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function Landing() {
           <div>
             <div className={styles.heroBadge}>
               <span className={styles.badgeDot} />
-              The MarketPlace for Auto Tech Â· MontrÃ©al Â· 200+ Fournisseurs
+              The MarketPlace for Auto Tech · Montreal · 200+ Fournisseurs
             </div>
             <div className={styles.heroEyebrow}>FlashMat Application</div>
             <h1 className={styles.h1}>
@@ -210,7 +210,7 @@ export default function Landing() {
               de <span className={styles.accent}>Montreal</span>,
             </h1>
             <p className={styles.sub}>
-              RÃ©servez un service, trouvez un provider fiable et dÃ©clenchez FlashFix en urgence sans quitter FlashMat.
+              Reservez un service, trouvez un provider fiable et declenchez FlashFix en urgence sans quitter FlashMat.
             </p>
             <div className={styles.heroCtas}>
               <button
@@ -247,16 +247,16 @@ export default function Landing() {
                   placeholder={activeTab.ph}
                   className={styles.searchInput}
                 />
-                <button type="submit" className={styles.searchBtn}>Rechercher â†’</button>
+                <button type="submit" className={styles.searchBtn}>Rechercher {'->'}</button>
               </form>
               {(dbLoading || normalizedFilter) && (
                 <div className={styles.searchResults}>
                   <div className={styles.searchResultsHeader}>
                     <span>Recherche FlashMat</span>
-                    {normalizedFilter ? <span>{heroQuickResults.length} rÃƒÂ©sultat{heroQuickResults.length > 1 ? 's' : ''}</span> : <span>Saisissez un terme</span>}
+                    {normalizedFilter ? <span>{heroQuickResults.length} resultat{heroQuickResults.length > 1 ? 's' : ''}</span> : <span>Saisissez un terme</span>}
                   </div>
                   {dbLoading ? (
-                    <div className={styles.searchResultEmpty}>Recherche en coursÃ¢â‚¬Â¦</div>
+                    <div className={styles.searchResultEmpty}>Recherche en cours...</div>
                   ) : heroQuickResults.length ? (
                     <div className={styles.searchResultsList}>
                       {heroQuickResults.map((result) => (
@@ -268,13 +268,13 @@ export default function Landing() {
                       ))}
                     </div>
                   ) : (
-                    <div className={styles.searchResultEmpty}>Aucun rÃƒÂ©sultat direct. Essayez un service, un provider ou un quartier.</div>
+                    <div className={styles.searchResultEmpty}>Aucun resultat direct. Essayez un service, un provider ou un quartier.</div>
                   )}
                 </div>
               )}
             </div>
             <div className={styles.chips}>
-              {[['ðŸ”§ MÃ©canique','mechanic'],['ðŸš¿ Lave-auto','wash'],['ðŸ”© Pneus','tire'],['ðŸš› Remorquage 24/7','tow'],['ðŸªŸ Vitres','glass'],['ðŸŽ¨ Carrosserie','body'],['â™»ï¸ Casse auto','junk']].map(([label, cat]) => (
+              {[['Mecanique','mechanic'],['Lave-auto','wash'],['Pneus','tire'],['Remorquage 24/7','tow'],['Vitres','glass'],['Carrosserie','body'],['Casse auto','junk']].map(([label, cat]) => (
                 <button key={cat} className={styles.chip} onClick={() => navigate('/services', { state: { cat } })}>{label}</button>
               ))}
             </div>
@@ -283,24 +283,24 @@ export default function Landing() {
             <div className={styles.heroInsightTop}>
               <div>
                 <div className={styles.heroInsightEyebrow}>Live sur FlashMat</div>
-                <div className={styles.heroInsightTitle}>Trouver, diagnostiquer, rÃ©server.</div>
+                <div className={styles.heroInsightTitle}>Trouver, diagnostiquer, reserver.</div>
               </div>
-              <div className={styles.heroInsightBadge}>4.7â˜… moyenne</div>
+              <div className={styles.heroInsightBadge}>4.7 moyenne</div>
             </div>
             <div className={styles.heroInsightGrid}>
               <div className={styles.heroInsightCard}>
                 <div className={styles.heroInsightLabel}>Services</div>
                 <div className={styles.heroInsightValue}>11</div>
-                <div className={styles.heroInsightText}>catÃ©gories actives</div>
+                <div className={styles.heroInsightText}>categories actives</div>
               </div>
               <div className={styles.heroInsightCard}>
                 <div className={styles.heroInsightLabel}>Providers</div>
                 <div className={styles.heroInsightValue}>200+</div>
-                <div className={styles.heroInsightText}>vÃ©rifiÃ©s Ã  MontrÃ©al</div>
+                <div className={styles.heroInsightText}>verifies a Montreal</div>
               </div>
               <div className={`${styles.heroInsightCard} ${styles.heroInsightCardWide}`}>
-                <div className={styles.heroInsightLabel}>Parcours recommandÃ©</div>
-                <div className={styles.heroInsightText}>Recherche par service â†’ matching provider â†’ rÃ©servation confirmÃ©e.</div>
+                <div className={styles.heroInsightLabel}>Parcours recommande</div>
+                <div className={styles.heroInsightText}>Recherche par service {'->'} matching provider {'->'} reservation confirmee.</div>
               </div>
             </div>
           </div>
@@ -309,7 +309,7 @@ export default function Landing() {
 
       {/* STATS BAND */}
       <div className={styles.statsBand}>
-        {[['200+', 'Fournisseurs MTL'], ['14k', 'Clients actifs'], ['4.7â˜…', 'Note moyenne'], ['10', 'Types de services'], ['24h', 'Support & urgences']].map(([v, l]) => (
+        {[['200+', 'Fournisseurs MTL'], ['14k', 'Clients actifs'], ['4.7', 'Note moyenne'], ['10', 'Types de services'], ['24h', 'Support & urgences']].map(([v, l]) => (
           <div key={l} className={styles.sbi}>
             <div className={styles.sbiVal}>{v}</div>
             <div className={styles.sbiLabel}>{l}</div>
@@ -320,19 +320,19 @@ export default function Landing() {
       {/* DOCTEUR AUTOMOBILE */}
       <section className={styles.section}>
         <div className={styles.sectionInner}>
-          <div className={styles.eyebrow}>â— Docteur Automobile</div>
+          <div className={styles.eyebrow}>Docteur Automobile</div>
           <h2 className={styles.sectionTitle}>Des conseils auto clairs,<br />avec <span>connexion client</span></h2>
           <div style={{ background: '#fff', borderRadius: 28, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', padding: '40px 44px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 32, alignItems: 'center' }}>
             <div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 10 }}>
-                RÃ©servÃ© aux clients connectÃ©s
+                Reserve aux clients connectes
               </div>
               <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, lineHeight: 1.05, color: 'var(--ink)' }}>
                 Parlez au Docteur Automobile quand vous en avez vraiment besoin
               </div>
             </div>
             <div style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
-              Posez vos questions d'entretien, de panne ou de rÃ©servation seulement une fois connectÃ©. FlashMat peut alors lier le diagnostic Ã  votre profil, vos vÃ©hicules et vos prochaines rÃ©servations.
+              Posez vos questions d'entretien, de panne ou de reservation seulement une fois connecte. FlashMat peut alors lier le diagnostic a votre profil, vos vehicules et vos prochaines reservations.
               <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                 <button type="button" className="btn btn-green btn-lg" onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
                 <button type="button" className="btn btn-outline btn-lg" onClick={() => navigate('/services')}>Voir les services</button>
@@ -345,15 +345,15 @@ export default function Landing() {
       {/* SERVICES */}
       <section className={styles.section} id="services">
         <div className={styles.sectionInner}>
-          <div className={styles.eyebrow}>â— Nos services</div>
-          <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin Ã  <span>MontrÃ©al</span></h2>
+          <div className={styles.eyebrow}>Nos services</div>
+          <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin a <span>Montreal</span></h2>
           <div className={styles.svcGrid}>
             {SERVICES.map(s => (
               <div key={s.id} className={styles.svcCard} onClick={() => navigate(s.id === 'flashfix' ? '/urgence' : '/services', s.id === 'flashfix' ? undefined : { state: { cat: s.id } })}>
                 <span className={styles.svcIcon}>{s.icon}</span>
                 <div className={styles.svcName}>{s.name}</div>
                 <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
-                <span className={styles.svcArrow}>â†’</span>
+                <span className={styles.svcArrow}>{'->'}</span>
               </div>
             ))}
           </div>
@@ -363,31 +363,31 @@ export default function Landing() {
       {/* PROVIDERS */}
       <section className={styles.section} id="providers">
         <div className={styles.sectionInner}>
-          <div className={styles.eyebrow}>â— Fournisseurs vedettes</div>
-          <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>MontrÃ©al</span></h2>
+          <div className={styles.eyebrow}>Fournisseurs vedettes</div>
+          <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montreal</span></h2>
           <div className={styles.provFilters}>
             {RATING_FILTERS.map(f => (
               <button key={f.key} className={`${styles.filterBtn} ${minRating === f.key ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(f.key)}>{f.label}</button>
             ))}
-            <button className={`${styles.filterBtn} ${minRating === 'open' ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(minRating === 'open' ? 0 : 'open')}>â— Ouvert</button>
+            <button className={`${styles.filterBtn} ${minRating === 'open' ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(minRating === 'open' ? 0 : 'open')}>Ouvert</button>
             {filterTerm && (
               <span style={{ fontSize: 12, color: 'var(--ink3)', marginLeft: 4 }}>
-                {dbLoading ? 'Rechercheâ€¦' : `${displayProviders.length} rÃ©sultat${displayProviders.length !== 1 ? 's' : ''} pour Â«\u00a0${filterTerm}\u00a0Â»`}
-                <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>âœ•</button>
+                {dbLoading ? 'Recherche...' : `${displayProviders.length} resultat${displayProviders.length !== 1 ? 's' : ''} pour "${filterTerm}"`}
+                <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>x</button>
               </span>
             )}
           </div>
           <div style={{ position: 'relative' }}>
-            <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>â€¹</button>
-            <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>â€º</button>
+            <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'<'}</button>
+            <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
             <div className={styles.provScroll} ref={scrollRef}>
               {dbLoading && (
-                <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargementâ€¦</div>
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement...</div>
               )}
               {!dbLoading && displayProviders.map(p => {
                 const isDb = !!p.type_label
                 const slug = isDb ? slugify(p.name) : p.slug
-                const icon = p.icon || 'ðŸ”§'
+                const icon = p.icon || 'ME'
                 const type = isDb ? p.type_label : p.type
                 const rating = p.rating || 0
                 const reviews = p.reviews || 0
@@ -398,9 +398,9 @@ export default function Landing() {
                     <div className={styles.provName}>{p.name}</div>
                     <div className={styles.provType}>{type}</div>
                     <div className={styles.provRating}>
-                      <span style={{ color: 'var(--amber)' }}>{'â˜…'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+                      <span style={{ color: 'var(--amber)' }}>{'*'.repeat(Math.round(rating))}</span> {rating} ({reviews})
                     </div>
-                    <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? 'â— Ouvert' : 'â— FermÃ©'}</span>
+                    <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? 'Ouvert' : 'Ferme'}</span>
                     {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
                     {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
                   </div>
@@ -414,19 +414,19 @@ export default function Landing() {
       {/* PORTALS */}
       <section className={styles.section} id="portals">
         <div className={styles.sectionInner}>
-          <div className={styles.eyebrow}>â— Rejoindre FlashMat</div>
-          <h2 className={styles.sectionTitle}>Choisissez<br />votre <span>rÃ´le</span></h2>
+          <div className={styles.eyebrow}>Rejoindre FlashMat</div>
+          <h2 className={styles.sectionTitle}>Choisissez<br />votre <span>role</span></h2>
           <div className={styles.portalsGrid}>
             <div className={`${styles.portalCard} ${styles.pcClient}`} onClick={() => navigate('/auth')}>
               <div className={styles.pcNum}>01</div>
               <div className={styles.pcTitle}>Portail Client</div>
-              <div className={styles.pcDesc}>Trouvez, rÃ©servez et suivez tous vos services auto Ã  MontrÃ©al depuis un seul tableau de bord.</div>
+              <div className={styles.pcDesc}>Trouvez, reservez et suivez tous vos services auto a Montreal depuis un seul tableau de bord.</div>
               <div className={styles.pcFeats}>
-                {[['ðŸ”','Recherche par immatriculation','Historique, rappels manufacturiers'],
-                  ['ðŸ“Š','FlashScoreâ„¢','Score santÃ© de votre vÃ©hicule en temps rÃ©el'],
-                  ['ðŸ“…','RÃ©servation instantanÃ©e','Agenda live de tous les fournisseurs'],
-                  ['âš¡','Alertes intelligentes','Rappels proactifs, promos, urgences'],
-                  ['ðŸ›’','Marketplace','Achat/vente piÃ¨ces entre MontrÃ©alais'],
+                {[['RP','Recherche par immatriculation','Historique, rappels manufacturiers'],
+                  ['FS','FlashScore','Score sante de votre vehicule en temps reel'],
+                  ['RI','Reservation instantanee','Agenda live de tous les fournisseurs'],
+                  ['AL','Alertes intelligentes','Rappels proactifs, promos, urgences'],
+                  ['MP','Marketplace','Achat/vente pieces entre Montrealais'],
                 ].map(([ico, t, d]) => (
                   <div key={t} className={styles.pcFeat}>
                     <span>{ico}</span>
@@ -434,18 +434,18 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              <button className="btn btn-green btn-lg" onClick={e => { e.stopPropagation(); navigate('/auth') }}>Commencer gratuitement â†’</button>
+              <button className="btn btn-green btn-lg" onClick={e => { e.stopPropagation(); navigate('/auth') }}>Commencer gratuitement {'->'}</button>
             </div>
             <div className={`${styles.portalCard} ${styles.pcProvider}`} onClick={() => navigate('/auth?role=provider')}>
               <div className={styles.pcNum}>02</div>
               <div className={styles.pcTitle}>Portail Fournisseur</div>
-              <div className={styles.pcDesc}>GÃ©rez votre atelier, attirez de nouveaux clients et augmentez vos revenus avec FlashMat.</div>
+              <div className={styles.pcDesc}>Gerez votre atelier, attirez de nouveaux clients et augmentez vos revenus avec FlashMat.</div>
               <div className={styles.pcFeats}>
-                {[['ðŸ“ˆ','Dashboard revenu','Chiffres en temps rÃ©el, cibles, tendances'],
-                  ['ðŸ“…','Gestion rÃ©servations','Calendrier intelligent, file d\'attente'],
-                  ['ðŸ“£','Promos ciblÃ©es','Offres Ã  vos clients fidÃ¨les'],
-                  ['âœ…','Notifier les clients','Alerte quand la voiture est prÃªte'],
-                  ['ðŸª','Profil public','VisibilitÃ© FlashMat + Google'],
+                {[['DB','Dashboard revenu','Chiffres en temps reel, cibles, tendances'],
+                  ['GR','Gestion reservations','Calendrier intelligent, file d\'attente'],
+                  ['PR','Promos ciblees','Offres a vos clients fideles'],
+                  ['NC','Notifier les clients','Alerte quand la voiture est prete'],
+                  ['PP','Profil public','Visibilite FlashMat + Google'],
                 ].map(([ico, t, d]) => (
                   <div key={t} className={styles.pcFeat}>
                     <span>{ico}</span>
@@ -453,7 +453,7 @@ export default function Landing() {
                   </div>
                 ))}
               </div>
-              <button className="btn btn-outline btn-lg" style={{ color: 'var(--blue)', borderColor: 'var(--blue)' }} onClick={e => { e.stopPropagation(); navigate('/auth?role=provider') }}>Inscrire mon atelier â†’</button>
+              <button className="btn btn-outline btn-lg" style={{ color: 'var(--blue)', borderColor: 'var(--blue)' }} onClick={e => { e.stopPropagation(); navigate('/auth?role=provider') }}>Inscrire mon atelier {'->'}</button>
             </div>
           </div>
         </div>
@@ -465,11 +465,11 @@ export default function Landing() {
       <footer className={styles.footer} style={{ display: 'none' }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain' }} />
         <div className={styles.footerLinks}>
-          {['Ã€ propos', 'Conditions', 'ConfidentialitÃ©', 'info@flashmat.ca', '514-476-1708'].map(l => (
+          {['A propos', 'Conditions', 'Confidentialite', 'info@flashmat.ca', '514-476-1708'].map(l => (
             <span key={l} className={styles.footerLink}>{l}</span>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: 'var(--ink3)', fontFamily: 'var(--mono)' }}>Â© 2025 FlashMat.ca Â· MontrÃ©al, QC</div>
+        <div style={{ fontSize: 11, color: 'var(--ink3)', fontFamily: 'var(--mono)' }}>&copy; 2025 FlashMat.ca · Montreal, QC</div>
       </footer>
     </div>
   )
