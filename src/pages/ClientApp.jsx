@@ -10,6 +10,7 @@ import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import VehicleDoctor from '../components/VehicleDoctor'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
+import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -165,7 +166,7 @@ export default function ClientApp() {
       .select('*')
       .order('rating', { ascending: false })
       .limit(100)
-    setProviders(data || [])
+    setProviders((data || []).map((provider) => mergeProviderProfile(provider)))
     setProvLoading(false)
   }
 

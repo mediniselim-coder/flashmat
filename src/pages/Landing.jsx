@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
 
@@ -74,7 +75,7 @@ export default function Landing() {
       .or(`name.ilike.%${filterTerm}%,type_label.ilike.%${filterTerm}%`)
       .order('rating', { ascending: false })
       .limit(30)
-      .then(({ data }) => { setDbProviders(data || []); setDbLoading(false) })
+      .then(({ data }) => { setDbProviders((data || []).map((provider) => mergeProviderProfile(provider))); setDbLoading(false) })
   }, [filterTerm])
 
   function openDoctor() {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { mergeProviderProfile } from '../lib/providerProfiles'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -142,12 +143,23 @@ export default function ProviderProfile() {
   const canBook = user && profile?.role === 'client'
 
   function normalizeDbProvider(data, slug) {
-    return { ...data, slug, logo: data.icon || '🔧', coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data.services || [] }
+    return mergeProviderProfile({
+      ...data,
+      slug,
+      logo: data.icon || '🔧',
+      coords: [45.5088, -73.5540],
+      hours: data.hours || { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Ferme',Sun:'Ferme' },
+      team: [],
+      reviews_list: [],
+      gallery: [],
+      highlights: data.services || [],
+      providerEmail: data.email,
+    })
   }
 
   useEffect(() => {
     const demo = DEMO_PROVIDERS[slug]
-    if (demo) { setProvider(demo); setLoading(false); return }
+    if (demo) { setProvider(mergeProviderProfile(demo)); setLoading(false); return }
 
     const exactName = searchParams.get('n')
     const query = exactName
@@ -159,6 +171,19 @@ export default function ProviderProfile() {
       setLoading(false)
     })
   }, [slug])
+
+  useEffect(() => {
+    function syncProviderProfile() {
+      setProvider((current) => current ? mergeProviderProfile(current) : current)
+    }
+
+    window.addEventListener('flashmat-provider-profile-updated', syncProviderProfile)
+    window.addEventListener('storage', syncProviderProfile)
+    return () => {
+      window.removeEventListener('flashmat-provider-profile-updated', syncProviderProfile)
+      window.removeEventListener('storage', syncProviderProfile)
+    }
+  }, [])
 
   useEffect(() => {
     if (canBook && searchParams.get('book') === '1') {

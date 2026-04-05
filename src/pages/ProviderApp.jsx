@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
+import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
+import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, inferTypeMeta, mergeProviderProfile, saveProviderOverride } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -71,7 +73,7 @@ function getTimelineLabel(step) {
 }
 
 export default function ProviderApp() {
-  const { profile } = useAuth()
+  const { profile, user } = useAuth()
   const { toast }            = useToast()
   const navigate             = useNavigate()
 
@@ -88,8 +90,17 @@ export default function ProviderApp() {
   const [promoVal, setPromoVal] = useState('20%')
   const [clientQ, setClientQ]   = useState('')
   const [flashFixRequests, setFlashFixRequests] = useState([])
+  const [providerProfileForm, setProviderProfileForm] = useState({
+    name: profile?.full_name || 'Garage Los Santos',
+    address: '7999 14e Avenue, Montreal, QC',
+    phone: '(514) 374-2829',
+    email: profile?.email || user?.email || '',
+    description: 'Mecaniciens certifies ASE. Specialistes toutes marques. Devis gratuit.',
+    services: ['Mecanique generale', 'Vidange', 'Freins'],
+    editableHours: DEFAULT_PROVIDER_HOURS,
+  })
 
-  const name = profile?.full_name || 'Garage Los Santos'
+  const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
   function go(id) { setPane(id); setSidebar(false) }
@@ -110,6 +121,124 @@ export default function ProviderApp() {
       window.removeEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
     }
   }, [])
+
+  useEffect(() => {
+    async function loadProviderProfile() {
+      const baseIdentity = { email: profile?.email || user?.email, name }
+      let nextForm = mergeProviderProfile({
+        ...providerProfileForm,
+        ...baseIdentity,
+      })
+
+      const exactName = profile?.full_name || name
+      const email = profile?.email || user?.email
+      const query = email
+        ? supabase.from('providers_list').select('*').or(`email.eq.${email},name.eq.${exactName}`).limit(1)
+        : supabase.from('providers_list').select('*').eq('name', exactName).limit(1)
+      const { data } = await query
+
+      if (data?.[0]) {
+        nextForm = mergeProviderProfile({
+          ...data[0],
+          providerEmail: data[0].email,
+          editableHours: data[0].editableHours || data[0].hours,
+        })
+      }
+
+      setProviderProfileForm({
+        name: nextForm.name || exactName,
+        address: nextForm.address || '',
+        phone: nextForm.phone || '',
+        email: nextForm.email || profile?.email || user?.email || '',
+        description: nextForm.description || '',
+        services: nextForm.services || [],
+        editableHours: nextForm.editableHours || DEFAULT_PROVIDER_HOURS,
+      })
+    }
+
+    loadProviderProfile()
+  }, [name, profile?.email, profile?.full_name, user?.email])
+
+  function setProfileField(field, value) {
+    setProviderProfileForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function toggleService(serviceLabel) {
+    setProviderProfileForm((current) => {
+      const exists = current.services.includes(serviceLabel)
+      return {
+        ...current,
+        services: exists
+          ? current.services.filter((service) => service !== serviceLabel)
+          : [...current.services, serviceLabel],
+      }
+    })
+  }
+
+  function updateHour(day, field, value) {
+    setProviderProfileForm((current) => ({
+      ...current,
+      editableHours: {
+        ...current.editableHours,
+        [day]: {
+          ...current.editableHours[day],
+          [field]: value,
+        },
+      },
+    }))
+  }
+
+  function toggleClosed(day) {
+    setProviderProfileForm((current) => ({
+      ...current,
+      editableHours: {
+        ...current.editableHours,
+        [day]: {
+          ...current.editableHours[day],
+          closed: !current.editableHours[day].closed,
+        },
+      },
+    }))
+  }
+
+  async function saveProviderProfileChanges() {
+    const typeMeta = inferTypeMeta(providerProfileForm.services)
+    const payload = {
+      name: providerProfileForm.name,
+      address: providerProfileForm.address,
+      phone: providerProfileForm.phone,
+      email: providerProfileForm.email,
+      description: providerProfileForm.description,
+      services: providerProfileForm.services,
+      editableHours: providerProfileForm.editableHours,
+      ...typeMeta,
+    }
+
+    saveProviderOverride({ email: providerProfileForm.email, name: providerProfileForm.name }, payload)
+
+    try {
+      const matchEmail = providerProfileForm.email || profile?.email || user?.email
+      if (matchEmail) {
+        await supabase
+          .from('providers_list')
+          .update({
+            name: providerProfileForm.name,
+            address: providerProfileForm.address,
+            phone: providerProfileForm.phone,
+            email: providerProfileForm.email,
+            description: providerProfileForm.description,
+            services: providerProfileForm.services,
+            type: typeMeta.type,
+            type_label: typeMeta.type_label,
+          })
+          .eq('email', matchEmail)
+      }
+    } catch {
+      // Keep local override even if the remote update is unavailable.
+    }
+
+    toast('Profil atelier sauvegarde', 'success')
+  }
 
   function acceptFlashFixRequest(requestId) {
     providerRespondToFlashFix(requestId, 'accept', name, {
@@ -492,18 +621,18 @@ export default function ProviderApp() {
         {/* ── PROFILE ── */}
         {pane === 'p-profile' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button className="btn btn-green" onClick={() => toast('Profil sauvegardé ✅','success')}>Sauvegarder</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button className="btn btn-green" onClick={saveProviderProfileChanges}>Sauvegarder</button></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
                 <div>
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">🏪 Informations</div></div>
                     <div className="panel-body">
-                      <div className="form-group"><label className="form-label">Nom de l'atelier</label><input className="form-input" defaultValue="Garage Los Santos" /></div>
-                      <div className="form-group"><label className="form-label">Adresse</label><input className="form-input" defaultValue="7999 14e Avenue, Montréal, QC" /></div>
-                      <div className="form-group"><label className="form-label">Téléphone</label><input className="form-input" defaultValue="(514) 374-2829" /></div>
-                      <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" defaultValue="losssantos@email.com" /></div>
-                      <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} defaultValue="Mécaniciens certifiés ASE. Spécialistes toutes marques. Devis gratuit." style={{resize:'vertical'}} /></div>
+                      <div className="form-group"><label className="form-label">Nom de l'atelier</label><input className="form-input" value={providerProfileForm.name} onChange={e => setProfileField('name', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Adresse</label><input className="form-input" value={providerProfileForm.address} onChange={e => setProfileField('address', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Téléphone</label><input className="form-input" value={providerProfileForm.phone} onChange={e => setProfileField('phone', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={providerProfileForm.email} onChange={e => setProfileField('email', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={providerProfileForm.description} onChange={e => setProfileField('description', e.target.value)} style={{resize:'vertical'}} /></div>
                     </div>
                   </div>
                 </div>
@@ -511,10 +640,12 @@ export default function ProviderApp() {
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">⏰ Horaires</div></div>
                     <div className="panel-body">
-                      {[['Lundi – Vendredi','07:30','17:30'],['Samedi','09:00','16:00'],['Dimanche',null,null]].map(([d,o,f]) => (
-                        <div key={d} style={{display:'grid',gridTemplateColumns:'110px 1fr 1fr',gap:8,alignItems:'center',marginBottom:8}}>
-                          <span style={{fontSize:11,color:'var(--ink2)'}}>{d}</span>
-                          {o ? <><input className="form-input" defaultValue={o} type="time" /><input className="form-input" defaultValue={f} type="time" /></> : <><input className="form-input" placeholder="Fermé" disabled style={{opacity:.4}} /><input className="form-input" placeholder="Fermé" disabled style={{opacity:.4}} /></>}
+                      {[['Mon', 'Lundi'], ['Tue', 'Mardi'], ['Wed', 'Mercredi'], ['Thu', 'Jeudi'], ['Fri', 'Vendredi'], ['Sat', 'Samedi'], ['Sun', 'Dimanche']].map(([key, label]) => (
+                        <div key={key} style={{display:'grid',gridTemplateColumns:'110px 1fr 1fr auto',gap:8,alignItems:'center',marginBottom:8}}>
+                          <span style={{fontSize:11,color:'var(--ink2)'}}>{label}</span>
+                          <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.open || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'open', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
+                          <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.close || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'close', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
+                          <button className="btn" style={{fontSize:10}} onClick={() => toggleClosed(key)}>{providerProfileForm.editableHours[key]?.closed ? 'Fermé' : 'Ouvert'}</button>
                         </div>
                       ))}
                     </div>
@@ -522,15 +653,32 @@ export default function ProviderApp() {
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">⚙️ Services offerts</div></div>
                     <div className="panel-body">
-                      {[['🔧','Mécanique auto',true],['🔩','Pneus',true],['🚿','Lave-auto',false],['🎨','Carrosserie',false],['🪟','Vitres auto',false]].map(([ico,name,on]) => (
-                        <div key={name} style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                          <div style={{display:'flex',alignItems:'center',gap:8}}><span>{ico}</span><span style={{fontSize:12,fontWeight:500}}>{name}</span></div>
-                          <div style={{width:36,height:19,borderRadius:9,background:on?'var(--green)':'var(--bg3)',border:`1px solid ${on?'var(--green)':'var(--border)'}`,cursor:'pointer',display:'flex',alignItems:'center',padding:2,justifyContent:on?'flex-end':'flex-start'}}
-                            onClick={e => { e.currentTarget.style.background = on?'var(--bg3)':'var(--green)'; toast('Service mis à jour ✅') }}>
-                            <div style={{width:14,height:14,background:'#fff',borderRadius:'50%'}} />
-                          </div>
-                        </div>
-                      ))}
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
+                        {PROVIDER_SERVICE_OPTIONS.map((service) => (
+                          <button
+                            key={service.id}
+                            type="button"
+                            onClick={() => toggleService(service.label)}
+                            style={{
+                              display:'flex',
+                              alignItems:'center',
+                              gap:8,
+                              textAlign:'left',
+                              border:`1px solid ${providerProfileForm.services.includes(service.label) ? 'var(--green)' : 'var(--border)'}`,
+                              background: providerProfileForm.services.includes(service.label) ? 'var(--green-bg)' : 'var(--bg3)',
+                              borderRadius:10,
+                              padding:'10px 12px',
+                              cursor:'pointer',
+                              fontSize:12,
+                              fontWeight:600,
+                            }}
+                          >
+                            <span>{service.icon}</span>
+                            <span>{service.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Tous les services FlashMat sont charges ici, et les services selectionnes seront affiches sur la page publique du provider.</div>
                     </div>
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { createFlashFixRequest } from '../lib/flashfix'
+import { mergeProviderProfile } from '../lib/providerProfiles'
 import { supabase } from '../lib/supabase'
 import NavBar from '../components/NavBar'
 
@@ -245,7 +246,7 @@ export default function FlashFixUrgence() {
         .limit(100)
 
       if (Array.isArray(data) && data.length > 0) {
-        setProviders(data)
+        setProviders(data.map((provider) => mergeProviderProfile(provider)))
       }
     }
 

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import ProviderMap from '../components/ProviderMap'
 import { supabase } from '../lib/supabase'
+import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const SEARCH_CATS = [
@@ -50,7 +51,7 @@ export default function ServiceProviders() {
         .order('rating', { ascending: false })
         .limit(100)
 
-      setProviders(data || [])
+      setProviders((data || []).map((provider) => mergeProviderProfile(provider)))
       setProvLoading(false)
     }
 
