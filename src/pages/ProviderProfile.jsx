@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../hooks/useToast'
+import BookingModal from '../components/BookingModal'
+import { createBooking } from '../lib/bookings'
 import { mergeProviderProfile, normalizeProviderRecord } from '../lib/providerProfiles'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -136,10 +139,12 @@ export default function ProviderProfile() {
   const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
   const { user, profile } = useAuth()
+  const { toast } = useToast()
   const [provider, setProvider] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState(false)
+  const [userVehicles, setUserVehicles] = useState([])
   const canBook = user && profile?.role === 'client'
 
   function normalizeDbProvider(data, slug) {
@@ -203,6 +208,20 @@ export default function ProviderProfile() {
     }
   }, [canBook, searchParams])
 
+  useEffect(() => {
+    async function loadVehicles() {
+      if (!canBook || !user?.id) return
+      const { data } = await supabase
+        .from('vehicles')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false })
+      setUserVehicles(data || [])
+    }
+
+    loadVehicles()
+  }, [canBook, user?.id])
+
   function requestBookingAccess() {
     if (canBook) {
       setBookingOpen(true)
@@ -213,6 +232,27 @@ export default function ProviderProfile() {
     const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
     window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
     window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+  }
+
+  async function handleBookingConfirm(payload) {
+    if (!provider?.id) {
+      throw new Error('Provider introuvable pour cette reservation')
+    }
+
+    await createBooking({
+      clientId: user.id,
+      providerId: provider.id,
+      vehicleId: payload.vehicle?.id,
+      service: payload.service,
+      serviceIcon: payload.serviceIcon,
+      date: payload.date,
+      timeSlot: payload.timeSlot,
+      notes: payload.notes,
+      price: payload.price,
+    })
+
+    toast('Reservation confirmee', 'success')
+    navigate('/app/client?pane=bookings')
   }
 
   if (loading) return (
@@ -456,7 +496,7 @@ export default function ProviderProfile() {
       </div>
 
       {/* BOOKING MODAL */}
-      {bookingOpen && canBook && (
+      {false && bookingOpen && canBook && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setBookingOpen(false)}>
           <div className="modal">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -504,6 +544,16 @@ export default function ProviderProfile() {
             </div>
           </div>
         </div>
+      )}
+
+      {bookingOpen && canBook && (
+        <BookingModal
+          providers={[provider]}
+          vehicles={userVehicles}
+          initialProvider={provider}
+          onClose={() => setBookingOpen(false)}
+          onConfirm={handleBookingConfirm}
+        />
       )}
 
       {/* FOOTER */}

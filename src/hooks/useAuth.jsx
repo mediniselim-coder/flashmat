@@ -104,13 +104,15 @@ export function AuthProvider({ children }) {
     })
     if (error) throw error
 
-    // Create profile
+    // Keep the profile in sync if the auth trigger already created it.
     if (data.user) {
-      await supabase.from('profiles').insert({
+      await supabase.from('profiles').upsert({
         id: data.user.id,
         full_name: fullName,
         email,
-        role, // 'client' or 'provider'
+        role,
+      }, {
+        onConflict: 'id',
       })
     }
     return data

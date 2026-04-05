@@ -7,6 +7,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
   const [makes, setMakes] = useState([])
   const [models, setModels] = useState([])
   const [years, setYears] = useState([])
+  const [manualMode, setManualMode] = useState(false)
   const [selectedMake, setSelectedMake] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
   const [selectedYear, setSelectedYear] = useState('')
@@ -14,12 +15,19 @@ export default function AddVehicleModal({ onClose, onAdd }) {
   const [plate, setPlate] = useState('')
   const [color, setColor] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => { fetchMakes() }, [])
 
   async function fetchMakes() {
-    const { data } = await supabase.rpc('get_distinct_makes')
-    setMakes(data?.map(d => d.make) || [])
+    try {
+      const { data, error: rpcError } = await supabase.rpc('get_distinct_makes')
+      if (rpcError) throw rpcError
+      setMakes(data?.map(d => d.make).filter(Boolean) || [])
+    } catch {
+      setManualMode(true)
+      setMakes([])
+    }
   }
 
   async function fetchModels(make) {
@@ -27,33 +35,57 @@ export default function AddVehicleModal({ onClose, onAdd }) {
     setSelectedModel('')
     setSelectedYear('')
     setSelectedTrim('')
-    const { data } = await supabase
-      .from('vehicles_catalog')
-      .select('model')
-      .eq('make', make)
-      .order('model')
-      .limit(500)
-    const unique = [...new Set(data?.map(d => d.model))]
-    setModels(unique)
+    try {
+      const { data, error } = await supabase
+        .from('vehicles_catalog')
+        .select('model')
+        .eq('make', make)
+        .order('model')
+        .limit(500)
+
+      if (error) throw error
+      const unique = [...new Set(data?.map(d => d.model))]
+      setModels(unique)
+    } catch {
+      setManualMode(true)
+      setModels([])
+    }
   }
 
   async function fetchYears(model) {
     setSelectedModel(model)
     setSelectedYear('')
     setSelectedTrim('')
-    const { data } = await supabase
-      .from('vehicles_catalog')
-      .select('year, body_type, engine, trim')
-      .eq('make', selectedMake)
-      .eq('model', model)
-      .order('year', { ascending: false })
-      .order('trim')
-      .limit(500)
-    setYears(data || [])
+    try {
+      const { data, error } = await supabase
+        .from('vehicles_catalog')
+        .select('year, body_type, engine, trim')
+        .eq('make', selectedMake)
+        .eq('model', model)
+        .order('year', { ascending: false })
+        .order('trim')
+        .limit(500)
+
+      if (error) throw error
+      setYears(data || [])
+    } catch {
+      setManualMode(true)
+      setYears([])
+    }
   }
 
   async function handleSubmit() {
-    if (!selectedMake || !selectedModel || !selectedYear) return
+    if (!user?.id) {
+      setError('Connexion requise pour enregistrer un vehicule.')
+      return
+    }
+
+    if (!selectedMake || !selectedModel || !selectedYear) {
+      setError('Choisissez la marque, le modele et l annee.')
+      return
+    }
+
+    setError('')
     setLoading(true)
     const vehicle = {
       owner_id: user.id,
@@ -64,16 +96,19 @@ export default function AddVehicleModal({ onClose, onAdd }) {
       color,
       flash_score: Math.floor(Math.random() * 20) + 80
     }
-    const { data, error } = await supabase
+    const { data, error: insertError } = await supabase
       .from('vehicles')
       .insert(vehicle)
       .select()
       .single()
     setLoading(false)
-    if (!error) {
-      onAdd({ ...vehicle, id: data.id })
-      onClose()
+    if (insertError) {
+      setError(insertError.message || 'Impossible d enregistrer le vehicule.')
+      return
     }
+
+    onAdd(data || vehicle)
+    onClose()
   }
 
   return (
@@ -84,15 +119,32 @@ export default function AddVehicleModal({ onClose, onAdd }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>X</button>
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Marque</label>
-          <select className="form-select" value={selectedMake} onChange={e => fetchModels(e.target.value)}>
-            <option value="">Choisir une marque...</option>
-            {makes.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
+        {!manualMode ? (
+          <div className="form-group">
+            <label className="form-label">Marque</label>
+            <select className="form-select" value={selectedMake} onChange={e => fetchModels(e.target.value)}>
+              <option value="">Choisir une marque...</option>
+              {makes.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+            <div className="form-group">
+              <label className="form-label">Marque</label>
+              <input className="form-input" value={selectedMake} onChange={e => setSelectedMake(e.target.value)} placeholder="Ex: Toyota" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Modele</label>
+              <input className="form-input" value={selectedModel} onChange={e => setSelectedModel(e.target.value)} placeholder="Ex: RAV4" />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Annee</label>
+              <input className="form-input" type="number" min="1950" max="2100" value={selectedYear} onChange={e => setSelectedYear(e.target.value)} placeholder="2021" />
+            </div>
+          </div>
+        )}
 
-        {models.length > 0 && (
+        {!manualMode && models.length > 0 && (
           <div className="form-group">
             <label className="form-label">Modele</label>
             <select className="form-select" value={selectedModel} onChange={e => fetchYears(e.target.value)}>
@@ -102,7 +154,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
           </div>
         )}
 
-        {years.length > 0 && (
+        {!manualMode && years.length > 0 && (
           <div className="form-group">
             <label className="form-label">Annee et version</label>
             <select className="form-select" value={selectedYear} onChange={e => setSelectedYear(e.target.value)}>
@@ -116,6 +168,12 @@ export default function AddVehicleModal({ onClose, onAdd }) {
           </div>
         )}
 
+        {manualMode && (
+          <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 12 }}>
+            Le catalogue detaille n est pas disponible pour le moment. Vous pouvez quand meme enregistrer votre vehicule manuellement.
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div className="form-group">
             <label className="form-label">Plaque QC (optionnel)</label>
@@ -126,6 +184,8 @@ export default function AddVehicleModal({ onClose, onAdd }) {
             <input className="form-input" placeholder="Ex: Blanc nacre" value={color} onChange={e => setColor(e.target.value)} />
           </div>
         </div>
+
+        {error && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
         <div className="modal-actions">
           <button className="btn" onClick={onClose}>Annuler</button>

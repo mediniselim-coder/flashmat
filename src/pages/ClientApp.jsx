@@ -10,6 +10,7 @@ import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import VehicleDoctor from '../components/VehicleDoctor'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
+import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
@@ -98,7 +99,9 @@ export default function ClientApp() {
   const [pane, setPane] = useState(initialPane)
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
+  const [selectedBookingProvider, setSelectedBookingProvider] = useState(null)
   const [providers, setProviders] = useState([])
+  const [bookings, setBookings] = useState([])
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(initialSearchCat)
@@ -122,6 +125,11 @@ export default function ClientApp() {
     .slice(0, 6)
 
   useEffect(() => { fetchProviders() }, [])
+
+  useEffect(() => {
+    if (!user?.id) return
+    fetchMyBookings()
+  }, [user?.id])
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -170,6 +178,15 @@ export default function ClientApp() {
     setProvLoading(false)
   }
 
+  async function fetchMyBookings() {
+    try {
+      const nextBookings = await fetchClientBookings(user.id)
+      setBookings(nextBookings)
+    } catch {
+      setBookings([])
+    }
+  }
+
   const filtered = providers.filter(p => {
     const matchCat = searchCat === 'all' || p.serviceCategories?.includes(searchCat)
     const q = searchQ.toLowerCase()
@@ -181,6 +198,16 @@ export default function ClientApp() {
   })
 
   function go(id) { setPane(id); setSidebar(false) }
+  function openBooking(provider = null) {
+    if (!myVehicles.length) {
+      toast('Ajoutez d abord un vehicule pour reserver un service', 'error')
+      setAddVehicleModal(true)
+      return
+    }
+
+    setSelectedBookingProvider(provider)
+    setBookingModal(true)
+  }
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) {
     setProfileMenuOpen(false)
@@ -190,6 +217,29 @@ export default function ClientApp() {
     setProfileMenuOpen(false)
     await signOut()
     navigate('/')
+  }
+
+  async function handleBookingConfirm(payload) {
+    if (!user?.id) {
+      throw new Error('Connexion client requise')
+    }
+
+    const createdBooking = await createBooking({
+      clientId: user.id,
+      providerId: payload.provider.id,
+      vehicleId: payload.vehicle?.id,
+      service: payload.service,
+      serviceIcon: payload.serviceIcon,
+      date: payload.date,
+      timeSlot: payload.timeSlot,
+      notes: payload.notes,
+      price: payload.price,
+    })
+
+    setBookings((current) => [createdBooking, ...current])
+    setSelectedBookingProvider(null)
+    setPane('bookings')
+    toast('Reservation confirmee', 'success')
   }
 
   function slugify(name) {
@@ -279,7 +329,7 @@ return (
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
           <div onClick={goHome} style={{fontFamily:'var(--display)',fontWeight:800,fontSize:17,cursor:'pointer'}}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
-          <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => setBookingModal(true)}>+ Réserver</button>
+          <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => openBooking()}>+ Réserver</button>
         </div>
 
         {pane === 'dashboard' && (
@@ -424,7 +474,7 @@ return (
               {/* QUICK ACTIONS */}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:20 }}>
                 {[
-                  { icon:'📅', label:'Réserver', sub:'un service', action: () => setBookingModal(true), color:'var(--green)' },
+                  { icon:'📅', label:'Réserver', sub:'un service', action: () => openBooking(), color:'var(--green)' },
                   { icon:'🗺️', label:'Trouver', sub:'un fournisseur', action: () => go('search'), color:'var(--blue)' },
                   { icon:'🛒', label:'Marketplace', sub:'pièces auto', action: () => go('marketplace'), color:'var(--amber)' },
                 ].map(q => (
@@ -475,7 +525,7 @@ return (
                 ))}
               </div>
               {!provLoading && filtered.length > 0 && (
-                <ProviderMap providers={filtered} onSelect={() => setBookingModal(true)} />
+                <ProviderMap providers={filtered} onSelect={(provider) => openBooking(provider)} />
               )}
               {provLoading ? (
                 <div style={{textAlign:'center',padding:60}}>
@@ -496,7 +546,7 @@ return (
                       <div style={{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end',flexShrink:0}}>
                         <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--ink3)'}}>{p.distance}</span>
                         <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open?'● Ouvert':'● Fermé'}</span>
-                        <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();setBookingModal(true)}}>Réserver</button>
+                        <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Réserver</button>
                       </div>
                     </div>
                   ))}
@@ -537,7 +587,7 @@ return (
       <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}><span style={{color:'var(--ink2)'}}>FlashScore™</span><span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span></div>
       <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
     </div>
-    <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={() => setBookingModal(true)}>Réserver un service</button>
+    <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={() => openBooking()}>Réserver un service</button>
   </div>
 ))}
               </div>
@@ -552,13 +602,13 @@ return (
               <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:10,padding:14,marginBottom:12,display:'flex',gap:10,alignItems:'center'}}>
                 <span style={{fontSize:20}}>🛢️</span>
                 <div style={{flex:1}}><div style={{fontWeight:700}}>Vidange en retard — Honda Civic</div><div style={{fontSize:11,color:'var(--ink2)'}}>5 200 km de dépassement</div></div>
-                <button className="btn btn-green" onClick={() => setBookingModal(true)}>Réserver</button>
+                <button className="btn btn-green" onClick={() => openBooking()}>Réserver</button>
               </div>
               {[{icon:'🔩',title:'Rotation des pneus',meta:'Honda Civic · 10 avr.'},{icon:'🧊',title:'Liquide refroidissement',meta:'RAV4 · 22 avr.'},{icon:'🔋',title:'Test batterie',meta:'Honda Civic · Avant mai'}].map(item => (
                 <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:12,display:'flex',gap:10,marginBottom:8,alignItems:'center'}}>
                   <span style={{fontSize:20}}>{item.icon}</span>
                   <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{item.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{item.meta}</div></div>
-                  <button className="btn" style={{fontSize:10}} onClick={() => setBookingModal(true)}>Réserver</button>
+                  <button className="btn" style={{fontSize:10}} onClick={() => openBooking()}>Réserver</button>
                 </div>
               ))}
             </div>
@@ -636,8 +686,31 @@ return (
 
         {pane === 'bookings' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes réservations</div></div><button className="btn btn-green" onClick={() => setBookingModal(true)}>+ Nouvelle</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Mes réservations</div></div><button className="btn btn-green" onClick={() => openBooking()}>+ Nouvelle</button></div>
             <div className={styles.pad}>
+              {bookings.length > 0 && (
+                <div style={{ display:'grid', gap:12, marginBottom:16 }}>
+                  {bookings.map((booking) => (
+                    <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
+                      <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:10}}>
+                        <div>
+                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
+                          <div style={{fontSize:12,color:'var(--ink2)'}}>{booking.providerName}</div>
+                        </div>
+                        <span className={`badge ${booking.statusClass}`}>{booking.statusLabel}</span>
+                      </div>
+                      <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                        <span className="badge badge-gray">{booking.vehicleLabel}</span>
+                        <span className="badge badge-blue">{booking.datetimeLabel}</span>
+                        <span className="badge badge-green">{booking.priceLabel}</span>
+                      </div>
+                      {booking.notes && (
+                        <div style={{marginTop:10,fontSize:11,color:'var(--ink2)'}}>📝 {booking.notes}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
               {activeFlashFixRequests.length > 0 && (
                 <div style={{background:'linear-gradient(135deg,#0f172a 0%, #1d4ed8 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:12}}>
@@ -732,7 +805,7 @@ return (
                   })}
                 </div>
               )}
-              {flashFixRequests.length === 0 && (
+              {flashFixRequests.length === 0 && bookings.length === 0 && (
                 <div style={{textAlign:'center',padding:40,color:'var(--ink3)'}}>
                   <div style={{fontSize:40,marginBottom:12}}>📅</div>
                   <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucune réservation pour l'instant</div>
@@ -752,7 +825,15 @@ return (
         </nav>
       </div>
 
-      {bookingModal && <BookingModal providers={providers} onClose={() => setBookingModal(false)} onConfirm={() => { setBookingModal(false); toast('✅ Réservation confirmée!','success') }} />}
+      {bookingModal && (
+        <BookingModal
+          providers={providers}
+          vehicles={myVehicles}
+          initialProvider={selectedBookingProvider}
+          onClose={() => { setBookingModal(false); setSelectedBookingProvider(null) }}
+          onConfirm={handleBookingConfirm}
+        />
+      )}
       <FlashAI portal="client" userName={name} />
       {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [v, ...prev]); setAddVehicleModal(false) }} />}
     </div>

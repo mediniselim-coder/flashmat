@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
+import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
@@ -153,6 +154,7 @@ export default function ProviderApp() {
   const [promoSvc, setPromoSvc] = useState('Vidange')
   const [promoVal, setPromoVal] = useState('20%')
   const [clientQ, setClientQ]   = useState('')
+  const [providerBookings, setProviderBookings] = useState([])
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [profileSaveNotice, setProfileSaveNotice] = useState('')
@@ -171,10 +173,24 @@ export default function ProviderApp() {
   const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
+  const providerClients = providerBookings.reduce((acc, booking) => {
+    if (!booking.client_id || acc.some((entry) => entry.id === booking.client_id)) return acc
+    acc.push({
+      id: booking.client_id,
+      name: booking.clientName,
+      email: booking.client?.email || '',
+      vehicles: [booking.vehicleLabel],
+      last: booking.datetimeLabel,
+      total: booking.priceLabel,
+      status: 'Actif',
+      cls: 'badge-green',
+    })
+    return acc
+  }, [])
   function go(id) { setPane(id); setSidebar(false) }
   function goHome() { setSidebar(false); navigate('/') }
 
-  const filteredClients = CLIENTS.filter(c => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+  const filteredClients = (providerClients.length > 0 ? providerClients : CLIENTS).filter(c => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -189,6 +205,21 @@ export default function ProviderApp() {
       window.removeEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests)
     }
   }, [])
+
+  useEffect(() => {
+    async function loadProviderBookings() {
+      if (!user?.id) return
+
+      try {
+        const nextBookings = await fetchProviderBookings(user.id)
+        setProviderBookings(nextBookings)
+      } catch {
+        setProviderBookings([])
+      }
+    }
+
+    loadProviderBookings()
+  }, [user?.id])
 
   useEffect(() => {
     async function loadProviderProfile() {
@@ -445,6 +476,29 @@ export default function ProviderApp() {
     toast(labels[nextStatus] || 'Mise à jour envoyée', 'success')
   }
 
+  async function markBookingDone(booking) {
+    try {
+      const updated = await updateBookingStatus(booking.id, 'done')
+      setProviderBookings((current) => current.map((entry) => entry.id === updated.id ? updated : entry))
+
+      try {
+        await createNotification({
+          userId: booking.client_id,
+          title: 'Votre vehicule est pret',
+          body: `${name} a termine le service ${booking.service}.`,
+          icon: '✅',
+          type: 'booking',
+        })
+      } catch {
+        // Notification cross-user may be blocked by RLS; the booking itself still stays updated.
+      }
+
+      toast(`${booking.clientName} notifie: voiture prete`, 'success')
+    } catch (error) {
+      toast(error.message || 'Impossible de mettre a jour la reservation', 'error')
+    }
+  }
+
   return (
     <div className={styles.shell}>
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
@@ -595,7 +649,7 @@ export default function ProviderApp() {
         {/* ── BOOKINGS ── */}
         {pane === 'p-bookings' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Réservations</div><div className={styles.pageSub}>{PROVIDER_BOOKINGS.length} aujourd'hui · {pendingFlashFix.length} urgence(s) FlashFix en attente</div></div></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Réservations</div><div className={styles.pageSub}>{providerBookings.length} reservation(s) · {pendingFlashFix.length} urgence(s) FlashFix en attente</div></div></div>
             <div className={styles.pad}>
               {pendingFlashFix.length > 0 && (
                 <div style={{background:'linear-gradient(135deg,#111827 0%, #7c2d12 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
@@ -707,22 +761,27 @@ export default function ProviderApp() {
                 <table>
                   <thead><tr><th>Client</th><th>Service</th><th>Véhicule</th><th>Date & Heure</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
                   <tbody>
-                    {PROVIDER_BOOKINGS.map((b,i) => (
-                      <tr key={i}>
-                        <td><strong>{b.client}</strong></td>
+                    {providerBookings.map((b) => (
+                      <tr key={b.id}>
+                        <td><strong>{b.clientName}</strong></td>
                         <td>{b.service}</td>
-                        <td style={{fontFamily:'var(--mono)',fontSize:11}}>{b.vehicle}</td>
-                        <td style={{fontFamily:'var(--mono)',fontSize:11}}>{b.datetime}</td>
-                        <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{b.price}</td>
-                        <td><span className={`badge ${b.cls}`}>{b.label}</span></td>
+                        <td style={{fontFamily:'var(--mono)',fontSize:11}}>{b.vehicleLabel}</td>
+                        <td style={{fontFamily:'var(--mono)',fontSize:11}}>{b.datetimeLabel}</td>
+                        <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{b.priceLabel}</td>
+                        <td><span className={`badge ${b.statusClass}`}>{b.statusLabel}</span></td>
                         <td style={{display:'flex',gap:4}}>
-                          <button className="btn btn-green" style={{fontSize:10,opacity:b.status==='scheduled'?.4:1}} disabled={b.status==='scheduled'} onClick={() => toast(`${b.client} notifié: Voiture prête ✅`,'success')}>✅ Prêt</button>
+                          <button className="btn btn-green" style={{fontSize:10,opacity:b.status==='done'?.4:1}} disabled={b.status==='done'} onClick={() => markBookingDone(b)}>✅ Prêt</button>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              {providerBookings.length === 0 && (
+                <div style={{textAlign:'center',padding:28,color:'var(--ink3)'}}>
+                  Aucune reservation enregistree pour le moment.
+                </div>
+              )}
             </div>
           </div>
         )}

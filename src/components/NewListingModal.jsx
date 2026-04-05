@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { normalizeMarketplaceListing, serializeMarketplaceDescription } from '../lib/marketplace'
 
 const CATEGORIES = ['Pièces moteur','Pneus & Jantes','Carrosserie','Freins & Suspension','Accessoires','Audio & Tech','Outils','Autres']
 const CONDITIONS = ['Neuf','Très bon état','Bon état','Acceptable']
@@ -29,13 +30,39 @@ export default function NewListingModal({ onClose, onCreated }) {
     setPhotos(prev => prev.filter((_, i) => i !== idx))
   }
 
-  async function uploadPhoto(file) {
-    const ext  = file.name.split('.').pop()
-    const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage.from('marketplace').upload(path, file, { upsert: false })
-    if (error) throw error
-    const { data } = supabase.storage.from('marketplace').getPublicUrl(path)
-    return data.publicUrl
+  function fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = () => reject(new Error('Impossible de lire le fichier'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+      const image = new Image()
+      image.onload = () => resolve(image)
+      image.onerror = () => reject(new Error('Impossible de charger l image'))
+      image.src = src
+    })
+  }
+
+  async function optimizePhoto(file) {
+    const rawDataUrl = await fileToDataUrl(file)
+    const image = await loadImageElement(rawDataUrl)
+    const ratio = Math.min(1200 / image.width, 900 / image.height, 1)
+    const width = Math.max(1, Math.round(image.width * ratio))
+    const height = Math.max(1, Math.round(image.height * ratio))
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const context = canvas.getContext('2d')
+
+    if (!context) throw new Error('Impossible de preparer l image')
+
+    context.drawImage(image, 0, 0, width, height)
+    return canvas.toDataURL('image/jpeg', 0.8)
   }
 
   async function submit(e) {
@@ -47,23 +74,24 @@ export default function NewListingModal({ onClose, onCreated }) {
     if (!form.title.trim() || !form.price) { setError('Titre et prix requis.'); return }
     setLoading(true); setError('')
     try {
-      // Upload all photos
-      const urls = await Promise.all(photos.map(p => uploadPhoto(p.file)))
-      const { data, error: err } = await supabase.from('marketplace_listings').insert({
+      const optimizedPhotos = await Promise.all(photos.map(p => optimizePhoto(p.file)))
+      const { data, error: err } = await supabase.from('marketplace').insert({
         seller_id:   user.id,
-        seller_name: profile?.full_name || 'Vendeur',
-        seller_type: profile?.role || 'client',
         title:       form.title.trim(),
-        description: form.description.trim(),
+        description: serializeMarketplaceDescription(form.description.trim(), {
+          condition: form.condition,
+          icon: form.icon,
+          phone: form.phone.trim(),
+          imageUrl: optimizedPhotos[0] || '',
+          sellerName: profile?.full_name || 'Vendeur',
+          sellerType: profile?.role || 'client',
+          city: 'Montreal',
+        }),
         price:       parseFloat(form.price),
         category:    form.category,
-        condition:   form.condition,
-        icon:        form.icon,
-        phone:       form.phone.trim(),
-        image_url:   urls[0] || null,
       }).select().single()
       if (err) throw err
-      onCreated({ ...data, _extra_images: urls.slice(1) })
+      onCreated(normalizeMarketplaceListing(data))
     } catch (err) {
       setError('Erreur: ' + err.message)
     }

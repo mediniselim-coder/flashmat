@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import NewListingModal from './NewListingModal'
+import { normalizeMarketplaceListing } from '../lib/marketplace'
 
 const CATS = ['Tous','Pièces moteur','Pneus & Jantes','Carrosserie','Freins & Suspension','Accessoires','Audio & Tech','Outils','Autres']
 const SORTS = [['recent','Plus récents'],['price_asc','Prix ↑'],['price_desc','Prix ↓']]
@@ -42,14 +43,14 @@ export default function Marketplace({ portal = 'client', openComposer = false })
 
   async function fetchListings() {
     setLoading(true)
-    const { data } = await supabase.from('marketplace_listings')
+    const { data } = await supabase.from('marketplace')
       .select('*').eq('is_active', true).order('created_at', { ascending: false })
-    setListings(data || [])
+    setListings((data || []).map(normalizeMarketplaceListing))
     setLoading(false)
   }
 
   async function deleteListing(id) {
-    await supabase.from('marketplace_listings').update({ is_active: false }).eq('id', id)
+    await supabase.from('marketplace').update({ is_active: false }).eq('id', id)
     setListings(l => l.filter(x => x.id !== id))
   }
 
