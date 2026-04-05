@@ -113,12 +113,13 @@ async function optimizeImageFile(file, { maxWidth = 1600, maxHeight = 1200, qual
 }
 
 export default function ProviderApp() {
-  const { profile, user, fetchProfile } = useAuth()
+  const { profile, user, fetchProfile, signOut } = useAuth()
   const { toast }            = useToast()
   const navigate             = useNavigate()
 
   const [pane, setPane]         = useState('p-dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [tasks, setTasks]       = useState([
     { title: 'Vidange — Sarah K. (Honda Fit)',        meta: '🔧 Mécanique · Baie 2', time: '10h30', done: false },
     { title: 'Rotation + équilibrage — Marc D. (BMW)', meta: '🔩 Pneus · Baie 1',     time: '11h00', done: false },
@@ -180,6 +181,8 @@ export default function ProviderApp() {
   }))
   function go(id) { setPane(id); setSidebar(false) }
   function goHome() { setSidebar(false); navigate('/') }
+  function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
+  async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
 
   const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
 
@@ -493,13 +496,13 @@ export default function ProviderApp() {
   return (
     <div className={styles.shell}>
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
+      {profileMenuOpen && <div className={styles.overlay} onClick={() => setProfileMenuOpen(false)} />}
 
       {/* SIDEBAR */}
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.sbHeader}>
           <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
-            <div className={styles.sbHex}>FM</div>
-            <div className={styles.sbLogoText}>Flash<span style={{color:'var(--green)'}}>Mat</span></div>
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
           </div>
           <span className={`${styles.sbMode} ${styles.modeProvider}`}>FOURNISSEUR</span>
         </div>
@@ -523,16 +526,28 @@ export default function ProviderApp() {
           </div>
         </nav>
         <div className={styles.sbBottom}>
-          <div
-            className={styles.userChip}
-            onClick={e => {
-              e.preventDefault()
-              e.stopPropagation()
-            }}
-          >
-            <div className={`${styles.avatar} ${styles.avatarBlue}`}>GL</div>
+          <div className={styles.profileMenuWrap}>
+            {profileMenuOpen && (
+              <div className={styles.profileMenu}>
+                <div className={styles.profileMenuHeader}>
+                  <div className={styles.profileMenuName}>{name}</div>
+                  <div className={styles.profileMenuRole}>Profil Fournisseur</div>
+                </div>
+                <button className={styles.profileMenuItem} onClick={goHome}><span>🏠</span><span>Accueil</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-dashboard')}><span>📈</span><span>Dashboard</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span>📅</span><span>Réservations</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span>🛒</span><span>Marketplace</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-profile')}><span>🏪</span><span>Profil atelier</span></button>
+                <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span>ℹ️</span><span>Aide & support</span></button>
+                <div className={styles.profileMenuDivider} />
+                <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span>🚪</span><span>Se déconnecter</span></button>
+              </div>
+            )}
+          <button type="button" className={styles.userChip} onClick={() => setProfileMenuOpen((open) => !open)}>
+            <div className={`${styles.avatar} ${styles.avatarBlue}`}>{name.slice(0,2).toUpperCase()}</div>
             <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>fournisseur · montréal</div></div>
             <span style={{ marginLeft: 'auto', color: 'var(--ink3)', fontSize: 11 }}>←</span>
+          </button>
           </div>
         </div>
       </aside>
@@ -541,7 +556,7 @@ export default function ProviderApp() {
       <div className={styles.main}>
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
-          <div className={styles.sbLogoText} onClick={goHome} style={{fontSize:17,cursor:'pointer'}}>Flash<span style={{color:'var(--green)'}}>Mat</span> <span style={{fontSize:10,color:'var(--blue)',fontFamily:'var(--mono)'}}>FOURNISSEUR</span></div>
+          <img src="/logo.jpg" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
           <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => go('p-bookings')}>+ RDV</button>
         </div>
 
