@@ -173,6 +173,13 @@ export default function ProviderApp() {
   const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
+  const bookingsDoneCount = providerBookings.filter((booking) => booking.status === 'done').length
+  const bookingsPendingCount = providerBookings.filter((booking) => booking.status !== 'done').length
+  const monthlyRevenue = providerBookings.reduce((sum, booking) => {
+    const amount = Number(String(booking.priceLabel || '').replace(/[^0-9.]/g, ''))
+    return sum + (Number.isFinite(amount) ? amount : 0)
+  }, 0)
+  const averageRating = 4.9
   const providerClients = providerBookings.reduce((acc, booking) => {
     if (!booking.client_id || acc.some((entry) => entry.id === booking.client_id)) return acc
     acc.push({
@@ -563,10 +570,10 @@ export default function ProviderApp() {
             </div>
             <div className={styles.pad}>
               <div className={styles.statsGrid}>
-                <div className="stat-card sc-green"><div className="stat-lbl">Revenu aujourd'hui</div><div className="stat-val">$<span style={{fontSize:22}}>449</span></div><div className="stat-sub">3 services complétés</div></div>
-                <div className="stat-card sc-blue"><div className="stat-lbl">RDV ce mois</div><div className="stat-val">47</div><div className="stat-sub">+12% vs mois dernier</div></div>
-                <div className="stat-card sc-amber"><div className="stat-lbl">En attente</div><div className="stat-val">3</div><div className="stat-sub">file d'attente</div></div>
-                <div className="stat-card sc-purple"><div className="stat-lbl">Note moyenne</div><div className="stat-val">4.9</div><div className="stat-sub">⭐ 145 avis</div></div>
+                <div className="stat-card sc-green"><div className="stat-lbl">Revenu enregistré</div><div className="stat-val">$<span style={{fontSize:22}}>{monthlyRevenue || 0}</span></div><div className="stat-sub">{bookingsDoneCount} service(s) terminés</div></div>
+                <div className="stat-card sc-blue"><div className="stat-lbl">RDV actifs</div><div className="stat-val">{providerBookings.length}</div><div className="stat-sub">réservations liées à FlashMat</div></div>
+                <div className="stat-card sc-amber"><div className="stat-lbl">En attente</div><div className="stat-val">{bookingsPendingCount}</div><div className="stat-sub">réservation(s) à traiter</div></div>
+                <div className="stat-card sc-purple"><div className="stat-lbl">Note moyenne</div><div className="stat-val">{averageRating}</div><div className="stat-sub">profil public atelier</div></div>
               </div>
 
               <div className={styles.g2}>

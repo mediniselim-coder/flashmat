@@ -85,6 +85,7 @@ function getClientSafeFlashFixEventLabel(eventLabel, status) {
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
+  const [notifications, setNotifications] = useState([])
   const [addVehicleModal, setAddVehicleModal] = useState(false)
   useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
   const { toast } = useToast()
@@ -129,6 +130,27 @@ export default function ClientApp() {
   useEffect(() => {
     if (!user?.id) return
     fetchMyBookings()
+  }, [user?.id])
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      if (!user?.id) return
+
+      try {
+        const { data } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20)
+
+        setNotifications(data || [])
+      } catch {
+        setNotifications([])
+      }
+    }
+
+    fetchNotifications()
   }, [user?.id])
 
   useEffect(() => {
@@ -241,6 +263,32 @@ export default function ClientApp() {
     setPane('bookings')
     toast('Reservation confirmee', 'success')
   }
+
+  const averageFlashScore = myVehicles.length
+    ? Math.round(myVehicles.reduce((sum, vehicle) => sum + Number(vehicle.flash_score || 0), 0) / myVehicles.length)
+    : 0
+  const nextServiceLabel = myVehicles[0] ? 'Entretien recommande bientot' : 'Ajoutez un véhicule'
+  const maintenanceItems = myVehicles.slice(0, 3).map((vehicle, index) => ({
+    icon: ['🛢️', '🔩', '🔋'][index] || '🔧',
+    title: index === 0 ? 'Vidange recommandee' : index === 1 ? 'Inspection pneus' : 'Test batterie',
+    meta: `${vehicle.make} ${vehicle.model} ${vehicle.year}`,
+  }))
+  const flashScoreCards = myVehicles.map((vehicle) => {
+    const score = Number(vehicle.flash_score || 80)
+    return {
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      score,
+      items: [
+        ['Moteur', Math.min(99, score + 6), 'green'],
+        ['Freins', Math.min(98, score + 3), score >= 80 ? 'green' : 'amber'],
+        ['Pneus', Math.max(55, score - 4), score >= 75 ? 'blue' : 'amber'],
+        ['Batterie', Math.min(97, score + 2), 'blue'],
+        ['Huile', Math.max(40, score - 8), score >= 85 ? 'green' : 'amber'],
+      ],
+    }
+  })
 
   function slugify(name) {
     return name.toLowerCase()
@@ -496,8 +544,8 @@ return (
               {/* STATS */}
               <div className={styles.statsGrid}>
                 <div className="stat-card sc-green"><div className="stat-lbl">Fournisseurs MTL</div><div className="stat-val">{providers.length}</div><div className="stat-sub">disponibles</div></div>
-                <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">87<span style={{fontSize:14}}>%</span></div><div className="stat-sub">{myVehicles[0] ? `${myVehicles[0].make} ${myVehicles[0].model}` : 'Ajoutez un véhicule'}</div></div>
-                <div className="stat-card sc-amber"><div className="stat-lbl">Prochain service</div><div className="stat-val">{myVehicles.length ? '7j' : '—'}</div><div className="stat-sub">{myVehicles.length ? 'Vidange recommandée' : 'Ajoutez un véhicule'}</div></div>
+                <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">{myVehicles.length ? averageFlashScore : '—'}{myVehicles.length ? <span style={{fontSize:14}}>%</span> : null}</div><div className="stat-sub">{myVehicles[0] ? `${myVehicles[0].make} ${myVehicles[0].model}` : 'Ajoutez un véhicule'}</div></div>
+                <div className="stat-card sc-amber"><div className="stat-lbl">Prochain service</div><div className="stat-val">{myVehicles.length ? `${Math.max(3, 14 - myVehicles.length)}j` : '—'}</div><div className="stat-sub">{nextServiceLabel}</div></div>
                 <div className="stat-card sc-purple"><div className="stat-lbl">Mes véhicules</div><div className="stat-val">{myVehicles.length}</div><div className="stat-sub">{myVehicles.length === 0 ? 'Aucun véhicule' : myVehicles.slice(0,2).map(v => v.model).join(' · ')}</div></div>
               </div>
             </div>
@@ -599,16 +647,18 @@ return (
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Entretien</div></div></div>
             <div className={styles.pad}>
-              <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:10,padding:14,marginBottom:12,display:'flex',gap:10,alignItems:'center'}}>
-                <span style={{fontSize:20}}>🛢️</span>
-                <div style={{flex:1}}><div style={{fontWeight:700}}>Vidange en retard — Honda Civic</div><div style={{fontSize:11,color:'var(--ink2)'}}>5 200 km de dépassement</div></div>
-                <button className="btn btn-green" onClick={() => openBooking()}>Réserver</button>
-              </div>
-              {[{icon:'🔩',title:'Rotation des pneus',meta:'Honda Civic · 10 avr.'},{icon:'🧊',title:'Liquide refroidissement',meta:'RAV4 · 22 avr.'},{icon:'🔋',title:'Test batterie',meta:'Honda Civic · Avant mai'}].map(item => (
+              {myVehicles.length > 0 && (
+                <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:10,padding:14,marginBottom:12,display:'flex',gap:10,alignItems:'center'}}>
+                  <span style={{fontSize:20}}>🛢️</span>
+                  <div style={{flex:1}}><div style={{fontWeight:700}}>Entretien recommande — {myVehicles[0].make} {myVehicles[0].model}</div><div style={{fontSize:11,color:'var(--ink2)'}}>FlashMat suggere une verification preventive cette semaine</div></div>
+                  <button className="btn btn-green" onClick={() => openBooking()}>Réserver</button>
+                </div>
+              )}
+              {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'🔧',title:'Ajoutez un vehicule',meta:'Pour voir vos rappels d entretien'}]).map(item => (
                 <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:12,display:'flex',gap:10,marginBottom:8,alignItems:'center'}}>
                   <span style={{fontSize:20}}>{item.icon}</span>
                   <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{item.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{item.meta}</div></div>
-                  <button className="btn" style={{fontSize:10}} onClick={() => openBooking()}>Réserver</button>
+                  <button className="btn" style={{fontSize:10}} onClick={() => myVehicles.length ? openBooking() : setAddVehicleModal(true)}>{myVehicles.length ? 'Réserver' : 'Ajouter'}</button>
                 </div>
               ))}
             </div>
@@ -622,13 +672,12 @@ return (
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>FlashScore™</div></div></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
-                {[{make:'Honda Civic',year:2019,score:87,items:[['Moteur',92,'green'],['Freins',90,'green'],['Pneus',78,'blue'],['Batterie',91,'blue'],['Huile',22,'amber']]},
-                  {make:'Toyota RAV4',year:2021,score:96,items:[['Moteur',99,'green'],['Freins',95,'green'],['Pneus',90,'green'],['Batterie',99,'blue'],['Huile',65,'green']]}].map(v => (
-                  <div key={v.make} className="panel">
-                    <div className="panel-hd"><div className="panel-title">📊 {v.make} {v.year}</div><span className="badge badge-green">{v.score}%</span></div>
+                {(flashScoreCards.length > 0 ? flashScoreCards : [{make:'Ajoutez',model:'un vehicule',year:'',score:0,items:[]}]).map(v => (
+                  <div key={`${v.make}-${v.model}-${v.year}`} className="panel">
+                    <div className="panel-hd"><div className="panel-title">📊 {v.make} {v.model} {v.year}</div><span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span></div>
                     <div className="panel-body">
                       <div style={{width:80,height:80,borderRadius:'50%',border:'6px solid var(--green)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',background:'var(--green-bg)'}}>
-                        <span style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--green)'}}>{v.score}</span>
+                        <span style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--green)'}}>{v.score || '—'}</span>
                       </div>
                       {v.items.map(([l,val,c]) => (
                         <div key={l} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,fontSize:11}}>
@@ -638,6 +687,9 @@ return (
                           <div style={{width:60}}><div className="prog-bar"><div className="prog-fill" style={{width:`${val}%`,background:`var(--${c})`}}/></div></div>
                         </div>
                       ))}
+                      {v.items.length === 0 && (
+                        <div style={{textAlign:'center',fontSize:12,color:'var(--ink3)'}}>Ajoutez un vehicule pour calculer votre FlashScore.</div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -670,15 +722,16 @@ return (
                 </div>
               )}
               <div className="panel">
-                {[{icon:'✅',bg:'var(--green-bg)',title:'Votre voiture est prête!',sub:'Garage Los Santos — Honda Civic',time:"Aujourd'hui 14h04",badge:'Nouveau',badgeCls:'badge-green'},
-                  {icon:'🏷️',bg:'var(--green-bg)',title:'Promo: 20% sur vidange!',sub:'Code OIL20 · Valide 1–5 avr.',time:'Hier 10h30',badge:'Nouveau',badgeCls:'badge-green'},
-                  {icon:'🚨',bg:'var(--amber-bg)',title:'Rappel manufacturier Honda Civic',sub:'Capteur ABS · Vérification gratuite',time:'Il y a 2 jours',badge:'Urgent',badgeCls:'badge-amber'}].map((n,i,arr) => (
+                {(notifications.length > 0 ? notifications : []).map((n,i,arr) => (
                   <div key={i} style={{display:'flex',gap:10,padding:'12px 14px',borderBottom:i<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
-                    <div style={{width:34,height:34,borderRadius:8,background:n.bg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{n.icon}</div>
-                    <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{n.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{n.sub}</div><div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{n.time}</div></div>
-                    <span className={`badge ${n.badgeCls}`}>{n.badge}</span>
+                    <div style={{width:34,height:34,borderRadius:8,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{n.icon || '🔔'}</div>
+                    <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{n.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{n.body}</div><div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(n.created_at)}</div></div>
+                    <span className="badge badge-blue">{n.type || 'Info'}</span>
                   </div>
                 ))}
+                {notifications.length === 0 && latestFlashFixEvents.length === 0 && (
+                  <div style={{padding:'16px 14px',fontSize:12,color:'var(--ink3)'}}>Aucune alerte pour le moment.</div>
+                )}
               </div>
             </div>
           </div>
