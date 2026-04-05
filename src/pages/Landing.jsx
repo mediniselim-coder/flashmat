@@ -148,46 +148,81 @@ export default function Landing() {
         <div className={styles.heroOrb1} />
         <div className={styles.heroOrb2} />
         <div className={styles.heroGrid} />
-        <div className={styles.heroBadge}>
-          <span className={styles.badgeDot} />
-          The MarketPlace for Auto Tech · Montréal · 200+ Fournisseurs
-        </div>
-        <h1 className={styles.h1}>
-          Le Hub<br />
-          <span className={styles.outline}>Auto</span> de<br />
-          <span className={styles.accent}>Montréal</span>
-        </h1>
-        <p className={styles.sub}>
-          Réservez, suivez, achetez — tout ce dont votre voiture a besoin à Montréal, en un seul endroit.
-          Recherche par immatriculation, FlashScore™, alertes intelligentes.
-        </p>
-        <div className={styles.searchWrap}>
-          <div className={styles.searchTabs}>
-            {TABS.map(t => (
-              <button key={t.key} className={`${styles.sTab} ${tab === t.key ? styles.sTabActive : ''}`} onClick={() => setTab(t.key)}>
-                {t.label}
+        <div className={styles.heroShell}>
+          <div>
+            <div className={styles.heroBadge}>
+              <span className={styles.badgeDot} />
+              The MarketPlace for Auto Tech · Montréal · 200+ Fournisseurs
+            </div>
+            <div className={styles.heroEyebrow}>FlashMat Application</div>
+            <h1 className={styles.h1}>
+              Tout l univers auto<br />
+              de <span className={styles.accent}>Montréal</span>,<br />
+              dans un seul hub.
+            </h1>
+            <p className={styles.sub}>
+              Réservez un service, trouvez un provider fiable et déclenchez FlashFix en urgence sans quitter FlashMat.
+            </p>
+            <div className={styles.heroCtas}>
+              <button
+                type="button"
+                className={styles.heroPrimaryCta}
+                onClick={() => document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Explorer les services
               </button>
-            ))}
+              <button
+                type="button"
+                className={styles.heroSecondaryCta}
+                onClick={() => navigate('/urgence')}
+              >
+                FlashFix Urgence
+              </button>
+            </div>
+            <div className={styles.searchWrap}>
+              <div className={styles.searchTabs}>
+                {TABS.map(t => (
+                  <button key={t.key} className={`${styles.sTab} ${tab === t.key ? styles.sTabActive : ''}`} onClick={() => setTab(t.key)}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <form className={styles.searchBox} onSubmit={handleSearch}>
+                <input value={query} onChange={e => setQuery(e.target.value)} placeholder={activeTab.ph} className={styles.searchInput} />
+                <button type="submit" className={styles.searchBtn}>Rechercher →</button>
+              </form>
+            </div>
+            <div className={styles.chips}>
+              {[['🔧 Mécanique','mechanic'],['🚿 Lave-auto','wash'],['🔩 Pneus','tire'],['🚛 Remorquage 24/7','tow'],['🪟 Vitres','glass'],['🎨 Carrosserie','body'],['♻️ Casse auto','junk']].map(([label, cat]) => (
+                <button key={cat} className={styles.chip} onClick={() => navigate('/services', { state: { cat } })}>{label}</button>
+              ))}
+            </div>
           </div>
-          <form className={styles.searchBox} onSubmit={handleSearch}>
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={activeTab.ph} className={styles.searchInput} />
-            <button type="submit" className={styles.searchBtn}>Rechercher →</button>
-          </form>
-        </div>
-        <div className={styles.chips}>
-          {[['🔧 Mécanique','mechanic'],['🚿 Lave-auto','wash'],['🔩 Pneus','tire'],['🚛 Remorquage 24/7','tow'],['🪟 Vitres','glass'],['🎨 Carrosserie','body'],['♻️ Casse auto','junk']].map(([label, cat]) => (
-            <button key={cat} className={styles.chip} onClick={() => navigate('/services', { state: { cat } })}>{label}</button>
-          ))}
-        </div>
-        <div style={{ marginTop: 18 }}>
-          <button
-            type="button"
-            className="btn btn-lg"
-            onClick={() => navigate('/urgence')}
-            style={{ background: '#ef4444', color: '#fff', borderColor: '#ef4444', boxShadow: '0 12px 28px rgba(239,68,68,0.22)' }}
-          >
-            FlashFix Urgence 24/7 →
-          </button>
+          <div className={styles.heroInsight}>
+            <div className={styles.heroInsightTop}>
+              <div>
+                <div className={styles.heroInsightEyebrow}>Live sur FlashMat</div>
+                <div className={styles.heroInsightTitle}>Trouver, diagnostiquer, réserver.</div>
+              </div>
+              <div className={styles.heroInsightBadge}>4.7★ moyenne</div>
+            </div>
+            <div className={styles.heroInsightGrid}>
+              <div className={styles.heroInsightCard}>
+                <div className={styles.heroInsightLabel}>Services</div>
+                <div className={styles.heroInsightValue}>11</div>
+                <div className={styles.heroInsightText}>catégories actives</div>
+              </div>
+              <div className={styles.heroInsightCard}>
+                <div className={styles.heroInsightLabel}>Providers</div>
+                <div className={styles.heroInsightValue}>200+</div>
+                <div className={styles.heroInsightText}>vérifiés à Montréal</div>
+              </div>
+              <div className={`${styles.heroInsightCard} ${styles.heroInsightCardWide}`}>
+                <div className={styles.heroInsightLabel}>Parcours recommandé</div>
+                <div className={styles.heroInsightText}>Recherche par service → matching provider → réservation confirmée.</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

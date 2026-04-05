@@ -41,9 +41,9 @@
 /* HERO */
 .hero {
   min-height: 100vh; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center;
-  padding: 120px 56px 100px; position: relative; overflow: hidden;
-  background: #f0f4ff;
+  align-items: stretch; justify-content: center; text-align: left;
+  padding: 132px 56px 92px; position: relative; overflow: hidden;
+  background: linear-gradient(180deg, #f7fbff 0%, #eef4ff 100%);
 }
 .heroOrb1 {
   position: absolute; width: 900px; height: 700px; border-radius: 50%;
@@ -64,35 +64,152 @@
 }
 .heroBadge {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(22,199,132,.1); border: 1px solid rgba(22,199,132,.35);
-  border-radius: 20px; padding: 6px 18px 6px 12px;
+  background: rgba(255,255,255,.78); border: 1px solid rgba(59,159,216,.22);
+  border-radius: 999px; padding: 7px 14px 7px 11px;
   font-family: var(--mono); font-size: 10px; letter-spacing: .8px;
-  color: var(--green); text-transform: uppercase; margin-bottom: 32px;
+  color: #3b6e9a; text-transform: uppercase; margin-bottom: 18px;
   position: relative; z-index: 2; animation: fadeUp .6s ease both;
 }
 .badgeDot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+.heroShell {
+  width: min(1480px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+  gap: 38px;
+  align-items: end;
+  position: relative;
+  z-index: 2;
+}
+.heroEyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: #5e7ea2;
+  margin-bottom: 18px;
+}
 .h1 {
-  font-family: var(--display); font-size: clamp(50px, 8vw, 108px);
-  font-weight: 800; line-height: .88; letter-spacing: -4px;
-  text-transform: uppercase; margin-bottom: 26px; color: #0f1e3d;
+  font-family: var(--display); font-size: clamp(52px, 7.2vw, 104px);
+  font-weight: 800; line-height: .92; letter-spacing: -4.2px;
+  text-transform: none; margin-bottom: 22px; color: #0f1e3d;
   position: relative; z-index: 2; animation: fadeUp .6s .1s ease both;
 }
-.outline { -webkit-text-stroke: 2px #1e3a8a; color: transparent; }
+.outline { -webkit-text-stroke: 1.6px #1e3a8a; color: transparent; }
 .accent  { background: linear-gradient(135deg, #2563eb, #16C784); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; -webkit-text-stroke: 0; }
 .sub {
-  font-size: 17px; font-weight: 400; color: #4b6285;
-  max-width: 620px; line-height: 1.75; margin-bottom: 52px;
+  font-size: 18px; font-weight: 400; color: #4b6285;
+  max-width: 640px; line-height: 1.8; margin-bottom: 28px;
   position: relative; z-index: 2; animation: fadeUp .6s .18s ease both;
+}
+.heroCtas {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+.heroPrimaryCta,
+.heroSecondaryCta {
+  border-radius: 999px;
+  padding: 14px 18px;
+  font-size: 13px;
+  font-weight: 800;
+  transition: all .18s;
+}
+.heroPrimaryCta {
+  border: none;
+  background: #0f1e3d;
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(15,30,61,.16);
+}
+.heroSecondaryCta {
+  border: 1px solid rgba(239,68,68,.18);
+  background: #fff4f4;
+  color: #ef4444;
+}
+.heroInsight {
+  background: linear-gradient(180deg, rgba(255,255,255,.86) 0%, rgba(255,255,255,.72) 100%);
+  border: 1px solid rgba(59,159,216,.16);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 30px 60px rgba(26,58,143,.10);
+  backdrop-filter: blur(18px);
+}
+.heroInsightTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+.heroInsightEyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: #6b87a3;
+  margin-bottom: 8px;
+}
+.heroInsightTitle {
+  font-family: var(--display);
+  font-size: 28px;
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: #10233b;
+}
+.heroInsightBadge {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(59,159,216,.10);
+  color: #23587e;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.heroInsightGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.heroInsightCard {
+  background: rgba(247,251,255,.92);
+  border: 1px solid rgba(26,58,143,.08);
+  border-radius: 20px;
+  padding: 18px;
+}
+.heroInsightCardWide { grid-column: 1 / -1; }
+.heroInsightLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #6b87a3;
+  margin-bottom: 8px;
+}
+.heroInsightValue {
+  font-family: var(--display);
+  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -1.6px;
+  color: #10233b;
+  margin-bottom: 6px;
+}
+.heroInsightText {
+  font-size: 13px;
+  line-height: 1.65;
+  color: #5a7088;
 }
 
 /* SEARCH */
-.searchWrap { width: 100%; max-width: 820px; position: relative; z-index: 2; animation: fadeUp .6s .26s ease both; margin-bottom: 20px; }
+.searchWrap { width: 100%; max-width: 820px; position: relative; z-index: 2; animation: fadeUp .6s .26s ease both; margin-bottom: 18px; }
 .searchTabs {
-  display: flex; background: rgba(255,255,255,.7);
-  border-radius: 12px 12px 0 0; border: 1px solid #cbd5e1; border-bottom: none; overflow: hidden;
+  display: flex; background: rgba(255,255,255,.78);
+  border-radius: 18px 18px 0 0; border: 1px solid #d7e3f0; border-bottom: none; overflow: hidden;
 }
 .sTab {
-  flex: 1; padding: 11px 6px; font-size: 11px; font-weight: 600;
+  flex: 1; padding: 13px 8px; font-size: 11px; font-weight: 700;
   color: #64748b; cursor: pointer; transition: all .15s; text-align: center;
   font-family: var(--mono); letter-spacing: .3px; text-transform: uppercase;
   background: none; border: none;
@@ -101,25 +218,25 @@
 .sTab:hover:not(.sTabActive) { color: #1e3a8a; background: rgba(255,255,255,.5); }
 .searchBox {
   display: flex; background: #fff;
-  border: 1.5px solid #2563eb; border-radius: 0 0 12px 12px;
-  overflow: hidden; box-shadow: 0 8px 40px rgba(37,99,235,.15);
+  border: 1px solid #d7e3f0; border-radius: 0 0 18px 18px;
+  overflow: hidden; box-shadow: 0 18px 42px rgba(26,58,143,.12);
 }
 .searchInput {
   flex: 1; background: transparent; border: none; outline: none;
-  color: #0f1e3d; font-family: var(--font); font-size: 15px; padding: 16px 20px;
+  color: #0f1e3d; font-family: var(--font); font-size: 15px; padding: 18px 22px;
 }
 .searchInput::placeholder { color: #94a3b8; }
 .searchBtn {
   background: linear-gradient(135deg, #1e40af, #2563eb); border: none; color: #fff;
   font-family: var(--font); font-size: 13px; font-weight: 700;
-  padding: 0 28px; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+  padding: 0 30px; cursor: pointer; transition: opacity .15s; white-space: nowrap;
   letter-spacing: .3px;
 }
 .searchBtn:hover { opacity: .9; }
-.chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; animation: fadeUp .6s .34s ease both; position: relative; z-index: 2; }
+.chips { display: flex; gap: 8px; justify-content: flex-start; flex-wrap: wrap; animation: fadeUp .6s .34s ease both; position: relative; z-index: 2; }
 .chip {
-  background: rgba(255,255,255,.8); border: 1px solid #cbd5e1; border-radius: 20px;
-  padding: 7px 16px; font-size: 12px; font-weight: 500; color: #334155;
+  background: rgba(255,255,255,.82); border: 1px solid #d7e3f0; border-radius: 999px;
+  padding: 8px 16px; font-size: 12px; font-weight: 600; color: #334155;
   cursor: pointer; transition: all .18s; backdrop-filter: blur(4px);
 }
 .chip:hover { border-color: #2563eb; color: #1e40af; background: rgba(37,99,235,.06); }
@@ -250,6 +367,11 @@
   .navLinks, .navRight { display: none; }
   .hamburger { display: block; }
   .hero { padding: 90px 20px 60px; }
+  .heroShell { grid-template-columns: 1fr; gap: 18px; }
+  .heroCtas { margin-bottom: 20px; }
+  .heroInsight { padding: 18px; }
+  .heroInsightGrid { grid-template-columns: 1fr; }
+  .heroInsightCardWide { grid-column: auto; }
   .h1 { font-size: clamp(42px, 13vw, 72px); letter-spacing: -2.5px; }
   .sub { font-size: 15px; }
   .section { padding: 52px 0; }
