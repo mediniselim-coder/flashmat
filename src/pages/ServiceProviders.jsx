@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import ProviderMap from '../components/ProviderMap'
+import SiteFooter from '../components/SiteFooter'
 import { supabase } from '../lib/supabase'
 import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
@@ -165,6 +166,8 @@ export default function ServiceProviders() {
           </div>
         )}
       </div>
+
+      <SiteFooter portal="public" />
     </div>
   )
 }

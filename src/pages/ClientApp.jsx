@@ -9,6 +9,7 @@ import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import VehicleDoctor from '../components/VehicleDoctor'
+import SiteFooter from '../components/SiteFooter'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
@@ -599,6 +600,7 @@ export default function ClientApp() {
           </div>
         )}
 
+        <SiteFooter portal="client" />
         <nav className={styles.bottomNav}>
           {[['dashboard','⚡','Accueil'],['bookings','📅','Résa'],['search','🗺️','Services'],['vehicles','🚗','Autos'],['notifications','🔔','Alertes']].map(([id,icon,label]) => (
             <button key={id} className={`${styles.bnItem} ${pane===id?styles.bnActive:''}`} onClick={() => go(id)}>

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import BookingModal from '../components/BookingModal'
+import SiteFooter from '../components/SiteFooter'
 import { createBooking } from '../lib/bookings'
 import { mergeProviderProfile, normalizeProviderRecord } from '../lib/providerProfiles'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
@@ -388,7 +389,8 @@ export default function ProviderProfile() {
       )}
 
       {/* FOOTER */}
-      <footer style={{ background: '#fff', borderTop: '1px solid var(--border)', padding: '24px', textAlign: 'center', marginTop: 40 }}>
+      <SiteFooter portal="public" />
+      <footer style={{ display: 'none', background: '#fff', borderTop: '1px solid var(--border)', padding: '24px', textAlign: 'center', marginTop: 40 }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 28, objectFit: 'contain', marginBottom: 8 }} />
         <div style={{ fontSize: 12, color: 'var(--ink3)' }}>© 2025 FlashMat.ca · The MarketPlace for Auto Tech</div>
       </footer>

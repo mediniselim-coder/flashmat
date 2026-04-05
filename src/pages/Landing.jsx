@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
+import SiteFooter from '../components/SiteFooter'
 
 const SERVICES = [
   { id: 'flashfix',  name: 'FlashFix',     icon: '🚨', count: 8 },
@@ -343,7 +344,9 @@ export default function Landing() {
       </section>
 
       {/* FOOTER */}
-      <footer className={styles.footer}>
+      <SiteFooter portal="public" />
+      {/* Legacy footer hidden after shared footer migration */}
+      <footer className={styles.footer} style={{ display: 'none' }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain' }} />
         <div className={styles.footerLinks}>
           {['À propos', 'Conditions', 'Confidentialité', 'info@flashmat.ca', '514-476-1708'].map(l => (

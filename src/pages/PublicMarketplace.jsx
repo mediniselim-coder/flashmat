@@ -1,5 +1,6 @@
 import NavBar from "../components/NavBar"
 import Marketplace from "../components/Marketplace"
+import SiteFooter from "../components/SiteFooter"
 
 export default function PublicMarketplace() {
   return (
@@ -23,6 +24,8 @@ export default function PublicMarketplace() {
       <div style={{ maxWidth: 1320, margin: "0 auto", padding: "24px 0 48px" }}>
         <Marketplace portal="public" />
       </div>
+
+      <SiteFooter portal="public" />
     </div>
   )
 }

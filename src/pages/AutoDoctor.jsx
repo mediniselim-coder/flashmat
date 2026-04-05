@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 import VehicleDoctor from '../components/VehicleDoctor'
+import SiteFooter from '../components/SiteFooter'
 
 const INFO_CARDS = [
   {
@@ -115,7 +116,8 @@ export default function AutoDoctor() {
         </div>
       </div>
 
-      <footer style={{ background: '#0f172a', color: '#94a3b8', padding: '32px', textAlign: 'center', fontSize: 13 }}>
+      <SiteFooter portal="public" />
+      <footer style={{ display: 'none', background: '#0f172a', color: '#94a3b8', padding: '32px', textAlign: 'center', fontSize: 13 }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain', marginBottom: 16, filter: 'brightness(0) invert(1)' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
           {['À propos', 'Conditions', 'Confidentialité', 'info@flashmat.ca', '514-476-1708'].map((item) => (

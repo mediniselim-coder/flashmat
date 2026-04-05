@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
+import SiteFooter from '../components/SiteFooter'
 
 const SERVICES = [
   { id: 'flashfix', name: 'FlashFix Urgence', icon: '🚨', desc: 'Un mécano mobile ou un service d urgence vient à vous rapidement, à domicile ou sur la route.', items: ['Mécano mobile', 'Batterie à booster', 'Pneu crevé', 'Intervention rapide'], count: 8 },
@@ -136,7 +137,8 @@ export default function Services() {
       </div>
 
       {/* FOOTER */}
-      <footer style={{ background: '#0a1528', color: 'var(--ink3)', padding: '32px 64px', textAlign: 'center', fontSize: 13, borderTop: '1px solid var(--border)' }}>
+      <SiteFooter portal="public" />
+      <footer style={{ display: 'none', background: '#0a1528', color: 'var(--ink3)', padding: '32px 64px', textAlign: 'center', fontSize: 13, borderTop: '1px solid var(--border)' }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain', marginBottom: 16, filter: 'brightness(0) invert(1)' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
           {['À propos', 'Conditions', 'Confidentialité', 'info@flashmat.ca', '514-476-1708'].map(l => (
