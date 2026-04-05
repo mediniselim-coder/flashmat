@@ -48,19 +48,19 @@ export default function Services() {
 
       {/* HERO */}
       <div style={{ background: 'linear-gradient(135deg, #0a1528 0%, #0f1e3d 60%, #1a3a8f 100%)', color: '#fff', padding: '64px 32px 48px', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 12, fontWeight: 600 }}>â— Nos services</div>
+        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 12, fontWeight: 600 }}>Nos services</div>
         <h1 style={{ fontSize: 42, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.2, fontFamily: 'var(--display)' }}>
           Tous les services auto<br />
-          <span style={{ color: 'var(--blue)' }}>Ã  MontrÃ©al</span>
+          <span style={{ color: 'var(--blue)' }}>a Montreal</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, maxWidth: 520, margin: '0 auto 32px' }}>
-          Trouvez le bon professionnel pour chaque besoin de votre vÃ©hicule â€” 200+ fournisseurs vÃ©rifiÃ©s Ã  MontrÃ©al.
+          Trouvez le bon professionnel pour chaque besoin de votre vehicule - 200+ fournisseurs verifies a Montreal.
         </p>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un serviceâ€¦"
+            placeholder="Rechercher un service..."
             style={{ width: '100%', padding: '14px 20px', borderRadius: 12, border: 'none', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font)' }}
           />
         </div>
@@ -68,7 +68,7 @@ export default function Services() {
 
       {/* STATS */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 48, padding: '24px 32px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7â˜…', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
+        {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
           <div key={l} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--display)' }}>{v}</div>
             <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{l}</div>
@@ -142,11 +142,11 @@ export default function Services() {
       <footer style={{ display: 'none', background: '#0a1528', color: 'var(--ink3)', padding: '32px 64px', textAlign: 'center', fontSize: 13, borderTop: '1px solid var(--border)' }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain', marginBottom: 16, filter: 'brightness(0) invert(1)' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
-          {['Ã€ propos', 'Conditions', 'ConfidentialitÃ©', 'info@flashmat.ca', '514-476-1708'].map(l => (
+          {['A propos', 'Conditions', 'Confidentialite', 'info@flashmat.ca', '514-476-1708'].map(l => (
             <span key={l} style={{ cursor: 'pointer' }}>{l}</span>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Â© 2025 FlashMat.ca Â· MontrÃ©al, QC</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>&copy; 2025 FlashMat.ca · Montreal, QC</div>
       </footer>
     </div>
   )
