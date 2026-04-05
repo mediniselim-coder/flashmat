@@ -68,27 +68,6 @@ export default function LoginModal({ onClose }) {
     }
   }
 
-  async function demoLogin(demoRole) {
-    setLoading(true)
-    try {
-      window.sessionStorage.setItem(
-        'flashmat-post-login-redirect',
-        demoRole === 'provider' ? '/app/provider' : '/app/client'
-      )
-      await signIn({
-        email: demoRole === 'provider' ? 'demo.provider@flashmat.ca' : 'demo.client@flashmat.ca',
-        password: 'demo123456'
-      })
-      toast('Connexion reussie !', 'success')
-      setShouldRedirectAfterClose(true)
-      onClose()
-    } catch {
-      toast('Compte de demonstration non disponible', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
     <>
       <div
@@ -136,19 +115,9 @@ export default function LoginModal({ onClose }) {
           {mode === 'login' ? 'Connectez-vous a votre espace FlashMat' : 'Rejoignez le hub automobile de Montreal'}
         </p>
 
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 11, color: '#999', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 10 }}>
-            Acces rapide
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <button onClick={() => demoLogin('client')} style={demoBtnStyle}>Client</button>
-            <button onClick={() => demoLogin('provider')} style={demoBtnStyle}>Fournisseur</button>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0', fontSize: 11, color: '#999', fontFamily: 'monospace' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0 18px', fontSize: 11, color: '#999', fontFamily: 'monospace' }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border, #eee)' }} />
-          ou continuer avec email
+          connexion securisee
           <div style={{ flex: 1, height: 1, background: 'var(--border, #eee)' }} />
         </div>
 
@@ -260,18 +229,6 @@ export default function LoginModal({ onClose }) {
       `}</style>
     </>
   )
-}
-
-const demoBtnStyle = {
-  background: 'var(--bg3, #f5f5f5)',
-  border: '1px solid var(--border, #eee)',
-  borderRadius: 10,
-  padding: '10px 12px',
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: 'pointer',
-  color: 'var(--ink, #1a1a1a)',
-  width: '100%',
 }
 
 const switchBtnStyle = {

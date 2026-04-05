@@ -30,17 +30,6 @@ const TICKER = [
   "Remorquage Elite — Dès $79 n'importe où MTL",
 ]
 
-const PROVIDERS = [
-  { name: 'Garage Los Santos',     slug: 'garage-los-santos',        icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews: 312, open: true,  dist: '0.8km' },
-  { name: 'CS Lave Auto Décarie',  slug: 'cs-lave-auto-decarie',     icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 198, open: true,  dist: '1.2km' },
-  { name: 'Dubé Pneu et Mécan.',   slug: 'dube-pneu-et-mecan',       icon: '🔩', type: 'Pneus',       rating: 4.3, reviews: 256, open: true,  dist: '2.1km' },
-  { name: 'Garage Méca. MK',       slug: 'garage-meca-mk',           icon: '🔧', type: 'Mécanique',   rating: 4.9, reviews: 145, open: false, dist: '1.8km' },
-  { name: 'Remorquage Elite 24/7', slug: 'remorquage-elite-24-7',    icon: '🚛', type: 'Remorquage',  rating: 4.6, reviews: 432, open: true,  dist: 'Mobile' },
-  { name: 'Lave-Auto 365',         slug: 'lave-auto-365',            icon: '🚿', type: 'Lave-auto',   rating: 4.8, reviews: 210, open: true,  dist: '2.4km' },
-  { name: 'JA Automobile',         slug: 'ja-automobile',            icon: '🔧', type: 'Mécanique',   rating: 4.8, reviews:  89, open: true,  dist: '3.2km' },
-  { name: 'Speedy Glass Montréal', slug: 'speedy-glass-montreal',    icon: '🪟', type: 'Vitres auto', rating: 4.5, reviews: 521, open: true,  dist: '1.5km' },
-]
-
 const TABS = [
   { key: 'service',     label: '🔧 Par service',    ph: 'Ex: mécanique, vidange, pneus, carrosserie…' },
   { key: 'quartier',   label: '📍 Par quartier',   ph: 'Ex: Plateau, NDG, Rosemont, Côte-des-Neiges…' },
@@ -130,8 +119,7 @@ export default function Landing() {
       .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
   }
 
-  const homepageProviders = featuredProviders.length > 0 ? featuredProviders : PROVIDERS
-  const displayProviders = (filterTerm ? dbProviders : homepageProviders).filter(p => {
+  const displayProviders = (filterTerm ? dbProviders : featuredProviders).filter(p => {
     if (minRating === 'open') return p.open === true || p.is_open === true || p.is_open === 'true'
     return (p.rating || 0) >= minRating
   })
@@ -367,3 +355,4 @@ export default function Landing() {
     </div>
   )
 }
+

@@ -21,31 +21,6 @@ const NAV = [
   { id: 'p-profile',     icon: '🏪', label: 'Profil atelier' },
 ]
 
-const QUEUE = [
-  { time: '09h00', client: 'Alex M.',    service: 'Plaquettes freins', cls: 'badge-green', label: 'Terminé',   done: true  },
-  { time: '10h30', client: 'Sarah K.',   service: 'Vidange',           cls: 'badge-amber', label: 'En cours',  done: false },
-  { time: '11h00', client: 'Marc D.',    service: 'Rotation pneus',    cls: 'badge-amber', label: 'En cours',  done: false },
-  { time: '13h00', client: 'Julie T.',   service: 'Alignement',        cls: 'badge-blue',  label: 'Planifié',  done: false },
-  { time: '14h30', client: 'Patrick R.', service: 'Recharge AC',       cls: 'badge-blue',  label: 'Planifié',  done: false },
-]
-
-const CLIENTS = [
-  { name: 'Alex Martin',      email: 'alex@email.com',     vehicles: ['Civic','RAV4'], last: '28 mars', total: '$1 240', status: 'VIP',     cls: 'badge-purple' },
-  { name: 'Sarah Kowalski',   email: 'sarah@email.com',    vehicles: ['Honda Fit'],   last: "Auj.",    total: '$380',   status: 'Actif',   cls: 'badge-green'  },
-  { name: 'Marc Dupont',      email: 'marc@email.com',     vehicles: ['BMW 320i'],    last: "Auj.",    total: '$620',   status: 'Actif',   cls: 'badge-green'  },
-  { name: 'Julie Tremblay',   email: 'julie@email.com',    vehicles: ['Mazda CX-5'], last: '15 mars', total: '$450',   status: 'Actif',   cls: 'badge-green'  },
-  { name: 'Patrick Roy',      email: 'patrick@email.com',  vehicles: ['Ford F-150'], last: '5 mars',  total: '$185',   status: 'Nouveau', cls: 'badge-blue'   },
-  { name: 'Marie Côté',       email: 'marie@email.com',    vehicles: ['Corolla'],    last: '20 fév.', total: '$320',   status: 'Actif',   cls: 'badge-green'  },
-]
-
-const PROVIDER_BOOKINGS = [
-  { client: 'Alex Martin',  service: 'Vidange + Filtre',  vehicle: 'Honda Civic', datetime: '1 avr. · 10h00', price: '$89',  status: 'confirmed', label: 'Confirmé',  cls: 'badge-green' },
-  { client: 'Sarah K.',     service: 'Vidange',           vehicle: 'Honda Fit',   datetime: "Auj. · 10h30",   price: '$75',  status: 'progress',  label: 'En cours',  cls: 'badge-amber' },
-  { client: 'Marc Dupont',  service: 'Rotation pneus',   vehicle: 'BMW 320i',    datetime: "Auj. · 11h00",   price: '$65',  status: 'progress',  label: 'En cours',  cls: 'badge-amber' },
-  { client: 'Julie T.',     service: 'Alignement roues', vehicle: 'Mazda CX-5',  datetime: "Auj. · 13h00",   price: '$95',  status: 'scheduled', label: 'Planifié',  cls: 'badge-blue'  },
-  { client: 'Patrick R.',   service: 'Recharge AC',      vehicle: 'Ford F-150',  datetime: "Auj. · 14h30",   price: '$120', status: 'scheduled', label: 'Planifié',  cls: 'badge-blue'  },
-]
-
 function getProviderDraftStorageKey(user, profile) {
   return `flashmat-provider-profile-draft:${user?.id || profile?.email || 'anonymous'}`
 }
@@ -194,10 +169,19 @@ export default function ProviderApp() {
     })
     return acc
   }, [])
+  const operationalQueue = providerBookings.slice(0, 5).map((booking) => ({
+    id: booking.id,
+    time: booking.timeSlot || booking.date || 'A confirmer',
+    client: booking.clientName,
+    service: booking.service,
+    cls: booking.statusClass,
+    label: booking.statusLabel,
+    done: booking.status === 'done',
+  }))
   function go(id) { setPane(id); setSidebar(false) }
   function goHome() { setSidebar(false); navigate('/') }
 
-  const filteredClients = (providerClients.length > 0 ? providerClients : CLIENTS).filter(c => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+  const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -583,8 +567,8 @@ export default function ProviderApp() {
                     <table>
                       <thead><tr><th>Heure</th><th>Client</th><th>Service</th><th>Statut</th><th></th></tr></thead>
                       <tbody>
-                        {QUEUE.map((q,i) => (
-                          <tr key={i}>
+                        {operationalQueue.map((q) => (
+                          <tr key={q.id}>
                             <td style={{fontFamily:'var(--mono)',color:'var(--blue)',fontSize:11}}>{q.time}</td>
                             <td style={{fontWeight:600}}>{q.client}</td>
                             <td>{q.service}</td>
@@ -595,35 +579,43 @@ export default function ProviderApp() {
                       </tbody>
                     </table>
                   </div>
+                  {operationalQueue.length === 0 && (
+                    <div style={{padding:18,color:'var(--ink3)',fontSize:12}}>
+                      Aucune reservation reelle n alimente encore la file d attente.
+                    </div>
+                  )}
                 </div>
                 <div>
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">📊 Revenu semaine</div></div>
                     <div className="panel-body">
-                      {[['Lun',1220,68],['Mar',1850,100],['Mer',1420,78],['Jeu',980,53],['Ven',0,0]].map(([d,v,p]) => (
-                        <div key={d} style={{marginBottom:8}}>
-                          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}>
-                            <span style={{color:'var(--ink2)'}}>{d}</span>
-                            <span style={{color:v?'var(--green)':'var(--ink3)',fontFamily:'var(--mono)'}}>{v?'$'+v.toLocaleString():'—'}</span>
-                          </div>
-                          <div className="prog-bar"><div className="prog-fill" style={{width:`${p}%`,background:p===100?'var(--green)':p>70?'var(--blue)':p>40?'var(--amber)':'var(--bg3)'}}/></div>
+                      {[['Réservations', providerBookings.length], ['Clients uniques', providerClients.length], ['Services terminés', bookingsDoneCount], ['Urgences FlashFix', flashFixQueue.length]].map(([label, value]) => (
+                        <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--border)',fontSize:12}}>
+                          <span style={{color:'var(--ink2)'}}>{label}</span>
+                          <strong style={{color:'var(--ink)',fontFamily:'var(--mono)'}}>{value}</strong>
                         </div>
                       ))}
                       <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)',display:'flex',justifyContent:'space-between'}}>
-                        <span style={{fontSize:11,color:'var(--ink2)'}}>Total semaine</span>
-                        <span style={{fontFamily:'var(--display)',fontSize:16,fontWeight:800,color:'var(--green)'}}>$5 470</span>
+                        <span style={{fontSize:11,color:'var(--ink2)'}}>Total enregistré</span>
+                        <span style={{fontFamily:'var(--display)',fontSize:16,fontWeight:800,color:'var(--green)'}}>${monthlyRevenue || 0}</span>
                       </div>
                     </div>
                   </div>
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">🏗️ Baies de travail</div></div>
-                    {[{n:1,who:'Marc D. — Rotation · ETA 12h30',cls:'badge-amber',dot:'var(--amber)'},{n:2,who:'Sarah K. — Vidange · ETA 11h45',cls:'badge-amber',dot:'var(--amber)'},{n:3,who:'Disponible',cls:'badge-green',dot:'var(--green)'},{n:4,who:'Disponible',cls:'badge-green',dot:'var(--green)'}].map(b => (
-                      <div key={b.n} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',borderBottom:'1px solid var(--border)'}}>
-                        <div style={{width:8,height:8,borderRadius:'50%',background:b.dot,flexShrink:0}}/>
-                        <div style={{flex:1}}><div style={{fontWeight:600,fontSize:12}}>Baie {b.n}</div><div style={{fontSize:10,color:'var(--ink2)'}}>{b.who}</div></div>
-                        <span className={`badge ${b.cls}`}>{b.cls.includes('amber')?'Occupée':'Libre'}</span>
+                    {[1, 2, 3, 4].map((bayNumber) => {
+                      const booking = providerBookings[bayNumber - 1]
+                      const occupied = Boolean(booking && booking.status !== 'done')
+                      return (
+                      <div key={bayNumber} style={{display:'flex',alignItems:'center',gap:9,padding:'11px 14px',borderBottom:'1px solid var(--border)'}}>
+                        <div style={{width:8,height:8,borderRadius:'50%',background:occupied ? 'var(--amber)' : 'var(--green)',flexShrink:0}}/>
+                        <div style={{flex:1}}>
+                          <div style={{fontWeight:600,fontSize:12}}>Baie {bayNumber}</div>
+                          <div style={{fontSize:10,color:'var(--ink2)'}}>{occupied ? `${booking.clientName} - ${booking.service}` : 'Disponible'}</div>
+                        </div>
+                        <span className={`badge ${occupied ? 'badge-amber' : 'badge-green'}`}>{occupied ? 'Occupée' : 'Libre'}</span>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>
@@ -816,6 +808,11 @@ export default function ProviderApp() {
                   </tbody>
                 </table>
               </div>
+              {filteredClients.length === 0 && (
+                <div style={{textAlign:'center',padding:28,color:'var(--ink3)'}}>
+                  Aucun client reel n apparait encore. Les clients seront listes ici apres les premieres reservations.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -827,15 +824,16 @@ export default function ProviderApp() {
             <div className={styles.pad}>
               <div className={styles.g2}>
                 <div>
-                  {[{pct:'20%',title:"SUR Vidange d'huile",desc:'Valide 1–5 avr. · Code: OIL20 · Envoyé à 47 clients',status:'Active',cls:'badge-green',stats:'32 vues · 8 résa'},
-                    {pct:'$10',title:'SUR Lavage complet',desc:'Valide 1–15 avr. · Tous nouveaux clients',status:'Planifiée',cls:'badge-blue',stats:'Débute 1 avr.'}].map((p,i) => (
-                    <div key={i} style={{background:'linear-gradient(135deg,var(--green-bg),var(--blue-bg))',border:'1px solid var(--border)',borderRadius:10,padding:16,marginBottom:10,position:'relative',overflow:'hidden'}}>
-                      <div style={{fontFamily:'var(--display)',fontSize:40,fontWeight:800,color:'var(--green)',lineHeight:1,marginBottom:4}}>{p.pct}</div>
-                      <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:4}}>{p.title}</div>
-                      <div style={{fontSize:11,color:'var(--ink2)',lineHeight:1.5}}>{p.desc}</div>
-                      <div style={{marginTop:9,display:'flex',gap:5}}><span className={`badge ${p.cls}`}>{p.status}</span><span className="badge badge-gray">{p.stats}</span></div>
+                  <div style={{background:'linear-gradient(135deg,var(--green-bg),var(--blue-bg))',border:'1px solid var(--border)',borderRadius:10,padding:18}}>
+                    <div style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--ink)',marginBottom:8}}>Promotions prêtes à brancher</div>
+                    <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.7}}>
+                      Cette zone n affiche plus de campagnes inventees. Creez une vraie offre, puis rattachez-la a vos clients ou a vos reservations FlashMat.
                     </div>
-                  ))}
+                    <div style={{marginTop:12,display:'flex',gap:6,flexWrap:'wrap'}}>
+                      <span className="badge badge-blue">Sans donnees demo</span>
+                      <span className="badge badge-gray">A connecter au module promo</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="panel">
                   <div className="panel-hd"><div className="panel-title">📣 Nouvelle promo</div></div>
@@ -997,3 +995,4 @@ export default function ProviderApp() {
     </div>
   )
 }
+
