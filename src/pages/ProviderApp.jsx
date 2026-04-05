@@ -551,15 +551,15 @@ export default function ProviderApp() {
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
           <div className={styles.sbLogoText} onClick={goHome} style={{fontSize:17,cursor:'pointer'}}>Flash<span style={{color:'var(--green)'}}>Mat</span> <span style={{fontSize:10,color:'var(--blue)',fontFamily:'var(--mono)'}}>FOURNISSEUR</span></div>
-          <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => toast('Nouvelle réservation ajoutée 📅','success')}>+ RDV</button>
+          <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => go('p-bookings')}>+ RDV</button>
         </div>
 
         {/* ── DASHBOARD ── */}
         {pane === 'p-dashboard' && (
           <div>
             <div className={styles.pageHdr}>
-              <div><div className={styles.pageTitle}>Bonjour 👋</div><div className={styles.pageSub}>Mardi 1 avr. · 5 clients aujourd'hui</div></div>
-              <button className="btn btn-green" onClick={() => toast('Client notifié: Voiture prête ✅','success')}>✅ Notifier client</button>
+              <div><div className={styles.pageTitle}>Bonjour 👋</div><div className={styles.pageSub}>{providerBookings.length} reservation(s) active(s) · {pendingFlashFix.length} urgence(s) FlashFix</div></div>
+              <button className="btn btn-green" onClick={() => go('p-bookings')}>✅ Voir les réservations</button>
             </div>
             <div className={styles.pad}>
               <div className={styles.statsGrid}>
@@ -789,7 +789,7 @@ export default function ProviderApp() {
         {/* ── CLIENTS ── */}
         {pane === 'p-clients' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Clients</div><div className={styles.pageSub}>{CLIENTS.length} clients</div></div></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Clients</div><div className={styles.pageSub}>{filteredClients.length} clients</div></div></div>
             <div className={styles.pad}>
               <input className="form-input" placeholder="🔍  Rechercher un client…" value={clientQ} onChange={e => setClientQ(e.target.value)} style={{marginBottom:14}} />
               <div className="panel" style={{overflowX:'auto'}}>
@@ -803,7 +803,7 @@ export default function ProviderApp() {
                         <td style={{fontFamily:'var(--mono)',fontSize:11}}>{c.last}</td>
                         <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{c.total}</td>
                         <td><span className={`badge ${c.cls}`}>{c.status}</span></td>
-                        <td><button className="btn" style={{fontSize:10}} onClick={() => toast(`Alerte envoyée à ${c.name} 📱`,'success')}>Alerter</button></td>
+                        <td><button className="btn" style={{fontSize:10}} onClick={() => go('p-bookings')}>Voir résa</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -837,8 +837,8 @@ export default function ProviderApp() {
                     <div className="form-group"><label className="form-label">Réduction</label><input className="form-input" value={promoVal} onChange={e => setPromoVal(e.target.value)} placeholder="Ex: 20% ou $15"/></div>
                     <div className="form-group"><label className="form-label">Date de fin</label><input className="form-input" type="date" /></div>
                     <div className="form-group"><label className="form-label">Message</label><input className="form-input" placeholder="Message personnalisé…"/></div>
-                    <button className="btn btn-green" style={{width:'100%',justifyContent:'center'}} onClick={() => toast(`Promo ${promoVal} sur ${promoSvc} envoyée à 47 clients! 🚀`,'success')}>
-                      Envoyer la promo →
+                    <button className="btn btn-green" style={{width:'100%',justifyContent:'center'}} onClick={() => go('p-clients')}>
+                      Gérer les clients →
                     </button>
                   </div>
                 </div>

@@ -143,7 +143,6 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [bookingOpen, setBookingOpen] = useState(false)
-  const [bookingSuccess, setBookingSuccess] = useState(false)
   const [userVehicles, setUserVehicles] = useState([])
   const canBook = user && profile?.role === 'client'
 
