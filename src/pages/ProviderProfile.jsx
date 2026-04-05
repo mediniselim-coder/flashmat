@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../hooks/useAuth'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -133,10 +134,12 @@ export default function ProviderProfile() {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
   const navigate  = useNavigate()
+  const { user, profile } = useAuth()
   const [provider, setProvider] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [bookingSuccess, setBookingSuccess] = useState(false)
+  const canBook = user && profile?.role === 'client'
 
   function normalizeDbProvider(data, slug) {
     return { ...data, slug, logo: data.icon || '🔧', coords: [45.5088, -73.5540], hours: { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Fermé',Sun:'Fermé' }, team: [], reviews_list: [], gallery: [], highlights: data.services || [] }
@@ -156,6 +159,24 @@ export default function ProviderProfile() {
       setLoading(false)
     })
   }, [slug])
+
+  useEffect(() => {
+    if (canBook && searchParams.get('book') === '1') {
+      setBookingOpen(true)
+    }
+  }, [canBook, searchParams])
+
+  function requestBookingAccess() {
+    if (canBook) {
+      setBookingOpen(true)
+      return
+    }
+
+    const exactName = searchParams.get('n')
+    const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
+    window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
+    window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+  }
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
@@ -179,7 +200,7 @@ export default function ProviderProfile() {
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain', cursor: 'pointer' }} onClick={() => navigate('/')} />
         <div style={{ flex: 1 }} />
         <button className="btn" onClick={() => navigate('/')}>← Retour</button>
-        <button className="btn btn-green" onClick={() => setBookingOpen(true)}>📅 Réserver</button>
+        <button className="btn btn-green" onClick={requestBookingAccess}>📅 Réserver</button>
       </nav>
 
       {/* COVER HEADER */}
@@ -207,7 +228,7 @@ export default function ProviderProfile() {
       <div style={{ background: '#fff', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <a href={`tel:${provider.phone}`} className="btn btn-outline">📞 Appeler</a>
         <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(provider.address)}`} target="_blank" rel="noreferrer" className="btn btn-outline">📍 Directions</a>
-        <button className="btn btn-green" onClick={() => setBookingOpen(true)}>📅 Prendre un rendez-vous</button>
+        <button className="btn btn-green" onClick={requestBookingAccess}>📅 Prendre un rendez-vous</button>
       </div>
 
       {/* MAIN CONTENT */}
@@ -269,7 +290,7 @@ export default function ProviderProfile() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {(provider.services || []).map(s => (
                   <div key={s} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer', transition: 'all .15s' }}
-                    onClick={() => setBookingOpen(true)}>
+                    onClick={requestBookingAccess}>
                     🔧 {s}
                   </div>
                 ))}
@@ -344,7 +365,7 @@ export default function ProviderProfile() {
             <div className="panel-hd"><div className="panel-title">📅 Réservation rapide</div></div>
             <div className="panel-body">
               <p style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 16 }}>Prenez rendez-vous en ligne en moins de 2 minutes!</p>
-              <button className="btn btn-green" style={{ width: '100%', justifyContent: 'center', padding: '12px' }} onClick={() => setBookingOpen(true)}>
+              <button className="btn btn-green" style={{ width: '100%', justifyContent: 'center', padding: '12px' }} onClick={requestBookingAccess}>
                 Prendre un rendez-vous →
               </button>
               <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
@@ -372,7 +393,7 @@ export default function ProviderProfile() {
       </div>
 
       {/* BOOKING MODAL */}
-      {bookingOpen && (
+      {bookingOpen && canBook && (
         <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setBookingOpen(false)}>
           <div className="modal">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>

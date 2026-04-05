@@ -9,6 +9,7 @@ import ClientApp from "./pages/ClientApp"
 import ProviderApp from "./pages/ProviderApp"
 import ProviderProfile from "./pages/ProviderProfile"
 import Services from "./pages/Services"
+import ServiceProviders from "./pages/ServiceProviders"
 import AutoDoctor from "./pages/AutoDoctor"
 import FlashFixUrgence from "./pages/FlashFixUrgence"
 import PublicMarketplace from "./pages/PublicMarketplace"
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/services/providers" element={<ServiceProviders />} />
           <Route path="/doctor" element={<AutoDoctor />} />
           <Route path="/urgence" element={<FlashFixUrgence />} />
           <Route path="/marketplace" element={<PublicMarketplace />} />

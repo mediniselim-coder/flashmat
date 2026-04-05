@@ -112,15 +112,7 @@ export default function Services() {
   }
 
   function goToFilteredSearch(categoryId) {
-    window.sessionStorage.setItem('flashmat-pending-service-search', JSON.stringify({
-      pane: 'search',
-      cat: categoryId,
-    }))
-    if (user && profile?.role === 'client') {
-      navigate(`/app/client?pane=search&cat=${encodeURIComponent(categoryId)}`)
-      return
-    }
-    navigate('/services?login=1')
+    navigate(`/services/providers?cat=${encodeURIComponent(categoryId)}`)
   }
 
   const filtered = SERVICES.filter(s =>
