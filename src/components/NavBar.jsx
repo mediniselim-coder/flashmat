@@ -293,7 +293,7 @@ export default function NavBar({ activePage }) {
         <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isCompact ? '40px 18px 18px' : '48px 22px 20px' }}>
           <div style={styles.drawerHeader}>
             <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
-            <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
+            <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">×</button>
           </div>
           <div style={styles.drawerIntro}>
             <div style={styles.drawerEyebrow}>Navigation FlashMat</div>
@@ -664,9 +664,15 @@ const styles = {
     background: '#f4f8fd',
     color: '#47617b',
     fontWeight: 700,
-    fontSize: 12,
-    padding: '9px 13px',
+    fontSize: 22,
+    width: 42,
+    height: 42,
+    padding: 0,
     borderRadius: 999,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
   },
   drawerIntro: { marginBottom: 28 },
   drawerEyebrow: {
