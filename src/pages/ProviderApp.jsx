@@ -73,7 +73,7 @@ function getTimelineLabel(step) {
 }
 
 export default function ProviderApp() {
-  const { profile, user } = useAuth()
+  const { profile, user, fetchProfile } = useAuth()
   const { toast }            = useToast()
   const navigate             = useNavigate()
 
@@ -124,13 +124,13 @@ export default function ProviderApp() {
 
   useEffect(() => {
     async function loadProviderProfile() {
-      const baseIdentity = { email: profile?.email || user?.email, name }
+      const baseIdentity = { email: profile?.email || user?.email, name: profile?.full_name || 'Garage Los Santos' }
       let nextForm = mergeProviderProfile({
         ...providerProfileForm,
         ...baseIdentity,
       })
 
-      const exactName = profile?.full_name || name
+      const exactName = profile?.full_name || 'Garage Los Santos'
       const email = profile?.email || user?.email
       const query = email
         ? supabase.from('providers_list').select('*').or(`email.eq.${email},name.eq.${exactName}`).limit(1)
@@ -157,7 +157,7 @@ export default function ProviderApp() {
     }
 
     loadProviderProfile()
-  }, [name, profile?.email, profile?.full_name, user?.email])
+  }, [profile?.email, profile?.full_name, user?.email])
 
   function setProfileField(field, value) {
     setProviderProfileForm((current) => ({ ...current, [field]: value }))
@@ -215,9 +215,22 @@ export default function ProviderApp() {
     }
 
     saveProviderOverride({ email: providerProfileForm.email, name: providerProfileForm.name }, payload)
+    saveProviderOverride({ email: profile?.email || user?.email, name: profile?.full_name || providerProfileForm.name }, payload)
 
     try {
       const matchEmail = providerProfileForm.email || profile?.email || user?.email
+      if (user?.id) {
+        await supabase
+          .from('profiles')
+          .update({
+            full_name: providerProfileForm.name,
+            email: providerProfileForm.email || profile?.email || user?.email,
+          })
+          .eq('id', user.id)
+
+        await fetchProfile(user.id)
+      }
+
       if (matchEmail) {
         await supabase
           .from('providers_list')
