@@ -390,6 +390,45 @@ const CASE_LIBRARY = [
     ],
   },
   {
+    id: 'wheel-bearing',
+    type: 'repair',
+    symptoms: [
+      { terms: ['roulement'], weight: 9 },
+      { terms: ['bearing'], weight: 8 },
+      { terms: ['roue', 'arriere'], weight: 5 },
+      { terms: ['roue', 'avant'], weight: 5 },
+      { terms: ['bruit', 'roue'], weight: 6 },
+      { terms: ['grincement', 'roue'], weight: 7 },
+      { terms: ['grondement'], weight: 6 },
+      { terms: ['bourdonnement'], weight: 6 },
+      { terms: ['ronronnement'], weight: 5 },
+      { terms: ['augmente', 'vitesse'], weight: 6 },
+      { terms: ['bruit', 'vitesse'], weight: 5 },
+      { terms: ['suspecte', 'roulement'], weight: 8 },
+    ],
+    probableIssue: 'Roulement de roue possiblement use ou endommage',
+    confidence: 'Moyenne a elevee',
+    urgency: 'A verifier rapidement',
+    estimate: '$140 - $420',
+    duration: '1 h a 2 h 30',
+    priceNote: 'Le bruit peut venir du roulement lui-meme, mais aussi parfois du pneu, du moyeu ou d une usure associee du train roulant.',
+    durationNote: 'Un essai routier et une verification de jeu a la roue permettent souvent de confirmer la piste assez vite.',
+    searchCat: 'mechanic',
+    summary: 'Un grincement, grondement ou bourdonnement localise a une roue, surtout s il augmente avec la vitesse, fait penser a un roulement de roue fatigue. Il vaut mieux confirmer rapidement avant que le bruit ou le jeu ne s aggrave.',
+    guidanceTitle: 'Ce qu il faut preciser au garage',
+    guidanceItems: [
+      'Indiquez si le bruit vient plutot de la roue avant ou arriere, gauche ou droite si vous le savez.',
+      'Dites si le bruit augmente avec la vitesse, en virage ou seulement sur certaines routes.',
+      'Mentionnez si vous sentez aussi une vibration, un jeu ou une chaleur inhabituelle pres de la roue.',
+      'Demandez un controle du roulement, du moyeu et du pneu pour confirmer la vraie source du bruit.',
+    ],
+    matches: [
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 14h20', price: 'Diagnostic roulement', tags: ['Train roulant', 'Bruit roue', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 16h00', price: 'Inspection roue / moyeu', tags: ['Roulement', 'Essai routier', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h10', price: 'Contrôle train roulant', tags: ['Roue', 'Diagnostic', 'Proche'] },
+    ],
+  },
+  {
     id: 'transmission',
     type: 'repair',
     symptoms: [
@@ -599,6 +638,61 @@ const DEFAULT_CASE = {
   ],
 }
 
+const OBD_CODE_PATTERNS = [
+  {
+    codes: ['p0300', 'p0301', 'p0302', 'p0303', 'p0304'],
+    probableIssue: 'Ratés d allumage moteur a diagnostiquer',
+    confidence: 'Elevee',
+    urgency: 'A verifier rapidement',
+    estimate: 'Diagnostic allumage, bobines, bougies ou injection',
+    duration: '30 min a 1 h 30',
+    priceNote: 'Les codes de rate peuvent venir des bougies, bobines, injecteurs, d une prise d air ou d un probleme de compression.',
+    durationNote: 'Evitez de rouler longtemps si le moteur tremble, manque de puissance ou si le voyant clignote.',
+    summary: 'Le code releve pointe vers un probleme de combustion sur un ou plusieurs cylindres. Le bon reflexe est de faire confirmer la vraie cause avant de remplacer des pieces au hasard.',
+    guidanceTitle: 'Diagnostic avance conseille',
+    guidanceItems: [
+      'Notez si le moteur tremble au ralenti, manque de puissance ou consomme plus que d habitude.',
+      'Demandez un controle des bobines, bougies, injecteurs et de la compression si le symptome persiste.',
+      'Si vous connaissez le cylindre concerne, mentionnez le code exact au garage.',
+      'Si le voyant moteur clignote, limitez la conduite jusqu au diagnostic.',
+    ],
+  },
+  {
+    codes: ['p0420', 'p0430'],
+    probableIssue: 'Rendement catalyseur ou gestion moteur a verifier',
+    confidence: 'Moyenne a elevee',
+    urgency: 'A verifier bientot',
+    estimate: 'Diagnostic emissions, sonde O2 et catalyseur',
+    duration: '45 min a 1 h 30',
+    priceNote: 'Le code peut etre lie au catalyseur, a une sonde lambda, a une fuite d echappement ou a un melange air-carburant incorrect.',
+    durationNote: 'Il faut confirmer la cause avant de changer un catalyseur, souvent couteux.',
+    summary: 'Ce code ne veut pas dire automatiquement que le catalyseur est mort. Il faut verifier les sondes, les fuites et le fonctionnement moteur avant de conclure.',
+    guidanceTitle: 'Avant de remplacer une grosse piece',
+    guidanceItems: [
+      'Demandez un diagnostic complet des emissions avant tout remplacement du catalyseur.',
+      'Mentionnez si vous avez une odeur inhabituelle, une perte de puissance ou une surconsommation.',
+      'Une fuite d echappement ou une sonde O2 fatiguee peuvent provoquer ce code.',
+    ],
+  },
+  {
+    codes: ['p0171', 'p0174'],
+    probableIssue: 'Melange trop pauvre a diagnostiquer',
+    confidence: 'Moyenne a elevee',
+    urgency: 'A verifier bientot',
+    estimate: 'Recherche de prise d air, debitmetre ou alimentation carburant',
+    duration: '45 min a 1 h 30',
+    priceNote: 'Les causes frequentes sont une fuite de vide, un capteur MAF sale, une pression d essence faible ou un souci de mesure d air.',
+    durationNote: 'Le diagnostic doit confirmer si le probleme vient de l admission d air ou du carburant.',
+    summary: 'Le moteur semble compenser un melange trop pauvre. Ce type de panne demande un diagnostic cible, pas juste un effacement du code.',
+    guidanceTitle: 'Bon niveau de detail a donner',
+    guidanceItems: [
+      'Precisez si le ralenti est instable, si l acceleration hesite ou si la consommation a change.',
+      'Demandez un controle du systeme d admission, du capteur MAF et de la pression de carburant.',
+      'Si le code revient apres effacement, il faut chercher la cause racine plutot que le reinitialiser encore.',
+    ],
+  },
+]
+
 function detectCase(text) {
   const normalized = (text || '')
     .toLowerCase()
@@ -795,6 +889,59 @@ function buildConservativeFallback() {
   }
 }
 
+function extractObdCodes(text) {
+  return Array.from(new Set((text.match(/\b[pcbu]\d{4}\b/g) || [])))
+}
+
+function buildObdDiagnosis(code) {
+  const pattern = OBD_CODE_PATTERNS.find((item) => item.codes.includes(code))
+  if (!pattern) return null
+
+  return {
+    ...DEFAULT_CASE,
+    ...pattern,
+    probableIssue: `${pattern.probableIssue} (${code.toUpperCase()})`,
+  }
+}
+
+function buildAdvancedDiagnosis(matches, normalized) {
+  const topMatches = matches.slice(0, 3)
+  if (!topMatches.length) return buildConservativeFallback()
+
+  const names = topMatches.map((entry) => entry.candidate.probableIssue.toLowerCase())
+  const first = topMatches[0].candidate
+  const confidence = topMatches[0].score >= 10 ? 'Moyenne a elevee' : 'Moyenne'
+  const urgency = topMatches.some((entry) => entry.candidate.urgency?.toLowerCase().includes('urgent'))
+    ? 'A verifier rapidement'
+    : 'Diagnostic avance conseille'
+
+  const detailHints = []
+  if (!inputIncludesAny(normalized, ['voyant', 'code', 'p0', 'b0', 'c0', 'u0'])) detailHints.push('Ajoutez si un voyant est allume ou si vous avez un code OBD.')
+  if (!inputIncludesAny(normalized, ['a froid', 'a chaud', 'demarrage', 'ralenti', 'autoroute', 'freinage'])) detailHints.push('Precisez quand le probleme arrive: a froid, a chaud, au ralenti, en roulant ou au freinage.')
+  if (!inputIncludesAny(normalized, ['bruit', 'odeur', 'fumee', 'vibration', 'fuite'])) detailHints.push('Indiquez le signe principal: bruit, odeur, fumee, vibration ou fuite.')
+
+  return {
+    ...DEFAULT_CASE,
+    type: 'repair',
+    probableIssue: 'Diagnostic avance: plusieurs pistes mecaniques a confirmer',
+    confidence,
+    urgency,
+    estimate: 'Diagnostic cible avant remplacement de pieces',
+    duration: '45 min a 1 h 30',
+    priceNote: 'Les indices fournis pointent vers plusieurs sous-systemes possibles. Un bon diagnostic permet de confirmer la vraie cause avant de commander des pieces.',
+    durationNote: 'Avec un symptome detaille ou un code OBD, le garage peut souvent reduire tres vite les hypotheses.',
+    summary: `Les symptomes decrits sont assez avances pour orienter plusieurs pistes probables: ${names.join(', ')}. FlashMat prefere vous donner ces hypotheses de travail plutot qu une seule panne trop precise sans verification.`,
+    guidanceTitle: 'Comment obtenir une reponse plus pointue',
+    guidanceItems: [
+      `La piste la plus probable pour l instant: ${first.probableIssue}.`,
+      ...topMatches.slice(1).map((entry) => `Autre piste plausible a verifier: ${entry.candidate.probableIssue}.`),
+      ...detailHints,
+    ].slice(0, 5),
+    searchCat: first.searchCat || 'mechanic',
+    matches: first.matches || DEFAULT_CASE.matches,
+  }
+}
+
 function detectCaseStable(text) {
   const normalized = normalizeVehicleDoctorInput(text)
   const conservativeFallback = buildConservativeFallback()
@@ -877,6 +1024,12 @@ function detectCaseStable(text) {
     return getVehicleDoctorCase('oil-change')
   }
 
+  const detectedCode = extractObdCodes(normalized)[0]
+  if (detectedCode) {
+    const codeDiagnosis = buildObdDiagnosis(detectedCode)
+    if (codeDiagnosis) return codeDiagnosis
+  }
+
   const scoredCases = CASE_LIBRARY
     .map((candidate) => {
       const matchedSymptoms = candidate.symptoms.filter((symptom) => inputIncludesAll(normalized, symptom.terms))
@@ -919,13 +1072,7 @@ function detectCaseStable(text) {
   }
 
   if (nextMatch && bestMatch.score - nextMatch.score <= 2) {
-    return {
-      ...conservativeFallback,
-      probableIssue: 'Plusieurs causes possibles a verifier',
-      confidence: 'Faible a moyenne',
-      urgency: 'Diagnostic conseille avant reparation',
-      summary: 'Les symptomes decrits pointent vers plusieurs pistes possibles. FlashMat prefere recommander un diagnostic cible plutot que donner une panne trop precise.',
-    }
+    return buildAdvancedDiagnosis(scoredCases, normalized)
   }
 
   return bestMatch.candidate
