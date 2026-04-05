@@ -125,6 +125,7 @@ export default function ProviderApp() {
   const [clientQ, setClientQ]   = useState('')
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const [isSavingProfile, setIsSavingProfile] = useState(false)
+  const [profileSaveNotice, setProfileSaveNotice] = useState('')
   const [providerProfileForm, setProviderProfileForm] = useState({
     name: profile?.full_name || 'Garage Los Santos',
     address: '7999 14e Avenue, Montreal, QC',
@@ -285,6 +286,7 @@ export default function ProviderApp() {
     if (isSavingProfile) return
 
     if (!providerProfileForm.name || !providerProfileForm.address || !providerProfileForm.phone || !providerProfileForm.description || providerProfileForm.services.length === 0) {
+      setProfileSaveNotice('Completez tous les champs obligatoires avant de sauvegarder.')
       toast('Completez le nom, l adresse, le telephone, la description et au moins un service', 'error')
       return
     }
@@ -312,6 +314,7 @@ export default function ProviderApp() {
 
     try {
       setIsSavingProfile(true)
+      setProfileSaveNotice('Sauvegarde en cours...')
       const matchEmail = providerProfileForm.email || profile?.email || user?.email
 
       if (user?.id) {
@@ -350,8 +353,10 @@ export default function ProviderApp() {
       if (providerUpsertError) throw providerUpsertError
 
       window.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
+      setProfileSaveNotice('Profil atelier sauvegarde.')
       toast('Profil atelier sauvegarde', 'success')
     } catch (error) {
+      setProfileSaveNotice('Profil garde localement. La synchronisation distante a echoue.')
       toast(error.message || 'Profil sauvegarde localement, mais la synchronisation distante a echoue', 'error')
     } finally {
       setIsSavingProfile(false)
@@ -739,8 +744,13 @@ export default function ProviderApp() {
         {/* ── PROFILE ── */}
         {pane === 'p-profile' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button className="btn btn-green" onClick={saveProviderProfileChanges} disabled={isSavingProfile}>{isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button type="button" className="btn btn-green" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>{isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
             <div className={styles.pad}>
+              {profileSaveNotice && (
+                <div style={{marginBottom:14,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,padding:'10px 14px',fontSize:12,color:'var(--ink2)'}}>
+                  {profileSaveNotice}
+                </div>
+              )}
               <div className={styles.g2}>
                 <div>
                   <div className="panel">
@@ -763,7 +773,7 @@ export default function ProviderApp() {
                       {providerProfileForm.coverPhoto && (
                         <div style={{marginBottom:14}}>
                           <img src={providerProfileForm.coverPhoto} alt="Couverture atelier" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                          <button className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
+                          <button type="button" className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
                         </div>
                       )}
                       <div className="form-group">
@@ -775,7 +785,7 @@ export default function ProviderApp() {
                           {providerProfileForm.galleryPhotos.map((photo, index) => (
                             <div key={index} style={{position:'relative'}}>
                               <img src={photo} alt={`Atelier ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                              <button className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
+                              <button type="button" className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
                             </div>
                           ))}
                         </div>
@@ -793,7 +803,7 @@ export default function ProviderApp() {
                           <span style={{fontSize:11,color:'var(--ink2)'}}>{label}</span>
                           <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.open || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'open', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
                           <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.close || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'close', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
-                          <button className="btn" style={{fontSize:10}} onClick={() => toggleClosed(key)}>{providerProfileForm.editableHours[key]?.closed ? 'Fermé' : 'Ouvert'}</button>
+                          <button type="button" className="btn" style={{fontSize:10}} onClick={() => toggleClosed(key)}>{providerProfileForm.editableHours[key]?.closed ? 'Fermé' : 'Ouvert'}</button>
                         </div>
                       ))}
                     </div>
