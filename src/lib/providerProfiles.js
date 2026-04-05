@@ -155,6 +155,8 @@ export function mergeProviderProfile(provider) {
     return {
       ...provider,
       editableHours: normalizeProviderHours(provider.editableHours || provider.hours),
+      coverPhoto: provider.coverPhoto || provider.cover_photo || provider.cover || '',
+      galleryPhotos: provider.galleryPhotos || provider.gallery_photos || [],
       hours: provider.hours && provider.hours.Mon ? provider.hours : hoursToDisplayMap(normalizeProviderHours(provider.hours)),
     }
   }
@@ -164,8 +166,8 @@ export function mergeProviderProfile(provider) {
     ...provider,
     ...override,
     services: override.services || provider.services || [],
-    coverPhoto: override.coverPhoto || provider.coverPhoto || provider.cover || '',
-    galleryPhotos: override.galleryPhotos || provider.galleryPhotos || [],
+    coverPhoto: override.coverPhoto || provider.coverPhoto || provider.cover_photo || provider.cover || '',
+    galleryPhotos: override.galleryPhotos || provider.galleryPhotos || provider.gallery_photos || [],
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
     type: override.type || provider.type,

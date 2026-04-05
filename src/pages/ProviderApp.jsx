@@ -72,13 +72,13 @@ function getTimelineLabel(step) {
   return labels[step] || step
 }
 
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result || ''))
-    reader.onerror = () => reject(new Error('Impossible de lire le fichier'))
-    reader.readAsDataURL(file)
-  })
+async function uploadProviderPhoto(file, userId) {
+  const ext = file.name.split('.').pop()
+  const path = `provider-gallery/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+  const { error } = await supabase.storage.from('marketplace').upload(path, file, { upsert: false })
+  if (error) throw error
+  const { data } = supabase.storage.from('marketplace').getPublicUrl(path)
+  return data.publicUrl
 }
 
 export default function ProviderApp() {
@@ -180,18 +180,26 @@ export default function ProviderApp() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    const dataUrl = await fileToDataUrl(file)
-    setProviderProfileForm((current) => ({ ...current, coverPhoto: dataUrl }))
-    toast('Photo couverture ajoutee', 'success')
+    try {
+      const photoUrl = await uploadProviderPhoto(file, user?.id || 'provider')
+      setProviderProfileForm((current) => ({ ...current, coverPhoto: photoUrl }))
+      toast('Photo couverture ajoutee', 'success')
+    } catch (error) {
+      toast(error.message || 'Impossible de televerser la photo', 'error')
+    }
   }
 
   async function updateGalleryPhotos(event) {
     const files = Array.from(event.target.files || []).slice(0, 4)
     if (files.length === 0) return
 
-    const photos = await Promise.all(files.map(fileToDataUrl))
-    setProviderProfileForm((current) => ({ ...current, galleryPhotos: photos }))
-    toast('Galerie atelier mise a jour', 'success')
+    try {
+      const photos = await Promise.all(files.map((file) => uploadProviderPhoto(file, user?.id || 'provider')))
+      setProviderProfileForm((current) => ({ ...current, galleryPhotos: photos }))
+      toast('Galerie atelier mise a jour', 'success')
+    } catch (error) {
+      toast(error.message || 'Impossible de televerser la galerie', 'error')
+    }
   }
 
   function removeCoverPhoto() {
@@ -285,6 +293,8 @@ export default function ProviderApp() {
             email: providerProfileForm.email,
             description: providerProfileForm.description,
             services: providerProfileForm.services,
+            cover_photo: providerProfileForm.coverPhoto,
+            gallery_photos: providerProfileForm.galleryPhotos,
             type: typeMeta.type,
             type_label: typeMeta.type_label,
           })
