@@ -304,9 +304,7 @@ export default function NavBar({ activePage }) {
           </div>
           <div style={{ ...styles.drawerLinks, gap: isCompact ? 10 : 12 }}>
             {MENU_SECTIONS.map((item) => (
-              <button key={item.label} type="button" style={{ ...styles.drawerLink, fontSize: isCompact ? 15 : 16, padding: isCompact ? '12px 14px' : '13px 15px' }} onClick={() => navigateTo(item.to)}>
-                {item.label}
-              </button>
+              <DrawerLink key={item.label} label={item.label} to={item.to} onNavigate={navigateTo} compact={isCompact} />
             ))}
           </div>
           <div style={styles.drawerFooter}>
@@ -379,6 +377,31 @@ function getRoleLabel(role) {
   if (role === 'provider') return 'fournisseur'
   if (role === 'client') return 'client'
   return 'compte flashmat'
+}
+
+function DrawerLink({ label, to, onNavigate, compact }) {
+  const [hover, setHover] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={() => onNavigate(to)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        ...styles.drawerLink,
+        fontSize: compact ? 14 : 15,
+        padding: compact ? '11px 14px' : '12px 14px',
+        transform: hover ? 'translateY(-1px)' : 'translateY(0)',
+        borderColor: hover ? 'rgba(59,159,216,0.24)' : 'rgba(26,58,143,0.08)',
+        boxShadow: hover ? '0 14px 28px rgba(26,58,143,0.08)' : '0 8px 18px rgba(26,58,143,0.04)',
+        color: hover ? '#103454' : '#17314a',
+        background: hover ? 'linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%)' : 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+      }}
+    >
+      {label}
+    </button>
+  )
 }
 
 function HoverLabel({ visible, label }) {
@@ -645,7 +668,7 @@ const styles = {
     padding: '9px 13px',
     borderRadius: 999,
   },
-  drawerIntro: { marginBottom: 26 },
+  drawerIntro: { marginBottom: 22 },
   drawerEyebrow: {
     fontSize: 10,
     letterSpacing: 2.2,
@@ -668,19 +691,20 @@ const styles = {
     lineHeight: 1.55,
     maxWidth: 270,
   },
-  drawerLinks: { display: 'grid', gap: 10, marginTop: 8, justifyItems: 'center' },
+  drawerLinks: { display: 'grid', gap: 10, marginTop: 12, justifyItems: 'center', alignContent: 'center', flex: 1 },
   drawerLink: {
     border: '1px solid rgba(26,58,143,0.08)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
     textAlign: 'left',
     color: '#17314a',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 650,
-    padding: '13px 15px',
+    padding: '12px 14px',
     borderRadius: 16,
     boxShadow: '0 8px 18px rgba(26,58,143,0.04)',
     width: '100%',
     maxWidth: 296,
+    transition: 'all .16s ease',
   },
   drawerFooter: { marginTop: 'auto', paddingTop: 18 },
   drawerAccountCard: {
