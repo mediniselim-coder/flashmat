@@ -72,6 +72,15 @@ function getTimelineLabel(step) {
   return labels[step] || step
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Impossible de lire le fichier'))
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function ProviderApp() {
   const { profile, user, fetchProfile } = useAuth()
   const { toast }            = useToast()
@@ -98,6 +107,8 @@ export default function ProviderApp() {
     description: 'Mecaniciens certifies ASE. Specialistes toutes marques. Devis gratuit.',
     services: ['Mecanique generale', 'Vidange', 'Freins'],
     editableHours: DEFAULT_PROVIDER_HOURS,
+    coverPhoto: '',
+    galleryPhotos: [],
   })
 
   const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
@@ -153,6 +164,8 @@ export default function ProviderApp() {
         description: nextForm.description || '',
         services: nextForm.services || [],
         editableHours: nextForm.editableHours || DEFAULT_PROVIDER_HOURS,
+        coverPhoto: nextForm.coverPhoto || nextForm.cover || '',
+        galleryPhotos: nextForm.galleryPhotos || [],
       })
     }
 
@@ -161,6 +174,35 @@ export default function ProviderApp() {
 
   function setProfileField(field, value) {
     setProviderProfileForm((current) => ({ ...current, [field]: value }))
+  }
+
+  async function updateCoverPhoto(event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const dataUrl = await fileToDataUrl(file)
+    setProviderProfileForm((current) => ({ ...current, coverPhoto: dataUrl }))
+    toast('Photo couverture ajoutee', 'success')
+  }
+
+  async function updateGalleryPhotos(event) {
+    const files = Array.from(event.target.files || []).slice(0, 4)
+    if (files.length === 0) return
+
+    const photos = await Promise.all(files.map(fileToDataUrl))
+    setProviderProfileForm((current) => ({ ...current, galleryPhotos: photos }))
+    toast('Galerie atelier mise a jour', 'success')
+  }
+
+  function removeCoverPhoto() {
+    setProviderProfileForm((current) => ({ ...current, coverPhoto: '' }))
+  }
+
+  function removeGalleryPhoto(index) {
+    setProviderProfileForm((current) => ({
+      ...current,
+      galleryPhotos: current.galleryPhotos.filter((_, photoIndex) => photoIndex !== index),
+    }))
   }
 
   function toggleService(serviceLabel) {
@@ -211,6 +253,8 @@ export default function ProviderApp() {
       description: providerProfileForm.description,
       services: providerProfileForm.services,
       editableHours: providerProfileForm.editableHours,
+      coverPhoto: providerProfileForm.coverPhoto,
+      galleryPhotos: providerProfileForm.galleryPhotos,
       ...typeMeta,
     }
 
@@ -373,6 +417,36 @@ export default function ProviderApp() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  <div className="panel">
+                    <div className="panel-hd"><div className="panel-title">Photos atelier</div></div>
+                    <div className="panel-body">
+                      <div className="form-group">
+                        <label className="form-label">Photo couverture</label>
+                        <input className="form-input" type="file" accept="image/*" onChange={updateCoverPhoto} />
+                      </div>
+                      {providerProfileForm.coverPhoto && (
+                        <div style={{marginBottom:14}}>
+                          <img src={providerProfileForm.coverPhoto} alt="Couverture atelier" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                          <button className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
+                        </div>
+                      )}
+                      <div className="form-group">
+                        <label className="form-label">Galerie atelier</label>
+                        <input className="form-input" type="file" accept="image/*" multiple onChange={updateGalleryPhotos} />
+                      </div>
+                      {providerProfileForm.galleryPhotos.length > 0 && (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
+                          {providerProfileForm.galleryPhotos.map((photo, index) => (
+                            <div key={index} style={{position:'relative'}}>
+                              <img src={photo} alt={`Atelier ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                              <button className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Les photos sauvegardees ici seront visibles par les clients sur la page provider.</div>
+                    </div>
                   </div>
                 </div>
                 <div>

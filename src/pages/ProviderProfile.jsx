@@ -229,7 +229,7 @@ export default function ProviderProfile() {
       </nav>
 
       {/* COVER HEADER */}
-      <div style={{ background: 'linear-gradient(135deg, #1a3a8f 0%, #2952cc 50%, #4db8e8 100%)', padding: '60px 24px 40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: provider.coverPhoto ? `center / cover no-repeat url(${provider.coverPhoto})` : 'linear-gradient(135deg, #1a3a8f 0%, #2952cc 50%, #4db8e8 100%)', padding: '60px 24px 40px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.35)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ width: 90, height: 90, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, margin: '0 auto 16px', boxShadow: '0 4px 20px rgba(0,0,0,.3)' }}>
@@ -324,15 +324,19 @@ export default function ProviderProfile() {
           </div>
 
           {/* GALLERY */}
-          {provider.gallery?.length > 0 && (
+          {(provider.galleryPhotos?.length > 0 || provider.gallery?.length > 0) && (
             <div className="panel">
               <div className="panel-hd"><div className="panel-title">📸 Galerie</div></div>
               <div className="panel-body">
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                  {provider.gallery.map((img, i) => (
-                    <div key={i} style={{ aspectRatio: '1', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, border: '1px solid var(--border)' }}>
-                      {img}
-                    </div>
+                  {(provider.galleryPhotos?.length > 0 ? provider.galleryPhotos : provider.gallery).map((img, i) => (
+                    typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? (
+                      <img key={i} src={img} alt={`Photo atelier ${i + 1}`} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 10, border: '1px solid var(--border)' }} />
+                    ) : (
+                      <div key={i} style={{ aspectRatio: '1', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, border: '1px solid var(--border)' }}>
+                        {img}
+                      </div>
+                    )
                   ))}
                 </div>
               </div>

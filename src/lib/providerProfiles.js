@@ -164,6 +164,8 @@ export function mergeProviderProfile(provider) {
     ...provider,
     ...override,
     services: override.services || provider.services || [],
+    coverPhoto: override.coverPhoto || provider.coverPhoto || provider.cover || '',
+    galleryPhotos: override.galleryPhotos || provider.galleryPhotos || [],
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
     type: override.type || provider.type,
