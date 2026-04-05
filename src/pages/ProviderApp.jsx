@@ -883,7 +883,7 @@ export default function ProviderApp() {
         </nav>
       </div>
 
-      <FlashAI portal="provider" userName={name} />
+      {pane !== 'p-profile' && <FlashAI portal="provider" userName={name} />}
     </div>
   )
 }
