@@ -703,6 +703,48 @@ function detectCase(text) {
 
   const urgentOverrides = [
     {
+      anyTerms: ['accident', 'collision', 'choc', 'accroche'],
+      minAnyTerms: 1,
+      extraAnyTerms: [
+        'voyant',
+        'voyants',
+        'tout les voyants',
+        'tous les voyants',
+        'phare',
+        'phares',
+        'feu',
+        'frein',
+        'freine pas',
+        'ne freine pas',
+        'freins',
+      ],
+      minExtraMatches: 2,
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Degats critiques apres accident touchant plusieurs systemes du vehicule',
+        confidence: 'Elevee',
+        urgency: 'Urgent - ne pas conduire',
+        estimate: 'Remorquage et diagnostic securite / electrique / freinage recommandes',
+        duration: 'Evaluation immediate puis devis selon les dommages',
+        priceNote: 'Apres un accident avec voyants allumes, eclairage en panne et freinage anormal, il faut verifier la securite generale avant toute reprise de route.',
+        durationNote: 'Le premier objectif est de confirmer si le vehicule peut etre deplace en securite ou doit etre remorque.',
+        searchCat: 'tow',
+        summary: 'Avec un accident, plusieurs voyants allumes, un phare qui ne fonctionne plus et un freinage qui ne repond pas normalement, FlashMat considere cela comme un cas critique. Il ne faut pas continuer a rouler sans controle prioritaire.',
+        guidanceTitle: 'Quoi faire tout de suite',
+        guidanceItems: [
+          'Ne conduisez pas le vehicule tant que le freinage et les circuits de securite ne sont pas verifies.',
+          'Si vous etes encore sur la route, arretez vous dans un endroit securitaire et demandez un remorquage.',
+          'Expliquez: accident, plusieurs voyants allumes, phare ne marche plus, freinage anormal.',
+          'Demandez un controle prioritaire du freinage, de l alimentation electrique et des dommages apres impact.',
+        ],
+        matches: [
+          { name: 'Remorquage Elite 24/7', rating: '4.6', distance: 'Mobile', eta: '15-25 min', price: 'Remorquage prioritaire', tags: ['Urgent', 'Remorquage', 'Disponible'] },
+          { name: 'Garage Mecanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd hui 13h10', price: 'Diagnostic securite complet', tags: ['Freinage', 'Electrique', 'Prioritaire'] },
+          { name: 'Atelier Carrosserie MTL', rating: '4.8', distance: '2.6 km', eta: 'Aujourd hui 15h40', price: 'Controle apres impact', tags: ['Carrosserie', 'Structure', 'Inspection'] },
+        ],
+      },
+    },
+    {
       anyTerms: [
         'roule toute seule',
         'freine toute seule',
@@ -1012,7 +1054,8 @@ function detectCaseStable(text) {
 
   const override = urgentOverrides.find((item) =>
     (!item.allTerms || inputIncludesAll(normalized, item.allTerms))
-    && (!item.anyTerms || inputIncludesAny(normalized, item.anyTerms))
+    && (!item.anyTerms || item.anyTerms.filter((term) => normalized.includes(term)).length >= (item.minAnyTerms || 1))
+    && (!item.extraAnyTerms || item.extraAnyTerms.filter((term) => normalized.includes(term)).length >= (item.minExtraMatches || 1))
   )
 
   if (override) {
