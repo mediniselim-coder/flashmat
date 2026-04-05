@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
-import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, inferTypeMeta, mergeProviderProfile, saveProviderOverride } from '../lib/providerProfiles'
+import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -99,6 +99,7 @@ export default function ProviderApp() {
   const [promoVal, setPromoVal] = useState('20%')
   const [clientQ, setClientQ]   = useState('')
   const [flashFixRequests, setFlashFixRequests] = useState([])
+  const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [providerProfileForm, setProviderProfileForm] = useState({
     name: profile?.full_name || 'Garage Los Santos',
     address: '7999 14e Avenue, Montreal, QC',
@@ -252,7 +253,15 @@ export default function ProviderApp() {
   }
 
   async function saveProviderProfileChanges() {
+    if (isSavingProfile) return
+
+    if (!providerProfileForm.name || !providerProfileForm.address || !providerProfileForm.phone || !providerProfileForm.description || providerProfileForm.services.length === 0) {
+      toast('Completez le nom, l adresse, le telephone, la description et au moins un service', 'error')
+      return
+    }
+
     const typeMeta = inferTypeMeta(providerProfileForm.services)
+    const publicHours = hoursToDisplayMap(providerProfileForm.editableHours)
     const payload = {
       name: providerProfileForm.name,
       address: providerProfileForm.address,
@@ -261,6 +270,7 @@ export default function ProviderApp() {
       description: providerProfileForm.description,
       services: providerProfileForm.services,
       editableHours: providerProfileForm.editableHours,
+      hours: publicHours,
       coverPhoto: providerProfileForm.coverPhoto,
       galleryPhotos: providerProfileForm.galleryPhotos,
       ...typeMeta,
@@ -270,9 +280,11 @@ export default function ProviderApp() {
     saveProviderOverride({ email: profile?.email || user?.email, name: profile?.full_name || providerProfileForm.name }, payload)
 
     try {
+      setIsSavingProfile(true)
       const matchEmail = providerProfileForm.email || profile?.email || user?.email
+
       if (user?.id) {
-        await supabase
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             full_name: providerProfileForm.name,
@@ -280,31 +292,76 @@ export default function ProviderApp() {
           })
           .eq('id', user.id)
 
+        if (profileError) throw profileError
         await fetchProfile(user.id)
       }
 
-      if (matchEmail) {
-        await supabase
-          .from('providers_list')
-          .update({
-            name: providerProfileForm.name,
-            address: providerProfileForm.address,
-            phone: providerProfileForm.phone,
-            email: providerProfileForm.email,
-            description: providerProfileForm.description,
-            services: providerProfileForm.services,
-            cover_photo: providerProfileForm.coverPhoto,
-            gallery_photos: providerProfileForm.galleryPhotos,
-            type: typeMeta.type,
-            type_label: typeMeta.type_label,
-          })
-          .eq('email', matchEmail)
+      const providerRecord = {
+        name: providerProfileForm.name,
+        address: providerProfileForm.address,
+        phone: providerProfileForm.phone,
+        email: providerProfileForm.email || matchEmail,
+        description: providerProfileForm.description,
+        services: providerProfileForm.services,
+        hours: publicHours,
+        editableHours: providerProfileForm.editableHours,
+        cover_photo: providerProfileForm.coverPhoto,
+        gallery_photos: providerProfileForm.galleryPhotos,
+        type: typeMeta.type,
+        type_label: typeMeta.type_label,
       }
-    } catch {
-      // Keep local override even if the remote update is unavailable.
-    }
 
-    toast('Profil atelier sauvegarde', 'success')
+      let existingProvider = null
+
+      if (matchEmail) {
+        const { data: providerByEmail, error: providerSearchError } = await supabase
+          .from('providers_list')
+          .select('id, email, name')
+          .eq('email', matchEmail)
+          .limit(1)
+
+        if (providerSearchError) throw providerSearchError
+        existingProvider = providerByEmail?.[0] || null
+      }
+
+      if (!existingProvider && providerProfileForm.name) {
+        const { data: providerByName, error: providerNameSearchError } = await supabase
+          .from('providers_list')
+          .select('id, email, name')
+          .eq('name', providerProfileForm.name)
+          .limit(1)
+
+        if (providerNameSearchError) throw providerNameSearchError
+        existingProvider = providerByName?.[0] || null
+      }
+
+      if (existingProvider?.id) {
+        const { error: providerUpdateError } = await supabase
+          .from('providers_list')
+          .update(providerRecord)
+          .eq('id', existingProvider.id)
+
+        if (providerUpdateError) throw providerUpdateError
+      } else {
+        const { error: providerInsertError } = await supabase
+          .from('providers_list')
+          .insert({
+            ...providerRecord,
+            rating: 0,
+            reviews: 0,
+            is_open: true,
+          })
+
+        if (providerInsertError) throw providerInsertError
+      }
+
+      window.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
+      toast('Profil atelier sauvegarde', 'success')
+    } catch (error) {
+      toast(error.message || 'Impossible de sauvegarder le profil atelier', 'error')
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   function acceptFlashFixRequest(requestId) {
@@ -688,7 +745,7 @@ export default function ProviderApp() {
         {/* ── PROFILE ── */}
         {pane === 'p-profile' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button className="btn btn-green" onClick={saveProviderProfileChanges}>Sauvegarder</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button className="btn btn-green" onClick={saveProviderProfileChanges} disabled={isSavingProfile}>{isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
                 <div>
