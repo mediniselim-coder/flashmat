@@ -1,21 +1,21 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 
 const SERVICES = [
-  { id: 'flashfix', name: 'FlashFix Urgence', icon: '🚨', desc: 'Un mécano mobile ou un service d urgence vient à vous rapidement, à domicile ou sur la route.', items: ['Mécano mobile', 'Batterie à booster', 'Pneu crevé', 'Intervention rapide'], count: 8 },
-  { id: 'mechanic', name: 'Mécanique générale', icon: '🔧', desc: 'Vidange, freins, suspension, diagnostic — tout pour garder votre voiture en parfait état.', items: ['Vidange d\'huile & filtres', 'Freins & plaquettes', 'Suspension & direction', 'Diagnostic électronique'], count: 59 },
-  { id: 'wash', name: 'Lave-auto', icon: '🚿', desc: 'Lavage extérieur, intérieur, détailing complet — redonnez à votre véhicule son éclat d\'origine.', items: ['Lavage extérieur complet', 'Nettoyage intérieur', 'Cire & protection', 'Détailing céramique'], count: 28 },
-  { id: 'tire', name: 'Pneus & jantes', icon: '🔩', desc: 'Installation, équilibrage, permutation — pneus été, hiver et quatre saisons disponibles.', items: ['Installation pneus hiver/été', 'Équilibrage & géométrie', 'Permutation saisonnière', 'Réparation crevaison'], count: 19 },
-  { id: 'body', name: 'Carrosserie', icon: '🎨', desc: 'Réparation de bosses, peinture, débosselage — votre carrosserie comme neuve.', items: ['Débosselage sans peinture', 'Peinture & retouche', 'Réparation pare-chocs', 'Remplacement pièces'], count: 15 },
-  { id: 'glass', name: 'Vitres auto', icon: '🪟', desc: 'Remplacement et réparation de pare-brise, vitres latérales et lunettes arrière.', items: ['Remplacement pare-brise', 'Réparation fissures', 'Vitres latérales', 'Teintage de vitres'], count: 12 },
-  { id: 'tuning', name: 'Performance', icon: '🏎️', desc: 'Reprogrammation moteur, échappement sport, modifications — libérez le potentiel de votre auto.', items: ['Reprogrammation ECU', 'Échappement sport', 'Suspension abaissée', 'Admission d\'air froid'], count: 10 },
-  { id: 'parts', name: 'Pièces auto', icon: '⚙️', desc: 'Pièces neuves et d\'occasion, toutes marques — livraison rapide à Montréal.', items: ['Pièces OEM & aftermarket', 'Commande en ligne', 'Pièces d\'occasion', 'Accessoires & équipements'], count: 18 },
-  { id: 'parking', name: 'Stationnement', icon: '🅿️', desc: 'Espaces sécurisés intérieurs et extérieurs, abonnements mensuels disponibles.', items: ['Stationnement intérieur', 'Abonnement mensuel', 'Surveillance 24/7', 'Borne de recharge VÉ'], count: 22 },
-  { id: 'tow', name: 'Remorquage', icon: '🚛', desc: 'Service d\'urgence 24/7 — remorquage, dépannage, démarrage et assistance routière.', items: ['Remorquage 24/7', 'Démarrage à booster', 'Pneu crevé sur route', 'Transport longue distance'], count: 17 },
-  { id: 'junk', name: 'Casses auto', icon: '♻️', desc: 'Récupération de véhicules, pièces usagées, recyclage — service écologique et rapide.', items: ['Achat véhicules accidentés', 'Pièces usagées certifiées', 'Recyclage écologique', 'Enlèvement gratuit'], count: 9 },
+  { id: 'flashfix', name: 'FlashFix Urgence', icon: 'FF', desc: 'Un mecano mobile ou un service d urgence vient a vous rapidement, a domicile ou sur la route.', items: ['Mecano mobile', 'Batterie a booster', 'Pneu creve', 'Intervention rapide'], count: 8 },
+  { id: 'mechanic', name: 'Mecanique generale', icon: 'ME', desc: 'Vidange, freins, suspension, diagnostic - tout pour garder votre voiture en parfait etat.', items: ['Vidange d huile et filtres', 'Freins et plaquettes', 'Suspension et direction', 'Diagnostic electronique'], count: 59 },
+  { id: 'wash', name: 'Lave-auto', icon: 'LV', desc: 'Lavage exterieur, interieur, detailing complet - redonnez a votre vehicule son eclat d origine.', items: ['Lavage exterieur complet', 'Nettoyage interieur', 'Cire et protection', 'Detailing ceramique'], count: 28 },
+  { id: 'tire', name: 'Pneus et jantes', icon: 'PN', desc: 'Installation, equilibrage, permutation - pneus ete, hiver et quatre saisons disponibles.', items: ['Installation pneus hiver/ete', 'Equilibrage et geometrie', 'Permutation saisonniere', 'Reparation crevaison'], count: 19 },
+  { id: 'body', name: 'Carrosserie', icon: 'CR', desc: 'Reparation de bosses, peinture, debosselage - votre carrosserie comme neuve.', items: ['Debosselage sans peinture', 'Peinture et retouche', 'Reparation pare-chocs', 'Remplacement pieces'], count: 15 },
+  { id: 'glass', name: 'Vitres auto', icon: 'VT', desc: 'Remplacement et reparation de pare-brise, vitres laterales et lunettes arriere.', items: ['Remplacement pare-brise', 'Reparation fissures', 'Vitres laterales', 'Teintage de vitres'], count: 12 },
+  { id: 'tuning', name: 'Performance', icon: 'PR', desc: 'Reprogrammation moteur, echappement sport, modifications - liberez le potentiel de votre auto.', items: ['Reprogrammation ECU', 'Echappement sport', 'Suspension abaissee', 'Admission d air froid'], count: 10 },
+  { id: 'parts', name: 'Pieces auto', icon: 'PC', desc: 'Pieces neuves et d occasion, toutes marques - livraison rapide a Montreal.', items: ['Pieces OEM et aftermarket', 'Commande en ligne', 'Pieces d occasion', 'Accessoires et equipements'], count: 18 },
+  { id: 'parking', name: 'Stationnement', icon: 'PK', desc: 'Espaces securises interieurs et exterieurs, abonnements mensuels disponibles.', items: ['Stationnement interieur', 'Abonnement mensuel', 'Surveillance 24/7', 'Borne de recharge VE'], count: 22 },
+  { id: 'tow', name: 'Remorquage', icon: 'RW', desc: 'Service d urgence 24/7 - remorquage, depannage, demarrage et assistance routiere.', items: ['Remorquage 24/7', 'Demarrage a booster', 'Pneu creve sur route', 'Transport longue distance'], count: 17 },
+  { id: 'junk', name: 'Casses auto', icon: 'CA', desc: 'Recuperation de vehicules, pieces usagees, recyclage - service ecologique et rapide.', items: ['Achat vehicules accidentes', 'Pieces usagees certifiees', 'Recyclage ecologique', 'Enlevement gratuit'], count: 9 },
 ]
 
 export default function Services() {
@@ -47,19 +47,19 @@ export default function Services() {
 
       {/* HERO */}
       <div style={{ background: 'linear-gradient(135deg, #0a1528 0%, #0f1e3d 60%, #1a3a8f 100%)', color: '#fff', padding: '64px 32px 48px', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 12, fontWeight: 600 }}>● Nos services</div>
+        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 12, fontWeight: 600 }}>â— Nos services</div>
         <h1 style={{ fontSize: 42, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.2, fontFamily: 'var(--display)' }}>
           Tous les services auto<br />
-          <span style={{ color: 'var(--blue)' }}>à Montréal</span>
+          <span style={{ color: 'var(--blue)' }}>Ã  MontrÃ©al</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, maxWidth: 520, margin: '0 auto 32px' }}>
-          Trouvez le bon professionnel pour chaque besoin de votre véhicule — 200+ fournisseurs vérifiés à Montréal.
+          Trouvez le bon professionnel pour chaque besoin de votre vÃ©hicule â€” 200+ fournisseurs vÃ©rifiÃ©s Ã  MontrÃ©al.
         </p>
         <div style={{ maxWidth: 480, margin: '0 auto' }}>
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un service…"
+            placeholder="Rechercher un serviceâ€¦"
             style={{ width: '100%', padding: '14px 20px', borderRadius: 12, border: 'none', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font)' }}
           />
         </div>
@@ -67,7 +67,7 @@ export default function Services() {
 
       {/* STATS */}
       <div style={{ display: 'flex', justifyContent: 'center', gap: 48, padding: '24px 32px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7★', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
+        {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7â˜…', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
           <div key={l} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--display)' }}>{v}</div>
             <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 2, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{l}</div>
@@ -103,7 +103,7 @@ export default function Services() {
               <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
                 {s.items.map(item => (
                   <li key={item} style={{ fontSize: 12, color: 'var(--ink2)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ color: 'var(--blue)', fontSize: 10, fontWeight: 700 }}>✓</span> {item}
+                    <span style={{ color: 'var(--blue)', fontSize: 10, fontWeight: 700 }}>+</span> {item}
                   </li>
                 ))}
               </ul>
@@ -121,7 +121,7 @@ export default function Services() {
                   fontFamily: 'var(--font)',
                 }}
               >
-                Trouver un fournisseur →
+                Trouver un fournisseur {'->'}
               </button>
             </div>
           ))}
@@ -129,9 +129,9 @@ export default function Services() {
 
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ink3)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, fontFamily: 'var(--display)' }}>Aucun service trouvé</div>
-            <div style={{ fontSize: 14 }}>Essayez un autre mot-clé</div>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>SR</div>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, fontFamily: 'var(--display)' }}>Aucun service trouve</div>
+            <div style={{ fontSize: 14 }}>Essayez un autre mot-cle</div>
           </div>
         )}
       </div>
@@ -141,12 +141,13 @@ export default function Services() {
       <footer style={{ display: 'none', background: '#0a1528', color: 'var(--ink3)', padding: '32px 64px', textAlign: 'center', fontSize: 13, borderTop: '1px solid var(--border)' }}>
         <img src="/logo.jpg" alt="FlashMat" style={{ height: 32, objectFit: 'contain', marginBottom: 16, filter: 'brightness(0) invert(1)' }} />
         <div style={{ display: 'flex', justifyContent: 'center', gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
-          {['À propos', 'Conditions', 'Confidentialité', 'info@flashmat.ca', '514-476-1708'].map(l => (
+          {['Ã€ propos', 'Conditions', 'ConfidentialitÃ©', 'info@flashmat.ca', '514-476-1708'].map(l => (
             <span key={l} style={{ cursor: 'pointer' }}>{l}</span>
           ))}
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>© 2025 FlashMat.ca · Montréal, QC</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>Â© 2025 FlashMat.ca Â· MontrÃ©al, QC</div>
       </footer>
     </div>
   )
 }
+

@@ -15,20 +15,20 @@ import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
-  { id: 'dashboard',     icon: '⚡', label: 'Tableau de bord' },
-  { id: 'bookings',      icon: '📅', label: 'Réservations', badge: true },
-  { id: 'search',        icon: '🗺️', label: 'Trouver un service' },
-  { id: 'vehicles',      icon: '🚗', label: 'Mes véhicules' },
-  { id: 'maintenance',   icon: '🔧', label: 'Entretien' },
-  { id: 'marketplace',   icon: '🛒', label: 'Marketplace' },
-  { id: 'flashscore',    icon: '📊', label: 'FlashScore™' },
-  { id: 'notifications', icon: '🔔', label: 'Alertes', badge: true },
+  { id: 'dashboard',     icon: 'TB', label: 'Tableau de bord' },
+  { id: 'bookings',      icon: 'RS', label: 'Reservations', badge: true },
+  { id: 'search',        icon: 'SV', label: 'Trouver un service' },
+  { id: 'vehicles',      icon: 'VH', label: 'Mes vehicules' },
+  { id: 'maintenance',   icon: 'EN', label: 'Entretien' },
+  { id: 'marketplace',   icon: 'MP', label: 'Marketplace' },
+  { id: 'flashscore',    icon: 'FS', label: 'FlashScore' },
+  { id: 'notifications', icon: 'AL', label: 'Alertes', badge: true },
 ]
 
 const SEARCH_CATS = [
-  ['all','Tous'],['mechanic','🔧 Mécanique'],['wash','🚿 Lave-auto'],
-  ['tire','🔩 Pneus'],['body','🎨 Carrosserie'],['glass','🪟 Vitres'],
-  ['tow','🚛 Remorquage'],['parts','⚙️ Pièces'],['parking','🅿️ Parking'],
+  ['all','Tous'],['mechanic','ME Mecanique'],['wash','LV Lave-auto'],
+  ['tire','PN Pneus'],['body','CR Carrosserie'],['glass','VT Vitres'],
+  ['tow','RW Remorquage'],['parts','PC Pieces'],['parking','PK Parking'],
 ]
 
 function readPendingServiceSearch() {
@@ -171,7 +171,7 @@ export default function ClientApp() {
 
   const averageFlashScore = myVehicles.length ? Math.round(myVehicles.reduce((sum, v) => sum + Number(v.flash_score || 0), 0) / myVehicles.length) : 0
   const nextServiceLabel = myVehicles[0] ? 'Entretien recommande bientot' : 'Ajoutez un véhicule'
-  const maintenanceItems = myVehicles.slice(0, 3).map((v, i) => ({ icon: ['🛢️','🔩','🔋'][i] || '🔧', title: i===0?'Vidange recommandee':i===1?'Inspection pneus':'Test batterie', meta: `${v.make} ${v.model} ${v.year}` }))
+  const maintenanceItems = myVehicles.slice(0, 3).map((v, i) => ({ icon: ['VG','PN','BT'][i] || 'ME', title: i===0?'Vidange recommandee':i===1?'Inspection pneus':'Test batterie', meta: `${v.make} ${v.model} ${v.year}` }))
   const flashScoreCards = myVehicles.map((v) => {
     const score = Number(v.flash_score || 80)
     return { make: v.make, model: v.model, year: v.year, score, items: [['Moteur',Math.min(99,score+6),'green'],['Freins',Math.min(98,score+3),score>=80?'green':'amber'],['Pneus',Math.max(55,score-4),score>=75?'blue':'amber'],['Batterie',Math.min(97,score+2),'blue'],['Huile',Math.max(40,score-8),score>=85?'green':'amber']] }
@@ -221,10 +221,10 @@ export default function ClientApp() {
                   <div className={styles.profileMenuRole}>Profil Client</div>
                 </div>
                 <button className={styles.profileMenuItem} onClick={goHome}><span>🏠</span><span>Accueil</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}><span>📊</span><span>Tableau de bord</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('vehicles')}><span>🚗</span><span>Mes véhicules</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('bookings')}><span>📅</span><span>Mes réservations</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('marketplace')}><span>🛒</span><span>Marketplace</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}><span>FS</span><span>Tableau de bord</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('vehicles')}><span>VH</span><span>Mes véhicules</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('bookings')}><span>RS</span><span>Mes réservations</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('marketplace')}><span>MP</span><span>Marketplace</span></button>
                 <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span>ℹ️</span><span>Aide & support</span></button>
                 <div className={styles.profileMenuDivider} />
                 <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span>🚪</span><span>Se déconnecter</span></button>
@@ -288,7 +288,7 @@ export default function ClientApp() {
                       <div style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:800, color:'#fff', lineHeight:1.1, letterSpacing:'-.5px', marginBottom:8 }}>Bonjour, {name} 👋</div>
                       <div style={{ fontSize:14, color:'rgba(255,255,255,.6)', lineHeight:1.6, maxWidth:320 }}>Commencez par ajouter votre véhicule pour accéder à tous vos services auto.</div>
                     </div>
-                    <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={() => setAddVehicleModal(true)}>🚗 Ajouter mon véhicule →</button>
+                    <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={() => setAddVehicleModal(true)}>VH Ajouter mon véhicule →</button>
                   </>
                 ) : (
                   <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
@@ -306,9 +306,9 @@ export default function ClientApp() {
             <div className={styles.pad}>
               <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:20 }}>
                 {[
-                  { icon:'📅', label:'Réserver', sub:'un service', action: () => openBooking(), color:'var(--green)' },
-                  { icon:'🗺️', label:'Trouver', sub:'un fournisseur', action: () => go('search'), color:'var(--blue)' },
-                  { icon:'🛒', label:'Marketplace', sub:'pièces auto', action: () => go('marketplace'), color:'var(--amber)' },
+                  { icon:'RS', label:'Réserver', sub:'un service', action: () => openBooking(), color:'var(--green)' },
+                  { icon:'SV', label:'Trouver', sub:'un fournisseur', action: () => go('search'), color:'var(--blue)' },
+                  { icon:'MP', label:'Marketplace', sub:'pièces auto', action: () => go('marketplace'), color:'var(--amber)' },
                 ].map(q => (
                   <button key={q.label} onClick={q.action}
                     style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 12px', cursor:'pointer', textAlign:'left', transition:'all .18s', boxShadow:'var(--shadow)' }}
@@ -354,7 +354,7 @@ export default function ClientApp() {
                 <div style={{display:'flex',flexDirection:'column',gap:10}}>
                   {filtered.map((p,i) => (
                     <div key={p.id||i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14,display:'flex',gap:12,alignItems:'flex-start',cursor:'pointer',boxShadow:'var(--shadow)'}} onClick={() => navigate(`/provider/${slugify(p.name)}`)}>
-                      <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{p.icon||'🔧'}</div>
+                      <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{p.icon||'ME'}</div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:2}}>{p.name}</div>
                         <div style={{fontSize:11,color:'var(--ink2)',marginBottom:6}}>{p.type_label} · {p.address} · ⭐{p.rating} ({p.reviews} avis) · {p.phone}</div>
@@ -362,7 +362,7 @@ export default function ClientApp() {
                       </div>
                       <div style={{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end',flexShrink:0}}>
                         <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--ink3)'}}>{p.distance}</span>
-                        <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open?'● Ouvert':'● Fermé'}</span>
+                        <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open?'Ouvert':'Ferme'}</span>
                         <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Réserver</button>
                       </div>
                     </div>
@@ -387,7 +387,7 @@ export default function ClientApp() {
               <div className={styles.g2}>
                 {myVehicles.length === 0 ? (
                   <div style={{textAlign:'center',padding:40,color:'var(--ink3)',gridColumn:'1/-1'}}>
-                    <div style={{fontSize:40,marginBottom:12}}>🚗</div>
+                    <div style={{fontSize:40,marginBottom:12}}>VH</div>
                     <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucun véhicule enregistré</div>
                     <div style={{fontSize:13,marginBottom:16}}>Ajoutez votre premier véhicule!</div>
                     <button className="btn btn-green btn-lg" onClick={() => setAddVehicleModal(true)}>+ Ajouter un véhicule</button>
@@ -418,12 +418,12 @@ export default function ClientApp() {
             <div className={styles.pad}>
               {myVehicles.length > 0 && (
                 <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:10,padding:14,marginBottom:12,display:'flex',gap:10,alignItems:'center'}}>
-                  <span style={{fontSize:20}}>🛢️</span>
+                  <span style={{fontSize:20}}>VG</span>
                   <div style={{flex:1}}><div style={{fontWeight:700}}>Entretien recommande — {myVehicles[0].make} {myVehicles[0].model}</div><div style={{fontSize:11,color:'var(--ink2)'}}>FlashMat suggere une verification preventive cette semaine</div></div>
                   <button className="btn btn-green" onClick={() => openBooking()}>Réserver</button>
                 </div>
               )}
-              {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'🔧',title:'Ajoutez un vehicule',meta:'Pour voir vos rappels d entretien'}]).map(item => (
+              {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Ajoutez un vehicule',meta:'Pour voir vos rappels d entretien'}]).map(item => (
                 <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:12,display:'flex',gap:10,marginBottom:8,alignItems:'center'}}>
                   <span style={{fontSize:20}}>{item.icon}</span>
                   <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{item.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{item.meta}</div></div>
@@ -443,7 +443,7 @@ export default function ClientApp() {
               <div className={styles.g2}>
                 {(flashScoreCards.length > 0 ? flashScoreCards : [{make:'Ajoutez',model:'un vehicule',year:'',score:0,items:[]}]).map(v => (
                   <div key={`${v.make}-${v.model}-${v.year}`} className="panel">
-                    <div className="panel-hd"><div className="panel-title">📊 {v.make} {v.model} {v.year}</div><span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span></div>
+                    <div className="panel-hd"><div className="panel-title">FS {v.make} {v.model} {v.year}</div><span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span></div>
                     <div className="panel-body">
                       <div style={{width:80,height:80,borderRadius:'50%',border:'6px solid var(--green)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',background:'var(--green-bg)'}}>
                         <span style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--green)'}}>{v.score || '—'}</span>
@@ -490,7 +490,7 @@ export default function ClientApp() {
               <div className="panel">
                 {notifications.map((n,i,arr) => (
                   <div key={i} style={{display:'flex',gap:10,padding:'12px 14px',borderBottom:i<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
-                    <div style={{width:34,height:34,borderRadius:8,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{n.icon || '🔔'}</div>
+                    <div style={{width:34,height:34,borderRadius:8,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>{n.icon || 'AL'}</div>
                     <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{n.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{n.body}</div><div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(n.created_at)}</div></div>
                     <span className="badge badge-blue">{n.type || 'Info'}</span>
                   </div>
@@ -590,7 +590,7 @@ export default function ClientApp() {
               )}
               {flashFixRequests.length === 0 && bookings.length === 0 && (
                 <div style={{textAlign:'center',padding:40,color:'var(--ink3)'}}>
-                  <div style={{fontSize:40,marginBottom:12}}>📅</div>
+                  <div style={{fontSize:40,marginBottom:12}}>RS</div>
                   <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:8}}>Aucune réservation pour l'instant</div>
                   <button className="btn btn-green btn-lg" onClick={() => go('search')}>Trouver un fournisseur →</button>
                 </div>
@@ -600,7 +600,7 @@ export default function ClientApp() {
         )}
 
         <nav className={styles.bottomNav}>
-          {[['dashboard','⚡','Accueil'],['bookings','📅','Résa'],['search','🗺️','Services'],['vehicles','🚗','Autos'],['notifications','🔔','Alertes']].map(([id,icon,label]) => (
+          {[['dashboard','TB','Accueil'],['bookings','RS','Résa'],['search','SV','Services'],['vehicles','VH','Autos'],['notifications','AL','Alertes']].map(([id,icon,label]) => (
             <button key={id} className={`${styles.bnItem} ${pane===id?styles.bnActive:''}`} onClick={() => go(id)}>
               <span style={{fontSize:18}}>{icon}</span><span>{label}</span>
             </button>
@@ -619,3 +619,4 @@ export default function ClientApp() {
     </div>
   )
 }
+

@@ -1,33 +1,33 @@
-const STORAGE_KEY = 'flashmat-provider-overrides'
+﻿const STORAGE_KEY = 'flashmat-provider-overrides'
 const DESCRIPTION_META_PREFIX = '<!--FLASHMAT_PROVIDER_META:'
 const DESCRIPTION_META_SUFFIX = '-->'
 
 export const PROVIDER_SERVICE_OPTIONS = [
-  { id: 'mechanic-general', label: 'Mecanique generale', icon: '🔧', category: 'mechanic' },
-  { id: 'oil-change', label: 'Vidange', icon: '🛢️', category: 'mechanic' },
-  { id: 'brakes', label: 'Freins', icon: '🛑', category: 'mechanic' },
-  { id: 'suspension', label: 'Suspension', icon: '🛞', category: 'mechanic' },
-  { id: 'diagnostic', label: 'Diagnostic electronique', icon: '🧠', category: 'mechanic' },
-  { id: 'ac', label: 'Climatisation', icon: '❄️', category: 'mechanic' },
-  { id: 'tires', label: 'Pneus', icon: '🔩', category: 'tire' },
-  { id: 'alignment', label: 'Alignement', icon: '📐', category: 'tire' },
-  { id: 'balancing', label: 'Balancement', icon: '⚙️', category: 'tire' },
-  { id: 'flat-repair', label: 'Reparation crevaison', icon: '🛞', category: 'tire' },
-  { id: 'wash', label: 'Lavage auto', icon: '🚿', category: 'wash' },
-  { id: 'detailing', label: 'Detailing', icon: '✨', category: 'wash' },
-  { id: 'ceramic', label: 'Traitement ceramique', icon: '🫧', category: 'wash' },
-  { id: 'body', label: 'Carrosserie', icon: '🎨', category: 'body' },
-  { id: 'paint', label: 'Peinture', icon: '🖌️', category: 'body' },
-  { id: 'dent', label: 'Debosselage', icon: '🔨', category: 'body' },
-  { id: 'glass', label: 'Vitres auto', icon: '🪟', category: 'glass' },
-  { id: 'windshield', label: 'Pare-brise', icon: '🪟', category: 'glass' },
-  { id: 'towing', label: 'Remorquage', icon: '🚛', category: 'tow' },
-  { id: 'roadside', label: 'Assistance routiere', icon: '🚨', category: 'tow' },
-  { id: 'battery', label: 'Boost batterie', icon: '🔋', category: 'tow' },
-  { id: 'lockout', label: 'Deverrouillage', icon: '🔓', category: 'tow' },
-  { id: 'parts', label: 'Pieces auto', icon: '⚙️', category: 'parts' },
-  { id: 'parking', label: 'Stationnement', icon: '🅿️', category: 'parking' },
-  { id: 'performance', label: 'Performance', icon: '🏎️', category: 'tuning' },
+  { id: 'mechanic-general', label: 'Mecanique generale', icon: 'ME', category: 'mechanic' },
+  { id: 'oil-change', label: 'Vidange', icon: 'VG', category: 'mechanic' },
+  { id: 'brakes', label: 'Freins', icon: 'FR', category: 'mechanic' },
+  { id: 'suspension', label: 'Suspension', icon: 'SP', category: 'mechanic' },
+  { id: 'diagnostic', label: 'Diagnostic electronique', icon: 'DG', category: 'mechanic' },
+  { id: 'ac', label: 'Climatisation', icon: 'CL', category: 'mechanic' },
+  { id: 'tires', label: 'Pneus', icon: 'PN', category: 'tire' },
+  { id: 'alignment', label: 'Alignement', icon: 'AL', category: 'tire' },
+  { id: 'balancing', label: 'Balancement', icon: 'BL', category: 'tire' },
+  { id: 'flat-repair', label: 'Reparation crevaison', icon: 'RC', category: 'tire' },
+  { id: 'wash', label: 'Lavage auto', icon: 'LV', category: 'wash' },
+  { id: 'detailing', label: 'Detailing', icon: 'DT', category: 'wash' },
+  { id: 'ceramic', label: 'Traitement ceramique', icon: 'TC', category: 'wash' },
+  { id: 'body', label: 'Carrosserie', icon: 'CR', category: 'body' },
+  { id: 'paint', label: 'Peinture', icon: 'PT', category: 'body' },
+  { id: 'dent', label: 'Debosselage', icon: 'DB', category: 'body' },
+  { id: 'glass', label: 'Vitres auto', icon: 'VT', category: 'glass' },
+  { id: 'windshield', label: 'Pare-brise', icon: 'PB', category: 'glass' },
+  { id: 'towing', label: 'Remorquage', icon: 'RW', category: 'tow' },
+  { id: 'roadside', label: 'Assistance routiere', icon: 'AR', category: 'tow' },
+  { id: 'battery', label: 'Boost batterie', icon: 'BT', category: 'tow' },
+  { id: 'lockout', label: 'Deverrouillage', icon: 'DV', category: 'tow' },
+  { id: 'parts', label: 'Pieces auto', icon: 'PC', category: 'parts' },
+  { id: 'parking', label: 'Stationnement', icon: 'PK', category: 'parking' },
+  { id: 'performance', label: 'Performance', icon: 'PR', category: 'tuning' },
 ]
 
 const CATEGORY_LABELS = {
@@ -43,15 +43,15 @@ const CATEGORY_LABELS = {
 }
 
 const CATEGORY_ICONS = {
-  mechanic: '🔧',
-  wash: '🚿',
-  tire: '🔩',
-  body: '🎨',
-  glass: '🪟',
-  tow: '🚛',
-  parts: '⚙️',
-  parking: '🅿️',
-  tuning: '🏎️',
+  mechanic: 'ME',
+  wash: 'LV',
+  tire: 'PN',
+  body: 'CR',
+  glass: 'VT',
+  tow: 'RW',
+  parts: 'PC',
+  parking: 'PK',
+  tuning: 'PR',
 }
 
 export const DEFAULT_PROVIDER_HOURS = {
@@ -297,8 +297,8 @@ export function normalizeProviderRecord(provider) {
     shop_name: provider.shop_name || provider.name || '',
     type: provider.type || typeMeta.type,
     type_label: provider.type_label || typeMeta.type_label,
-    icon: provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || '🔧',
-    logo: provider.logo || provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || '🔧',
+    icon: provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || 'ME',
+    logo: provider.logo || provider.icon || CATEGORY_ICONS[provider.type || typeMeta.type] || 'ME',
     address: provider.address || '',
     phone: provider.phone || '',
     description: visibleDescription,
@@ -351,3 +351,4 @@ export function mergeProviderProfile(provider) {
     publicReady: isProviderProfileComplete({ ...normalizedProvider, ...override, services: mergedServices }),
   }
 }
+

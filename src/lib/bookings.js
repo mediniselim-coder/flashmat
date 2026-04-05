@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 
 const STATUS_META = {
   pending: { label: 'En attente', cls: 'badge-amber' },
@@ -18,7 +18,7 @@ function formatBookingDate(date, timeSlot) {
     })
     : 'Date a confirmer'
 
-  return `${datePart} · ${timeSlot || 'Heure a confirmer'}`
+  return `${datePart} Â· ${timeSlot || 'Heure a confirmer'}`
 }
 
 export function getBookingStatusMeta(status) {
@@ -36,7 +36,7 @@ export function normalizeBookingRecord(booking) {
     clientName: clientProfile?.full_name || booking.clientName || 'Client FlashMat',
     providerName: providerProfile?.shop_name || providerProfile?.name || booking.providerName || 'Atelier FlashMat',
     vehicleLabel: vehicle
-      ? `${vehicle.make} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}${vehicle.plate ? ` · ${vehicle.plate}` : ''}`
+      ? `${vehicle.make} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}${vehicle.plate ? ` Â· ${vehicle.plate}` : ''}`
       : booking.vehicleLabel || 'Vehicule a confirmer',
     datetimeLabel: formatBookingDate(booking.date, booking.time_slot),
     priceLabel: booking.price || 'Prix a confirmer',
@@ -85,7 +85,7 @@ export async function createBooking(input) {
     provider_id: input.providerId,
     vehicle_id: input.vehicleId || null,
     service: input.service,
-    service_icon: input.serviceIcon || '🔧',
+    service_icon: input.serviceIcon || 'ME',
     date: input.date || null,
     time_slot: input.timeSlot || null,
     notes: input.notes || '',
@@ -123,7 +123,7 @@ export async function updateBookingStatus(bookingId, status) {
   return normalizeBookingRecord(data)
 }
 
-export async function createNotification({ userId, title, body, icon = '🔔', type = 'info' }) {
+export async function createNotification({ userId, title, body, icon = 'AL', type = 'info' }) {
   if (!userId) return
 
   await supabase.from('notifications').insert({
@@ -135,3 +135,4 @@ export async function createNotification({ userId, title, body, icon = '🔔', t
     is_read: false,
   })
 }
+

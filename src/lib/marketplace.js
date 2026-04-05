@@ -1,4 +1,4 @@
-const MARKETPLACE_META_PREFIX = '<!--FLASHMAT_MARKETPLACE_META:'
+﻿const MARKETPLACE_META_PREFIX = '<!--FLASHMAT_MARKETPLACE_META:'
 const MARKETPLACE_META_SUFFIX = '-->'
 
 function encodeMarketplaceMeta(meta) {
@@ -59,7 +59,7 @@ export function normalizeMarketplaceListing(listing) {
     ...listing,
     description,
     condition: meta.condition || 'Bon etat',
-    icon: meta.icon || '📦',
+    icon: meta.icon || 'MP',
     phone: meta.phone || '',
     image_url: meta.imageUrl || '',
     seller_name: meta.sellerName || 'Vendeur FlashMat',
@@ -67,3 +67,4 @@ export function normalizeMarketplaceListing(listing) {
     city: listing.city || meta.city || 'Montreal',
   }
 }
+
