@@ -290,32 +290,32 @@ export default function NavBar({ activePage }) {
       {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
 
       {menuOpen && (
-        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? 'min(360px, 86vw)' : 'min(390px, 32vw)', borderRadius: isMobile ? '0' : '0 28px 28px 0', top: isMobile ? 0 : 72, padding: isCompact ? '22px 20px 20px' : '28px 28px 24px' }}>
+        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: isMobile ? '0' : '0 24px 24px 0', top: 0, height: '100vh', padding: isCompact ? '18px 18px 18px' : '22px 22px 20px' }}>
           <div style={styles.drawerHeader}>
-            <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 52 : 62, objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
           </div>
           <div style={styles.drawerIntro}>
             <div style={styles.drawerEyebrow}>Navigation FlashMat</div>
-            <div style={{ ...styles.drawerTitle, fontSize: isCompact ? 22 : 30, maxWidth: 280 }}>Simple. Rapide. Très FlashMat.</div>
-            <div style={{ ...styles.drawerText, fontSize: isCompact ? 14 : 15, maxWidth: isCompact ? 280 : 320 }}>
-              Les raccourcis essentiels, dans une mise en page plus calme, plus légère et plus lisible.
+            <div style={{ ...styles.drawerTitle, fontSize: isCompact ? 18 : 22, maxWidth: 250 }}>Simple. Fast. FlashMat.</div>
+            <div style={{ ...styles.drawerText, fontSize: isCompact ? 12.5 : 13, maxWidth: 270 }}>
+              The essentials, presented with less noise and a cleaner rhythm.
             </div>
           </div>
           <div style={{ ...styles.drawerLinks, gap: isCompact ? 10 : 12 }}>
             {MENU_SECTIONS.map((item) => (
-              <button key={item.label} type="button" style={{ ...styles.drawerLink, fontSize: isCompact ? 18 : 22, padding: isCompact ? '13px 14px' : '16px 18px' }} onClick={() => navigateTo(item.to)}>
+              <button key={item.label} type="button" style={{ ...styles.drawerLink, fontSize: isCompact ? 15 : 16, padding: isCompact ? '12px 14px' : '13px 15px' }} onClick={() => navigateTo(item.to)}>
                 {item.label}
               </button>
             ))}
           </div>
           <div style={styles.drawerFooter}>
-            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 18 : 22 }}>
+            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 16 : 18 }}>
               <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
-              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 18 : 22 }}>
+              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 16 : 18 }}>
                 {user ? `Connecté en tant que ${displayName}` : 'Connectez-vous pour réserver, diagnostiquer et suivre vos services'}
               </div>
-              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 13 : 14 }}>
+              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 12 : 12.5 }}>
                 {user
                   ? (isProvider ? 'Accédez à votre espace fournisseur et à vos outils FlashMat.' : 'Retrouvez vos véhicules, réservations et diagnostics en un endroit.')
                   : 'Le compte FlashMat vous donne accès au Docteur Automobile, aux réservations et à votre espace personnel.'}
@@ -616,12 +616,12 @@ const styles = {
   scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
   drawer: {
     position: 'fixed',
-    top: 72,
+    top: 0,
     left: 0,
     bottom: 0,
     width: 'min(420px, 92vw)',
     background: '#ffffff',
-    borderRadius: '0 28px 28px 0',
+    borderRadius: '0 24px 24px 0',
     borderRight: '1px solid rgba(26,58,143,0.08)',
     boxShadow: '24px 0 70px rgba(4,18,32,0.22)',
     zIndex: 121,
@@ -629,102 +629,103 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
+    justifyContent: 'space-between',
   },
-  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, marginBottom: 28 },
+  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 },
   drawerClose: {
     border: '1px solid rgba(26,58,143,0.1)',
     background: '#f4f8fd',
     color: '#47617b',
     fontWeight: 700,
-    fontSize: 13,
-    padding: '10px 14px',
+    fontSize: 12,
+    padding: '9px 13px',
     borderRadius: 999,
   },
-  drawerIntro: { marginBottom: 28 },
+  drawerIntro: { marginBottom: 20 },
   drawerEyebrow: {
-    fontSize: 11,
-    letterSpacing: 2,
+    fontSize: 10,
+    letterSpacing: 2.2,
     textTransform: 'uppercase',
     color: '#6f8ba7',
     fontWeight: 800,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   drawerTitle: {
     fontFamily: 'var(--display)',
-    fontSize: 30,
-    lineHeight: 1.05,
+    fontSize: 22,
+    lineHeight: 1.08,
     color: '#17314a',
-    marginBottom: 12,
-    letterSpacing: '-0.03em',
+    marginBottom: 10,
+    letterSpacing: '-0.04em',
   },
   drawerText: {
     color: '#617a92',
-    fontSize: 15,
-    lineHeight: 1.7,
-    maxWidth: 320,
+    fontSize: 13,
+    lineHeight: 1.55,
+    maxWidth: 270,
   },
-  drawerLinks: { display: 'grid', gap: 12, marginTop: 8 },
+  drawerLinks: { display: 'grid', gap: 10, marginTop: 4 },
   drawerLink: {
     border: '1px solid rgba(26,58,143,0.08)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
     textAlign: 'left',
     color: '#17314a',
-    fontSize: 22,
-    fontWeight: 700,
-    padding: '16px 18px',
-    borderRadius: 18,
-    boxShadow: '0 10px 24px rgba(26,58,143,0.05)',
+    fontSize: 16,
+    fontWeight: 650,
+    padding: '13px 15px',
+    borderRadius: 16,
+    boxShadow: '0 8px 18px rgba(26,58,143,0.04)',
   },
-  drawerFooter: { marginTop: 'auto', paddingTop: 22 },
+  drawerFooter: { marginTop: 'auto', paddingTop: 18 },
   drawerAccountCard: {
     background: 'linear-gradient(135deg, #082237 0%, #103454 62%, #2f81be 100%)',
     color: '#fff',
-    borderRadius: 24,
-    padding: 22,
-    boxShadow: '0 18px 38px rgba(8,34,55,0.22)',
+    borderRadius: 22,
+    padding: 18,
+    boxShadow: '0 16px 30px rgba(8,34,55,0.18)',
   },
   drawerAccountEyebrow: {
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 1.8,
     textTransform: 'uppercase',
     color: 'rgba(220,239,255,0.72)',
     fontWeight: 800,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   drawerAccountTitle: {
     fontFamily: 'var(--display)',
-    fontSize: 22,
-    lineHeight: 1.12,
-    marginBottom: 10,
+    fontSize: 18,
+    lineHeight: 1.15,
+    marginBottom: 8,
   },
   drawerAccountText: {
     color: 'rgba(236,247,255,0.8)',
-    fontSize: 14,
-    lineHeight: 1.7,
+    fontSize: 12.5,
+    lineHeight: 1.55,
   },
   drawerAccountActions: {
     display: 'flex',
     alignItems: 'center',
     gap: 12,
-    marginTop: 18,
+    marginTop: 16,
     flexWrap: 'wrap',
   },
   drawerPrimaryCta: {
     border: 'none',
     borderRadius: 999,
-    padding: '12px 18px',
+    padding: '11px 16px',
     background: '#ffffff',
     color: '#103454',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 800,
   },
   drawerSecondaryCta: {
     border: '1px solid rgba(255,255,255,0.22)',
     borderRadius: 999,
-    padding: '12px 18px',
+    padding: '11px 16px',
     background: 'transparent',
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 700,
   },
   drawerLogin: {
@@ -736,16 +737,16 @@ const styles = {
     background: 'transparent',
     color: '#fff',
     fontWeight: 700,
-    fontSize: 14,
-    padding: '12px 16px',
+    fontSize: 13,
+    padding: '11px 14px',
   },
   drawerSignup: {
     border: 'none',
     borderRadius: 999,
-    padding: '12px 20px',
+    padding: '11px 16px',
     background: '#ffffff',
     color: '#082237',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 800,
   },
   panelWrap: {
