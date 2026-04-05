@@ -290,7 +290,7 @@ export default function NavBar({ activePage }) {
       {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
 
       {menuOpen && (
-        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isCompact ? '28px 18px 18px' : '34px 22px 20px' }}>
+        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isCompact ? '40px 18px 18px' : '48px 22px 20px' }}>
           <div style={styles.drawerHeader}>
             <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
@@ -392,11 +392,11 @@ function DrawerLink({ label, to, onNavigate, compact }) {
         ...styles.drawerLink,
         fontSize: compact ? 14 : 15,
         padding: compact ? '11px 14px' : '12px 14px',
-        transform: hover ? 'translateY(-1px)' : 'translateY(0)',
-        borderColor: hover ? 'rgba(59,159,216,0.24)' : 'rgba(26,58,143,0.08)',
-        boxShadow: hover ? '0 14px 28px rgba(26,58,143,0.08)' : '0 8px 18px rgba(26,58,143,0.04)',
-        color: hover ? '#103454' : '#17314a',
-        background: hover ? 'linear-gradient(180deg, #ffffff 0%, #f3f8ff 100%)' : 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+        transform: hover ? 'translateY(-2px) scale(1.01)' : 'translateY(0) scale(1)',
+        borderColor: hover ? 'rgba(59,159,216,0.34)' : 'rgba(26,58,143,0.08)',
+        boxShadow: hover ? '0 18px 34px rgba(26,58,143,0.12)' : '0 8px 18px rgba(26,58,143,0.04)',
+        color: hover ? '#0b2e4b' : '#17314a',
+        background: hover ? 'linear-gradient(180deg, #ffffff 0%, #eef6ff 100%)' : 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
       }}
     >
       {label}
@@ -658,7 +658,7 @@ const styles = {
     overflow: 'hidden',
     justifyContent: 'space-between',
   },
-  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 },
+  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 30 },
   drawerClose: {
     border: '1px solid rgba(26,58,143,0.1)',
     background: '#f4f8fd',
@@ -668,7 +668,7 @@ const styles = {
     padding: '9px 13px',
     borderRadius: 999,
   },
-  drawerIntro: { marginBottom: 22 },
+  drawerIntro: { marginBottom: 16 },
   drawerEyebrow: {
     fontSize: 10,
     letterSpacing: 2.2,
@@ -691,7 +691,7 @@ const styles = {
     lineHeight: 1.55,
     maxWidth: 270,
   },
-  drawerLinks: { display: 'grid', gap: 10, marginTop: 12, justifyItems: 'center', alignContent: 'center', flex: 1 },
+  drawerLinks: { display: 'grid', gap: 10, marginTop: 2, justifyItems: 'center', alignContent: 'start', flex: 1 },
   drawerLink: {
     border: '1px solid rgba(26,58,143,0.08)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
