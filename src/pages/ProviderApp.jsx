@@ -163,11 +163,9 @@ export default function ProviderApp() {
   useEffect(() => {
     async function loadProviderProfile() {
       const baseIdentity = { email: profile?.email || user?.email, name: profile?.full_name || 'Garage Los Santos' }
-      const localDraft = readProviderDraft(user, profile)
       let nextForm = mergeProviderProfile({
         ...providerProfileForm,
         ...baseIdentity,
-        ...(localDraft || {}),
       })
 
       const { data } = user?.id
@@ -183,7 +181,15 @@ export default function ProviderApp() {
           ...data,
           name: data.shop_name,
           providerEmail: profile?.email || user?.email,
-          editableHours: providerProfileForm.editableHours,
+        })
+      }
+
+      const localDraft = readProviderDraft(user, profile)
+      if (localDraft) {
+        nextForm = mergeProviderProfile({
+          ...nextForm,
+          ...localDraft,
+          providerEmail: profile?.email || user?.email,
         })
       }
 
@@ -201,7 +207,7 @@ export default function ProviderApp() {
     }
 
     loadProviderProfile()
-  }, [profile?.email, profile?.full_name, user?.email])
+  }, [profile?.email, profile?.full_name, user?.email, user?.id])
 
   function setProfileField(field, value) {
     setProviderProfileForm((current) => ({ ...current, [field]: value }))
@@ -307,8 +313,8 @@ export default function ProviderApp() {
       ...typeMeta,
     }
 
-    saveProviderOverride({ email: providerProfileForm.email, name: providerProfileForm.name }, payload)
-    saveProviderOverride({ email: profile?.email || user?.email, name: profile?.full_name || providerProfileForm.name }, payload)
+    saveProviderOverride({ id: user?.id, email: providerProfileForm.email, name: providerProfileForm.name }, payload)
+    saveProviderOverride({ id: user?.id, email: profile?.email || user?.email, name: profile?.full_name || providerProfileForm.name }, payload)
     writeProviderDraft(user, profile, payload)
     setProviderProfileForm((current) => ({ ...current, ...payload }))
 
