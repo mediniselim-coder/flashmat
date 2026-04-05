@@ -428,36 +428,6 @@ export default function ProviderApp() {
                       </tbody>
                     </table>
                   </div>
-                  <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">Photos atelier</div></div>
-                    <div className="panel-body">
-                      <div className="form-group">
-                        <label className="form-label">Photo couverture</label>
-                        <input className="form-input" type="file" accept="image/*" onChange={updateCoverPhoto} />
-                      </div>
-                      {providerProfileForm.coverPhoto && (
-                        <div style={{marginBottom:14}}>
-                          <img src={providerProfileForm.coverPhoto} alt="Couverture atelier" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                          <button className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
-                        </div>
-                      )}
-                      <div className="form-group">
-                        <label className="form-label">Galerie atelier</label>
-                        <input className="form-input" type="file" accept="image/*" multiple onChange={updateGalleryPhotos} />
-                      </div>
-                      {providerProfileForm.galleryPhotos.length > 0 && (
-                        <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
-                          {providerProfileForm.galleryPhotos.map((photo, index) => (
-                            <div key={index} style={{position:'relative'}}>
-                              <img src={photo} alt={`Atelier ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                              <button className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Les photos sauvegardees ici seront visibles par les clients sur la page provider.</div>
-                    </div>
-                  </div>
                 </div>
                 <div>
                   <div className="panel">
@@ -730,6 +700,36 @@ export default function ProviderApp() {
                       <div className="form-group"><label className="form-label">Téléphone</label><input className="form-input" value={providerProfileForm.phone} onChange={e => setProfileField('phone', e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={providerProfileForm.email} onChange={e => setProfileField('email', e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={providerProfileForm.description} onChange={e => setProfileField('description', e.target.value)} style={{resize:'vertical'}} /></div>
+                    </div>
+                  </div>
+                  <div className="panel">
+                    <div className="panel-hd"><div className="panel-title">Photos atelier</div></div>
+                    <div className="panel-body">
+                      <div className="form-group">
+                        <label className="form-label">Photo couverture</label>
+                        <input className="form-input" type="file" accept="image/*" onChange={updateCoverPhoto} />
+                      </div>
+                      {providerProfileForm.coverPhoto && (
+                        <div style={{marginBottom:14}}>
+                          <img src={providerProfileForm.coverPhoto} alt="Couverture atelier" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                          <button className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
+                        </div>
+                      )}
+                      <div className="form-group">
+                        <label className="form-label">Galerie atelier</label>
+                        <input className="form-input" type="file" accept="image/*" multiple onChange={updateGalleryPhotos} />
+                      </div>
+                      {providerProfileForm.galleryPhotos.length > 0 && (
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
+                          {providerProfileForm.galleryPhotos.map((photo, index) => (
+                            <div key={index} style={{position:'relative'}}>
+                              <img src={photo} alt={`Atelier ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                              <button className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Les photos sauvegardees ici seront visibles par les clients sur la page provider.</div>
                     </div>
                   </div>
                 </div>
