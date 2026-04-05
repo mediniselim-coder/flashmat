@@ -22,8 +22,16 @@ const COORDS = {
 
 export default function ProviderMap({ providers, onSelect }) {
   return (
-    <div style={{ height: 380, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', marginBottom: 16 }}>
-      <MapContainer center={[45.5088, -73.5540]} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+    <div className="flashmat-provider-map" style={{ height: 380, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', marginBottom: 16, position: 'relative', zIndex: 0, isolation: 'isolate' }}>
+      <style>{`
+        .flashmat-provider-map .leaflet-container { z-index: 0 !important; }
+        .flashmat-provider-map .leaflet-pane { z-index: 1 !important; }
+        .flashmat-provider-map .leaflet-top,
+        .flashmat-provider-map .leaflet-bottom,
+        .flashmat-provider-map .leaflet-control,
+        .flashmat-provider-map .leaflet-popup { z-index: 2 !important; }
+      `}</style>
+      <MapContainer center={[45.5088, -73.5540]} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={false}>
         <TileLayer
           attribution='&copy; OpenStreetMap'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
