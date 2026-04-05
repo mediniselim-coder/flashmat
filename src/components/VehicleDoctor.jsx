@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import styles from './VehicleDoctor.module.css'
+
+const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY
 
 const INPUT_MODES = [
   { id: 'text', label: 'Texte libre' },
@@ -1078,25 +1080,144 @@ function detectCaseStable(text) {
   return bestMatch.candidate
 }
 
+function shouldUseAiFallback(input, localDiagnosis) {
+  if (!ANTHROPIC_API_KEY || !input || input.trim().length < 18 || !localDiagnosis) {
+    return false
+  }
+
+  const probableIssue = String(localDiagnosis.probableIssue || '').toLowerCase()
+  const confidence = String(localDiagnosis.confidence || '').toLowerCase()
+
+  return (
+    probableIssue.includes('inspection mecanique generale')
+    || probableIssue.includes('diagnostic encore incertain')
+    || probableIssue.includes('plusieurs pistes')
+    || confidence.includes('faible')
+  )
+}
+
+function parseAiJsonBlock(rawText) {
+  const text = String(rawText || '').trim()
+  if (!text) return null
+
+  try {
+    return JSON.parse(text)
+  } catch {
+    const match = text.match(/\{[\s\S]*\}/)
+    if (!match) return null
+    try {
+      return JSON.parse(match[0])
+    } catch {
+      return null
+    }
+  }
+}
+
+function normalizeAiDiagnosisResponse(response, fallbackDiagnosis) {
+  if (!response || typeof response !== 'object') return null
+
+  const probableIssue = String(response.probableIssue || '').trim()
+  const summary = String(response.summary || '').trim()
+
+  if (!probableIssue || !summary) {
+    return null
+  }
+
+  const guidanceItems = Array.isArray(response.guidanceItems)
+    ? response.guidanceItems.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 5)
+    : fallbackDiagnosis.guidanceItems || []
+
+  return {
+    ...fallbackDiagnosis,
+    type: response.type === 'maintenance' ? 'maintenance' : 'repair',
+    probableIssue,
+    confidence: String(response.confidence || fallbackDiagnosis.confidence || 'Moyenne').trim(),
+    urgency: String(response.urgency || fallbackDiagnosis.urgency || 'A verifier').trim(),
+    estimate: String(response.estimate || fallbackDiagnosis.estimate || 'Diagnostic cible').trim(),
+    duration: String(response.duration || fallbackDiagnosis.duration || 'A confirmer').trim(),
+    priceNote: String(response.priceNote || fallbackDiagnosis.priceNote || '').trim(),
+    durationNote: String(response.durationNote || fallbackDiagnosis.durationNote || '').trim(),
+    summary,
+    guidanceTitle: String(response.guidanceTitle || fallbackDiagnosis.guidanceTitle || 'Points cles').trim(),
+    guidanceItems,
+    searchCat: ['mechanic', 'tire', 'body', 'glass', 'tow', 'wash'].includes(response.searchCat)
+      ? response.searchCat
+      : (fallbackDiagnosis.searchCat || 'mechanic'),
+    matches: fallbackDiagnosis.matches || DEFAULT_CASE.matches,
+  }
+}
+
+async function fetchAnthropicDiagnosis(input, fallbackDiagnosis) {
+  if (!ANTHROPIC_API_KEY) return null
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 700,
+      system: `Tu es le moteur de diagnostic automobile de FlashMat. Reponds uniquement en JSON valide.
+Le JSON doit contenir exactement ces champs:
+type, probableIssue, confidence, urgency, estimate, duration, priceNote, durationNote, summary, guidanceTitle, guidanceItems, searchCat.
+Contraintes:
+- language: francais simple
+- pas de markdown
+- pas de texte hors JSON
+- confidence doit etre: Faible, Moyenne, Moyenne a elevee, ou Elevee
+- searchCat doit etre un de: mechanic, tire, body, glass, tow, wash
+- guidanceItems doit etre un tableau de 3 a 5 phrases courtes
+- si le cas est dangereux, dire clairement de ne pas conduire
+- ne pas inventer un code OBD
+- ne pas promettre une certitude absolue`,
+      messages: [
+        {
+          role: 'user',
+          content: `Symptome client: ${input}
+
+Diagnostic prudent local actuel:
+- probableIssue: ${fallbackDiagnosis.probableIssue}
+- confidence: ${fallbackDiagnosis.confidence}
+- urgency: ${fallbackDiagnosis.urgency}
+- searchCat: ${fallbackDiagnosis.searchCat}
+
+Affinez ce diagnostic pour une cliente qui ne connait pas bien l automobile.`,
+        },
+      ],
+    }),
+  })
+
+  if (!response.ok) {
+    throw new Error('Le service IA n a pas repondu correctement')
+  }
+
+  const data = await response.json()
+  const aiText = data?.content?.[0]?.text
+  return normalizeAiDiagnosisResponse(parseAiJsonBlock(aiText), fallbackDiagnosis)
+}
+
 export default function VehicleDoctor({ compact = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const resultRef = useRef(null)
   const analyzeTimeoutRef = useRef(null)
   const highlightTimeoutRef = useRef(null)
+  const latestAnalysisRef = useRef(0)
   const [inputMode, setInputMode] = useState('text')
   const [draft, setDraft] = useState('')
-  const [submitted, setSubmitted] = useState('')
+  const [diagnosis, setDiagnosis] = useState(null)
+  const [diagnosisSource, setDiagnosisSource] = useState('rules')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasFreshResult, setHasFreshResult] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Décrivez le symptôme puis lancez le diagnostic.')
-
-  const diagnosis = useMemo(() => (submitted ? detectCaseStable(submitted) : null), [submitted])
   const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
-    ? 'Conseil entretien FlashMat'
-    : 'Diagnostic automatique FlashMat'
+    ? (diagnosisSource === 'ai' ? 'Conseil entretien IA FlashMat' : 'Conseil entretien FlashMat')
+    : (diagnosisSource === 'ai' ? 'Diagnostic IA assiste FlashMat' : 'Diagnostic automatique FlashMat')
 
   useEffect(() => {
     return () => {
@@ -1130,11 +1251,45 @@ export default function VehicleDoctor({ compact = false, userName }) {
     setHasFreshResult(false)
     setStatusMessage('Analyse du symptôme en cours...')
 
-    analyzeTimeoutRef.current = window.setTimeout(() => {
-      setSubmitted(value)
+    const analysisId = Date.now()
+    latestAnalysisRef.current = analysisId
+
+    analyzeTimeoutRef.current = window.setTimeout(async () => {
+      const localDiagnosis = detectCaseStable(value)
+      let finalDiagnosis = localDiagnosis
+      let finalSource = 'rules'
+      let finalStatus = 'Diagnostic prêt. Consultez le résultat et les garages suggérés.'
+
+      setDiagnosis(localDiagnosis)
+      setDiagnosisSource('rules')
+
+      if (shouldUseAiFallback(value, localDiagnosis)) {
+        setStatusMessage('Analyse IA en cours pour affiner le diagnostic...')
+
+        try {
+          const aiDiagnosis = await fetchAnthropicDiagnosis(value, localDiagnosis)
+          if (latestAnalysisRef.current !== analysisId) return
+
+          if (aiDiagnosis) {
+            finalDiagnosis = aiDiagnosis
+            finalSource = 'ai'
+            finalStatus = 'Diagnostic IA prêt. Vérifiez la synthèse et les actions conseillées.'
+          } else {
+            finalStatus = 'Diagnostic local prêt. Le fallback IA n a pas renvoyé de réponse exploitable.'
+          }
+        } catch {
+          if (latestAnalysisRef.current !== analysisId) return
+          finalStatus = 'Diagnostic local prêt. Le service IA est indisponible pour le moment.'
+        }
+      }
+
+      if (latestAnalysisRef.current !== analysisId) return
+
+      setDiagnosis(finalDiagnosis)
+      setDiagnosisSource(finalSource)
       setIsAnalyzing(false)
       setHasFreshResult(true)
-      setStatusMessage('Diagnostic prêt. Consultez le résultat et les garages suggérés.')
+      setStatusMessage(finalStatus)
       resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 
       highlightTimeoutRef.current = window.setTimeout(() => {
@@ -1292,6 +1447,14 @@ export default function VehicleDoctor({ compact = false, userName }) {
               </span>
               <span className={styles.statusText}>{statusMessage}</span>
             </div>
+
+            {diagnosis && (
+              <div className={styles.badgeRow}>
+                <span className={`${styles.badge} ${styles.badgeInfo}`}>
+                  {diagnosisSource === 'ai' ? 'Réponse affinée par IA' : 'Réponse basée sur les cas FlashMat'}
+                </span>
+              </div>
+            )}
 
             <p className={styles.summary}>
               {diagnosis
