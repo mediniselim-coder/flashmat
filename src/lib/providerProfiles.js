@@ -28,6 +28,18 @@ export const PROVIDER_SERVICE_OPTIONS = [
   { id: 'performance', label: 'Performance', icon: '🏎️', category: 'tuning' },
 ]
 
+const CATEGORY_LABELS = {
+  mechanic: 'Mecanique',
+  wash: 'Lave-auto',
+  tire: 'Pneus',
+  body: 'Carrosserie',
+  glass: 'Vitres auto',
+  tow: 'Remorquage',
+  parts: 'Pieces auto',
+  parking: 'Parking',
+  tuning: 'Performance',
+}
+
 export const DEFAULT_PROVIDER_HOURS = {
   Mon: { closed: false, open: '08:00', close: '17:00' },
   Tue: { closed: false, open: '08:00', close: '17:00' },
@@ -128,32 +140,86 @@ export function normalizeProviderHours(hours) {
   return displayMapToHours(hours)
 }
 
-export function inferTypeMeta(services = []) {
-  const normalized = services.map((service) => String(service).toLowerCase())
+export function getProviderServiceCategories(services = [], fallbackType = '') {
+  const categories = new Set()
 
-  if (normalized.some((service) => service.includes('lavage') || service.includes('detailing') || service.includes('ceramique'))) {
-    return { type: 'wash', type_label: 'Lave-auto' }
+  services
+    .map((service) => String(service || '').trim())
+    .filter(Boolean)
+    .forEach((serviceLabel) => {
+      const normalized = serviceLabel.toLowerCase()
+      const option = PROVIDER_SERVICE_OPTIONS.find((entry) => entry.label.toLowerCase() === normalized)
+
+      if (option?.category) {
+        categories.add(option.category)
+        return
+      }
+
+      if (normalized.includes('lavage') || normalized.includes('detailing') || normalized.includes('ceramique')) categories.add('wash')
+      if (normalized.includes('remorquage') || normalized.includes('assistance') || normalized.includes('batterie') || normalized.includes('deverrouillage')) categories.add('tow')
+      if (normalized.includes('pare-brise') || normalized.includes('vitres')) categories.add('glass')
+      if (normalized.includes('carrosserie') || normalized.includes('peinture') || normalized.includes('debosselage')) categories.add('body')
+      if (normalized.includes('pneu') || normalized.includes('alignement') || normalized.includes('balancement') || normalized.includes('crevaison')) categories.add('tire')
+      if (normalized.includes('piece')) categories.add('parts')
+      if (normalized.includes('parking') || normalized.includes('stationnement')) categories.add('parking')
+      if (normalized.includes('performance')) categories.add('tuning')
+      if (
+        normalized.includes('mecanique')
+        || normalized.includes('vidange')
+        || normalized.includes('frein')
+        || normalized.includes('suspension')
+        || normalized.includes('diagnostic')
+        || normalized.includes('climatisation')
+      ) {
+        categories.add('mechanic')
+      }
+    })
+
+  if (categories.size === 0 && fallbackType) {
+    categories.add(String(fallbackType).toLowerCase())
   }
-  if (normalized.some((service) => service.includes('remorquage') || service.includes('assistance') || service.includes('batterie') || service.includes('deverrouillage'))) {
-    return { type: 'tow', type_label: 'Remorquage' }
+
+  if (categories.size === 0) {
+    categories.add('mechanic')
   }
-  if (normalized.some((service) => service.includes('pare-brise') || service.includes('vitres'))) {
-    return { type: 'glass', type_label: 'Vitres auto' }
+
+  return Array.from(categories)
+}
+
+function getPrimaryServiceType(services = [], fallbackType = '') {
+  const categories = getProviderServiceCategories(services, fallbackType)
+  const primary = categories[0] || 'mechanic'
+  return {
+    type: primary,
+    type_label: CATEGORY_LABELS[primary] || 'Mecanique',
   }
-  if (normalized.some((service) => service.includes('carrosserie') || service.includes('peinture') || service.includes('debosselage'))) {
-    return { type: 'body', type_label: 'Carrosserie' }
-  }
-  if (normalized.some((service) => service.includes('pneu') || service.includes('alignement') || service.includes('balancement'))) {
-    return { type: 'tire', type_label: 'Pneus' }
-  }
-  return { type: 'mechanic', type_label: 'Mecanique' }
+}
+
+export function inferTypeMeta(services = []) {
+  return getPrimaryServiceType(services)
+}
+
+export function isProviderProfileComplete(provider) {
+  return Boolean(
+    provider?.name
+    && provider?.address
+    && provider?.phone
+    && provider?.description
+    && Array.isArray(provider?.services)
+    && provider.services.length > 0
+  )
 }
 
 export function mergeProviderProfile(provider) {
+  const baseTypeMeta = getPrimaryServiceType(provider?.services || [], provider?.type || '')
   const override = getProviderOverride(provider)
   if (!override) {
     return {
       ...provider,
+      type: provider.type || baseTypeMeta.type,
+      type_label: provider.type_label || baseTypeMeta.type_label,
+      serviceCategories: getProviderServiceCategories(provider?.services || [], provider?.type || ''),
+      publicReady: isProviderProfileComplete(provider),
       editableHours: normalizeProviderHours(provider.editableHours || provider.hours),
       coverPhoto: provider.coverPhoto || provider.cover_photo || provider.cover || '',
       galleryPhotos: provider.galleryPhotos || provider.gallery_photos || [],
@@ -162,15 +228,19 @@ export function mergeProviderProfile(provider) {
   }
 
   const mergedHours = normalizeProviderHours(override.editableHours || provider.editableHours || provider.hours)
+  const mergedServices = override.services || provider.services || []
+  const mergedTypeMeta = getPrimaryServiceType(mergedServices, override.type || provider.type || '')
   return {
     ...provider,
     ...override,
-    services: override.services || provider.services || [],
+    services: mergedServices,
     coverPhoto: override.coverPhoto || provider.coverPhoto || provider.cover_photo || provider.cover || '',
     galleryPhotos: override.galleryPhotos || provider.galleryPhotos || provider.gallery_photos || [],
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
-    type: override.type || provider.type,
-    type_label: override.type_label || provider.type_label,
+    type: override.type || provider.type || mergedTypeMeta.type,
+    type_label: override.type_label || provider.type_label || mergedTypeMeta.type_label,
+    serviceCategories: getProviderServiceCategories(mergedServices, override.type || provider.type || ''),
+    publicReady: isProviderProfileComplete({ ...provider, ...override, services: mergedServices }),
   }
 }

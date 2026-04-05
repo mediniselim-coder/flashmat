@@ -72,10 +72,24 @@ export default function Landing() {
     supabase
       .from('providers_list')
       .select('*')
-      .or(`name.ilike.%${filterTerm}%,type_label.ilike.%${filterTerm}%`)
       .order('rating', { ascending: false })
-      .limit(30)
-      .then(({ data }) => { setDbProviders((data || []).map((provider) => mergeProviderProfile(provider))); setDbLoading(false) })
+      .limit(100)
+      .then(({ data }) => {
+        const normalized = filterTerm.toLowerCase()
+        setDbProviders(
+          (data || [])
+            .map((provider) => mergeProviderProfile(provider))
+            .filter((provider) =>
+              provider.publicReady && (
+                provider.name?.toLowerCase().includes(normalized)
+                || provider.type_label?.toLowerCase().includes(normalized)
+                || provider.address?.toLowerCase().includes(normalized)
+                || provider.services?.some((service) => service.toLowerCase().includes(normalized))
+              )
+            ),
+        )
+        setDbLoading(false)
+      })
   }, [filterTerm])
 
   function openDoctor() {

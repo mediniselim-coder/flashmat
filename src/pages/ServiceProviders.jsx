@@ -51,7 +51,7 @@ export default function ServiceProviders() {
         .order('rating', { ascending: false })
         .limit(100)
 
-      setProviders((data || []).map((provider) => mergeProviderProfile(provider)))
+      setProviders((data || []).map((provider) => mergeProviderProfile(provider)).filter((provider) => provider.publicReady))
       setProvLoading(false)
     }
 
@@ -65,12 +65,13 @@ export default function ServiceProviders() {
   }
 
   const filtered = providers.filter((provider) => {
-    const matchCat = searchCat === 'all' || provider.type === searchCat
+    const matchCat = searchCat === 'all' || provider.serviceCategories?.includes(searchCat)
     const q = searchQ.toLowerCase()
     const matchQ = !q
       || provider.name?.toLowerCase().includes(q)
       || provider.type_label?.toLowerCase().includes(q)
       || provider.address?.toLowerCase().includes(q)
+      || provider.services?.some((service) => service.toLowerCase().includes(q))
 
     return matchCat && matchQ
   })
@@ -134,7 +135,7 @@ export default function ServiceProviders() {
                     {provider.type_label} · {provider.address} · ⭐{provider.rating} ({provider.reviews} avis) · {provider.phone}
                   </div>
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                    {(provider.services || []).slice(0, 3).map((service) => <span key={service} className="badge badge-gray">{service}</span>)}
+                    {(provider.services || []).slice(0, 4).map((service) => <span key={service} className="badge badge-gray">{service}</span>)}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>

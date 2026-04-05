@@ -166,16 +166,17 @@ export default function ClientApp() {
       .select('*')
       .order('rating', { ascending: false })
       .limit(100)
-    setProviders((data || []).map((provider) => mergeProviderProfile(provider)))
+    setProviders((data || []).map((provider) => mergeProviderProfile(provider)).filter((provider) => provider.publicReady))
     setProvLoading(false)
   }
 
   const filtered = providers.filter(p => {
-    const matchCat = searchCat === 'all' || p.type === searchCat
+    const matchCat = searchCat === 'all' || p.serviceCategories?.includes(searchCat)
     const q = searchQ.toLowerCase()
     const matchQ = !q || p.name?.toLowerCase().includes(q) ||
       p.type_label?.toLowerCase().includes(q) ||
-      p.address?.toLowerCase().includes(q)
+      p.address?.toLowerCase().includes(q) ||
+      p.services?.some((service) => service.toLowerCase().includes(q))
     return matchCat && matchQ
   })
 
