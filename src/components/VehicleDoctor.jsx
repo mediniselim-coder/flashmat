@@ -1,11 +1,11 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import styles from './VehicleDoctor.module.css'
 
 const INPUT_MODES = [
   { id: 'text', label: 'Texte libre' },
-  { id: 'photo', label: 'Photo du problÃ¨me' },
+  { id: 'photo', label: 'Photo du problème' },
   { id: 'audio', label: 'Note vocale' },
 ]
 
@@ -13,7 +13,7 @@ const QUICK_CASES = [
   'Ma voiture grince quand je freine',
   'Le moteur chauffe dans le trafic',
   'La batterie semble faible le matin',
-  'Jâ€™ai un pneu qui perd de lâ€™air',
+  'J’ai un pneu qui perd de l’air',
 ]
 
 const CASE_LIBRARY = [
@@ -30,26 +30,26 @@ const CASE_LIBRARY = [
       { terms: ['rav4'], weight: 2 },
       { terms: ['2021'], weight: 1 },
     ],
-    probableIssue: 'Conseil de vidange et dâ€™entretien courant',
-    confidence: 'Ã‰levÃ©e',
-    urgency: 'Ã€ planifier selon le kilomÃ©trage',
-    estimate: 'En gÃ©nÃ©ral tous les 8 000 Ã  10 000 km',
-    duration: 'Environ tous les 6 Ã  12 mois',
-    priceNote: 'Si vous faites surtout de la ville, du froid, de petits trajets ou beaucoup de trafic, faites-la plus tÃ´t, souvent vers 5 000 Ã  8 000 km.',
-    durationNote: 'Pour un RAV4 2021, vÃ©rifiez aussi le dernier entretien fait et lâ€™indicateur de maintenance au tableau de bord.',
+    probableIssue: 'Conseil de vidange et d’entretien courant',
+    confidence: 'Élevée',
+    urgency: 'À planifier selon le kilométrage',
+    estimate: 'En général tous les 8 000 à 10 000 km',
+    duration: 'Environ tous les 6 à 12 mois',
+    priceNote: 'Si vous faites surtout de la ville, du froid, de petits trajets ou beaucoup de trafic, faites-la plus tôt, souvent vers 5 000 à 8 000 km.',
+    durationNote: 'Pour un RAV4 2021, vérifiez aussi le dernier entretien fait et l’indicateur de maintenance au tableau de bord.',
     searchCat: 'mechanic',
-    summary: 'Pour une personne qui veut juste savoir quoi faire: une vidange sert Ã  garder le moteur bien lubrifiÃ©. Si vous ne connaissez pas lâ€™historique exact, le plus prudent est de vÃ©rifier la derniÃ¨re vidange et de viser un entretien rÃ©gulier plutÃ´t que dâ€™attendre un problÃ¨me.',
+    summary: 'Pour une personne qui veut juste savoir quoi faire: une vidange sert à garder le moteur bien lubrifié. Si vous ne connaissez pas l’historique exact, le plus prudent est de vérifier la dernière vidange et de viser un entretien régulier plutôt que d’attendre un problème.',
     guidanceTitle: 'Ce que vous devez savoir',
     guidanceItems: [
-      'Si la derniÃ¨re vidange date de plus de 6 Ã  12 mois, il est raisonnable de la planifier.',
-      'Si lâ€™auto a roulÃ© environ 8 000 Ã  10 000 km depuis la derniÃ¨re vidange, il est souvent temps de la faire.',
-      'Si vous faites surtout de courts trajets, du trafic ou lâ€™hiver, faites-la plus tÃ´t.',
-      'Quand vous prenez rendez-vous, vous pouvez simplement demander: vidange dâ€™huile + vÃ©rification de base.',
+      'Si la dernière vidange date de plus de 6 à 12 mois, il est raisonnable de la planifier.',
+      'Si l’auto a roulé environ 8 000 à 10 000 km depuis la dernière vidange, il est souvent temps de la faire.',
+      'Si vous faites surtout de courts trajets, du trafic ou l’hiver, faites-la plus tôt.',
+      'Quand vous prenez rendez-vous, vous pouvez simplement demander: vidange d’huile + vérification de base.',
     ],
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h30', price: 'Vidange dÃ¨s $89', tags: ['Vidange', 'Inspection rapide', 'Disponible'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 16h00', price: 'Vidange dÃ¨s $95', tags: ['Entretien', 'Avis Ã©levÃ©s', 'RÃ©servation express'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h30', price: 'Vidange dÃ¨s $85', tags: ['Entretien', 'ContrÃ´le de base', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h30', price: 'Vidange dès $89', tags: ['Vidange', 'Inspection rapide', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 16h00', price: 'Vidange dès $95', tags: ['Entretien', 'Avis élevés', 'Réservation express'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h30', price: 'Vidange dès $85', tags: ['Entretien', 'Contrôle de base', 'Fiable'] },
     ],
   },
   {
@@ -70,26 +70,26 @@ const CASE_LIBRARY = [
       { terms: ['serrure'], weight: 4 },
       { terms: ['carrosserie'], weight: 5 },
     ],
-    probableIssue: 'Porte arriÃ¨re possiblement bloquÃ©e aprÃ¨s impact',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ faire vÃ©rifier rapidement',
-    estimate: 'ContrÃ´le carrosserie et mÃ©canisme de porte',
-    duration: 'Diagnostic souvent le jour mÃªme',
-    priceNote: 'AprÃ¨s un accident, il faut vÃ©rifier la porte, la serrure, les charniÃ¨res et lâ€™alignement de la carrosserie avant de forcer lâ€™ouverture.',
-    durationNote: 'Si la porte est coincÃ©e aprÃ¨s impact, un atelier de carrosserie ou un garage peut confirmer si câ€™est la tÃ´le, la serrure ou le cadre qui bloque.',
+    probableIssue: 'Porte arrière possiblement bloquée après impact',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À faire vérifier rapidement',
+    estimate: 'Contrôle carrosserie et mécanisme de porte',
+    duration: 'Diagnostic souvent le jour même',
+    priceNote: 'Après un accident, il faut vérifier la porte, la serrure, les charnières et l’alignement de la carrosserie avant de forcer l’ouverture.',
+    durationNote: 'Si la porte est coincée après impact, un atelier de carrosserie ou un garage peut confirmer si c’est la tôle, la serrure ou le cadre qui bloque.',
     searchCat: 'body',
-    summary: 'AprÃ¨s un accident, ne forcez pas la porte si elle ne sâ€™ouvre plus. Le bon rÃ©flexe est de faire vÃ©rifier la carrosserie et le mÃ©canisme dâ€™ouverture pour Ã©viter dâ€™aggraver les dÃ©gÃ¢ts ou de casser la poignÃ©e.',
+    summary: 'Après un accident, ne forcez pas la porte si elle ne s’ouvre plus. Le bon réflexe est de faire vérifier la carrosserie et le mécanisme d’ouverture pour éviter d’aggraver les dégâts ou de casser la poignée.',
     guidanceTitle: 'Quoi faire maintenant',
     guidanceItems: [
-      'Nâ€™essayez pas de forcer la porte avec violence, surtout si elle frotte ou semble dÃ©calÃ©e.',
-      'VÃ©rifiez si le problÃ¨me vient de la poignÃ©e, de la serrure ou dâ€™un dÃ©calage visible de la porte aprÃ¨s le choc.',
-      'Si la porte ferme mal ou si la carrosserie est enfoncÃ©e, cherchez plutÃ´t un atelier de carrosserie.',
-      'Quand vous appelez, dites simplement: accident, porte arriÃ¨re bloquÃ©e, jâ€™ai besoin dâ€™un contrÃ´le carrosserie et mÃ©canisme de porte.',
+      'N’essayez pas de forcer la porte avec violence, surtout si elle frotte ou semble décalée.',
+      'Vérifiez si le problème vient de la poignée, de la serrure ou d’un décalage visible de la porte après le choc.',
+      'Si la porte ferme mal ou si la carrosserie est enfoncée, cherchez plutôt un atelier de carrosserie.',
+      'Quand vous appelez, dites simplement: accident, porte arrière bloquée, j’ai besoin d’un contrôle carrosserie et mécanisme de porte.',
     ],
     matches: [
-      { name: 'Atelier Carrosserie MTL', rating: '4.8', distance: '2.6 km', eta: 'Aujourdâ€™hui 15h40', price: 'Diagnostic carrosserie', tags: ['Carrosserie', 'Portes', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 17h00', price: 'Inspection rapide', tags: ['Diagnostic', 'AprÃ¨s accident', 'Fiable'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h15', price: 'ContrÃ´le de porte', tags: ['MÃ©canique', 'Serrure', 'Proche'] },
+      { name: 'Atelier Carrosserie MTL', rating: '4.8', distance: '2.6 km', eta: 'Aujourd’hui 15h40', price: 'Diagnostic carrosserie', tags: ['Carrosserie', 'Portes', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 17h00', price: 'Inspection rapide', tags: ['Diagnostic', 'Après accident', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h15', price: 'Contrôle de porte', tags: ['Mécanique', 'Serrure', 'Proche'] },
     ],
   },
   {
@@ -110,26 +110,26 @@ const CASE_LIBRARY = [
       { terms: ['fusible'], weight: 4 },
       { terms: ['electrique'], weight: 4 },
     ],
-    probableIssue: 'ProblÃ¨me de phare avant ou dâ€™Ã©clairage',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ faire vÃ©rifier rapidement',
+    probableIssue: 'Problème de phare avant ou d’éclairage',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À faire vérifier rapidement',
     estimate: 'Souvent ampoule, fusible ou connecteur',
-    duration: 'ContrÃ´le rapide en atelier',
-    priceNote: 'Le problÃ¨me peut venir dâ€™une ampoule grillÃ©e, dâ€™un fusible, dâ€™un faux contact ou du bloc optique.',
-    durationNote: 'Si un seul phare avant ne marche plus, la vÃ©rification est souvent simple et rapide.',
+    duration: 'Contrôle rapide en atelier',
+    priceNote: 'Le problème peut venir d’une ampoule grillée, d’un fusible, d’un faux contact ou du bloc optique.',
+    durationNote: 'Si un seul phare avant ne marche plus, la vérification est souvent simple et rapide.',
     searchCat: 'mechanic',
-    summary: 'Si le phare avant ne fonctionne plus, Ã©vitez de rouler la nuit sans rÃ©paration. Le plus souvent, il faut vÃ©rifier lâ€™ampoule, le fusible ou le cÃ¢blage avant de remplacer des piÃ¨ces plus coÃ»teuses.',
-    guidanceTitle: 'Quoi vÃ©rifier',
+    summary: 'Si le phare avant ne fonctionne plus, évitez de rouler la nuit sans réparation. Le plus souvent, il faut vérifier l’ampoule, le fusible ou le câblage avant de remplacer des pièces plus coûteuses.',
+    guidanceTitle: 'Quoi vérifier',
     guidanceItems: [
-      'Regardez si un seul phare est touchÃ© ou les deux.',
-      'Si un seul cÃ´tÃ© est Ã©teint, une ampoule grillÃ©e est une cause frÃ©quente.',
-      'Si le phare sâ€™allume parfois puis sâ€™Ã©teint, il peut sâ€™agir dâ€™un faux contact.',
-      'Quand vous appelez, dites: phare avant ne fonctionne pas, jâ€™ai besoin dâ€™un contrÃ´le ampoule, fusible et connexion.',
+      'Regardez si un seul phare est touché ou les deux.',
+      'Si un seul côté est éteint, une ampoule grillée est une cause fréquente.',
+      'Si le phare s’allume parfois puis s’éteint, il peut s’agir d’un faux contact.',
+      'Quand vous appelez, dites: phare avant ne fonctionne pas, j’ai besoin d’un contrôle ampoule, fusible et connexion.',
     ],
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h10', price: 'ContrÃ´le Ã©clairage', tags: ['Ã‰lectrique', 'Phare', 'Disponible'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 15h20', price: 'Diagnostic rapide', tags: ['Ã‰lectrique', 'Avis Ã©levÃ©s', 'Fiable'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h00', price: 'VÃ©rification phare', tags: ['Ã‰clairage', 'Inspection', 'Proche'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h10', price: 'Contrôle éclairage', tags: ['Électrique', 'Phare', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 15h20', price: 'Diagnostic rapide', tags: ['Électrique', 'Avis élevés', 'Fiable'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h00', price: 'Vérification phare', tags: ['Éclairage', 'Inspection', 'Proche'] },
     ],
   },
   {
@@ -150,19 +150,19 @@ const CASE_LIBRARY = [
       { terms: ['bruit metallique'], weight: 4 },
       { terms: ['brake'], weight: 4 },
     ],
-    probableIssue: 'Plaquettes de frein usÃ©es',
-    confidence: 'Ã‰levÃ©e',
-    urgency: 'Ã€ traiter rapidement',
+    probableIssue: 'Plaquettes de frein usées',
+    confidence: 'Élevée',
+    urgency: 'À traiter rapidement',
     estimate: '$180 - $320',
     duration: '45 min - 1 h 30',
     priceNote: 'Inclut inspection et remplacement avant',
-    durationNote: 'Selon lâ€™Ã©tat des disques',
+    durationNote: 'Selon l’état des disques',
     searchCat: 'mechanic',
-    summary: 'Le symptÃ´me ressemble Ã  une usure avancÃ©e des plaquettes avant. Le systÃ¨me recommande une inspection le jour mÃªme pour Ã©viter dâ€™abÃ®mer les disques.',
+    summary: 'Le symptôme ressemble à une usure avancée des plaquettes avant. Le système recommande une inspection le jour même pour éviter d’abîmer les disques.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 13h20', price: '$210 estimÃ©', tags: ['Freins', 'Inspection incluse', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 15h10', price: '$195 estimÃ©', tags: ['Freins', 'PiÃ¨ces en stock', 'TrÃ¨s rapide'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 16h00', price: '$230 estimÃ©', tags: ['Freins', 'Avis Ã©levÃ©s', 'Paiement sur place'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 13h20', price: '$210 estimé', tags: ['Freins', 'Inspection incluse', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 15h10', price: '$195 estimé', tags: ['Freins', 'Pièces en stock', 'Très rapide'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 16h00', price: '$230 estimé', tags: ['Freins', 'Avis élevés', 'Paiement sur place'] },
     ],
   },
   {
@@ -189,19 +189,19 @@ const CASE_LIBRARY = [
       { terms: ['clique'], weight: 3 },
       { terms: ['clic'], weight: 3 },
     ],
-    probableIssue: 'Batterie faible ou alternateur Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ planifier aujourdâ€™hui',
+    probableIssue: 'Batterie faible ou alternateur à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À planifier aujourd’hui',
     estimate: '$120 - $340',
     duration: '30 min - 1 h',
-    priceNote: 'Test batterie + charge + remplacement si nÃ©cessaire',
+    priceNote: 'Test batterie + charge + remplacement si nécessaire',
     durationNote: 'Plus rapide si la batterie est disponible en stock',
     searchCat: 'mechanic',
-    summary: 'Le dÃ©marrage difficile au froid ou aprÃ¨s stationnement pointe vers une batterie fatiguÃ©e. Un test de charge et de systÃ¨me de dÃ©marrage est conseillÃ©.',
+    summary: 'Le démarrage difficile au froid ou après stationnement pointe vers une batterie fatiguée. Un test de charge et de système de démarrage est conseillé.',
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 11h40', price: '$145 estimÃ©', tags: ['Batterie', 'Test rapide', 'Disponible'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 14h00', price: '$160 estimÃ©', tags: ['Ã‰lectrique', 'Diagnostic', 'RÃ©servation express'] },
-      { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourdâ€™hui 16h15', price: '$130 estimÃ©', tags: ['Petit budget', 'Disponible', 'Client rÃ©gulier'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 11h40', price: '$145 estimé', tags: ['Batterie', 'Test rapide', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 14h00', price: '$160 estimé', tags: ['Électrique', 'Diagnostic', 'Réservation express'] },
+      { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourd’hui 16h15', price: '$130 estimé', tags: ['Petit budget', 'Disponible', 'Client régulier'] },
     ],
   },
   {
@@ -221,18 +221,18 @@ const CASE_LIBRARY = [
       { terms: ['valve'], weight: 4 },
     ],
     probableIssue: 'Fuite lente ou crevaison sur un pneu',
-    confidence: 'Ã‰levÃ©e',
-    urgency: 'Ã€ faire avant un long trajet',
+    confidence: 'Élevée',
+    urgency: 'À faire avant un long trajet',
     estimate: '$35 - $180',
     duration: '20 min - 50 min',
-    priceNote: 'RÃ©paration simple ou remplacement selon lâ€™usure',
-    durationNote: 'Permutation possible en mÃªme temps',
+    priceNote: 'Réparation simple ou remplacement selon l’usure',
+    durationNote: 'Permutation possible en même temps',
     searchCat: 'tire',
-    summary: 'Une perte dâ€™air rÃ©pÃ©tÃ©e indique souvent une crevaison lente ou une valve abÃ®mÃ©e. Le systÃ¨me recommande un contrÃ´le immÃ©diat pour Ã©viter lâ€™Ã©clatement.',
+    summary: 'Une perte d’air répétée indique souvent une crevaison lente ou une valve abîmée. Le système recommande un contrôle immédiat pour éviter l’éclatement.',
     matches: [
-      { name: 'DubÃ© Pneu et MÃ©can.', rating: '4.3', distance: '2.1 km', eta: 'Aujourdâ€™hui 12h15', price: '$49 estimÃ©', tags: ['Pneus', 'RÃ©paration rapide', 'Stock hiver'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h20', price: '$65 estimÃ©', tags: ['Pneus', 'Inspection incluse', 'Disponible'] },
-      { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourdâ€™hui 17h00', price: '$55 estimÃ©', tags: ['Petit budget', 'Disponible', 'Sans rendez-vous'] },
+      { name: 'Dubé Pneu et Mécan.', rating: '4.3', distance: '2.1 km', eta: 'Aujourd’hui 12h15', price: '$49 estimé', tags: ['Pneus', 'Réparation rapide', 'Stock hiver'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h20', price: '$65 estimé', tags: ['Pneus', 'Inspection incluse', 'Disponible'] },
+      { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourd’hui 17h00', price: '$55 estimé', tags: ['Petit budget', 'Disponible', 'Sans rendez-vous'] },
     ],
   },
   {
@@ -250,19 +250,19 @@ const CASE_LIBRARY = [
       { terms: ['ventilateur'], weight: 3 },
       { terms: ['thermostat'], weight: 3 },
     ],
-    probableIssue: 'Surchauffe liÃ©e au liquide de refroidissement',
+    probableIssue: 'Surchauffe liée au liquide de refroidissement',
     confidence: 'Moyenne',
-    urgency: 'Urgent si lâ€™aiguille monte vite',
+    urgency: 'Urgent si l’aiguille monte vite',
     estimate: '$95 - $420',
     duration: '45 min - 2 h',
-    priceNote: 'ContrÃ´le circuit, fuite, thermostat ou ventilateur',
-    durationNote: 'DÃ©pend de la piÃ¨ce en cause',
+    priceNote: 'Contrôle circuit, fuite, thermostat ou ventilateur',
+    durationNote: 'Dépend de la pièce en cause',
     searchCat: 'mechanic',
-    summary: 'Le moteur qui chauffe en circulation lente peut signaler un manque de liquide, un ventilateur dÃ©fectueux ou un thermostat bloquÃ©. Ã‰vite de rouler longtemps avant inspection.',
+    summary: 'Le moteur qui chauffe en circulation lente peut signaler un manque de liquide, un ventilateur défectueux ou un thermostat bloqué. Évite de rouler longtemps avant inspection.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 13h45', price: '$120 estimÃ©', tags: ['Refroidissement', 'Diagnostic', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 15h30', price: '$140 estimÃ©', tags: ['Moteur', 'ContrÃ´le complet', 'Aujourdâ€™hui'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h00', price: '$110 estimÃ©', tags: ['Diagnostic', 'TrÃ¨s proche', 'Fiable'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 13h45', price: '$120 estimé', tags: ['Refroidissement', 'Diagnostic', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 15h30', price: '$140 estimé', tags: ['Moteur', 'Contrôle complet', 'Aujourd’hui'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h00', price: '$110 estimé', tags: ['Diagnostic', 'Très proche', 'Fiable'] },
     ],
   },
   {
@@ -277,25 +277,25 @@ const CASE_LIBRARY = [
       { terms: ['voyant'], weight: 3 },
       { terms: ['diagnostic'], weight: 2 },
     ],
-    probableIssue: 'Voyant moteur Ã  faire diagnostiquer',
+    probableIssue: 'Voyant moteur à faire diagnostiquer',
     confidence: 'Moyenne',
-    urgency: 'Ã€ vÃ©rifier bientÃ´t',
-    estimate: 'Lecture de codes et diagnostic Ã©lectronique',
-    duration: 'Souvent en moins dâ€™une heure',
-    priceNote: 'Le voyant moteur peut venir dâ€™un capteur, dâ€™un problÃ¨me dâ€™allumage, dâ€™Ã©missions ou dâ€™un dÃ©faut plus sÃ©rieux.',
-    durationNote: 'Si le voyant clignote ou si lâ€™auto roule trÃ¨s mal, arrÃªtez-vous dÃ¨s que possible.',
+    urgency: 'À vérifier bientôt',
+    estimate: 'Lecture de codes et diagnostic électronique',
+    duration: 'Souvent en moins d’une heure',
+    priceNote: 'Le voyant moteur peut venir d’un capteur, d’un problème d’allumage, d’émissions ou d’un défaut plus sérieux.',
+    durationNote: 'Si le voyant clignote ou si l’auto roule très mal, arrêtez-vous dès que possible.',
     searchCat: 'mechanic',
-    summary: 'Le voyant moteur ne dit pas exactement quoi changer, mais il indique quâ€™un diagnostic Ã©lectronique est nÃ©cessaire pour lire le code et Ã©viter de remplacer des piÃ¨ces au hasard.',
-    guidanceTitle: 'Bon rÃ©flexe',
+    summary: 'Le voyant moteur ne dit pas exactement quoi changer, mais il indique qu’un diagnostic électronique est nécessaire pour lire le code et éviter de remplacer des pièces au hasard.',
+    guidanceTitle: 'Bon réflexe',
     guidanceItems: [
       'Si le voyant est fixe, prenez rendez-vous rapidement pour une lecture de codes.',
-      'Sâ€™il clignote, limitez la conduite et faites vÃ©rifier lâ€™auto dÃ¨s que possible.',
-      'Notez si lâ€™auto tremble, manque de puissance ou consomme plus que dâ€™habitude.',
-      'Demandez simplement: voyant moteur allumÃ©, jâ€™ai besoin dâ€™un scan et dâ€™un diagnostic.',
+      'S’il clignote, limitez la conduite et faites vérifier l’auto dès que possible.',
+      'Notez si l’auto tremble, manque de puissance ou consomme plus que d’habitude.',
+      'Demandez simplement: voyant moteur allumé, j’ai besoin d’un scan et d’un diagnostic.',
     ],
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 14h10', price: 'Scan moteur', tags: ['Diagnostic', 'Ã‰lectronique', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 15h45', price: 'Lecture codes', tags: ['Moteur', 'Rapide', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 14h10', price: 'Scan moteur', tags: ['Diagnostic', 'Électronique', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 15h45', price: 'Lecture codes', tags: ['Moteur', 'Rapide', 'Proche'] },
       { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h20', price: 'Diagnostic complet', tags: ['Check engine', 'Fiable', 'Inspection'] },
     ],
   },
@@ -313,24 +313,24 @@ const CASE_LIBRARY = [
       { terms: ['froid'], weight: 3 },
     ],
     probableIssue: 'Climatisation faible ou non fonctionnelle',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ planifier selon le confort',
-    estimate: 'ContrÃ´le gaz, compresseur ou fuite',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À planifier selon le confort',
+    estimate: 'Contrôle gaz, compresseur ou fuite',
     duration: 'Diagnostic souvent rapide',
-    priceNote: 'Le problÃ¨me peut venir dâ€™un manque de gaz, dâ€™une fuite, du compresseur ou dâ€™un souci Ã©lectrique.',
-    durationNote: 'Un atelier peut dâ€™abord contrÃ´ler la pression et confirmer si une recharge suffit ou non.',
+    priceNote: 'Le problème peut venir d’un manque de gaz, d’une fuite, du compresseur ou d’un souci électrique.',
+    durationNote: 'Un atelier peut d’abord contrôler la pression et confirmer si une recharge suffit ou non.',
     searchCat: 'mechanic',
-    summary: 'Si lâ€™air ne devient plus froid, il faut vÃ©rifier le niveau de rÃ©frigÃ©rant et le circuit de climatisation avant de faire une recharge au hasard.',
+    summary: 'Si l’air ne devient plus froid, il faut vérifier le niveau de réfrigérant et le circuit de climatisation avant de faire une recharge au hasard.',
     guidanceTitle: 'Ce que vous pouvez dire au garage',
     guidanceItems: [
       'Ma clim ne refroidit plus ou souffle chaud.',
-      'Je veux vÃ©rifier sâ€™il manque du gaz ou sâ€™il y a une fuite.',
-      'Si possible, faites un contrÃ´le pression + compresseur.',
+      'Je veux vérifier s’il manque du gaz ou s’il y a une fuite.',
+      'Si possible, faites un contrôle pression + compresseur.',
     ],
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 16h10', price: 'ContrÃ´le clim', tags: ['Climatisation', 'Diagnostic', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 16h10', price: 'Contrôle clim', tags: ['Climatisation', 'Diagnostic', 'Disponible'] },
       { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 10h00', price: 'Recharge / test', tags: ['A/C', 'Inspection', 'Fiable'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 11h15', price: 'Diagnostic clim', tags: ['Compresseur', 'Circuit', 'Avis Ã©levÃ©s'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 11h15', price: 'Diagnostic clim', tags: ['Compresseur', 'Circuit', 'Avis élevés'] },
     ],
   },
   {
@@ -347,19 +347,19 @@ const CASE_LIBRARY = [
       { terms: ['train avant'], weight: 6 },
       { terms: ['cognement'], weight: 6 },
     ],
-    probableIssue: 'Suspension ou train avant Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ vÃ©rifier rapidement',
+    probableIssue: 'Suspension ou train avant à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À vérifier rapidement',
     estimate: '$120 - $650',
-    duration: '1 h Ã  3 h selon la piÃ¨ce',
-    priceNote: 'Le bruit peut venir dâ€™un amortisseur, dâ€™une biellette, dâ€™un silentbloc ou dâ€™une piÃ¨ce du train avant.',
-    durationNote: 'Le diagnostic sert Ã  trouver la piÃ¨ce prÃ©cise avant remplacement.',
+    duration: '1 h à 3 h selon la pièce',
+    priceNote: 'Le bruit peut venir d’un amortisseur, d’une biellette, d’un silentbloc ou d’une pièce du train avant.',
+    durationNote: 'Le diagnostic sert à trouver la pièce précise avant remplacement.',
     searchCat: 'mechanic',
-    summary: 'Un bruit sur les bosses ou en tournant indique souvent une piÃ¨ce de suspension ou de direction fatiguÃ©e. Il vaut mieux la faire inspecter avant que lâ€™usure ne sâ€™aggrave.',
+    summary: 'Un bruit sur les bosses ou en tournant indique souvent une pièce de suspension ou de direction fatiguée. Il vaut mieux la faire inspecter avant que l’usure ne s’aggrave.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 13h50', price: '$145 diagnostic', tags: ['Suspension', 'Train avant', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 16h20', price: '$160 inspection', tags: ['Direction', 'Biellettes', 'Fiable'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h40', price: '$130 contrÃ´le', tags: ['Suspension', 'Rapide', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 13h50', price: '$145 diagnostic', tags: ['Suspension', 'Train avant', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 16h20', price: '$160 inspection', tags: ['Direction', 'Biellettes', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h40', price: '$130 contrôle', tags: ['Suspension', 'Rapide', 'Proche'] },
     ],
   },
   {
@@ -374,19 +374,19 @@ const CASE_LIBRARY = [
       { terms: ['autoroute'], weight: 3 },
       { terms: ['tremble'], weight: 3 },
     ],
-    probableIssue: 'Vibration au volant Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ planifier rapidement',
+    probableIssue: 'Vibration au volant à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À planifier rapidement',
     estimate: '$60 - $240',
-    duration: '30 min Ã  2 h',
-    priceNote: 'La cause frÃ©quente est un pneu mal Ã©quilibrÃ©, un problÃ¨me dâ€™alignement ou une usure de direction/suspension.',
-    durationNote: 'Le garage peut commencer par Ã©quilibrage et inspection du train roulant.',
+    duration: '30 min à 2 h',
+    priceNote: 'La cause fréquente est un pneu mal équilibré, un problème d’alignement ou une usure de direction/suspension.',
+    durationNote: 'Le garage peut commencer par équilibrage et inspection du train roulant.',
     searchCat: 'mechanic',
-    summary: 'Un volant qui vibre indique souvent un souci de pneus, dâ€™Ã©quilibrage ou de train avant. Ce nâ€™est pas Ã  ignorer si la vibration augmente avec la vitesse.',
+    summary: 'Un volant qui vibre indique souvent un souci de pneus, d’équilibrage ou de train avant. Ce n’est pas à ignorer si la vibration augmente avec la vitesse.',
     matches: [
-      { name: 'DubÃ© Pneu et MÃ©can.', rating: '4.3', distance: '2.1 km', eta: 'Aujourdâ€™hui 12h40', price: 'Ã‰quilibrage / alignement', tags: ['Pneus', 'Direction', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 15h00', price: 'ContrÃ´le volant', tags: ['Train avant', 'Inspection', 'Proche'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 10h10', price: 'Diagnostic chÃ¢ssis', tags: ['Suspension', 'Direction', 'Fiable'] },
+      { name: 'Dubé Pneu et Mécan.', rating: '4.3', distance: '2.1 km', eta: 'Aujourd’hui 12h40', price: 'Équilibrage / alignement', tags: ['Pneus', 'Direction', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 15h00', price: 'Contrôle volant', tags: ['Train avant', 'Inspection', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 10h10', price: 'Diagnostic châssis', tags: ['Suspension', 'Direction', 'Fiable'] },
     ],
   },
   {
@@ -423,9 +423,9 @@ const CASE_LIBRARY = [
       'Demandez un controle du roulement, du moyeu et du pneu pour confirmer la vraie source du bruit.',
     ],
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 14h20', price: 'Diagnostic roulement', tags: ['Train roulant', 'Bruit roue', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 16h00', price: 'Inspection roue / moyeu', tags: ['Roulement', 'Essai routier', 'Fiable'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h10', price: 'ContrÃ´le train roulant', tags: ['Roue', 'Diagnostic', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 14h20', price: 'Diagnostic roulement', tags: ['Train roulant', 'Bruit roue', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 16h00', price: 'Inspection roue / moyeu', tags: ['Roulement', 'Essai routier', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h10', price: 'Contrôle train roulant', tags: ['Roue', 'Diagnostic', 'Proche'] },
     ],
   },
   {
@@ -441,19 +441,19 @@ const CASE_LIBRARY = [
       { terms: ['jerk'], weight: 5 },
       { terms: ['automatique'], weight: 3 },
     ],
-    probableIssue: 'Transmission ou boÃ®te de vitesses Ã  diagnostiquer',
+    probableIssue: 'Transmission ou boîte de vitesses à diagnostiquer',
     confidence: 'Moyenne',
-    urgency: 'Ã€ vÃ©rifier rapidement',
+    urgency: 'À vérifier rapidement',
     estimate: '$140 - $900+',
-    duration: 'Diagnostic nÃ©cessaire avant devis',
-    priceNote: 'La cause peut aller dâ€™un niveau dâ€™huile/transmission Ã  un problÃ¨me interne plus important.',
-    durationNote: 'Ne pas continuer Ã  rouler longtemps si les vitesses cognent fort ou ne passent plus correctement.',
+    duration: 'Diagnostic nécessaire avant devis',
+    priceNote: 'La cause peut aller d’un niveau d’huile/transmission à un problème interne plus important.',
+    durationNote: 'Ne pas continuer à rouler longtemps si les vitesses cognent fort ou ne passent plus correctement.',
     searchCat: 'mechanic',
-    summary: 'Une transmission qui patine, donne des coups ou passe mal les vitesses doit Ãªtre diagnostiquÃ©e rapidement pour Ã©viter des dommages plus coÃ»teux.',
+    summary: 'Une transmission qui patine, donne des coups ou passe mal les vitesses doit être diagnostiquée rapidement pour éviter des dommages plus coûteux.',
     matches: [
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 15h50', price: 'Diagnostic transmission', tags: ['BoÃ®te', 'Inspection', 'Fiable'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 09h20', price: 'Lecture et essai', tags: ['Transmission', 'Avis Ã©levÃ©s', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 10h10', price: 'ContrÃ´le vitesses', tags: ['Automatique', 'Rapide', 'Proche'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 15h50', price: 'Diagnostic transmission', tags: ['Boîte', 'Inspection', 'Fiable'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 09h20', price: 'Lecture et essai', tags: ['Transmission', 'Avis élevés', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 10h10', price: 'Contrôle vitesses', tags: ['Automatique', 'Rapide', 'Proche'] },
     ],
   },
   {
@@ -469,19 +469,19 @@ const CASE_LIBRARY = [
       { terms: ['sort'], weight: 2 },
       { terms: ['odeur'], weight: 2 },
     ],
-    probableIssue: 'FumÃ©e ou problÃ¨me dâ€™Ã©chappement Ã  vÃ©rifier',
+    probableIssue: 'Fumée ou problème d’échappement à vérifier',
     confidence: 'Moyenne',
-    urgency: 'Ã€ vÃ©rifier rapidement',
-    estimate: 'Diagnostic moteur / Ã©chappement',
+    urgency: 'À vérifier rapidement',
+    estimate: 'Diagnostic moteur / échappement',
     duration: 'Variable selon la cause',
-    priceNote: 'La couleur de la fumÃ©e aide: blanche, noire ou bleue ne pointent pas vers les mÃªmes causes.',
-    durationNote: 'Si la fumÃ©e est importante ou accompagnÃ©e dâ€™une perte de puissance, Ã©vitez de rouler inutilement.',
+    priceNote: 'La couleur de la fumée aide: blanche, noire ou bleue ne pointent pas vers les mêmes causes.',
+    durationNote: 'Si la fumée est importante ou accompagnée d’une perte de puissance, évitez de rouler inutilement.',
     searchCat: 'mechanic',
-    summary: 'La fumÃ©e Ã  lâ€™Ã©chappement peut indiquer un problÃ¨me de combustion, dâ€™huile ou de refroidissement. Il faut surtout Ã©viter de continuer Ã  rouler si le symptÃ´me est marquÃ©.',
+    summary: 'La fumée à l’échappement peut indiquer un problème de combustion, d’huile ou de refroidissement. Il faut surtout éviter de continuer à rouler si le symptôme est marqué.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 14h50', price: 'Diagnostic moteur', tags: ['FumÃ©e', 'Ã‰chappement', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 17h10', price: 'Inspection complÃ¨te', tags: ['Moteur', 'Combustion', 'Fiable'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h30', price: 'ContrÃ´le Ã©chappement', tags: ['Ã‰chappement', 'Rapide', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 14h50', price: 'Diagnostic moteur', tags: ['Fumée', 'Échappement', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 17h10', price: 'Inspection complète', tags: ['Moteur', 'Combustion', 'Fiable'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Demain 09h30', price: 'Contrôle échappement', tags: ['Échappement', 'Rapide', 'Proche'] },
     ],
   },
   {
@@ -495,19 +495,19 @@ const CASE_LIBRARY = [
       { terms: ['huile'], weight: 3 },
       { terms: ['leak'], weight: 3 },
     ],
-    probableIssue: 'Fuite dâ€™huile moteur Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ vÃ©rifier rapidement',
+    probableIssue: 'Fuite d’huile moteur à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À vérifier rapidement',
     estimate: '$120 - $550',
-    duration: 'Selon lâ€™origine de la fuite',
-    priceNote: 'La fuite peut venir dâ€™un joint, dâ€™un bouchon, du carter ou du filtre.',
-    durationNote: 'Il faut dâ€™abord localiser lâ€™origine exacte avant devis final.',
+    duration: 'Selon l’origine de la fuite',
+    priceNote: 'La fuite peut venir d’un joint, d’un bouchon, du carter ou du filtre.',
+    durationNote: 'Il faut d’abord localiser l’origine exacte avant devis final.',
     searchCat: 'mechanic',
-    summary: 'Une fuite dâ€™huile ne doit pas Ãªtre ignorÃ©e, surtout si la tache grandit ou si le niveau baisse. Le mieux est de faire localiser la fuite avant quâ€™elle nâ€™abÃ®me le moteur.',
+    summary: 'Une fuite d’huile ne doit pas être ignorée, surtout si la tache grandit ou si le niveau baisse. Le mieux est de faire localiser la fuite avant qu’elle n’abîme le moteur.',
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h20', price: 'Recherche de fuite', tags: ['Huile', 'Diagnostic', 'Disponible'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 16h30', price: 'Inspection moteur', tags: ['Fuite', 'Joint', 'Fiable'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h50', price: 'ContrÃ´le complet', tags: ['Huile', 'RÃ©paration', 'Proche'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h20', price: 'Recherche de fuite', tags: ['Huile', 'Diagnostic', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 16h30', price: 'Inspection moteur', tags: ['Fuite', 'Joint', 'Fiable'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h50', price: 'Contrôle complet', tags: ['Huile', 'Réparation', 'Proche'] },
     ],
   },
   {
@@ -523,17 +523,17 @@ const CASE_LIBRARY = [
       { terms: ['rose'], weight: 3 },
     ],
     probableIssue: 'Fuite de liquide de refroidissement',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ vÃ©rifier vite',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À vérifier vite',
     estimate: '$110 - $480',
     duration: 'Variable selon la fuite',
-    priceNote: 'La fuite peut venir dâ€™une durite, du radiateur, du bouchon ou dâ€™une autre piÃ¨ce du circuit.',
-    durationNote: 'Ã‰vitez de rouler si le niveau descend vite ou si la tempÃ©rature monte.',
+    priceNote: 'La fuite peut venir d’une durite, du radiateur, du bouchon ou d’une autre pièce du circuit.',
+    durationNote: 'Évitez de rouler si le niveau descend vite ou si la température monte.',
     searchCat: 'mechanic',
-    summary: 'Une fuite de liquide de refroidissement peut mener Ã  une surchauffe. Il faut contrÃ´ler le circuit avant de continuer Ã  rouler normalement.',
+    summary: 'Une fuite de liquide de refroidissement peut mener à une surchauffe. Il faut contrôler le circuit avant de continuer à rouler normalement.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 13h30', price: 'Test circuit', tags: ['Radiateur', 'Fuite', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 15h30', price: 'Inspection liquide', tags: ['Refroidissement', 'Rapide', 'Proche'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 13h30', price: 'Test circuit', tags: ['Radiateur', 'Fuite', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 15h30', price: 'Inspection liquide', tags: ['Refroidissement', 'Rapide', 'Proche'] },
       { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 10h20', price: 'Diagnostic fuite', tags: ['Coolant', 'Fiable', 'Inspection'] },
     ],
   },
@@ -550,19 +550,19 @@ const CASE_LIBRARY = [
       { terms: ['switch'], weight: 4 },
       { terms: ['regulateur'], weight: 5 },
     ],
-    probableIssue: 'Vitre Ã©lectrique ou mÃ©canisme de fenÃªtre Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ planifier rapidement',
-    estimate: 'Moteur, interrupteur ou rÃ©gulateur',
-    duration: 'Souvent rapide Ã  diagnostiquer',
-    priceNote: 'Le problÃ¨me peut venir du bouton, du moteur de vitre ou du mÃ©canisme intÃ©rieur.',
-    durationNote: 'Si la vitre reste ouverte, il vaut mieux faire rÃ©parer rapidement pour Ã©viter lâ€™eau et le vol.',
+    probableIssue: 'Vitre électrique ou mécanisme de fenêtre à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À planifier rapidement',
+    estimate: 'Moteur, interrupteur ou régulateur',
+    duration: 'Souvent rapide à diagnostiquer',
+    priceNote: 'Le problème peut venir du bouton, du moteur de vitre ou du mécanisme intérieur.',
+    durationNote: 'Si la vitre reste ouverte, il vaut mieux faire réparer rapidement pour éviter l’eau et le vol.',
     searchCat: 'mechanic',
-    summary: 'Une vitre qui ne monte plus ou ne descend plus est souvent liÃ©e au moteur, au bouton ou au rÃ©gulateur. Le diagnostic permet de cibler la piÃ¨ce exacte.',
+    summary: 'Une vitre qui ne monte plus ou ne descend plus est souvent liée au moteur, au bouton ou au régulateur. Le diagnostic permet de cibler la pièce exacte.',
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 16h10', price: 'ContrÃ´le vitre', tags: ['Ã‰lectrique', 'FenÃªtre', 'Disponible'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h15', price: 'Inspection mÃ©canisme', tags: ['Porte', 'RÃ©gulateur', 'Fiable'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 11h00', price: 'Diagnostic rapide', tags: ['Vitre', 'Switch', 'Avis Ã©levÃ©s'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 16h10', price: 'Contrôle vitre', tags: ['Électrique', 'Fenêtre', 'Disponible'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h15', price: 'Inspection mécanisme', tags: ['Porte', 'Régulateur', 'Fiable'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Demain 11h00', price: 'Diagnostic rapide', tags: ['Vitre', 'Switch', 'Avis élevés'] },
     ],
   },
   {
@@ -577,19 +577,19 @@ const CASE_LIBRARY = [
       { terms: ['ne marche pas'], weight: 4 },
       { terms: ['moteur', 'essuie'], weight: 6 },
     ],
-    probableIssue: 'Essuie-glace ou systÃ¨me dâ€™essuyage Ã  vÃ©rifier',
-    confidence: 'Moyenne Ã  Ã©levÃ©e',
-    urgency: 'Ã€ rÃ©gler vite si mauvais temps',
+    probableIssue: 'Essuie-glace ou système d’essuyage à vérifier',
+    confidence: 'Moyenne à élevée',
+    urgency: 'À régler vite si mauvais temps',
     estimate: 'Souvent balais, fusible ou moteur',
     duration: 'Souvent rapide',
-    priceNote: 'Parfois un simple remplacement de balais suffit, parfois il faut contrÃ´ler le moteur ou le fusible.',
-    durationNote: 'Câ€™est un point de sÃ©curitÃ©, surtout en pluie ou neige.',
+    priceNote: 'Parfois un simple remplacement de balais suffit, parfois il faut contrôler le moteur ou le fusible.',
+    durationNote: 'C’est un point de sécurité, surtout en pluie ou neige.',
     searchCat: 'mechanic',
-    summary: 'Si les essuie-glaces nettoient mal ou ne fonctionnent plus, il faut les faire vÃ©rifier rapidement pour garder une bonne visibilitÃ©.',
+    summary: 'Si les essuie-glaces nettoient mal ou ne fonctionnent plus, il faut les faire vérifier rapidement pour garder une bonne visibilité.',
     matches: [
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h50', price: 'ContrÃ´le essuie-glace', tags: ['SÃ©curitÃ©', 'Balais', 'Disponible'] },
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 15h40', price: 'Diagnostic rapide', tags: ['Moteur', 'Fusible', 'Fiable'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h40', price: 'Inspection visibilitÃ©', tags: ['Essuie-glace', 'Proche', 'Rapide'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h50', price: 'Contrôle essuie-glace', tags: ['Sécurité', 'Balais', 'Disponible'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 15h40', price: 'Diagnostic rapide', tags: ['Moteur', 'Fusible', 'Fiable'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Demain 09h40', price: 'Inspection visibilité', tags: ['Essuie-glace', 'Proche', 'Rapide'] },
     ],
   },
   {
@@ -603,45 +603,45 @@ const CASE_LIBRARY = [
       { terms: ['fuite', 'essence'], weight: 9 },
       { terms: ['sent', 'essence'], weight: 7 },
     ],
-    probableIssue: 'Odeur dâ€™essence ou fuite possible Ã  faire vÃ©rifier',
-    confidence: 'Ã‰levÃ©e',
+    probableIssue: 'Odeur d’essence ou fuite possible à faire vérifier',
+    confidence: 'Élevée',
     urgency: 'Urgent',
-    estimate: 'ContrÃ´le alimentation carburant',
-    duration: 'DÃ¨s que possible',
-    priceNote: 'Une odeur dâ€™essence peut indiquer une fuite ou un problÃ¨me du circuit dâ€™alimentation.',
-    durationNote: 'Ã‰vitez de continuer Ã  rouler ou de stationner dans un endroit fermÃ© sans contrÃ´le.',
+    estimate: 'Contrôle alimentation carburant',
+    duration: 'Dès que possible',
+    priceNote: 'Une odeur d’essence peut indiquer une fuite ou un problème du circuit d’alimentation.',
+    durationNote: 'Évitez de continuer à rouler ou de stationner dans un endroit fermé sans contrôle.',
     searchCat: 'mechanic',
-    summary: 'Une odeur dâ€™essence est un symptÃ´me Ã  prendre au sÃ©rieux. Le plus prudent est de limiter lâ€™usage du vÃ©hicule et de faire vÃ©rifier rapidement le circuit de carburant.',
+    summary: 'Une odeur d’essence est un symptôme à prendre au sérieux. Le plus prudent est de limiter l’usage du véhicule et de faire vérifier rapidement le circuit de carburant.',
     matches: [
-      { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 13h10', price: 'ContrÃ´le carburant', tags: ['Urgent', 'SÃ©curitÃ©', 'Disponible'] },
-      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 14h00', price: 'Inspection fuite', tags: ['Essence', 'Rapide', 'Proche'] },
-      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourdâ€™hui 16h10', price: 'Diagnostic complet', tags: ['Carburant', 'Fiable', 'Inspection'] },
+      { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 13h10', price: 'Contrôle carburant', tags: ['Urgent', 'Sécurité', 'Disponible'] },
+      { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 14h00', price: 'Inspection fuite', tags: ['Essence', 'Rapide', 'Proche'] },
+      { name: 'JA Automobile', rating: '4.8', distance: '3.2 km', eta: 'Aujourd’hui 16h10', price: 'Diagnostic complet', tags: ['Carburant', 'Fiable', 'Inspection'] },
     ],
   },
 ]
 
 const DEFAULT_CASE = {
   type: 'repair',
-  probableIssue: 'Inspection mÃ©canique gÃ©nÃ©rale recommandÃ©e',
+  probableIssue: 'Inspection mécanique générale recommandée',
   confidence: 'Moyenne',
-  urgency: 'Ã€ planifier selon le symptÃ´me',
+  urgency: 'À planifier selon le symptôme',
   estimate: '$85 - $220',
   duration: '30 min - 1 h',
-  priceNote: 'Diagnostic initial avant devis prÃ©cis',
-  durationNote: 'Le devis final dÃ©pendra du vÃ©hicule',
+  priceNote: 'Diagnostic initial avant devis précis',
+  durationNote: 'Le devis final dépendra du véhicule',
   searchCat: 'mechanic',
-  summary: 'Le symptÃ´me dÃ©crit nâ€™est pas assez prÃ©cis pour isoler une panne unique. FlashMat recommande un diagnostic rapide avec un garage disponible aujourdâ€™hui.',
+  summary: 'Le symptôme décrit n’est pas assez précis pour isoler une panne unique. FlashMat recommande un diagnostic rapide avec un garage disponible aujourd’hui.',
   matches: [
-    { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourdâ€™hui 13h50', price: '$95 estimÃ©', tags: ['Diagnostic', 'TrÃ¨s proche', 'Disponible'] },
-    { name: 'Garage MÃ©canique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourdâ€™hui 15h00', price: '$110 estimÃ©', tags: ['Diagnostic', 'Avis Ã©levÃ©s', 'RÃ©servation express'] },
-    { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourdâ€™hui 16h40', price: '$89 estimÃ©', tags: ['Petit budget', 'Disponible', 'MontrÃ©al'] },
+    { name: 'Garage Los Santos', rating: '4.8', distance: '0.8 km', eta: 'Aujourd’hui 13h50', price: '$95 estimé', tags: ['Diagnostic', 'Très proche', 'Disponible'] },
+    { name: 'Garage Mécanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd’hui 15h00', price: '$110 estimé', tags: ['Diagnostic', 'Avis élevés', 'Réservation express'] },
+    { name: 'Garage Communautaire Pointe', rating: '4.8', distance: '2.4 km', eta: 'Aujourd’hui 16h40', price: '$89 estimé', tags: ['Petit budget', 'Disponible', 'Montréal'] },
   ],
 }
 
 const OBD_CODE_PATTERNS = [
   {
     codes: ['p0300', 'p0301', 'p0302', 'p0303', 'p0304'],
-    probableIssue: 'RatÃ©s d allumage moteur a diagnostiquer',
+    probableIssue: 'Ratés d allumage moteur a diagnostiquer',
     confidence: 'Elevee',
     urgency: 'A verifier rapidement',
     estimate: 'Diagnostic allumage, bobines, bougies ou injection',
@@ -809,28 +809,28 @@ function detectCase(text) {
       terms: ['odeur', 'essence'],
       response: {
         ...DEFAULT_CASE,
-        probableIssue: 'Odeur dâ€™essence Ã  faire vÃ©rifier immÃ©diatement',
-        confidence: 'Ã‰levÃ©e',
+        probableIssue: 'Odeur d’essence à faire vérifier immédiatement',
+        confidence: 'Élevée',
         urgency: 'Urgent',
-        estimate: 'ContrÃ´le alimentation carburant',
-        duration: 'DÃ¨s que possible',
-        priceNote: 'Ã‰vitez de continuer Ã  rouler inutilement et faites contrÃ´ler le vÃ©hicule rapidement.',
-        durationNote: 'La sÃ©curitÃ© passe avant le devis final.',
-        summary: 'Une odeur dâ€™essence peut indiquer une fuite ou un problÃ¨me du circuit de carburant. Le mieux est de faire vÃ©rifier le vÃ©hicule rapidement.',
+        estimate: 'Contrôle alimentation carburant',
+        duration: 'Dès que possible',
+        priceNote: 'Évitez de continuer à rouler inutilement et faites contrôler le véhicule rapidement.',
+        durationNote: 'La sécurité passe avant le devis final.',
+        summary: 'Une odeur d’essence peut indiquer une fuite ou un problème du circuit de carburant. Le mieux est de faire vérifier le véhicule rapidement.',
       },
     },
     {
       terms: ['voyant', 'clignote'],
       response: {
         ...DEFAULT_CASE,
-        probableIssue: 'Voyant moteur clignotant Ã  faire vÃ©rifier rapidement',
-        confidence: 'Ã‰levÃ©e',
+        probableIssue: 'Voyant moteur clignotant à faire vérifier rapidement',
+        confidence: 'Élevée',
         urgency: 'Urgent',
-        estimate: 'Diagnostic Ã©lectronique immÃ©diat',
-        duration: 'DÃ¨s que possible',
-        priceNote: 'Un voyant moteur clignotant peut signaler un problÃ¨me plus sÃ©rieux quâ€™un voyant fixe.',
-        durationNote: 'Limitez la conduite jusquâ€™au diagnostic.',
-        summary: 'Si le voyant clignote, mieux vaut Ã©viter de rouler longtemps et demander un diagnostic dÃ¨s que possible.',
+        estimate: 'Diagnostic électronique immédiat',
+        duration: 'Dès que possible',
+        priceNote: 'Un voyant moteur clignotant peut signaler un problème plus sérieux qu’un voyant fixe.',
+        durationNote: 'Limitez la conduite jusqu’au diagnostic.',
+        summary: 'Si le voyant clignote, mieux vaut éviter de rouler longtemps et demander un diagnostic dès que possible.',
       },
     },
   ]
@@ -864,10 +864,10 @@ function detectCase(text) {
   if (nextMatch && bestMatch.score - nextMatch.score <= 1) {
     return {
       ...DEFAULT_CASE,
-      probableIssue: 'Plusieurs causes possibles Ã  vÃ©rifier',
-      confidence: 'Faible Ã  moyenne',
-      urgency: 'Diagnostic conseillÃ© avant rÃ©paration',
-      summary: 'Les symptÃ´mes dÃ©crits pointent vers plusieurs pistes possibles. FlashMat recommande un diagnostic mÃ©canique pour confirmer la vraie cause avant de rÃ©server une rÃ©paration ciblÃ©e.',
+      probableIssue: 'Plusieurs causes possibles à vérifier',
+      confidence: 'Faible à moyenne',
+      urgency: 'Diagnostic conseillé avant réparation',
+      summary: 'Les symptômes décrits pointent vers plusieurs pistes possibles. FlashMat recommande un diagnostic mécanique pour confirmer la vraie cause avant de réserver une réparation ciblée.',
     }
   }
 
@@ -1210,8 +1210,8 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const [diagnosis, setDiagnosis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasFreshResult, setHasFreshResult] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('DÃ©crivez le symptÃ´me puis lancez le diagnostic.')
-  const ctaLabel = user && profile?.role === 'client' ? 'RÃ©server en 10 sec' : 'Se connecter et rÃ©server'
+  const [statusMessage, setStatusMessage] = useState('Décrivez le symptôme puis lancez le diagnostic.')
+  const ctaLabel = user && profile?.role === 'client' ? 'Réserver en 10 sec' : 'Se connecter et réserver'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
     ? 'Conseil entretien FlashMat'
@@ -1237,7 +1237,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
   function analyze(nextDraft) {
     const value = (nextDraft || draft).trim()
     if (!value) {
-      setStatusMessage('DÃ©crivez un symptÃ´me pour lancer le diagnostic.')
+      setStatusMessage('Décrivez un symptôme pour lancer le diagnostic.')
       return
     }
 
@@ -1247,7 +1247,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
     setDraft(value)
     setIsAnalyzing(true)
     setHasFreshResult(false)
-    setStatusMessage('Analyse du symptÃ´me en cours...')
+    setStatusMessage('Analyse du symptôme en cours...')
 
     const analysisId = Date.now()
     latestAnalysisRef.current = analysisId
@@ -1255,12 +1255,12 @@ export default function VehicleDoctor({ compact = false, userName }) {
     analyzeTimeoutRef.current = window.setTimeout(async () => {
       const localDiagnosis = detectCaseStable(value)
       let finalDiagnosis = localDiagnosis
-      let finalStatus = 'Diagnostic prÃªt. Consultez le rÃ©sultat et les garages suggÃ©rÃ©s.'
+      let finalStatus = 'Diagnostic prêt. Consultez le résultat et les garages suggérés.'
 
       setDiagnosis(localDiagnosis)
 
       if (shouldTryAiDiagnosis(value, localDiagnosis)) {
-        setStatusMessage('Analyse approfondie du symptï¿½me en cours...')
+        setStatusMessage('Analyse approfondie du sympt�me en cours...')
 
         try {
           const aiDiagnosis = await fetchAnthropicDiagnosis(value, localDiagnosis)
@@ -1268,13 +1268,13 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
           if (aiDiagnosis) {
             finalDiagnosis = aiDiagnosis
-            finalStatus = 'Diagnostic prï¿½t. Vï¿½rifiez la synthï¿½se et les actions conseillï¿½es.'
+            finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
           } else {
-            finalStatus = 'Diagnostic prï¿½t. Vï¿½rifiez la synthï¿½se et les actions conseillï¿½es.'
+            finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
           }
         } catch {
           if (latestAnalysisRef.current !== analysisId) return
-          finalStatus = 'Diagnostic prï¿½t. Vï¿½rifiez la synthï¿½se et les actions conseillï¿½es.'
+          finalStatus = 'Diagnostic pr�t. V�rifiez la synth�se et les actions conseill�es.'
         }
       }
 
@@ -1304,8 +1304,8 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <div className={styles.eyebrow}>FlashMat Diagnostic</div>
               <h2 className={styles.compactTitle}>Votre Docteur Automobile</h2>
               <p className={styles.compactSub}>
-                DÃ©crivez le symptÃ´me, ajoutez bientÃ´t une photo ou un audio, et FlashMat propose un problÃ¨me probable,
-                un prix estimÃ©, une durÃ©e et les garages disponibles les plus pertinents.
+                Décrivez le symptôme, ajoutez bientôt une photo ou un audio, et FlashMat propose un problème probable,
+                un prix estimé, une durée et les garages disponibles les plus pertinents.
               </p>
             </div>
             <div className={styles.confidence}>Bonjour {userName || 'client'}</div>
@@ -1321,8 +1321,8 @@ export default function VehicleDoctor({ compact = false, userName }) {
                   Le docteur <span>pour voiture</span>
                 </h2>
                 <p className={styles.subtitle}>
-                  DÃ©crivez votre problÃ¨me, envoyez bientÃ´t une photo ou une note vocale, puis laissez FlashMat
-                  estimer la panne, le prix, le temps de rÃ©paration et vous connecter au meilleur mÃ©canicien dispo.
+                  Décrivez votre problème, envoyez bientôt une photo ou une note vocale, puis laissez FlashMat
+                  estimer la panne, le prix, le temps de réparation et vous connecter au meilleur mécanicien dispo.
                 </p>
               </>
             ) : null}
@@ -1345,15 +1345,15 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 className={styles.textarea}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ex: ma voiture fait un bruit quand je freine, lâ€™auto vibre et une lumiÃ¨re sâ€™allume au tableau de bord."
+                placeholder="Ex: ma voiture fait un bruit quand je freine, l’auto vibre et une lumière s’allume au tableau de bord."
               />
               <div className={styles.helper}>
                 <span>
-                  {inputMode === 'text' && 'DÃ©crivez les bruits, vibrations, odeurs ou voyants.'}
-                  {inputMode === 'photo' && 'Le mode photo peut dÃ©jÃ  lancer le diagnostic aprÃ¨s description du symptÃ´me.'}
-                  {inputMode === 'audio' && 'Le mode audio est prÃ©vu dans le flow: la note vocale alimentera le diagnostic.'}
+                  {inputMode === 'text' && 'Décrivez les bruits, vibrations, odeurs ou voyants.'}
+                  {inputMode === 'photo' && 'Le mode photo peut déjà lancer le diagnostic après description du symptôme.'}
+                  {inputMode === 'audio' && 'Le mode audio est prévu dans le flow: la note vocale alimentera le diagnostic.'}
                 </span>
-                <strong>Montrï¿½al ï¿½ estimation + matching</strong>
+                <strong>Montr�al � estimation + matching</strong>
               </div>
             </div>
 
@@ -1395,24 +1395,24 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <div className={styles.statCard}>
                 <div className={styles.statLabel}>Diagnostic auto</div>
                 <div className={styles.statValue}>1 min</div>
-                <div className={styles.statSub}>RÃ©sultat clair avant de rÃ©server</div>
+                <div className={styles.statSub}>Résultat clair avant de réserver</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statLabel}>Prix en temps rÃ©el</div>
-                <div className={styles.statValue}>{diagnosis?.estimate || 'â€”'}</div>
+                <div className={styles.statLabel}>Prix en temps réel</div>
+                <div className={styles.statValue}>{diagnosis?.estimate || '—'}</div>
                 <div className={styles.statSub}>
                   {diagnosis?.type === 'maintenance'
-                    ? 'RepÃ¨re simple pour savoir quand planifier le service'
+                    ? 'Repère simple pour savoir quand planifier le service'
                     : diagnosis
-                      ? 'Fourchette basÃ©e sur le problÃ¨me probable'
+                      ? 'Fourchette basée sur le problème probable'
                       : 'Lancez le diagnostic pour une estimation'}
                 </div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statLabel}>RÃ©servation rapide</div>
-                <div className={styles.statValue}>{diagnosis ? '3 garages' : 'â€”'}</div>
+                <div className={styles.statLabel}>Réservation rapide</div>
+                <div className={styles.statValue}>{diagnosis ? '3 garages' : '—'}</div>
                 <div className={styles.statSub}>
-                  {diagnosis ? 'Proches, disponibles, dÃ©jÃ  filtrÃ©s' : 'Des suggestions apparaÃ®tront aprÃ¨s analyse'}
+                  {diagnosis ? 'Proches, disponibles, déjà filtrés' : 'Des suggestions apparaîtront après analyse'}
                 </div>
               </div>
             </div>
@@ -1427,7 +1427,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <div>
                 <div className={styles.resultEyebrow}>{resultEyebrowLabel}</div>
                 <h3 className={styles.resultTitle}>
-                  {diagnosis ? diagnosis.probableIssue : 'PrÃªt Ã  analyser votre vÃ©hicule'}
+                  {diagnosis ? diagnosis.probableIssue : 'Prêt à analyser votre véhicule'}
                 </h3>
               </div>
               <div className={styles.confidence}>
@@ -1437,7 +1437,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <div className={styles.statusRow}>
               <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
-                {isAnalyzing ? 'Analyse...' : 'Diagnostic prÃªt'}
+                {isAnalyzing ? 'Analyse...' : 'Diagnostic prêt'}
               </span>
               <span className={styles.statusText}>{statusMessage}</span>
             </div>
@@ -1446,7 +1446,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
             <p className={styles.summary}>
               {diagnosis
                 ? diagnosis.summary
-                : 'DÃ©crivez un bruit, une vibration, un voyant ou un comportement Ã©trange, puis cliquez sur le bouton pour obtenir une estimation.'}
+                : 'Décrivez un bruit, une vibration, un voyant ou un comportement étrange, puis cliquez sur le bouton pour obtenir une estimation.'}
             </p>
 
             {diagnosis ? (
@@ -1454,30 +1454,30 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 <span className={`${styles.badge} ${diagnosis.urgency.toLowerCase().includes('urgent') || diagnosis.urgency.toLowerCase().includes('rapidement') ? styles.badgeWarn : styles.badgeSafe}`}>
                   {diagnosis.urgency}
                 </span>
-                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching Ã  MontrÃ©al</span>
+                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching à Montréal</span>
               </div>
             ) : null}
 
             <div className={styles.metricGrid}>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Quand le faire' : 'Prix estimÃ©'}</div>
-                <div className={styles.metricValue}>{diagnosis?.estimate || 'â€”'}</div>
+                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Quand le faire' : 'Prix estimé'}</div>
+                <div className={styles.metricValue}>{diagnosis?.estimate || '—'}</div>
                 <div className={styles.metricSub}>
-                  {diagnosis?.priceNote || 'Lâ€™estimation apparaÃ®tra aprÃ¨s lâ€™analyse'}
+                  {diagnosis?.priceNote || 'L’estimation apparaîtra après l’analyse'}
                 </div>
               </div>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'RepÃ¨re dans le temps' : 'Temps de rÃ©paration'}</div>
-                <div className={styles.metricValue}>{diagnosis?.duration || 'â€”'}</div>
+                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Repère dans le temps' : 'Temps de réparation'}</div>
+                <div className={styles.metricValue}>{diagnosis?.duration || '—'}</div>
                 <div className={styles.metricSub}>
-                  {diagnosis?.durationNote || 'La durÃ©e estimÃ©e apparaÃ®tra aprÃ¨s lâ€™analyse'}
+                  {diagnosis?.durationNote || 'La durée estimée apparaîtra après l’analyse'}
                 </div>
               </div>
             </div>
 
             {diagnosis?.guidanceItems?.length ? (
               <div className={styles.guidanceCard}>
-                <div className={styles.guidanceTitle}>{diagnosis.guidanceTitle || 'Ã€ retenir'}</div>
+                <div className={styles.guidanceTitle}>{diagnosis.guidanceTitle || 'À retenir'}</div>
                 <div className={styles.guidanceList}>
                   {diagnosis.guidanceItems.map((item) => (
                     <div key={item} className={styles.guidanceItem}>{item}</div>
@@ -1488,7 +1488,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <div className={styles.matchSection}>
               <div className={styles.matchHeader}>
-                <h4 className={styles.matchTitle}>3 garages suggÃ©rÃ©s aujourdâ€™hui</h4>
+                <h4 className={styles.matchTitle}>3 garages suggérés aujourd’hui</h4>
                 <span className={styles.matchHint}>Proches + compatibles + dispo</span>
               </div>
 
@@ -1499,7 +1499,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                       <div>
                         <div className={styles.matchName}>{match.name}</div>
                         <div className={styles.matchMeta}>
-                          â­ {match.rating} Â· {match.distance} Â· {match.eta}
+                          ⭐ {match.rating} · {match.distance} · {match.eta}
                         </div>
                       </div>
                       <div className={styles.matchPrice}>{match.price}</div>
@@ -1515,7 +1515,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                         className={styles.reserveBtn}
                         onClick={() => openMatchingSearch(effectiveSearchCat)}
                       >
-                        RÃ©server
+                        Réserver
                       </button>
                     </div>
                   </div>
