@@ -313,12 +313,10 @@ export default function NavBar({ activePage }) {
             <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 14 : 15 }}>
               <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
               <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 15 : 16 }}>
-                {user ? `Connecté en tant que ${displayName}` : 'Connectez-vous pour réserver, diagnostiquer et suivre vos services'}
+                {user ? displayName : 'Connectez-vous'}
               </div>
               <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 11.5 : 12 }}>
-                {user
-                  ? (isProvider ? 'Accédez à votre espace fournisseur et à vos outils FlashMat.' : 'Retrouvez vos véhicules, réservations et diagnostics en un endroit.')
-                  : 'Le compte FlashMat vous donne accès au Docteur Automobile, aux réservations et à votre espace personnel.'}
+                {user ? `${getRoleLabel(profile?.role)} · montréal` : 'Client, fournisseur ou partenaire'}
               </div>
               {user ? (
                 <div style={styles.drawerAccountActions}>
@@ -375,6 +373,12 @@ function AppIconButton({ item, isActive, hoveredIcon, setHoveredIcon, onClick, i
       <HoverLabel visible={hoveredIcon === item.id} label={item.shortLabel} />
     </button>
   )
+}
+
+function getRoleLabel(role) {
+  if (role === 'provider') return 'fournisseur'
+  if (role === 'client') return 'client'
+  return 'compte flashmat'
 }
 
 function HoverLabel({ visible, label }) {
