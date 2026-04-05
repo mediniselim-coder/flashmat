@@ -106,6 +106,36 @@ function fileToDataUrl(file) {
   })
 }
 
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('Impossible de charger l image'))
+    image.src = src
+  })
+}
+
+async function optimizeImageFile(file, { maxWidth = 1600, maxHeight = 1200, quality = 0.82 } = {}) {
+  const rawDataUrl = await fileToDataUrl(file)
+  const image = await loadImageElement(rawDataUrl)
+
+  const ratio = Math.min(maxWidth / image.width, maxHeight / image.height, 1)
+  const targetWidth = Math.max(1, Math.round(image.width * ratio))
+  const targetHeight = Math.max(1, Math.round(image.height * ratio))
+
+  const canvas = document.createElement('canvas')
+  canvas.width = targetWidth
+  canvas.height = targetHeight
+
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Impossible de preparer l image')
+  }
+
+  context.drawImage(image, 0, 0, targetWidth, targetHeight)
+  return canvas.toDataURL('image/jpeg', quality)
+}
+
 export default function ProviderApp() {
   const { profile, user, fetchProfile } = useAuth()
   const { toast }            = useToast()
@@ -218,11 +248,13 @@ export default function ProviderApp() {
     if (!file) return
 
     try {
-      const photoUrl = await fileToDataUrl(file)
+      const photoUrl = await optimizeImageFile(file, { maxWidth: 1600, maxHeight: 900, quality: 0.84 })
       setProviderProfileForm((current) => ({ ...current, coverPhoto: photoUrl }))
       toast('Photo couverture ajoutee', 'success')
     } catch (error) {
       toast(error.message || 'Impossible de televerser la photo', 'error')
+    } finally {
+      event.target.value = ''
     }
   }
 
@@ -231,11 +263,18 @@ export default function ProviderApp() {
     if (files.length === 0) return
 
     try {
-      const photos = await Promise.all(files.map((file) => fileToDataUrl(file)))
-      setProviderProfileForm((current) => ({ ...current, galleryPhotos: photos }))
+      const photos = await Promise.all(
+        files.map((file) => optimizeImageFile(file, { maxWidth: 1400, maxHeight: 1000, quality: 0.8 })),
+      )
+      setProviderProfileForm((current) => ({
+        ...current,
+        galleryPhotos: [...current.galleryPhotos, ...photos].slice(0, 6),
+      }))
       toast('Galerie atelier mise a jour', 'success')
     } catch (error) {
       toast(error.message || 'Impossible de televerser la galerie', 'error')
+    } finally {
+      event.target.value = ''
     }
   }
 
