@@ -668,7 +668,7 @@ const styles = {
     padding: '9px 13px',
     borderRadius: 999,
   },
-  drawerIntro: { marginBottom: 16 },
+  drawerIntro: { marginBottom: 28 },
   drawerEyebrow: {
     fontSize: 10,
     letterSpacing: 2.2,
@@ -691,7 +691,7 @@ const styles = {
     lineHeight: 1.55,
     maxWidth: 270,
   },
-  drawerLinks: { display: 'grid', gap: 10, marginTop: 2, justifyItems: 'center', alignContent: 'start', flex: 1 },
+  drawerLinks: { display: 'grid', gap: 10, marginTop: 14, justifyItems: 'center', alignContent: 'start', flex: 1 },
   drawerLink: {
     border: '1px solid rgba(26,58,143,0.08)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
