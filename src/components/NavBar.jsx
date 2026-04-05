@@ -290,7 +290,7 @@ export default function NavBar({ activePage }) {
       {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
 
       {menuOpen && (
-        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: isMobile ? '0' : '0 24px 24px 0', top: 0, height: '100vh', padding: isCompact ? '18px 18px 18px' : '22px 22px 20px' }}>
+        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isCompact ? '28px 18px 18px' : '34px 22px 20px' }}>
           <div style={styles.drawerHeader}>
             <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)}>Fermer</button>
@@ -310,12 +310,12 @@ export default function NavBar({ activePage }) {
             ))}
           </div>
           <div style={styles.drawerFooter}>
-            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 16 : 18 }}>
+            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 14 : 15 }}>
               <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
-              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 16 : 18 }}>
+              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 15 : 16 }}>
                 {user ? `Connecté en tant que ${displayName}` : 'Connectez-vous pour réserver, diagnostiquer et suivre vos services'}
               </div>
-              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 12 : 12.5 }}>
+              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 11.5 : 12 }}>
                 {user
                   ? (isProvider ? 'Accédez à votre espace fournisseur et à vos outils FlashMat.' : 'Retrouvez vos véhicules, réservations et diagnostics en un endroit.')
                   : 'Le compte FlashMat vous donne accès au Docteur Automobile, aux réservations et à votre espace personnel.'}
@@ -621,17 +621,17 @@ const styles = {
     bottom: 0,
     width: 'min(420px, 92vw)',
     background: '#ffffff',
-    borderRadius: '0 24px 24px 0',
+    borderRadius: '0',
     borderRight: '1px solid rgba(26,58,143,0.08)',
     boxShadow: '24px 0 70px rgba(4,18,32,0.22)',
     zIndex: 121,
-    padding: '28px 28px 24px',
+    padding: '34px 22px 20px',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     justifyContent: 'space-between',
   },
-  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 },
+  drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28 },
   drawerClose: {
     border: '1px solid rgba(26,58,143,0.1)',
     background: '#f4f8fd',
@@ -641,7 +641,7 @@ const styles = {
     padding: '9px 13px',
     borderRadius: 999,
   },
-  drawerIntro: { marginBottom: 20 },
+  drawerIntro: { marginBottom: 26 },
   drawerEyebrow: {
     fontSize: 10,
     letterSpacing: 2.2,
@@ -664,7 +664,7 @@ const styles = {
     lineHeight: 1.55,
     maxWidth: 270,
   },
-  drawerLinks: { display: 'grid', gap: 10, marginTop: 4 },
+  drawerLinks: { display: 'grid', gap: 10, marginTop: 8, justifyItems: 'center' },
   drawerLink: {
     border: '1px solid rgba(26,58,143,0.08)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
@@ -675,14 +675,18 @@ const styles = {
     padding: '13px 15px',
     borderRadius: 16,
     boxShadow: '0 8px 18px rgba(26,58,143,0.04)',
+    width: '100%',
+    maxWidth: 296,
   },
   drawerFooter: { marginTop: 'auto', paddingTop: 18 },
   drawerAccountCard: {
     background: 'linear-gradient(135deg, #082237 0%, #103454 62%, #2f81be 100%)',
     color: '#fff',
-    borderRadius: 22,
-    padding: 18,
-    boxShadow: '0 16px 30px rgba(8,34,55,0.18)',
+    borderRadius: 18,
+    padding: 15,
+    boxShadow: '0 12px 24px rgba(8,34,55,0.16)',
+    maxWidth: 296,
+    margin: '0 auto',
   },
   drawerAccountEyebrow: {
     fontSize: 10,
@@ -706,8 +710,8 @@ const styles = {
   drawerAccountActions: {
     display: 'flex',
     alignItems: 'center',
-    gap: 12,
-    marginTop: 16,
+    gap: 10,
+    marginTop: 14,
     flexWrap: 'wrap',
   },
   drawerPrimaryCta: {
