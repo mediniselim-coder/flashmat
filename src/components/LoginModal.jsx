@@ -10,41 +10,36 @@ export default function LoginModal({ onClose }) {
   const [mode, setMode] = useState('login')
   const [role, setRole] = useState('client')
   const [loading, setLoading] = useState(false)
-  const [shouldRedirectAfterClose, setShouldRedirectAfterClose] = useState(false)
   const [form, setForm] = useState({ email: '', password: '', fullName: '', confirmPassword: '' })
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
-  useEffect(() => {
-    function handlePostLoginRedirect() {
-      try {
-        const postLoginRedirect = window.sessionStorage.getItem('flashmat-post-login-redirect')
-        if (postLoginRedirect) {
-          window.sessionStorage.removeItem('flashmat-post-login-redirect')
-          navigate(postLoginRedirect)
-          return true
-        }
-
-        const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
-        if (!raw) return false
-        const pending = JSON.parse(raw)
-        if (!pending?.cat) return false
-        navigate(`/app/client?pane=search&cat=${encodeURIComponent(pending.cat)}`)
-        return true
-      } catch {
-        return false
+  function consumePostLoginRedirect() {
+    try {
+      const postLoginRedirect = window.sessionStorage.getItem('flashmat-post-login-redirect')
+      if (postLoginRedirect) {
+        window.sessionStorage.removeItem('flashmat-post-login-redirect')
+        return postLoginRedirect
       }
-    }
 
+      const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
+      if (!raw) return null
+      const pending = JSON.parse(raw)
+      if (!pending?.cat) return null
+      window.sessionStorage.removeItem('flashmat-pending-service-search')
+      return `/app/client?pane=search&cat=${encodeURIComponent(pending.cat)}`
+    } catch {
+      return null
+    }
+  }
+
+  useEffect(() => {
     window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
 
     return () => {
       window.dispatchEvent(new CustomEvent('flashmat-login-modal-close'))
-      if (shouldRedirectAfterClose) {
-        handlePostLoginRedirect()
-      }
     }
-  }, [navigate, shouldRedirectAfterClose])
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -59,8 +54,10 @@ export default function LoginModal({ onClose }) {
         await signIn({ email: form.email, password: form.password })
         toast('Connexion reussie !', 'success')
       }
-      setShouldRedirectAfterClose(true)
+      const nextPath = consumePostLoginRedirect()
+      const fallbackPath = mode === 'signup' ? (role === 'provider' ? '/app/provider' : '/app/client') : '/'
       onClose()
+      navigate(nextPath || fallbackPath)
     } catch (err) {
       toast(err.message || 'Une erreur est survenue', 'error')
     } finally {
