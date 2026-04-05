@@ -100,7 +100,6 @@ export default function Landing() {
       navigate('/doctor')
       return
     }
-
     window.sessionStorage.setItem('flashmat-post-login-redirect', '/doctor')
     navigate('/doctor?login=1')
   }
@@ -132,12 +131,13 @@ export default function Landing() {
   return (
     <div className={styles.page}>
 
-      {/* NAV — composant réutilisable avec popup profil */}
       <NavBar activePage="home" />
+
+      {/* TICKER — une seule fois */}
       <div className={styles.ticker}>
         <div className={styles.tickerTrack}>
           {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>•</strong> {t}</span>
+            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>⚡</strong> {t}</span>
           ))}
         </div>
       </div>
@@ -200,144 +200,144 @@ export default function Landing() {
         ))}
       </div>
 
-      <section className={styles.section} style={{ paddingTop: 0 }}>
-        <div className={styles.eyebrow}>● Docteur Automobile</div>
-        <h2 className={styles.sectionTitle}>Des conseils auto clairs,<br />avec <span>connexion client</span></h2>
-        <div style={{ background: '#fff', borderRadius: 28, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', padding: '28px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, alignItems: 'center' }}>
-          <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 10 }}>
-              Reserve aux clients connectes
+      {/* DOCTEUR AUTOMOBILE */}
+      <section className={styles.section}>
+        <div className={styles.sectionInner}>
+          <div className={styles.eyebrow}>● Docteur Automobile</div>
+          <h2 className={styles.sectionTitle}>Des conseils auto clairs,<br />avec <span>connexion client</span></h2>
+          <div style={{ background: '#fff', borderRadius: 28, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', padding: '40px 44px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 32, alignItems: 'center' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 10 }}>
+                Réservé aux clients connectés
+              </div>
+              <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, lineHeight: 1.05, color: 'var(--ink)' }}>
+                Parlez au Docteur Automobile quand vous en avez vraiment besoin
+              </div>
             </div>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, lineHeight: 1.05, color: 'var(--ink)' }}>
-              Parler au Docteur Automobile quand vous en avez vraiment besoin
-            </div>
-          </div>
-          <div style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
-            Posez vos questions d entretien, de panne ou de reservation seulement une fois connecte. FlashMat peut alors lier le diagnostic a votre profil, vos vehicules et vos prochaines reservations.
-            <div style={{ marginTop: 18, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-green btn-lg" onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
-              <button type="button" className="btn btn-outline btn-lg" onClick={() => navigate('/services')}>Voir les services</button>
+            <div style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
+              Posez vos questions d'entretien, de panne ou de réservation seulement une fois connecté. FlashMat peut alors lier le diagnostic à votre profil, vos véhicules et vos prochaines réservations.
+              <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button type="button" className="btn btn-green btn-lg" onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
+                <button type="button" className="btn btn-outline btn-lg" onClick={() => navigate('/services')}>Voir les services</button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TICKER */}
-      <div className={styles.ticker}>
-        <div className={styles.tickerTrack}>
-          {[...TICKER, ...TICKER].map((t, i) => (
-            <span key={i} className={styles.tickerItem}><strong className={styles.tickerSep}>⚡</strong> {t}</span>
-          ))}
-        </div>
-      </div>
-
       {/* SERVICES */}
       <section className={styles.section} id="services">
-        <div className={styles.eyebrow}>● Nos services</div>
-        <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin à <span>Montréal</span></h2>
-        <div className={styles.svcGrid}>
-          {SERVICES.map(s => (
-            <div key={s.id} className={styles.svcCard} onClick={() => navigate(s.id === 'flashfix' ? '/urgence' : '/services', s.id === 'flashfix' ? undefined : { state: { cat: s.id } })}>
-              <span className={styles.svcIcon}>{s.icon}</span>
-              <div className={styles.svcName}>{s.name}</div>
-              <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
-              <span className={styles.svcArrow}>→</span>
-            </div>
-          ))}
+        <div className={styles.sectionInner}>
+          <div className={styles.eyebrow}>● Nos services</div>
+          <h2 className={styles.sectionTitle}>Tout ce dont votre auto<br />a besoin à <span>Montréal</span></h2>
+          <div className={styles.svcGrid}>
+            {SERVICES.map(s => (
+              <div key={s.id} className={styles.svcCard} onClick={() => navigate(s.id === 'flashfix' ? '/urgence' : '/services', s.id === 'flashfix' ? undefined : { state: { cat: s.id } })}>
+                <span className={styles.svcIcon}>{s.icon}</span>
+                <div className={styles.svcName}>{s.name}</div>
+                <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
+                <span className={styles.svcArrow}>→</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* PROVIDERS */}
-      <section className={styles.section} id="providers" style={{ paddingTop: 0 }}>
-        <div className={styles.eyebrow}>● Fournisseurs vedettes</div>
-        <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
-        <div className={styles.provFilters}>
-          {RATING_FILTERS.map(f => (
-            <button key={f.key} className={`${styles.filterBtn} ${minRating === f.key ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(f.key)}>{f.label}</button>
-          ))}
-          <button className={`${styles.filterBtn} ${minRating === 'open' ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(minRating === 'open' ? 0 : 'open')}>● Ouvert</button>
-          {filterTerm && (
-            <span style={{ fontSize: 12, color: 'var(--ink3)', marginLeft: 4 }}>
-              {dbLoading ? 'Recherche…' : `${displayProviders.length} résultat${displayProviders.length !== 1 ? 's' : ''} pour «\u00a0${filterTerm}\u00a0»`}
-              <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕</button>
-            </span>
-          )}
-        </div>
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
-          <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
-          <div className={styles.provScroll} ref={scrollRef}>
-            {dbLoading && filterTerm && (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
+      <section className={styles.section} id="providers">
+        <div className={styles.sectionInner}>
+          <div className={styles.eyebrow}>● Fournisseurs vedettes</div>
+          <h2 className={styles.sectionTitle}>Les meilleurs pros<br />de <span>Montréal</span></h2>
+          <div className={styles.provFilters}>
+            {RATING_FILTERS.map(f => (
+              <button key={f.key} className={`${styles.filterBtn} ${minRating === f.key ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(f.key)}>{f.label}</button>
+            ))}
+            <button className={`${styles.filterBtn} ${minRating === 'open' ? styles.filterBtnActive : ''}`} onClick={() => setMinRating(minRating === 'open' ? 0 : 'open')}>● Ouvert</button>
+            {filterTerm && (
+              <span style={{ fontSize: 12, color: 'var(--ink3)', marginLeft: 4 }}>
+                {dbLoading ? 'Recherche…' : `${displayProviders.length} résultat${displayProviders.length !== 1 ? 's' : ''} pour «\u00a0${filterTerm}\u00a0»`}
+                <button onClick={() => setFilterTerm('')} style={{ marginLeft: 8, background: 'none', border: 'none', color: 'var(--green)', cursor: 'pointer', fontSize: 12 }}>✕</button>
+              </span>
             )}
-            {!dbLoading && displayProviders.map(p => {
-              const isDb = !!p.type_label
-              const slug = isDb ? slugify(p.name) : p.slug
-              const icon = p.icon || '🔧'
-              const type = isDb ? p.type_label : p.type
-              const rating = p.rating || 0
-              const reviews = p.reviews || 0
-              const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
-              return (
-                <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
-                  <div className={styles.provAvatar}>{icon}</div>
-                  <div className={styles.provName}>{p.name}</div>
-                  <div className={styles.provType}>{type}</div>
-                  <div className={styles.provRating}>
-                    <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+          </div>
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+            <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+            <div className={styles.provScroll} ref={scrollRef}>
+              {dbLoading && (
+                <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement…</div>
+              )}
+              {!dbLoading && displayProviders.map(p => {
+                const isDb = !!p.type_label
+                const slug = isDb ? slugify(p.name) : p.slug
+                const icon = p.icon || '🔧'
+                const type = isDb ? p.type_label : p.type
+                const rating = p.rating || 0
+                const reviews = p.reviews || 0
+                const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
+                return (
+                  <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
+                    <div className={styles.provAvatar}>{icon}</div>
+                    <div className={styles.provName}>{p.name}</div>
+                    <div className={styles.provType}>{type}</div>
+                    <div className={styles.provRating}>
+                      <span style={{ color: 'var(--amber)' }}>{'★'.repeat(Math.round(rating))}</span> {rating} ({reviews})
+                    </div>
+                    <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? '● Ouvert' : '● Fermé'}</span>
+                    {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
+                    {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
                   </div>
-                  <span className={`badge ${isOpen ? 'badge-green' : 'badge-amber'}`}>{isOpen ? '● Ouvert' : '● Fermé'}</span>
-                  {!isDb && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.dist}</div>}
-                  {isDb && p.address && <div style={{ fontSize: 10, color: 'var(--ink3)', fontFamily: 'var(--mono)', marginTop: 4 }}>{p.address}</div>}
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       </section>
 
       {/* PORTALS */}
-      <section className={styles.section} id="portals" style={{ paddingTop: 0 }}>
-        <div className={styles.eyebrow}>● Rejoindre FlashMat</div>
-        <h2 className={styles.sectionTitle}>Choisissez<br />votre <span>rôle</span></h2>
-        <div className={styles.portalsGrid}>
-          <div className={`${styles.portalCard} ${styles.pcClient}`} onClick={() => navigate('/auth')}>
-            <div className={styles.pcNum}>01</div>
-            <div className={styles.pcTitle}>Portail Client</div>
-            <div className={styles.pcDesc}>Trouvez, réservez et suivez tous vos services auto à Montréal depuis un seul tableau de bord.</div>
-            <div className={styles.pcFeats}>
-              {[['🔍','Recherche par immatriculation','Historique, rappels manufacturiers'],
-                ['📊','FlashScore™','Score santé de votre véhicule en temps réel'],
-                ['📅','Réservation instantanée','Agenda live de tous les fournisseurs'],
-                ['⚡','Alertes intelligentes','Rappels proactifs, promos, urgences'],
-                ['🛒','Marketplace','Achat/vente pièces entre Montréalais'],
-              ].map(([ico, t, d]) => (
-                <div key={t} className={styles.pcFeat}>
-                  <span>{ico}</span>
-                  <div><strong>{t}</strong><br /><small>{d}</small></div>
-                </div>
-              ))}
+      <section className={styles.section} id="portals">
+        <div className={styles.sectionInner}>
+          <div className={styles.eyebrow}>● Rejoindre FlashMat</div>
+          <h2 className={styles.sectionTitle}>Choisissez<br />votre <span>rôle</span></h2>
+          <div className={styles.portalsGrid}>
+            <div className={`${styles.portalCard} ${styles.pcClient}`} onClick={() => navigate('/auth')}>
+              <div className={styles.pcNum}>01</div>
+              <div className={styles.pcTitle}>Portail Client</div>
+              <div className={styles.pcDesc}>Trouvez, réservez et suivez tous vos services auto à Montréal depuis un seul tableau de bord.</div>
+              <div className={styles.pcFeats}>
+                {[['🔍','Recherche par immatriculation','Historique, rappels manufacturiers'],
+                  ['📊','FlashScore™','Score santé de votre véhicule en temps réel'],
+                  ['📅','Réservation instantanée','Agenda live de tous les fournisseurs'],
+                  ['⚡','Alertes intelligentes','Rappels proactifs, promos, urgences'],
+                  ['🛒','Marketplace','Achat/vente pièces entre Montréalais'],
+                ].map(([ico, t, d]) => (
+                  <div key={t} className={styles.pcFeat}>
+                    <span>{ico}</span>
+                    <div><strong>{t}</strong><br /><small>{d}</small></div>
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-green btn-lg" onClick={e => { e.stopPropagation(); navigate('/auth') }}>Commencer gratuitement →</button>
             </div>
-            <button className="btn btn-green btn-lg" onClick={e => { e.stopPropagation(); navigate('/auth') }}>Commencer gratuitement →</button>
-          </div>
-          <div className={`${styles.portalCard} ${styles.pcProvider}`} onClick={() => navigate('/auth?role=provider')}>
-            <div className={styles.pcNum}>02</div>
-            <div className={styles.pcTitle}>Portail Fournisseur</div>
-            <div className={styles.pcDesc}>Gérez votre atelier, attirez de nouveaux clients et augmentez vos revenus avec FlashMat.</div>
-            <div className={styles.pcFeats}>
-              {[['📈','Dashboard revenu','Chiffres en temps réel, cibles, tendances'],
-                ['📅','Gestion réservations','Calendrier intelligent, file d\'attente'],
-                ['📣','Promos ciblées','Offres à vos clients fidèles'],
-                ['✅','Notifier les clients','Alerte quand la voiture est prête'],
-                ['🏪','Profil public','Visibilité FlashMat + Google'],
-              ].map(([ico, t, d]) => (
-                <div key={t} className={styles.pcFeat}>
-                  <span>{ico}</span>
-                  <div><strong>{t}</strong><br /><small>{d}</small></div>
-                </div>
-              ))}
+            <div className={`${styles.portalCard} ${styles.pcProvider}`} onClick={() => navigate('/auth?role=provider')}>
+              <div className={styles.pcNum}>02</div>
+              <div className={styles.pcTitle}>Portail Fournisseur</div>
+              <div className={styles.pcDesc}>Gérez votre atelier, attirez de nouveaux clients et augmentez vos revenus avec FlashMat.</div>
+              <div className={styles.pcFeats}>
+                {[['📈','Dashboard revenu','Chiffres en temps réel, cibles, tendances'],
+                  ['📅','Gestion réservations','Calendrier intelligent, file d\'attente'],
+                  ['📣','Promos ciblées','Offres à vos clients fidèles'],
+                  ['✅','Notifier les clients','Alerte quand la voiture est prête'],
+                  ['🏪','Profil public','Visibilité FlashMat + Google'],
+                ].map(([ico, t, d]) => (
+                  <div key={t} className={styles.pcFeat}>
+                    <span>{ico}</span>
+                    <div><strong>{t}</strong><br /><small>{d}</small></div>
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-outline btn-lg" style={{ color: 'var(--blue)', borderColor: 'var(--blue)' }} onClick={e => { e.stopPropagation(); navigate('/auth?role=provider') }}>Inscrire mon atelier →</button>
             </div>
-            <button className="btn btn-outline btn-lg" style={{ color: 'var(--blue)', borderColor: 'var(--blue)' }} onClick={e => { e.stopPropagation(); navigate('/auth?role=provider') }}>Inscrire mon atelier →</button>
           </div>
         </div>
       </section>
@@ -355,4 +355,3 @@ export default function Landing() {
     </div>
   )
 }
-
