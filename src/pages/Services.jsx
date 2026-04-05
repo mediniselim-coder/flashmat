@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
+import ServiceIcon from '../components/ServiceIcon'
 
 const SERVICES = [
   { id: 'flashfix', name: 'FlashFix Urgence', icon: 'FF', desc: 'Un mecano mobile ou un service d urgence vient a vous rapidement, a domicile ou sur la route.', items: ['Mecano mobile', 'Batterie a booster', 'Pneu creve', 'Intervention rapide'], count: 8 },
@@ -93,7 +94,7 @@ export default function Services() {
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
-                <div style={{ fontSize: 36, lineHeight: 1 }}>{s.icon}</div>
+                <ServiceIcon code={s.icon} size={58} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 4, fontFamily: 'var(--display)' }}>{s.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 600, fontFamily: 'var(--mono)' }}>{s.count} fournisseurs</div>

@@ -6,6 +6,7 @@ import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
+import ServiceIcon from '../components/ServiceIcon'
 
 const SERVICES = [
   { id: 'flashfix',  name: 'FlashFix',      icon: 'FF', count: 8 },
@@ -350,7 +351,7 @@ export default function Landing() {
           <div className={styles.svcGrid}>
             {SERVICES.map(s => (
               <div key={s.id} className={styles.svcCard} onClick={() => navigate(s.id === 'flashfix' ? '/urgence' : '/services', s.id === 'flashfix' ? undefined : { state: { cat: s.id } })}>
-                <span className={styles.svcIcon}>{s.icon}</span>
+                <span className={styles.svcIcon}><ServiceIcon code={s.icon} size={54} /></span>
                 <div className={styles.svcName}>{s.name}</div>
                 <div className={styles.svcCount}>{s.count} {s.id === 'parking' ? 'emplacements' : 'fournisseurs'}</div>
                 <span className={styles.svcArrow}>{'->'}</span>
@@ -394,7 +395,7 @@ export default function Landing() {
                 const isOpen = isDb ? (p.is_open === true || p.is_open === 'true') : p.open
                 return (
                   <div key={p.id || p.name} className={styles.provCard} onClick={() => navigate(`/provider/${slug}${isDb ? `?n=${encodeURIComponent(p.name)}` : ''}`)}>
-                    <div className={styles.provAvatar}>{icon}</div>
+                    <div className={styles.provAvatar}><ServiceIcon code={icon} size={48} /></div>
                     <div className={styles.provName}>{p.name}</div>
                     <div className={styles.provType}>{type}</div>
                     <div className={styles.provRating}>
