@@ -14,6 +14,8 @@ import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
+const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
+
 const NAV = [
   { id: 'dashboard',     icon: 'TB', label: 'Dashboard' },
   { id: 'bookings',      icon: 'RS', label: 'Bookings', badge: true },
@@ -75,12 +77,41 @@ function getClientSafeFlashFixEventLabel(eventLabel, status) {
   return eventLabel
 }
 
+function readVehicleExtrasMap() {
+  try {
+    return JSON.parse(window.localStorage.getItem(VEHICLE_EXTRAS_STORAGE_KEY) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function mergeVehicleExtras(vehicle) {
+  const extrasMap = readVehicleExtrasMap()
+  const extras = extrasMap[vehicle?.id] || {}
+  return {
+    ...vehicle,
+    vin: vehicle?.vin || vehicle?.serial_number || extras.vin || extras.serial_number || '',
+    serial_number: vehicle?.serial_number || vehicle?.vin || extras.serial_number || extras.vin || '',
+    mileage: vehicle?.mileage ?? extras.mileage ?? '',
+    image_url: vehicle?.image_url || vehicle?.photo_url || extras.image_url || extras.photo_url || '',
+    photo_url: vehicle?.photo_url || vehicle?.image_url || extras.photo_url || extras.image_url || '',
+  }
+}
+
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
   const [notifications, setNotifications] = useState([])
   const [addVehicleModal, setAddVehicleModal] = useState(false)
-  useEffect(() => { if (user?.id) { supabase.from('vehicles').select('*').eq('owner_id', user.id).then(({ data }) => setMyVehicles(data || [])) } }, [user])
+  useEffect(() => {
+    if (user?.id) {
+      supabase
+        .from('vehicles')
+        .select('*')
+        .eq('owner_id', user.id)
+        .then(({ data }) => setMyVehicles((data || []).map(mergeVehicleExtras)))
+    }
+  }, [user])
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -296,11 +327,12 @@ export default function ClientApp() {
                     <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={() => setAddVehicleModal(true)}>Add My Vehicle →</button>
                   </>
                 ) : (
-                  <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+              <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
                     <div>
                       <div style={{ fontFamily:'var(--mono)', fontSize:10, color:'rgba(59,159,216,.9)', textTransform:'uppercase', letterSpacing:'1px', marginBottom:6 }}>● My vehicles</div>
                       <div style={{ fontFamily:'var(--display)', fontSize:22, fontWeight:800, color:'#fff', letterSpacing:'-.5px' }}>{myVehicles[0].make} {myVehicles[0].model} {myVehicles[0].year}</div>
                       {myVehicles[0].plate && <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'rgba(255,255,255,.5)', marginTop:4 }}>{myVehicles[0].plate}</div>}
+                      {myVehicles[0].mileage ? <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'rgba(255,255,255,.45)', marginTop:4 }}>{Number(myVehicles[0].mileage).toLocaleString()} km</div> : null}
                     </div>
                     <button className="btn" style={{ background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', color:'#fff', fontSize:12 }} onClick={() => setAddVehicleModal(true)}>+ Add</button>
                   </div>
@@ -398,12 +430,17 @@ export default function ClientApp() {
                   </div>
                 ) : myVehicles.map(v => (
                   <div key={v.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+                    {v.image_url && (
+                      <img src={v.image_url} alt={`${v.make} ${v.model}`} style={{ width:'100%', height:160, objectFit:'cover', borderRadius:12, border:'1px solid var(--border)', marginBottom:12 }} />
+                    )}
                     <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
                       <div style={{fontFamily:'var(--display)',fontSize:18,fontWeight:800}}>{v.make} {v.model} {v.year}</div>
                       <span className="badge badge-green">My vehicle</span>
                     </div>
                     {v.plate && <div style={{fontFamily:'var(--mono)',fontSize:10,background:'var(--bg2)',border:'1px solid var(--border)',padding:'3px 8px',borderRadius:4,display:'inline-block',marginBottom:12}}>{v.plate}</div>}
                     {v.color && <div style={{fontSize:11,color:'var(--ink2)',marginBottom:8}}>Color: {v.color}</div>}
+                    {v.vin && <div style={{fontSize:11,color:'var(--ink2)',marginBottom:6}}>VIN: <span style={{fontFamily:'var(--mono)'}}>{v.vin}</span></div>}
+                    {v.mileage ? <div style={{fontSize:11,color:'var(--ink2)',marginBottom:8}}>Mileage: {Number(v.mileage).toLocaleString()} km</div> : null}
                     <div style={{marginBottom:8}}>
                       <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}><span style={{color:'var(--ink2)'}}>FlashScore™</span><span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span></div>
                       <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
@@ -619,7 +656,7 @@ export default function ClientApp() {
         />
       )}
       <FlashAI portal="client" userName={name} />
-      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [v, ...prev]); setAddVehicleModal(false) }} />}
+      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [mergeVehicleExtras(v), ...prev]); setAddVehicleModal(false) }} />}
     </div>
   )
 }
