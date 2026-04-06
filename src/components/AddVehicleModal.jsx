@@ -4,22 +4,26 @@ import { useAuth } from '../hooks/useAuth'
 
 const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
 
-function readVehicleExtras() {
+function getVehicleExtrasStorageKey(userId) {
+  return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
+}
+
+function readVehicleExtras(userId) {
   try {
-    return JSON.parse(window.localStorage.getItem(VEHICLE_EXTRAS_STORAGE_KEY) || '{}')
+    return JSON.parse(window.localStorage.getItem(getVehicleExtrasStorageKey(userId)) || '{}')
   } catch {
     return {}
   }
 }
 
-function saveVehicleExtras(vehicleId, extras) {
+function saveVehicleExtras(userId, vehicleId, extras) {
   if (!vehicleId) return
-  const current = readVehicleExtras()
+  const current = readVehicleExtras(userId)
   current[vehicleId] = {
     ...(current[vehicleId] || {}),
     ...extras,
   }
-  window.localStorage.setItem(VEHICLE_EXTRAS_STORAGE_KEY, JSON.stringify(current))
+  window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
 }
 
 function fileToDataUrl(file) {
@@ -213,7 +217,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
         photo_url: optimizedPhoto,
       }
 
-      saveVehicleExtras(savedVehicle.id, {
+      saveVehicleExtras(user.id, savedVehicle.id, {
         vin: savedVehicle.vin,
         serial_number: savedVehicle.serial_number,
         mileage: savedVehicle.mileage,

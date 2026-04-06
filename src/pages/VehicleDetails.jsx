@@ -9,16 +9,20 @@ import AppIcon from '../components/AppIcon'
 
 const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
 
-function readVehicleExtrasMap() {
+function getVehicleExtrasStorageKey(userId) {
+  return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
+}
+
+function readVehicleExtrasMap(userId) {
   try {
-    return JSON.parse(window.localStorage.getItem(VEHICLE_EXTRAS_STORAGE_KEY) || '{}')
+    return JSON.parse(window.localStorage.getItem(getVehicleExtrasStorageKey(userId)) || '{}')
   } catch {
     return {}
   }
 }
 
-function mergeVehicleExtras(vehicle) {
-  const extrasMap = readVehicleExtrasMap()
+function mergeVehicleExtras(vehicle, userId) {
+  const extrasMap = readVehicleExtrasMap(userId)
   const extras = extrasMap[vehicle?.id] || {}
 
   return {
@@ -54,7 +58,12 @@ export default function VehicleDetails() {
 
   useEffect(() => {
     async function loadVehiclePage() {
-      if (!user?.id || !vehicleId) return
+      if (!user?.id || !vehicleId) {
+        setVehicle(null)
+        setBookings([])
+        setLoading(false)
+        return
+      }
 
       setLoading(true)
       try {
@@ -68,7 +77,7 @@ export default function VehicleDetails() {
           fetchClientBookings(user.id),
         ])
 
-        const nextVehicle = data ? mergeVehicleExtras(data) : null
+        const nextVehicle = data && String(data.owner_id || '') === String(user.id) ? mergeVehicleExtras(data, user.id) : null
         setVehicle(nextVehicle)
         setBookings((bookingRows || []).filter((booking) => String(booking.vehicle_id || booking.vehicle?.id || '') === String(vehicleId)))
       } catch {

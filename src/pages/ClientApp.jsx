@@ -116,16 +116,20 @@ function formatActivityTime(value) {
   }
 }
 
-function readVehicleExtrasMap() {
+function getVehicleExtrasStorageKey(userId) {
+  return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
+}
+
+function readVehicleExtrasMap(userId) {
   try {
-    return JSON.parse(window.localStorage.getItem(VEHICLE_EXTRAS_STORAGE_KEY) || '{}')
+    return JSON.parse(window.localStorage.getItem(getVehicleExtrasStorageKey(userId)) || '{}')
   } catch {
     return {}
   }
 }
 
-function mergeVehicleExtras(vehicle) {
-  const extrasMap = readVehicleExtrasMap()
+function mergeVehicleExtras(vehicle, userId) {
+  const extrasMap = readVehicleExtrasMap(userId)
   const extras = extrasMap[vehicle?.id] || {}
   return {
     ...vehicle,
@@ -143,14 +147,21 @@ export default function ClientApp() {
   const [notifications, setNotifications] = useState([])
   const [addVehicleModal, setAddVehicleModal] = useState(false)
   useEffect(() => {
-    if (user?.id) {
-      supabase
-        .from('vehicles')
-        .select('*')
-        .eq('owner_id', user.id)
-        .then(({ data }) => setMyVehicles((data || []).map(mergeVehicleExtras)))
+    if (!user?.id) {
+      setMyVehicles([])
+      return
     }
-  }, [user])
+
+    setMyVehicles([])
+    supabase
+      .from('vehicles')
+      .select('*')
+      .eq('owner_id', user.id)
+      .then(({ data }) => {
+        const ownedVehicles = (data || []).filter((vehicle) => String(vehicle.owner_id || '') === String(user.id))
+        setMyVehicles(ownedVehicles.map((vehicle) => mergeVehicleExtras(vehicle, user.id)))
+      })
+  }, [user?.id])
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -805,7 +816,7 @@ export default function ClientApp() {
         />
       )}
       <FlashAI portal="client" userName={name} />
-      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [mergeVehicleExtras(v), ...prev]); setAddVehicleModal(false) }} />}
+      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [mergeVehicleExtras(v, user?.id), ...prev.filter((item) => String(item.owner_id || '') === String(user?.id || ''))]); setAddVehicleModal(false) }} />}
     </div>
   )
 }
