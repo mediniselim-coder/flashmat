@@ -8,7 +8,6 @@ import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
-import VehicleDoctor from '../components/VehicleDoctor'
 import AppIcon from '../components/AppIcon'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
@@ -326,7 +325,6 @@ export default function ClientApp() {
                   </button>
                 ))}
               </div>
-              <div style={{ marginBottom: 20 }}><VehicleDoctor compact userName={name} /></div>
               <div className={styles.statsGrid}>
                 <div className="stat-card sc-green"><div className="stat-lbl">Montreal Providers</div><div className="stat-val">{providers.length}</div><div className="stat-sub">available now</div></div>
                 <div className="stat-card sc-blue"><div className="stat-lbl">FlashScore™</div><div className="stat-val">{myVehicles.length ? averageFlashScore : '—'}{myVehicles.length ? <span style={{fontSize:14}}>%</span> : null}</div><div className="stat-sub">{myVehicles[0] ? `${myVehicles[0].make} ${myVehicles[0].model}` : 'Add a vehicle'}</div></div>
