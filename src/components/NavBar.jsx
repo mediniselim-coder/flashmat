@@ -127,6 +127,7 @@ export default function NavBar({ activePage }) {
 
   const isProvider = profile?.role === 'provider'
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
+  const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -298,7 +299,13 @@ export default function NavBar({ activePage }) {
                     setProfileOpen((current) => !current)
                   }}
                 >
-                  <span style={styles.accountAvatar}>{displayName.slice(0, 1).toUpperCase()}</span>
+                  <span style={styles.accountAvatar}>
+                    {profileAvatar ? (
+                      <img src={profileAvatar} alt={displayName} style={styles.accountAvatarImage} />
+                    ) : (
+                      displayName.slice(0, 1).toUpperCase()
+                    )}
+                  </span>
                   {!isMobile && <span style={styles.accountText}>{displayName}</span>}
                 </button>
 
@@ -813,7 +820,13 @@ const styles = {
     width: 32, height: 32, borderRadius: '50%',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b9fd8 100%)',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    color: '#fff', fontSize: 13, fontWeight: 800,
+    color: '#fff', fontSize: 13, fontWeight: 800, overflow: 'hidden',
+  },
+  accountAvatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
   },
   accountText: { maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 700 },
   scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },

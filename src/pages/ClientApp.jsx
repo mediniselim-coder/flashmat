@@ -228,6 +228,7 @@ export default function ClientApp() {
   const pane = getPaneFromClientPath(location.pathname)
 
   const name = profile?.full_name || 'Alex'
+  const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
   const activeFlashFixRequests = flashFixRequests.filter((r) => r.channel === 'flashfix' && r.status !== 'completed')
   const latestFlashFixEvents = flashFixRequests
     .filter((r) => r.channel === 'flashfix')
@@ -525,7 +526,13 @@ export default function ClientApp() {
               </div>
             )}
             <button type="button" className={styles.userChip} onClick={() => setProfileMenuOpen(open => !open)}>
-              <div className={`${styles.avatar} ${styles.avatarGreen}`}>{name.slice(0,2).toUpperCase()}</div>
+              <div className={`${styles.avatar} ${styles.avatarGreen}`} style={{ overflow: 'hidden' }}>
+                {profileAvatar ? (
+                  <img src={profileAvatar} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  name.slice(0,2).toUpperCase()
+                )}
+              </div>
               <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>client · montreal</div></div>
               <span style={{marginLeft:'auto',color:'var(--ink3)',fontSize:11}}>{profileMenuOpen ? '↓' : '←'}</span>
             </button>
