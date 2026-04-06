@@ -3,16 +3,18 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { normalizeMarketplaceListing, serializeMarketplaceDescription } from '../lib/marketplace'
 
-const CATEGORIES = ['Engine Parts', 'Tires & Wheels', 'Bodywork', 'Brakes & Suspension', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
+const SHOP_CATEGORIES = ['Cleaning Products', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
+const PARTS_CATEGORIES = ['Engine Parts', 'Tires & Wheels', 'Bodywork', 'Brakes & Suspension']
 const CONDITIONS = ['New', 'Very good', 'Good', 'Acceptable']
 const ICONS = ['ME','PN','VH','PR','PC','RW','VT','CR','BT','MP','TL','EL','AD','SH']
 
-export default function NewListingModal({ onClose, onCreated }) {
+export default function NewListingModal({ onClose, onCreated, listingType = 'shop' }) {
   const { user, profile } = useAuth()
   const fileRef = useRef()
+  const categories = listingType === 'parts' ? PARTS_CATEGORIES : SHOP_CATEGORIES
   const [form, setForm] = useState({
-    title: '', description: '', price: '', category: 'Pieces moteur',
-    condition: 'Bon etat', icon: 'ME', phone: '',
+    title: '', description: '', price: '', category: categories[0],
+    condition: 'Good', icon: listingType === 'parts' ? 'PC' : 'SH', phone: '',
   })
   const [photos, setPhotos]     = useState([])   // { file, preview }[]
   const [loading, setLoading]   = useState(false)
@@ -71,6 +73,10 @@ export default function NewListingModal({ onClose, onCreated }) {
       setError('You need to sign in to publish a listing.')
       return
     }
+    if (listingType === 'parts' && profile?.role !== 'provider') {
+      setError('Auto parts listings can only be published from a provider account.')
+      return
+    }
     if (!form.title.trim() || !form.price) { setError('Title and price are required.'); return }
     setLoading(true); setError('')
     try {
@@ -86,6 +92,8 @@ export default function NewListingModal({ onClose, onCreated }) {
           sellerName: profile?.full_name || 'Seller',
           sellerType: profile?.role || 'client',
           city: 'Montreal',
+          listingType,
+          audience: listingType === 'parts' ? 'providers' : 'all',
         }),
         price:       parseFloat(form.price),
         category:    form.category,
@@ -102,7 +110,9 @@ export default function NewListingModal({ onClose, onCreated }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 540, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-          <div className="modal-title" style={{ marginBottom:0 }}>Create a listing</div>
+          <div className="modal-title" style={{ marginBottom:0 }}>
+            {listingType === 'parts' ? 'Create an auto parts listing' : 'Create a shop listing'}
+          </div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>x</button>
         </div>
 
@@ -161,7 +171,7 @@ export default function NewListingModal({ onClose, onCreated }) {
             <div className="form-group">
               <label className="form-label">Category</label>
               <select className="form-select" value={form.category} onChange={e => set('category', e.target.value)}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {categories.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div className="form-group">

@@ -58,13 +58,19 @@ export function normalizeMarketplaceListing(listing) {
   return {
     ...listing,
     description,
-    condition: meta.condition || 'Bon etat',
+    condition: meta.condition || 'Good',
     icon: meta.icon || 'MP',
     phone: meta.phone || '',
     image_url: meta.imageUrl || '',
-    seller_name: meta.sellerName || 'Vendeur FlashMat',
+    seller_name: meta.sellerName || 'FlashMat Seller',
     seller_type: meta.sellerType || 'client',
     city: listing.city || meta.city || 'Montreal',
+    listing_type: meta.listingType || 'shop',
+    audience: meta.audience || 'all',
+    vehicle_id: meta.vehicleId || '',
+    vehicle_snapshot: meta.vehicleSnapshot || null,
+    vehicle_public_path: meta.vehiclePublicPath || '',
+    seller_label: meta.sellerType === 'provider' ? 'Provider' : 'Client',
   }
 }
 

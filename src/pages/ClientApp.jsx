@@ -9,9 +9,11 @@ import BookingModal from '../components/BookingModal'
 import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
+import SellVehicleModal from '../components/SellVehicleModal'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
+import { normalizeMarketplaceListing } from '../lib/marketplace'
 import styles from './AppShell.module.css'
 
 const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
@@ -156,6 +158,7 @@ export default function ClientApp() {
   const [myVehicles, setMyVehicles] = useState([])
   const [notifications, setNotifications] = useState([])
   const [vehicleModalState, setVehicleModalState] = useState({ open: false, mode: 'create', vehicle: null })
+  const [sellVehicleState, setSellVehicleState] = useState({ open: false, vehicle: null, listing: null })
   useEffect(() => {
     if (!user?.id) {
       setMyVehicles([])
@@ -172,6 +175,30 @@ export default function ClientApp() {
         setMyVehicles(ownedVehicles.map((vehicle) => mergeVehicleExtras(vehicle, user.id)))
       })
   }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id || myVehicles.length === 0) return
+
+    async function attachVehicleListings() {
+      const { data } = await supabase
+        .from('marketplace')
+        .select('*')
+        .eq('seller_id', user.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      const vehicleListings = (data || [])
+        .map(normalizeMarketplaceListing)
+        .filter((listing) => listing.listing_type === 'vehicle' && listing.vehicle_id)
+
+      setMyVehicles((current) => current.map((vehicle) => {
+        const matchedListing = vehicleListings.find((listing) => String(listing.vehicle_id) === String(vehicle.id))
+        return matchedListing ? { ...vehicle, sale_listing: matchedListing } : { ...vehicle, sale_listing: null }
+      }))
+    }
+
+    attachVehicleListings()
+  }, [myVehicles.length, user?.id])
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -278,6 +305,18 @@ export default function ClientApp() {
     setVehicleModalState({ open: false, mode: 'create', vehicle: null })
   }
 
+  function openSellVehicleModal(vehicle) {
+    setSellVehicleState({
+      open: true,
+      vehicle,
+      listing: vehicle?.sale_listing || null,
+    })
+  }
+
+  function closeSellVehicleModal() {
+    setSellVehicleState({ open: false, vehicle: null, listing: null })
+  }
+
   function goToVehicle(vehicleId) {
     if (!vehicleId) return
     setSidebar(false)
@@ -306,6 +345,25 @@ export default function ClientApp() {
     )))
     closeVehicleModal()
     toast('Vehicle profile updated', 'success')
+  }
+
+  function handleVehicleListed(nextListing) {
+    const normalizedListing = normalizeMarketplaceListing(nextListing)
+    setMyVehicles((prev) => prev.map((item) => (
+      String(item.id) === String(normalizedListing.vehicle_id)
+        ? { ...item, sale_listing: normalizedListing }
+        : item
+    )))
+    closeSellVehicleModal()
+    toast('Vehicle published to the marketplace', 'success')
+  }
+
+  function handleVehicleListingRemoved(listingId) {
+    setMyVehicles((prev) => prev.map((item) => (
+      item.sale_listing?.id === listingId ? { ...item, sale_listing: null } : item
+    )))
+    closeSellVehicleModal()
+    toast('Vehicle removed from the marketplace', 'success')
   }
 
   async function handleVehicleDelete(vehicle) {
@@ -667,6 +725,9 @@ export default function ClientApp() {
                               <button className="btn" style={{justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openEditVehicleModal(v) }}>Edit</button>
                               <button className="btn" style={{justifyContent:'center',color:'var(--red)',borderColor:'rgba(239,68,68,.18)'}} onClick={(event) => { event.stopPropagation(); handleVehicleDelete(v) }}>Delete</button>
                             </div>
+                            <button className={`btn ${v.sale_listing ? '' : 'btn-green'}`} style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openSellVehicleModal(v) }}>
+                              {v.sale_listing ? 'Manage marketplace listing' : 'Sell this vehicle'}
+                            </button>
                             <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openBooking() }}>Book a Service</button>
                           </div>
                         ))}
@@ -919,6 +980,15 @@ export default function ClientApp() {
           onClose={closeVehicleModal}
           onAdd={handleVehicleAdded}
           onSave={handleVehicleSaved}
+        />
+      )}
+      {sellVehicleState.open && (
+        <SellVehicleModal
+          vehicle={sellVehicleState.vehicle}
+          existingListing={sellVehicleState.listing}
+          onClose={closeSellVehicleModal}
+          onCreated={handleVehicleListed}
+          onRemoved={handleVehicleListingRemoved}
         />
       )}
     </div>
