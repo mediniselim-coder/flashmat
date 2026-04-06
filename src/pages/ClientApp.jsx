@@ -128,6 +128,16 @@ function readVehicleExtrasMap(userId) {
   }
 }
 
+function removeVehicleExtras(userId, vehicleId) {
+  if (!vehicleId) return
+
+  const current = readVehicleExtrasMap(userId)
+  if (!current[vehicleId]) return
+
+  delete current[vehicleId]
+  window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
+}
+
 function mergeVehicleExtras(vehicle, userId) {
   const extrasMap = readVehicleExtrasMap(userId)
   const extras = extrasMap[vehicle?.id] || {}
@@ -145,7 +155,7 @@ export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
   const [myVehicles, setMyVehicles] = useState([])
   const [notifications, setNotifications] = useState([])
-  const [addVehicleModal, setAddVehicleModal] = useState(false)
+  const [vehicleModalState, setVehicleModalState] = useState({ open: false, mode: 'create', vehicle: null })
   useEffect(() => {
     if (!user?.id) {
       setMyVehicles([])
@@ -256,18 +266,69 @@ export default function ClientApp() {
     navigate(nextPath, options)
   }
 
+  function openAddVehicleModal() {
+    setVehicleModalState({ open: true, mode: 'create', vehicle: null })
+  }
+
+  function openEditVehicleModal(vehicle) {
+    setVehicleModalState({ open: true, mode: 'edit', vehicle })
+  }
+
+  function closeVehicleModal() {
+    setVehicleModalState({ open: false, mode: 'create', vehicle: null })
+  }
+
   function goToVehicle(vehicleId) {
     if (!vehicleId) return
     setSidebar(false)
     navigate(`/app/client/vehicles/${vehicleId}`)
   }
   function openBooking(provider = null) {
-    if (!myVehicles.length) { toast('Add a vehicle first to book a service', 'error'); setAddVehicleModal(true); return }
+    if (!myVehicles.length) { toast('Add a vehicle first to book a service', 'error'); openAddVehicleModal(); return }
     setSelectedBookingProvider(provider); setBookingModal(true)
   }
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
+
+  function handleVehicleAdded(nextVehicle) {
+    setMyVehicles((prev) => [
+      mergeVehicleExtras(nextVehicle, user?.id),
+      ...prev.filter((item) => String(item.owner_id || '') === String(user?.id || '')),
+    ])
+    closeVehicleModal()
+    toast('Vehicle added to your profile', 'success')
+  }
+
+  function handleVehicleSaved(nextVehicle) {
+    setMyVehicles((prev) => prev.map((item) => (
+      String(item.id) === String(nextVehicle.id) ? mergeVehicleExtras(nextVehicle, user?.id) : item
+    )))
+    closeVehicleModal()
+    toast('Vehicle profile updated', 'success')
+  }
+
+  async function handleVehicleDelete(vehicle) {
+    if (!user?.id || !vehicle?.id) return
+    if (!window.confirm(`Remove ${vehicle.make} ${vehicle.model} ${vehicle.year} from your profile? FlashMat will keep the vehicle lifecycle by VIN.`)) {
+      return
+    }
+
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ owner_id: null })
+      .eq('id', vehicle.id)
+      .eq('owner_id', user.id)
+
+    if (error) {
+      toast(error.message || 'Unable to remove the vehicle from your profile', 'error')
+      return
+    }
+
+    removeVehicleExtras(user.id, vehicle.id)
+    setMyVehicles((prev) => prev.filter((item) => String(item.id) !== String(vehicle.id)))
+    toast('Vehicle removed from your profile', 'success')
+  }
 
   async function handleBookingConfirm(payload) {
     if (!user?.id) throw new Error('Client login required')
@@ -427,7 +488,7 @@ export default function ClientApp() {
                       <div style={{ fontFamily:'var(--display)', fontSize:28, fontWeight:800, color:'#fff', lineHeight:1.1, letterSpacing:'-.5px', marginBottom:8 }}>Welcome, {name}</div>
                       <div style={{ fontSize:14, color:'rgba(255,255,255,.6)', lineHeight:1.6, maxWidth:320 }}>Start by adding your vehicle to unlock your services, diagnosis, and bookings.</div>
                     </div>
-                    <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={() => setAddVehicleModal(true)}>Add My Vehicle →</button>
+                    <button className="btn btn-green btn-lg" style={{ alignSelf:'flex-start', fontSize:15, padding:'14px 28px' }} onClick={openAddVehicleModal}>Add My Vehicle →</button>
                   </>
                 ) : (
               <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
@@ -437,7 +498,7 @@ export default function ClientApp() {
                       {myVehicles[0].plate && <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'rgba(255,255,255,.5)', marginTop:4 }}>{myVehicles[0].plate}</div>}
                       {myVehicles[0].mileage ? <div style={{ fontFamily:'var(--mono)', fontSize:11, color:'rgba(255,255,255,.45)', marginTop:4 }}>{Number(myVehicles[0].mileage).toLocaleString()} km</div> : null}
                     </div>
-                    <button className="btn" style={{ background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', color:'#fff', fontSize:12 }} onClick={() => setAddVehicleModal(true)}>+ Add</button>
+                    <button className="btn" style={{ background:'rgba(255,255,255,.12)', border:'1px solid rgba(255,255,255,.2)', color:'#fff', fontSize:12 }} onClick={openAddVehicleModal}>+ Add</button>
                   </div>
                 )}
               </div>
@@ -521,7 +582,7 @@ export default function ClientApp() {
 
         {pane === 'vehicles' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>My Vehicles</div><div className={styles.pageSub}>Your saved vehicles</div></div><button className="btn btn-green" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>My Vehicles</div><div className={styles.pageSub}>Your saved vehicles</div></div><button className="btn btn-green" onClick={openAddVehicleModal}>+ Add Vehicle</button></div>
             <div className={styles.pad}>
               <div className={styles.vehicleSplit}>
                 <div className={styles.vehicleColumn}>
@@ -530,12 +591,12 @@ export default function ClientApp() {
                       <img src="/vehicle-fallback.svg" alt="Abstract vehicle placeholder" className={styles.vehicleMedia} />
                       <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,marginBottom:8,color:'var(--ink)'}}>No vehicles yet</div>
                       <div style={{fontSize:13,marginBottom:16,color:'var(--ink3)'}}>Add your first vehicle to start building your FlashMat garage.</div>
-                      <button className="btn btn-green btn-lg" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button>
+                      <button className="btn btn-green btn-lg" onClick={openAddVehicleModal}>+ Add Vehicle</button>
                     </div>
-                  ) : (
-                    <div className={styles.vehicleGrid}>
-                      {myVehicles.map(v => (
-                        <div key={v.id} className={styles.vehicleCard} onClick={() => goToVehicle(v.id)} style={{cursor:'pointer'}}>
+                    ) : (
+                      <div className={styles.vehicleGrid}>
+                        {myVehicles.map(v => (
+                          <div key={v.id} className={styles.vehicleCard} onClick={() => goToVehicle(v.id)} style={{cursor:'pointer'}}>
                           <img
                             src={v.image_url || '/vehicle-fallback.svg'}
                             alt={`${v.make} ${v.model}`}
@@ -545,14 +606,19 @@ export default function ClientApp() {
                             <div className={styles.vehicleTitle}>{v.make} {v.model} {v.year}</div>
                             <span className="badge badge-green">My vehicle</span>
                           </div>
-                          <div className={styles.vehicleMeta}>
-                            {v.plate ? <span className={styles.vehicleMetaPill}>{v.plate}</span> : null}
-                            {v.color ? <span className={styles.vehicleMetaPill}>{v.color}</span> : null}
-                            {v.mileage ? <span className={styles.vehicleMetaPill}>{Number(v.mileage).toLocaleString()} km</span> : null}
-                          </div>
-                          <div className={styles.vehicleInfoList}>
-                            <div className={styles.vehicleInfoRow}>
-                              <span>Brand</span>
+                            <div className={styles.vehicleMeta}>
+                              {v.plate ? <span className={styles.vehicleMetaPill}>{v.plate}</span> : null}
+                              {v.color ? (
+                                <span className={styles.vehicleMetaPill} style={{display:'inline-flex',alignItems:'center',gap:6}}>
+                                  <span style={{width:10,height:10,borderRadius:999,background:v.color,border:'1px solid rgba(15, 30, 61, 0.12)',boxShadow:'inset 0 0 0 1px rgba(255,255,255,.32)'}} />
+                                  {v.color}
+                                </span>
+                              ) : null}
+                              {v.mileage ? <span className={styles.vehicleMetaPill}>{Number(v.mileage).toLocaleString()} km</span> : null}
+                            </div>
+                            <div className={styles.vehicleInfoList}>
+                              <div className={styles.vehicleInfoRow}>
+                                <span>Brand</span>
                               <strong>{v.make}</strong>
                             </div>
                             <div className={styles.vehicleInfoRow}>
@@ -567,15 +633,19 @@ export default function ClientApp() {
                           <div style={{marginBottom:10}}>
                             <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
                               <span style={{color:'var(--ink2)'}}>FlashScore™</span>
-                              <span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span>
+                                <span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span>
+                              </div>
+                              <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
                             </div>
-                            <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
+                            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginTop:8}}>
+                              <button className="btn" style={{justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openEditVehicleModal(v) }}>Edit</button>
+                              <button className="btn" style={{justifyContent:'center',color:'var(--red)',borderColor:'rgba(239,68,68,.18)'}} onClick={(event) => { event.stopPropagation(); handleVehicleDelete(v) }}>Delete</button>
+                            </div>
+                            <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openBooking() }}>Book a Service</button>
                           </div>
-                          <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openBooking() }}>Book a Service</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
                 </div>
 
                 <div className={styles.vehicleColumn}>
@@ -628,7 +698,7 @@ export default function ClientApp() {
                 <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:12,display:'flex',gap:10,marginBottom:8,alignItems:'center'}}>
                   <span style={{color:'var(--blue)',display:'inline-flex'}}><AppIcon code={item.icon} size={20} /></span>
                   <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{item.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{item.meta}</div></div>
-                  <button className="btn" style={{fontSize:10}} onClick={() => myVehicles.length ? openBooking() : setAddVehicleModal(true)}>{myVehicles.length ? 'Book' : 'Add'}</button>
+                  <button className="btn" style={{fontSize:10}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add'}</button>
                 </div>
               ))}
             </div>
@@ -816,7 +886,15 @@ export default function ClientApp() {
         />
       )}
       <FlashAI portal="client" userName={name} />
-      {addVehicleModal && <AddVehicleModal onClose={() => setAddVehicleModal(false)} onAdd={v => { setMyVehicles(prev => [mergeVehicleExtras(v, user?.id), ...prev.filter((item) => String(item.owner_id || '') === String(user?.id || ''))]); setAddVehicleModal(false) }} />}
+      {vehicleModalState.open && (
+        <AddVehicleModal
+          mode={vehicleModalState.mode}
+          vehicle={vehicleModalState.vehicle}
+          onClose={closeVehicleModal}
+          onAdd={handleVehicleAdded}
+          onSave={handleVehicleSaved}
+        />
+      )}
     </div>
   )
 }
