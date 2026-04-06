@@ -63,7 +63,7 @@ function formatStreetAddress(components) {
 }
 
 export default function ClientProfileModal({ onClose }) {
-  const { user, profile, updateProfile } = useAuth()
+  const { user, profile, updateProfile, deleteAccount } = useAuth()
   const fileRef = useRef(null)
   const addressInputRef = useRef(null)
   const autocompleteRef = useRef(null)
@@ -78,7 +78,9 @@ export default function ClientProfileModal({ onClose }) {
     avatar_url: '',
   })
   const [loading, setLoading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState('')
 
   useEffect(() => {
     setForm({
@@ -208,6 +210,26 @@ export default function ClientProfileModal({ onClose }) {
     }
   }
 
+  async function handleDeleteAccount() {
+    if (confirmDelete.trim().toUpperCase() !== 'DELETE') {
+      setError('Type DELETE to confirm account deletion.')
+      return
+    }
+
+    setError('')
+    setDeleting(true)
+
+    try {
+      await deleteAccount()
+      onClose()
+      window.location.href = '/'
+    } catch (deleteError) {
+      setError(deleteError.message || 'Unable to delete your account.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="modal-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 620, maxHeight: '92vh', overflowY: 'auto' }}>
@@ -291,9 +313,42 @@ export default function ClientProfileModal({ onClose }) {
 
           {error && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
+          <div style={{ marginTop: 18, background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: 16, padding: '14px 16px', marginBottom: 14 }}>
+            <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 6 }}>
+              Delete account
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 10 }}>
+              This permanently removes your FlashMat account and signs you out. Type <strong>DELETE</strong> to confirm.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
+              <input
+                className="form-input"
+                value={confirmDelete}
+                onChange={(event) => setConfirmDelete(event.target.value)}
+                placeholder="Type DELETE"
+                disabled={deleting}
+              />
+              <button
+                type="button"
+                className="btn"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                style={{
+                  color: '#fff',
+                  background: 'var(--red)',
+                  borderColor: 'rgba(239, 68, 68, 0.4)',
+                  minWidth: 136,
+                  justifyContent: 'center',
+                }}
+              >
+                {deleting ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Delete account'}
+              </button>
+            </div>
+          </div>
+
           <div className="modal-actions">
             <button type="button" className="btn" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-green btn-lg" disabled={loading}>
+            <button type="submit" className="btn btn-green btn-lg" disabled={loading || deleting}>
               {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Save profile'}
             </button>
           </div>

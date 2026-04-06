@@ -35,6 +35,39 @@ function writeAuthCache(user, profile) {
   }
 }
 
+function clearCurrentUserScopedStorage(userId = '') {
+  if (typeof window === 'undefined') return
+
+  const keysToRemove = [AUTH_CACHE_KEY]
+  const normalizedUserId = String(userId || '').trim()
+
+  try {
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (!key) continue
+
+      if (
+        key.startsWith('flashmat-vehicle-extras:')
+        || key.startsWith('flashmat-vehicle-gallery:')
+        || key.startsWith('flashmat-provider-profile-draft:')
+        || key.startsWith('flashmat-provider-overrides:')
+        || key.startsWith('flashmat-client-vehicles:')
+      ) {
+        if (!normalizedUserId || key.includes(normalizedUserId) || key.endsWith(':anonymous')) {
+          keysToRemove.push(key)
+        }
+      }
+    }
+
+    Array.from(new Set(keysToRemove)).forEach((key) => {
+      window.localStorage.removeItem(key)
+      window.sessionStorage.removeItem(key)
+    })
+  } catch {
+    // Ignore storage cleanup errors and keep the auth flow moving.
+  }
+}
+
 function buildProfileRecord(record = {}, authUser = null) {
   const metadata = authUser?.user_metadata || {}
 
@@ -177,6 +210,30 @@ export function AuthProvider({ children }) {
     writeAuthCache(null, null)
   }
 
+  async function deleteAccount() {
+    if (!user?.id) throw new Error('You need to be signed in to delete your account.')
+
+    const { error } = await supabase.rpc('delete_my_account')
+
+    if (error) {
+      if (String(error.message || '').toLowerCase().includes('function public.delete_my_account')) {
+        throw new Error('Account deletion is not enabled in the database yet. Run the latest Supabase production migration first.')
+      }
+      throw error
+    }
+
+    explicitSignOutRef.current = true
+    clearCurrentUserScopedStorage(user.id)
+    try {
+      await supabase.auth.signOut()
+    } catch {
+      // Ignore remote sign-out failures after the user row is already gone.
+    }
+    setUser(null)
+    setProfile(null)
+    writeAuthCache(null, null)
+  }
+
   async function updateProfile(updates = {}) {
     if (!user?.id) throw new Error('You need to be signed in to update your profile.')
 
@@ -223,7 +280,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, fetchProfile, updateProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, fetchProfile, updateProfile, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   )
