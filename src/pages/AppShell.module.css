@@ -6,7 +6,7 @@
 .sidebar {
   width: 248px; flex-shrink: 0; background: linear-gradient(180deg, #07253d 0%, #0b2740 100%); border-right: 1px solid rgba(120,180,220,.12);
   display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
-  overflow-y: auto; box-shadow: 8px 0 30px rgba(4,18,32,.16); z-index: 50;
+  overflow: visible; box-shadow: 8px 0 30px rgba(4,18,32,.16); z-index: 50;
   transition: transform .25s ease;
 }
 .sbHeader { padding: 18px 16px; border-bottom: 1px solid rgba(120,180,220,.12); display: flex; align-items: center; gap: 10px; }
@@ -49,9 +49,10 @@
 .userRole { font-size: 10px; color: rgba(182,206,228,.68); font-family: var(--mono); }
 .profileMenu {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 10px);
+  left: calc(100% + 14px);
+  right: auto;
+  bottom: 0;
+  width: 280px;
   background: #0b2740;
   border: 1px solid rgba(120,180,220,.12);
   border-radius: 18px;
@@ -315,7 +316,7 @@
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
-  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); overflow-y: auto; }
   .sidebarOpen { transform: translateX(0); animation: slideInLeft .25s ease; }
   .mobileTopbar { display: flex; }
   .bottomNav { display: flex; }
@@ -323,6 +324,12 @@
   .pageHdr button { display: none; }
   .pad { padding: 14px 14px 90px; }
   .statsGrid { grid-template-columns: 1fr 1fr; }
+  .profileMenu {
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 10px);
+    width: auto;
+  }
   .g2, .g3 { grid-template-columns: 1fr; }
   .vehicleSplit, .vehicleGrid { grid-template-columns: 1fr; }
   .vehicleCard { max-width: none; }
