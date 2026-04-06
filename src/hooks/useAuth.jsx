@@ -213,13 +213,30 @@ export function AuthProvider({ children }) {
   async function deleteAccount() {
     if (!user?.id) throw new Error('You need to be signed in to delete your account.')
 
-    const { error } = await supabase.rpc('delete_my_account')
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError) throw sessionError
 
-    if (error) {
-      if (String(error.message || '').toLowerCase().includes('function public.delete_my_account')) {
-        throw new Error('Account deletion is not enabled in the database yet. Run the latest Supabase production migration first.')
-      }
-      throw error
+    const accessToken = sessionData?.session?.access_token
+    if (!accessToken) {
+      throw new Error('Your session expired. Sign in again before deleting your account.')
+    }
+
+    const response = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+
+    let payload = null
+    try {
+      payload = await response.json()
+    } catch {
+      payload = null
+    }
+
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Unable to delete your account right now.')
     }
 
     explicitSignOutRef.current = true
