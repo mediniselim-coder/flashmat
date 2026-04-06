@@ -64,6 +64,11 @@ function getClientPathSegment(pathname) {
   return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
 }
 
+function getVehicleIdFromClientPath(pathname) {
+  const segments = pathname.replace(/\/+$/, '').split('/')
+  return segments[3] === 'vehicles' && segments[4] ? segments[4] : ''
+}
+
 function readPendingServiceSearch() {
   try {
     const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
@@ -169,6 +174,7 @@ export default function ClientApp() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const rawPaneSegment = getClientPathSegment(location.pathname)
+  const vehicleRouteId = getVehicleIdFromClientPath(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
   const name = profile?.full_name || 'Alex'
@@ -244,6 +250,12 @@ export default function ClientApp() {
     setSidebar(false)
     navigate(nextPath, options)
   }
+
+  function goToVehicle(vehicleId) {
+    if (!vehicleId) return
+    setSidebar(false)
+    navigate(`/app/client/vehicles/${vehicleId}`)
+  }
   function openBooking(provider = null) {
     if (!myVehicles.length) { toast('Add a vehicle first to book a service', 'error'); setAddVehicleModal(true); return }
     setSelectedBookingProvider(provider); setBookingModal(true)
@@ -265,6 +277,10 @@ export default function ClientApp() {
     const score = Number(v.flash_score || 80)
     return { make: v.make, model: v.model, year: v.year, score, items: [['Engine', Math.min(99, score + 6), 'green'], ['Brakes', Math.min(98, score + 3), score >= 80 ? 'green' : 'amber'], ['Tires', Math.max(55, score - 4), score >= 75 ? 'blue' : 'amber'], ['Battery', Math.min(97, score + 2), 'blue'], ['Oil', Math.max(40, score - 8), score >= 85 ? 'green' : 'amber']] }
   })
+  const selectedVehicle = vehicleRouteId ? myVehicles.find((vehicle) => String(vehicle.id) === String(vehicleRouteId)) : null
+  const selectedVehicleBookings = selectedVehicle
+    ? bookings.filter((booking) => String(booking.vehicle_id || booking.vehicle?.id || '') === String(selectedVehicle.id))
+    : []
   const vehicleActivity = [
     ...myVehicles.map((vehicle) => ({
       id: `vehicle-${vehicle.id}`,
@@ -504,95 +520,217 @@ export default function ClientApp() {
 
         {pane === 'vehicles' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>My Vehicles</div><div className={styles.pageSub}>Your saved vehicles</div></div><button className="btn btn-green" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button></div>
-            <div className={styles.pad}>
-              <div className={styles.vehicleSplit}>
-                <div className={styles.vehicleColumn}>
-                  {myVehicles.length === 0 ? (
-                    <div className={styles.vehicleCard} style={{textAlign:'center',padding:24}}>
-                      <img src="/vehicle-fallback.svg" alt="Abstract vehicle placeholder" className={styles.vehicleMedia} />
-                      <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,marginBottom:8,color:'var(--ink)'}}>No vehicles yet</div>
-                      <div style={{fontSize:13,marginBottom:16,color:'var(--ink3)'}}>Add your first vehicle to start building your FlashMat garage.</div>
-                      <button className="btn btn-green btn-lg" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button>
-                    </div>
-                  ) : (
-                    <div className={styles.vehicleGrid}>
-                      {myVehicles.map(v => (
-                        <div key={v.id} className={styles.vehicleCard}>
-                          <img
-                            src={v.image_url || '/vehicle-fallback.svg'}
-                            alt={`${v.make} ${v.model}`}
-                            className={styles.vehicleMedia}
-                          />
-                          <div className={styles.vehicleTop}>
-                            <div className={styles.vehicleTitle}>{v.make} {v.model} {v.year}</div>
-                            <span className="badge badge-green">My vehicle</span>
-                          </div>
-                          <div className={styles.vehicleMeta}>
-                            {v.plate ? <span className={styles.vehicleMetaPill}>{v.plate}</span> : null}
-                            {v.color ? <span className={styles.vehicleMetaPill}>{v.color}</span> : null}
-                            {v.mileage ? <span className={styles.vehicleMetaPill}>{Number(v.mileage).toLocaleString()} km</span> : null}
-                          </div>
-                          <div className={styles.vehicleInfoList}>
-                            <div className={styles.vehicleInfoRow}>
-                              <span>Brand</span>
-                              <strong>{v.make}</strong>
-                            </div>
-                            <div className={styles.vehicleInfoRow}>
-                              <span>Year</span>
-                              <strong>{v.year}</strong>
-                            </div>
-                            <div className={styles.vehicleInfoRow}>
-                              <span>VIN</span>
-                              <strong style={{fontFamily:'var(--mono)',fontSize:11}}>{v.vin || 'Not added yet'}</strong>
-                            </div>
-                          </div>
-                          <div style={{marginBottom:10}}>
-                            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
-                              <span style={{color:'var(--ink2)'}}>FlashScore™</span>
-                              <span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span>
-                            </div>
-                            <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
-                          </div>
-                          <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={() => openBooking()}>Book a Service</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.vehicleColumn}>
-                  <div className={styles.historyCard}>
-                    <div className={styles.historyHeader}>
-                      <div className={styles.historyEyebrow}>FlashMat Activity</div>
-                      <div className={styles.historyTitle}>Recent activity</div>
-                      <div className={styles.historySub}>A quieter view of bookings, garage updates, and saved vehicles.</div>
-                    </div>
-
-                    {vehicleActivity.length > 0 ? (
-                      <div className={styles.historyList}>
-                        {vehicleActivity.map((item) => (
-                          <div key={item.id} className={styles.historyItem}>
-                            <div className={styles.historyIcon}><AppIcon code={item.icon} size={18} /></div>
-                            <div>
-                              <div className={styles.historyItemTitle}>{item.title}</div>
-                              <div className={styles.historyItemMeta}>{item.meta}</div>
-                              <div className={styles.historyItemTime}>{formatActivityTime(item.at)}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className={styles.historyEmpty}>
-                        <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="AI" size={26} /></div>
-                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,color:'var(--ink)',marginBottom:8}}>No history yet</div>
-                        <div style={{fontSize:13,lineHeight:1.7}}>Once you add vehicles, book services, or receive alerts, your FlashMat timeline will appear here.</div>
-                      </div>
-                    )}
+            {selectedVehicle ? (
+              <>
+                <div className={styles.pageHdr}>
+                  <div>
+                    <div className={styles.pageTitle}>{selectedVehicle.make} {selectedVehicle.model} {selectedVehicle.year}</div>
+                    <div className={styles.pageSub}>Vehicle details and service history</div>
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    <button className="btn" onClick={() => go('vehicles')}>← Back to My Vehicles</button>
+                    <button className="btn btn-green" onClick={() => openBooking()}>Book a Service</button>
                   </div>
                 </div>
-              </div>
-            </div>
+                <div className={styles.pad}>
+                  <div style={{display:'grid',gridTemplateColumns:'minmax(0, 1.05fr) minmax(320px, .95fr)',gap:16,alignItems:'start'}}>
+                    <div className="panel">
+                      <div className="panel-body" style={{padding:18}}>
+                        <img
+                          src={selectedVehicle.image_url || '/vehicle-fallback.svg'}
+                          alt={`${selectedVehicle.make} ${selectedVehicle.model}`}
+                          style={{width:'100%',height:260,objectFit:'cover',borderRadius:16,border:'1px solid var(--border)',marginBottom:16,background:'linear-gradient(135deg, #102746 0%, #2c7ac8 100%)'}}
+                        />
+                        <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:12}}>
+                          <div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:28,lineHeight:1.02,color:'var(--ink)'}}>{selectedVehicle.make} {selectedVehicle.model}</div>
+                            <div style={{fontSize:13,color:'var(--ink2)',marginTop:4}}>Saved in your FlashMat garage</div>
+                          </div>
+                          <span className="badge badge-green">My vehicle</span>
+                        </div>
+                        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+                          {selectedVehicle.plate ? <span className="badge badge-gray">{selectedVehicle.plate}</span> : null}
+                          {selectedVehicle.color ? <span className="badge badge-blue">{selectedVehicle.color}</span> : null}
+                          {selectedVehicle.mileage ? <span className="badge badge-amber">{Number(selectedVehicle.mileage).toLocaleString()} km</span> : null}
+                          <span className="badge badge-green">FlashScore {selectedVehicle.flash_score}%</span>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:12,marginBottom:16}}>
+                          {[
+                            ['Brand', selectedVehicle.make || '—'],
+                            ['Model year', selectedVehicle.year || '—'],
+                            ['VIN', selectedVehicle.vin || 'Not added yet'],
+                            ['Services completed', selectedVehicleBookings.length],
+                          ].map(([label, value]) => (
+                            <div key={label} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:'12px 14px'}}>
+                              <div style={{fontSize:10,fontFamily:'var(--mono)',letterSpacing:.8,textTransform:'uppercase',color:'var(--ink3)',marginBottom:6}}>{label}</div>
+                              <div style={{fontSize:14,fontWeight:700,color:'var(--ink)',fontFamily:label === 'VIN' ? 'var(--mono)' : undefined,wordBreak:'break-word'}}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div>
+                          <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:6}}>
+                            <span style={{color:'var(--ink2)'}}>FlashScore™</span>
+                            <span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{selectedVehicle.flash_score}%</span>
+                          </div>
+                          <div className="prog-bar"><div className="prog-fill" style={{width:`${selectedVehicle.flash_score}%`,background:'var(--green)'}}/></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{display:'grid',gap:14}}>
+                      <div className="panel">
+                        <div className="panel-hd">
+                          <div className="panel-title">Service History</div>
+                          <span className="badge badge-blue">{selectedVehicleBookings.length} record{selectedVehicleBookings.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div className="panel-body" style={{padding:0}}>
+                          {selectedVehicleBookings.length > 0 ? (
+                            selectedVehicleBookings.map((booking, index) => (
+                              <div key={booking.id} style={{display:'flex',gap:12,padding:'14px 16px',borderBottom:index < selectedVehicleBookings.length - 1 ? '1px solid var(--border)' : 'none'}}>
+                                <div style={{width:38,height:38,borderRadius:12,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--blue)',flexShrink:0}}>
+                                  <AppIcon code={booking.service_icon || 'RS'} size={18} />
+                                </div>
+                                <div style={{flex:1,minWidth:0}}>
+                                  <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:4}}>
+                                    <div style={{fontSize:14,fontWeight:700,color:'var(--ink)'}}>{booking.service}</div>
+                                    <span className={`badge ${booking.statusClass}`}>{booking.statusLabel}</span>
+                                  </div>
+                                  <div style={{fontSize:12,color:'var(--ink2)',marginBottom:5}}>{booking.providerName}</div>
+                                  <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                                    <span className="badge badge-gray">{booking.datetimeLabel}</span>
+                                    <span className="badge badge-blue">{booking.priceLabel}</span>
+                                  </div>
+                                  {booking.notes ? <div style={{fontSize:11,color:'var(--ink3)',marginTop:8,lineHeight:1.6}}>{booking.notes}</div> : null}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div style={{padding:'24px 18px',textAlign:'center',color:'var(--ink3)'}}>
+                              <div style={{color:'var(--blue)',marginBottom:12,display:'flex',justifyContent:'center'}}><AppIcon code="RS" size={30} /></div>
+                              <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,color:'var(--ink)',marginBottom:8}}>No services yet</div>
+                              <div style={{fontSize:12,lineHeight:1.7,marginBottom:14}}>Bookings and completed services for this vehicle will appear here.</div>
+                              <button className="btn btn-green" onClick={() => openBooking()}>Book first service</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="panel">
+                        <div className="panel-hd"><div className="panel-title">Vehicle Summary</div></div>
+                        <div className="panel-body">
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(3, minmax(0, 1fr))',gap:10}}>
+                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:12,padding:12}}>
+                              <div style={{fontSize:10,fontFamily:'var(--mono)',textTransform:'uppercase',color:'var(--ink3)',marginBottom:6}}>Total services</div>
+                              <div style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--ink)'}}>{selectedVehicleBookings.length}</div>
+                            </div>
+                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:12,padding:12}}>
+                              <div style={{fontSize:10,fontFamily:'var(--mono)',textTransform:'uppercase',color:'var(--ink3)',marginBottom:6}}>Last service</div>
+                              <div style={{fontSize:13,fontWeight:700,color:'var(--ink)'}}>{selectedVehicleBookings[0]?.datetimeLabel || 'Not yet'}</div>
+                            </div>
+                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:12,padding:12}}>
+                              <div style={{fontSize:10,fontFamily:'var(--mono)',textTransform:'uppercase',color:'var(--ink3)',marginBottom:6}}>Current score</div>
+                              <div style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--green)'}}>{selectedVehicle.flash_score}%</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.pageHdr}><div><div className={styles.pageTitle}>My Vehicles</div><div className={styles.pageSub}>Your saved vehicles</div></div><button className="btn btn-green" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button></div>
+                <div className={styles.pad}>
+                  <div className={styles.vehicleSplit}>
+                    <div className={styles.vehicleColumn}>
+                      {myVehicles.length === 0 ? (
+                        <div className={styles.vehicleCard} style={{textAlign:'center',padding:24}}>
+                          <img src="/vehicle-fallback.svg" alt="Abstract vehicle placeholder" className={styles.vehicleMedia} />
+                          <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,marginBottom:8,color:'var(--ink)'}}>No vehicles yet</div>
+                          <div style={{fontSize:13,marginBottom:16,color:'var(--ink3)'}}>Add your first vehicle to start building your FlashMat garage.</div>
+                          <button className="btn btn-green btn-lg" onClick={() => setAddVehicleModal(true)}>+ Add Vehicle</button>
+                        </div>
+                      ) : (
+                        <div className={styles.vehicleGrid}>
+                          {myVehicles.map(v => (
+                            <div key={v.id} className={styles.vehicleCard} onClick={() => goToVehicle(v.id)} style={{cursor:'pointer'}}>
+                              <img
+                                src={v.image_url || '/vehicle-fallback.svg'}
+                                alt={`${v.make} ${v.model}`}
+                                className={styles.vehicleMedia}
+                              />
+                              <div className={styles.vehicleTop}>
+                                <div className={styles.vehicleTitle}>{v.make} {v.model} {v.year}</div>
+                                <span className="badge badge-green">My vehicle</span>
+                              </div>
+                              <div className={styles.vehicleMeta}>
+                                {v.plate ? <span className={styles.vehicleMetaPill}>{v.plate}</span> : null}
+                                {v.color ? <span className={styles.vehicleMetaPill}>{v.color}</span> : null}
+                                {v.mileage ? <span className={styles.vehicleMetaPill}>{Number(v.mileage).toLocaleString()} km</span> : null}
+                              </div>
+                              <div className={styles.vehicleInfoList}>
+                                <div className={styles.vehicleInfoRow}>
+                                  <span>Brand</span>
+                                  <strong>{v.make}</strong>
+                                </div>
+                                <div className={styles.vehicleInfoRow}>
+                                  <span>Year</span>
+                                  <strong>{v.year}</strong>
+                                </div>
+                                <div className={styles.vehicleInfoRow}>
+                                  <span>VIN</span>
+                                  <strong style={{fontFamily:'var(--mono)',fontSize:11}}>{v.vin || 'Not added yet'}</strong>
+                                </div>
+                              </div>
+                              <div style={{marginBottom:10}}>
+                                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:4}}>
+                                  <span style={{color:'var(--ink2)'}}>FlashScore™</span>
+                                  <span style={{color:'var(--green)',fontFamily:'var(--mono)'}}>{v.flash_score}%</span>
+                                </div>
+                                <div className="prog-bar"><div className="prog-fill" style={{width:`${v.flash_score}%`,background:'var(--green)'}}/></div>
+                              </div>
+                              <button className="btn btn-green" style={{marginTop:8,width:'100%',justifyContent:'center'}} onClick={(event) => { event.stopPropagation(); openBooking() }}>Book a Service</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.vehicleColumn}>
+                      <div className={styles.historyCard}>
+                        <div className={styles.historyHeader}>
+                          <div className={styles.historyEyebrow}>FlashMat Activity</div>
+                          <div className={styles.historyTitle}>Recent activity</div>
+                          <div className={styles.historySub}>A quieter view of bookings, garage updates, and saved vehicles.</div>
+                        </div>
+
+                        {vehicleActivity.length > 0 ? (
+                          <div className={styles.historyList}>
+                            {vehicleActivity.map((item) => (
+                              <div key={item.id} className={styles.historyItem}>
+                                <div className={styles.historyIcon}><AppIcon code={item.icon} size={18} /></div>
+                                <div>
+                                  <div className={styles.historyItemTitle}>{item.title}</div>
+                                  <div className={styles.historyItemMeta}>{item.meta}</div>
+                                  <div className={styles.historyItemTime}>{formatActivityTime(item.at)}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className={styles.historyEmpty}>
+                            <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="AI" size={26} /></div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,color:'var(--ink)',marginBottom:8}}>No history yet</div>
+                            <div style={{fontSize:13,lineHeight:1.7}}>Once you add vehicles, book services, or receive alerts, your FlashMat timeline will appear here.</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
