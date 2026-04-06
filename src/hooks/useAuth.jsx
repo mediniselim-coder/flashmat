@@ -48,11 +48,6 @@ export function AuthProvider({ children }) {
         return
       }
 
-      if (!explicitSignOutRef.current && cachedAuth.user) {
-        setLoading(false)
-        return
-      }
-
       setUser(null)
       setProfile(null)
       writeAuthCache(null, null)
