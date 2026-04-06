@@ -10,7 +10,12 @@ create table public.profiles (
   email       text not null,
   role        text not null check (role in ('client','provider')),
   phone       text,
+  address     text,
+  city        text,
+  province    text,
+  postal_code text,
   avatar_url  text,
+  updated_at  timestamp with time zone default now(),
   created_at  timestamp with time zone default now()
 );
 
@@ -21,10 +26,16 @@ create table public.vehicles (
   make        text not null,
   model       text not null,
   year        integer not null,
+  trim        text,
   plate       text,
   color       text,
   vin         text,
+  serial_number text,
+  mileage     integer,
+  image_url   text,
+  photo_url   text,
   flash_score integer default 80,
+  updated_at  timestamp with time zone default now(),
   created_at  timestamp with time zone default now()
 );
 
@@ -96,11 +107,16 @@ alter table public.notifications enable row level security;
 alter table public.marketplace   enable row level security;
 
 -- Profiles: chacun voit son propre profil, fournisseurs publics
-create policy "profiles_own"    on public.profiles for all using (auth.uid() = id);
-create policy "profiles_public" on public.profiles for select using (true);
+create policy "profiles_select_own" on public.profiles for select using (auth.uid() = id);
+create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
+create policy "profiles_public_provider" on public.profiles for select using (role = 'provider');
 
 -- Vehicles: propriétaire seulement
-create policy "vehicles_own" on public.vehicles for all using (auth.uid() = owner_id);
+create policy "vehicles_select_own" on public.vehicles for select using (auth.uid() = owner_id);
+create policy "vehicles_insert_own" on public.vehicles for insert with check (auth.uid() = owner_id);
+create policy "vehicles_update_own" on public.vehicles for update using (auth.uid() = owner_id) with check (auth.uid() = owner_id or owner_id is null);
+create policy "vehicles_delete_own" on public.vehicles for delete using (auth.uid() = owner_id);
 
 -- Providers: publics en lecture, propriétaire en écriture
 create policy "providers_read"  on public.providers for select using (true);
