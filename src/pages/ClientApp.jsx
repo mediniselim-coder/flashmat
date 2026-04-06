@@ -11,6 +11,8 @@ import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
 import SellVehicleModal from '../components/SellVehicleModal'
 import ClientProfileModal from '../components/ClientProfileModal'
+import HelpSupportModal from '../components/HelpSupportModal'
+import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
@@ -217,6 +219,8 @@ export default function ClientApp() {
   const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
+  const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
+  const [securityModalOpen, setSecurityModalOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
@@ -332,6 +336,8 @@ export default function ClientApp() {
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
   function openClientProfileModal() { setProfileMenuOpen(false); setClientProfileModalOpen(true) }
+  function openHelpSupportModal() { setProfileMenuOpen(false); setHelpSupportModalOpen(true) }
+  function openSecurityModal() { setProfileMenuOpen(false); setSecurityModalOpen(true) }
 
   function handleVehicleAdded(nextVehicle) {
     setMyVehicles((prev) => [
@@ -508,12 +514,9 @@ export default function ClientApp() {
                   <div className={styles.profileMenuRole}>Client Profile</div>
                 </div>
                 <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="AC" /></span><span>Edit Profile</span></button>
+                <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
+                <button className={styles.profileMenuItem} onClick={openSecurityModal}><span><AppIcon code="AL" /></span><span>Security & Privacy</span></button>
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}><span><AppIcon code="TB" /></span><span>Dashboard</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('vehicles')}><span><AppIcon code="VH" /></span><span>My Vehicles</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('bookings')}><span><AppIcon code="RS" /></span><span>My Bookings</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('marketplace')}><span><AppIcon code="MP" /></span><span>Marketplace</span></button>
-                <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <div className={styles.profileMenuDivider} />
                 <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span><AppIcon code="SO" /></span><span>Sign Out</span></button>
               </div>
@@ -996,6 +999,8 @@ export default function ClientApp() {
         />
       )}
       {clientProfileModalOpen && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
+      {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
+      {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
     </div>
   )
 }

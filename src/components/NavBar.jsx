@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './LoginModal'
 import ClientProfileModal from './ClientProfileModal'
+import HelpSupportModal from './HelpSupportModal'
+import SecurityPrivacyModal from './SecurityPrivacyModal'
 
 const PRIMARY_ITEMS = [
   {
@@ -119,6 +121,8 @@ export default function NavBar({ activePage }) {
   const [loginOpen, setLoginOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
+  const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
+  const [securityModalOpen, setSecurityModalOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -211,14 +215,13 @@ export default function NavBar({ activePage }) {
       ]
     }
 
-      return [
-        { icon: <UserIcon />, label: 'Edit profile', action: () => { setProfileOpen(false); setClientProfileModalOpen(true) } },
-        { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
-        { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
-        { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
-        { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
-      ]
-  }, [isProvider, navigate, profile, user])
+        return [
+          { icon: <UserIcon />, label: 'Edit profile', action: () => { setProfileOpen(false); setClientProfileModalOpen(true) } },
+         { icon: <DoctorIcon />, label: 'Help & Support', action: () => { setProfileOpen(false); setHelpSupportModalOpen(true) } },
+         { icon: <LockIcon />, label: 'Security & Privacy', action: () => { setProfileOpen(false); setSecurityModalOpen(true) } },
+         { icon: <HomeIcon />, label: 'Home', action: () => navigateTo('/') },
+        ]
+    }, [isProvider, navigate, profile, user])
 
   const siteSearchEntries = useMemo(() => {
     const dynamicEntries = PRIMARY_ITEMS.flatMap((item) =>
@@ -396,6 +399,8 @@ export default function NavBar({ activePage }) {
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
       {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
+      {helpSupportModalOpen && !isProvider && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
+      {securityModalOpen && !isProvider && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
     </>
   )
 }
@@ -635,6 +640,8 @@ function ProvidersIcon() { return <Svg><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 
 function DoctorIcon() { return <Svg><path d="M12 4v16" /><path d="M5 11h14" /><circle cx="12" cy="12" r="8" /></Svg> }
 function MarketplaceIcon() { return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg> }
 function UserIcon() { return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg> }
+function HomeIcon() { return <Svg><path d="M4 11.5 12 5l8 6.5" /><path d="M6.5 10.5V20h11v-9.5" /></Svg> }
+function LockIcon() { return <Svg><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 1 1 8 0v3" /></Svg> }
 function SearchIcon() { return <Svg><circle cx="11" cy="11" r="6" /><path d="m20 20-4.35-4.35" /></Svg> }
 function MapPinIcon() { return <Svg style={{ width: 16, height: 16 }}><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z" /><circle cx="12" cy="10" r="2.3" /></Svg> }
 function DashboardIcon() { return <Svg><path d="M4 13h7V4H4v9Z" /><path d="M13 20h7v-7h-7v7Z" /><path d="M13 11h7V4h-7v7Z" /><path d="M4 20h7v-5H4v5Z" /></Svg> }
