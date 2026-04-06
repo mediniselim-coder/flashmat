@@ -1,5 +1,8 @@
 const APP_VERSION_STORAGE_KEY = 'flashmat-app-version'
 const APP_RELOAD_STORAGE_KEY = 'flashmat-app-version-reload'
+const PERSISTENT_STORAGE_PREFIXES = [
+  'flashmat-vehicle-extras:',
+]
 
 function safeWindow() {
   return typeof window !== 'undefined' ? window : null
@@ -11,7 +14,8 @@ function clearFlashMatStorage(storage) {
   const keysToRemove = []
   for (let index = 0; index < storage.length; index += 1) {
     const key = storage.key(index)
-    if (key && key.startsWith('flashmat-')) {
+    const shouldPreserve = key && PERSISTENT_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
+    if (key && key.startsWith('flashmat-') && !shouldPreserve) {
       keysToRemove.push(key)
     }
   }
