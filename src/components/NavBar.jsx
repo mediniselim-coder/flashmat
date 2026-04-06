@@ -209,14 +209,13 @@ export default function NavBar({ activePage }) {
         { icon: <MarketplaceIcon />, label: 'Marketplace fournisseur', action: () => navigateTo('/app/provider') },
         { icon: <DoctorIcon />, label: 'Support FlashMat', action: () => setProfileOpen(false) },
       ]
-    }
-
-        return [
-          { icon: <UserIcon />, label: 'Edit profile', action: () => { setProfileOpen(false); setClientProfileModalOpen(true) } },
-         { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
-         { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
-         { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
-         { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
+      }
+  
+          return [
+           { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
+           { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
+           { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
+           { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
         ]
     }, [isProvider, navigate, profile, user])
 
@@ -306,8 +305,23 @@ export default function NavBar({ activePage }) {
                 {profileOpen && (
                   <div style={styles.profilePopup}>
                     <div style={styles.profileHeader}>
-                      <div style={styles.profileTitle}>{displayName}</div>
-                      <div style={styles.profileSubtitle}>{isProvider ? 'Profil fournisseur' : 'Profil client'}</div>
+                      <div style={styles.profileHeaderRow}>
+                        <div>
+                          <div style={styles.profileTitle}>{displayName}</div>
+                          <div style={styles.profileSubtitle}>{isProvider ? 'Profil fournisseur' : 'Profil client'}</div>
+                        </div>
+                        {!isProvider && (
+                          <button
+                            type="button"
+                            onClick={() => { setProfileOpen(false); setClientProfileModalOpen(true) }}
+                            style={styles.profileSettingsButton}
+                            aria-label="Edit profile"
+                            title="Edit profile"
+                          >
+                            <SettingsIcon />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div style={{ padding: 10 }}>
                       {profileItems.map((item) => (
@@ -635,6 +649,7 @@ function ProvidersIcon() { return <Svg><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 
 function DoctorIcon() { return <Svg><path d="M12 4v16" /><path d="M5 11h14" /><circle cx="12" cy="12" r="8" /></Svg> }
 function MarketplaceIcon() { return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg> }
 function UserIcon() { return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg> }
+function SettingsIcon() { return <Svg><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.7Z" /></Svg> }
 function SearchIcon() { return <Svg><circle cx="11" cy="11" r="6" /><path d="m20 20-4.35-4.35" /></Svg> }
 function MapPinIcon() { return <Svg style={{ width: 16, height: 16 }}><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z" /><circle cx="12" cy="10" r="2.3" /></Svg> }
 function DashboardIcon() { return <Svg><path d="M4 13h7V4H4v9Z" /><path d="M13 20h7v-7h-7v7Z" /><path d="M13 11h7V4h-7v7Z" /><path d="M4 20h7v-5H4v5Z" /></Svg> }
@@ -1010,8 +1025,21 @@ const styles = {
   panelClose: { marginTop: 18, border: 'none', background: 'transparent', color: '#506a86', fontSize: 14, fontWeight: 700 },
   profilePopup: { position: 'absolute', right: 0, top: 56, width: 280, borderRadius: 18, overflow: 'hidden', background: '#0b2740', border: '1px solid rgba(120,180,220,0.12)', boxShadow: '0 24px 42px rgba(4,18,32,0.32)' },
   profileHeader: { padding: 18, borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(59,159,216,0.14), rgba(26,58,143,0.18))' },
+  profileHeaderRow: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   profileTitle: { color: '#fff', fontWeight: 800, fontSize: 16, marginBottom: 4 },
   profileSubtitle: { color: '#90b7d9', fontSize: 12, fontWeight: 700 },
+  profileSettingsButton: {
+    width: 34,
+    height: 34,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.14)',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#dbe7f6',
+    flexShrink: 0,
+  },
   popupItem: { width: '100%', display: 'flex', alignItems: 'center', gap: 12, border: 'none', borderRadius: 12, padding: '12px 12px', textAlign: 'left', fontSize: 14, fontWeight: 600 },
   popupIcon: { width: 18, height: 18, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   svg: { width: 20, height: 20, display: 'block' },
