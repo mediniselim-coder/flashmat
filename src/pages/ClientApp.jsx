@@ -527,8 +527,8 @@ export default function ClientApp() {
                   <div className={styles.historyCard}>
                     <div className={styles.historyHeader}>
                       <div className={styles.historyEyebrow}>FlashMat Activity</div>
-                      <div className={styles.historyTitle}>Your recent history</div>
-                      <div className={styles.historySub}>Bookings, garage updates, saved vehicles, and account activity all in one place.</div>
+                      <div className={styles.historyTitle}>Recent activity</div>
+                      <div className={styles.historySub}>A quieter view of bookings, garage updates, and saved vehicles.</div>
                     </div>
 
                     {vehicleActivity.length > 0 ? (

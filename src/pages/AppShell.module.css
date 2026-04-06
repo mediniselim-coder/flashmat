@@ -105,8 +105,8 @@
 
 .vehicleSplit {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, .85fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, .72fr);
+  gap: 18px;
   align-items: start;
 }
 
@@ -116,25 +116,27 @@
 
 .vehicleGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  gap: 12px;
+  align-content: start;
 }
 
 .vehicleCard {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 14px;
-  box-shadow: var(--shadow);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 10px 24px rgba(15, 30, 61, 0.06);
+  max-width: 320px;
 }
 
 .vehicleMedia {
   width: 100%;
-  aspect-ratio: 1 / .72;
+  aspect-ratio: 1 / .7;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 12px;
   border: 1px solid var(--border);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   background: linear-gradient(135deg, #102746 0%, #2c7ac8 100%);
 }
 
@@ -142,15 +144,15 @@
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   align-items: flex-start;
 }
 
 .vehicleTitle {
   font-family: var(--display);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
-  line-height: 1.05;
+  line-height: 1.1;
   letter-spacing: -.4px;
   color: var(--ink);
 }
@@ -159,30 +161,30 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .vehicleMetaPill {
   border: 1px solid var(--border);
   background: var(--bg3);
   border-radius: 999px;
-  padding: 5px 9px;
-  font-size: 10px;
+  padding: 4px 8px;
+  font-size: 9px;
   color: var(--ink2);
   font-family: var(--mono);
 }
 
 .vehicleInfoList {
   display: grid;
-  gap: 7px;
-  margin-bottom: 14px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .vehicleInfoRow {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink2);
 }
 
@@ -192,41 +194,42 @@
 }
 
 .historyCard {
-  background: linear-gradient(180deg, #f9fbff 0%, #f3f7ff 100%);
+  background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(15, 30, 61, 0.05);
   overflow: hidden;
 }
 
 .historyHeader {
-  padding: 18px 18px 14px;
+  padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(59,159,216,.08), rgba(26,58,143,.03));
+  background: rgba(59,159,216,.03);
 }
 
 .historyEyebrow {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 9px;
   letter-spacing: .9px;
   text-transform: uppercase;
-  color: var(--blue);
-  margin-bottom: 8px;
+  color: var(--ink3);
+  margin-bottom: 6px;
 }
 
 .historyTitle {
   font-family: var(--display);
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 800;
   letter-spacing: -.4px;
   color: var(--ink);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .historySub {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink2);
-  line-height: 1.6;
+  line-height: 1.55;
+  max-width: 30ch;
 }
 
 .historyList {
@@ -235,9 +238,9 @@
 
 .historyItem {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
-  gap: 12px;
-  padding: 14px 18px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -246,39 +249,39 @@
 }
 
 .historyIcon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg2);
+  background: var(--bg3);
   border: 1px solid var(--border);
   color: var(--blue);
 }
 
 .historyItemTitle {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--ink);
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .historyItemMeta {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--ink2);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .historyItemTime {
-  margin-top: 5px;
-  font-size: 10px;
+  margin-top: 4px;
+  font-size: 9px;
   color: var(--ink3);
   font-family: var(--mono);
 }
 
 .historyEmpty {
-  padding: 28px 22px;
+  padding: 24px 18px;
   text-align: center;
   color: var(--ink3);
 }
@@ -322,4 +325,5 @@
   .statsGrid { grid-template-columns: 1fr 1fr; }
   .g2, .g3 { grid-template-columns: 1fr; }
   .vehicleSplit, .vehicleGrid { grid-template-columns: 1fr; }
+  .vehicleCard { max-width: none; }
 }
