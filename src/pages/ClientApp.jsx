@@ -513,7 +513,7 @@ export default function ClientApp() {
                   <div className={styles.profileMenuName}>{name}</div>
                   <div className={styles.profileMenuRole}>Client Profile</div>
                 </div>
-                <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="AC" /></span><span>Edit Profile</span></button>
+                <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="PP" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <button className={styles.profileMenuItem} onClick={openSecurityModal}><span><AppIcon code="AL" /></span><span>Security & Privacy</span></button>
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
