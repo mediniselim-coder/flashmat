@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 
+const GOOGLE_PLACES_SCRIPT_ID = 'flashmat-google-places'
+const GOOGLE_PLACES_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -10,9 +13,60 @@ function fileToDataUrl(file) {
   })
 }
 
+function loadGooglePlacesApi() {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('Google Places is only available in the browser.'))
+  }
+
+  if (window.google?.maps?.places) {
+    return Promise.resolve(window.google)
+  }
+
+  if (!GOOGLE_PLACES_KEY) {
+    return Promise.reject(new Error('Google Places API key is not configured.'))
+  }
+
+  return new Promise((resolve, reject) => {
+    const existing = document.getElementById(GOOGLE_PLACES_SCRIPT_ID)
+
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.google), { once: true })
+      existing.addEventListener('error', () => reject(new Error('Unable to load Google Places.')), { once: true })
+      return
+    }
+
+    const script = document.createElement('script')
+    script.id = GOOGLE_PLACES_SCRIPT_ID
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_KEY}&libraries=places`
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve(window.google)
+    script.onerror = () => reject(new Error('Unable to load Google Places.'))
+    document.head.appendChild(script)
+  })
+}
+
+function readPlacePart(components, type, useShort = false) {
+  const component = components.find((item) => item.types?.includes(type))
+  if (!component) return ''
+  return useShort ? component.short_name || component.long_name || '' : component.long_name || component.short_name || ''
+}
+
+function formatStreetAddress(components) {
+  const streetNumber = readPlacePart(components, 'street_number')
+  const route = readPlacePart(components, 'route')
+  const subpremise = readPlacePart(components, 'subpremise')
+
+  const base = [streetNumber, route].filter(Boolean).join(' ').trim()
+  if (subpremise && base) return `${base}, ${subpremise}`
+  return subpremise || base
+}
+
 export default function ClientProfileModal({ onClose }) {
   const { user, profile, updateProfile } = useAuth()
   const fileRef = useRef(null)
+  const addressInputRef = useRef(null)
+  const autocompleteRef = useRef(null)
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -38,6 +92,56 @@ export default function ClientProfileModal({ onClose }) {
       avatar_url: profile?.avatar_url || '',
     })
   }, [profile, user?.email])
+
+  useEffect(() => {
+    let cancelled = false
+    let listener = null
+
+    async function connectGoogleAutocomplete() {
+      if (!addressInputRef.current || autocompleteRef.current) return
+
+      try {
+        const google = await loadGooglePlacesApi()
+        if (cancelled || !addressInputRef.current) return
+
+        const autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
+          types: ['address'],
+          fields: ['address_components', 'formatted_address'],
+          componentRestrictions: { country: ['ca', 'us'] },
+        })
+
+        autocompleteRef.current = autocomplete
+        listener = autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace()
+          const components = place?.address_components || []
+          const streetAddress = formatStreetAddress(components) || place?.formatted_address || ''
+          const city = readPlacePart(components, 'locality')
+            || readPlacePart(components, 'postal_town')
+            || readPlacePart(components, 'sublocality')
+          const province = readPlacePart(components, 'administrative_area_level_1', true)
+          const postalCode = readPlacePart(components, 'postal_code')
+
+          setForm((current) => ({
+            ...current,
+            address: streetAddress || current.address,
+            city: city || current.city,
+            province: province || current.province,
+            postal_code: postalCode || current.postal_code,
+          }))
+        })
+      } catch {
+        // Keep normal browser autofill behavior when Google Places is unavailable.
+      }
+    }
+
+    connectGoogleAutocomplete()
+
+    return () => {
+      cancelled = true
+      if (listener?.remove) listener.remove()
+      autocompleteRef.current = null
+    }
+  }, [])
 
   function setField(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -166,8 +270,12 @@ export default function ClientProfileModal({ onClose }) {
 
           <div className="form-group">
             <label className="form-label">Street address</label>
-            <input className="form-input" autoComplete="street-address" value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Street address, apartment, suite..." />
-            <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 6 }}>Uses standard address autofill fields so Google and browser autofill can recognize it more easily.</div>
+            <input ref={addressInputRef} className="form-input" autoComplete="street-address" value={form.address} onChange={(event) => setField('address', event.target.value)} placeholder="Street address, apartment, suite..." />
+            <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 6 }}>
+              {GOOGLE_PLACES_KEY
+                ? 'Address suggestions are powered by Google Places.'
+                : 'Google Places autocomplete is ready, but it needs a VITE_GOOGLE_MAPS_API_KEY to activate.'}
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
