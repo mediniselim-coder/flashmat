@@ -166,12 +166,12 @@ const styles = {
     background: 'linear-gradient(180deg, #061826 0%, #081f31 100%)',
     color: '#d9e7f3',
     borderTop: '1px solid rgba(120,180,220,0.12)',
-    marginTop: 'auto',
+    marginTop: 72,
   },
   shell: {
     maxWidth: 1440,
     margin: '0 auto',
-    padding: '44px 28px 20px',
+    padding: '56px 28px 24px',
   },
   topRow: {
     display: 'grid',
