@@ -83,6 +83,22 @@ function getScopedStorageKey() {
   }
 }
 
+function readCurrentAuthIdentity() {
+  const win = safeWindow()
+  if (!win) return { userId: '', email: '' }
+
+  try {
+    const rawAuth = win.localStorage.getItem(AUTH_CACHE_KEY)
+    const parsedAuth = rawAuth ? JSON.parse(rawAuth) : null
+    return {
+      userId: String(parsedAuth?.user?.id || '').trim(),
+      email: String(parsedAuth?.user?.email || parsedAuth?.profile?.email || '').trim().toLowerCase(),
+    }
+  } catch {
+    return { userId: '', email: '' }
+  }
+}
+
 function readRawOverrides() {
   const win = safeWindow()
   if (!win) return {}
@@ -334,7 +350,20 @@ export function normalizeProviderRecord(provider) {
 export function mergeProviderProfile(provider) {
   const normalizedProvider = normalizeProviderRecord(provider)
   const baseTypeMeta = getPrimaryServiceType(normalizedProvider?.services || [], normalizedProvider?.type || '')
-  const override = getProviderOverride(normalizedProvider)
+  const authIdentity = readCurrentAuthIdentity()
+  const providerOwnerId = String(normalizedProvider?.id || '').trim()
+  const providerOwnerEmail = String(
+    normalizedProvider?.providerEmail
+    || normalizedProvider?.email
+    || ''
+  )
+    .trim()
+    .toLowerCase()
+  const canUseLocalOverride = Boolean(
+    (authIdentity.userId && providerOwnerId && authIdentity.userId === providerOwnerId)
+    || (authIdentity.email && providerOwnerEmail && authIdentity.email === providerOwnerEmail)
+  )
+  const override = canUseLocalOverride ? getProviderOverride(normalizedProvider) : null
   if (!override) {
     return {
       ...normalizedProvider,
