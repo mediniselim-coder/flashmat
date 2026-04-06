@@ -1,0 +1,36 @@
+<svg width="800" height="560" viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="560" rx="36" fill="url(#bg)"/>
+  <rect x="40" y="40" width="720" height="480" rx="28" fill="url(#panel)" stroke="rgba(255,255,255,0.18)"/>
+  <circle cx="188" cy="408" r="70" fill="#0F2745"/>
+  <circle cx="608" cy="408" r="70" fill="#0F2745"/>
+  <circle cx="188" cy="408" r="52" fill="#EAF3FF" fill-opacity="0.16" stroke="#9DD6FF" stroke-opacity="0.4"/>
+  <circle cx="608" cy="408" r="52" fill="#EAF3FF" fill-opacity="0.16" stroke="#9DD6FF" stroke-opacity="0.4"/>
+  <path d="M144 330C162 304 198 286 244 281L350 270C381 267 409 255 434 236L484 198C507 180 539 171 575 173L620 176C651 178 678 195 694 220L726 268C734 280 739 294 739 309V342H144V330Z" fill="url(#car)"/>
+  <path d="M293 267L340 264C374 262 405 251 430 232L469 201C486 188 507 180 530 178L569 176L582 241L293 267Z" fill="#EAF3FF" fill-opacity="0.1"/>
+  <rect x="104" y="118" width="172" height="34" rx="17" fill="#FFFFFF" fill-opacity="0.08"/>
+  <rect x="122" y="132" width="62" height="6" rx="3" fill="#87D8FF"/>
+  <rect x="104" y="168" width="246" height="88" rx="20" fill="#FFFFFF" fill-opacity="0.06"/>
+  <rect x="122" y="194" width="146" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.75"/>
+  <rect x="122" y="221" width="194" height="10" rx="5" fill="#C8DCF6" fill-opacity="0.8"/>
+  <rect x="122" y="356" width="144" height="14" rx="7" fill="#FFFFFF" fill-opacity="0.12"/>
+  <rect x="534" y="116" width="144" height="144" rx="26" fill="#FFFFFF" fill-opacity="0.08"/>
+  <path d="M585 205L611 174L640 205" stroke="#8AD9FF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="560" y="290" width="118" height="16" rx="8" fill="#FFFFFF" fill-opacity="0.14"/>
+  <rect x="560" y="320" width="82" height="12" rx="6" fill="#BFD6F2" fill-opacity="0.7"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="800" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#102746"/>
+      <stop offset="0.56" stop-color="#153563"/>
+      <stop offset="1" stop-color="#2C7AC8"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="100" y1="90" x2="704" y2="488" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#7FC9FF" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="car" x1="197" y1="202" x2="690" y2="333" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF4FF" stop-opacity="0.15"/>
+      <stop offset="0.52" stop-color="#75C8FF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#3CA8FF" stop-opacity="0.56"/>
+    </linearGradient>
+  </defs>
+</svg>
