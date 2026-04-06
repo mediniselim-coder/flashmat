@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './LoginModal'
+import ClientProfileModal from './ClientProfileModal'
 
 const PRIMARY_ITEMS = [
   {
@@ -117,6 +118,7 @@ export default function NavBar({ activePage }) {
   const { user, profile, signOut } = useAuth()
   const [loginOpen, setLoginOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -209,12 +211,13 @@ export default function NavBar({ activePage }) {
       ]
     }
 
-    return [
-      { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
-      { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
-      { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
-      { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
-    ]
+      return [
+        { icon: <UserIcon />, label: 'Edit profile', action: () => { setProfileOpen(false); setClientProfileModalOpen(true) } },
+        { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
+        { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
+        { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
+        { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
+      ]
   }, [isProvider, navigate, profile, user])
 
   const siteSearchEntries = useMemo(() => {
@@ -392,6 +395,7 @@ export default function NavBar({ activePage }) {
       )}
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
+      {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
     </>
   )
 }

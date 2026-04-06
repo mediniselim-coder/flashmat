@@ -10,6 +10,7 @@ import AddVehicleModal from '../components/AddVehicleModal'
 import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
 import SellVehicleModal from '../components/SellVehicleModal'
+import ClientProfileModal from '../components/ClientProfileModal'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
@@ -215,6 +216,7 @@ export default function ClientApp() {
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
@@ -329,6 +331,7 @@ export default function ClientApp() {
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
+  function openClientProfileModal() { setProfileMenuOpen(false); setClientProfileModalOpen(true) }
 
   function handleVehicleAdded(nextVehicle) {
     setMyVehicles((prev) => [
@@ -504,6 +507,7 @@ export default function ClientApp() {
                   <div className={styles.profileMenuName}>{name}</div>
                   <div className={styles.profileMenuRole}>Client Profile</div>
                 </div>
+                <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="AC" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('dashboard')}><span><AppIcon code="TB" /></span><span>Dashboard</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('vehicles')}><span><AppIcon code="VH" /></span><span>My Vehicles</span></button>
@@ -991,6 +995,7 @@ export default function ClientApp() {
           onRemoved={handleVehicleListingRemoved}
         />
       )}
+      {clientProfileModalOpen && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
     </div>
   )
 }

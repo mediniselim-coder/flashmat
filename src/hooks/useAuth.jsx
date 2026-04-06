@@ -128,8 +128,41 @@ export function AuthProvider({ children }) {
     writeAuthCache(null, null)
   }
 
+  async function updateProfile(updates = {}) {
+    if (!user?.id) throw new Error('You need to be signed in to update your profile.')
+
+    const nextProfile = {
+      ...(profile || {}),
+      ...updates,
+      id: user.id,
+    }
+
+    const authPayload = {}
+    if (updates.full_name) authPayload.data = { ...(user.user_metadata || {}), full_name: updates.full_name, role: profile?.role || user.user_metadata?.role || 'client' }
+    if (updates.email && updates.email !== user.email) authPayload.email = updates.email
+
+    if (Object.keys(authPayload).length > 0) {
+      const { data, error } = await supabase.auth.updateUser(authPayload)
+      if (error) throw error
+      if (data?.user) setUser(data.user)
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(nextProfile, { onConflict: 'id' })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    const resolvedProfile = data || nextProfile
+    setProfile(resolvedProfile)
+    writeAuthCache(user, resolvedProfile)
+    return resolvedProfile
+  }
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, fetchProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, fetchProfile, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )
