@@ -45,6 +45,7 @@ drop policy if exists "profiles_select_own" on public.profiles;
 drop policy if exists "profiles_update_own" on public.profiles;
 drop policy if exists "profiles_insert_own" on public.profiles;
 drop policy if exists "profiles_public_provider" on public.profiles;
+drop policy if exists "profiles_booked_client_visible_to_provider" on public.profiles;
 
 create policy "profiles_select_own"
 on public.profiles
@@ -66,6 +67,19 @@ create policy "profiles_public_provider"
 on public.profiles
 for select
 using (role = 'provider');
+
+create policy "profiles_booked_client_visible_to_provider"
+on public.profiles
+for select
+using (
+  role = 'client'
+  and exists (
+    select 1
+    from public.bookings
+    where public.bookings.client_id = public.profiles.id
+      and public.bookings.provider_id = auth.uid()
+  )
+);
 
 drop policy if exists "vehicles_own" on public.vehicles;
 drop policy if exists "vehicles_select_own" on public.vehicles;

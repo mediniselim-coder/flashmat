@@ -111,6 +111,15 @@ create policy "profiles_select_own" on public.profiles for select using (auth.ui
 create policy "profiles_update_own" on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
 create policy "profiles_insert_own" on public.profiles for insert with check (auth.uid() = id);
 create policy "profiles_public_provider" on public.profiles for select using (role = 'provider');
+create policy "profiles_booked_client_visible_to_provider" on public.profiles for select using (
+  role = 'client'
+  and exists (
+    select 1
+    from public.bookings
+    where public.bookings.client_id = public.profiles.id
+      and public.bookings.provider_id = auth.uid()
+  )
+);
 
 -- Vehicles: propriétaire seulement
 create policy "vehicles_select_own" on public.vehicles for select using (auth.uid() = owner_id);
