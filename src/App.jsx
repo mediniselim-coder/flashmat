@@ -13,6 +13,7 @@ import ServiceProviders from "./pages/ServiceProviders"
 import AutoDoctor from "./pages/AutoDoctor"
 import FlashFixUrgence from "./pages/FlashFixUrgence"
 import PublicMarketplace from "./pages/PublicMarketplace"
+import VehicleDetails from "./pages/VehicleDetails"
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -67,6 +68,14 @@ export default function App() {
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />
           <Route path="/app/client" element={<Navigate to="/app/client/dashboard" replace />} />
+          <Route
+            path="/app/client/vehicles/:vehicleId"
+            element={
+              <ProtectedRoute requiredRole="client">
+                <VehicleDetails />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/app/client/*"
             element={

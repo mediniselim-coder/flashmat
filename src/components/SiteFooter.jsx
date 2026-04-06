@@ -130,10 +130,10 @@ function getPortalCard(portal) {
     return {
       title: 'Espace client',
       links: [
-        { label: 'Tableau de bord', to: '/app/client' },
-        { label: 'Reservations', to: '/app/client?pane=bookings' },
-        { label: 'Mes vehicules', to: '/app/client?pane=vehicles' },
-        { label: 'Trouver un service', to: '/app/client?pane=search' },
+        { label: 'Tableau de bord', to: '/app/client/dashboard' },
+        { label: 'Reservations', to: '/app/client/bookings' },
+        { label: 'Mes vehicules', to: '/app/client/vehicles' },
+        { label: 'Trouver un service', to: '/app/client/search' },
       ],
     }
   }

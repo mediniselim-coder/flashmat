@@ -210,9 +210,9 @@ export default function NavBar({ activePage }) {
     }
 
     return [
-      { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client') },
-      { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client') },
-      { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client') },
+      { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
+      { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
+      { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
       { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
     ]
   }, [isProvider, navigate, profile, user])
