@@ -26,6 +26,33 @@ function saveVehicleExtras(userId, vehicleId, extras) {
   window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
 }
 
+async function persistVehicleOptionalFields(vehicleId, extendedVehicle) {
+  if (!vehicleId) return {}
+
+  const fieldCandidates = [
+    ['vin', extendedVehicle.vin],
+    ['serial_number', extendedVehicle.serial_number],
+    ['mileage', extendedVehicle.mileage],
+    ['image_url', extendedVehicle.image_url],
+    ['photo_url', extendedVehicle.photo_url],
+  ].filter(([, value]) => value !== '' && value !== null && value !== undefined)
+
+  const persistedFields = {}
+
+  await Promise.all(fieldCandidates.map(async ([field, value]) => {
+    const { error } = await supabase
+      .from('vehicles')
+      .update({ [field]: value })
+      .eq('id', vehicleId)
+
+    if (!error) {
+      persistedFields[field] = value
+    }
+  }))
+
+  return persistedFields
+}
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -193,12 +220,18 @@ export default function AddVehicleModal({ onClose, onAdd }) {
         .select()
         .single()
 
+      let persistedOptionalFields = {}
+
       if (insertResult.error) {
         insertResult = await supabase
           .from('vehicles')
           .insert(baseVehicle)
           .select()
           .single()
+
+        if (!insertResult.error && insertResult.data?.id) {
+          persistedOptionalFields = await persistVehicleOptionalFields(insertResult.data.id, extendedVehicle)
+        }
       }
 
       setLoading(false)
@@ -210,11 +243,11 @@ export default function AddVehicleModal({ onClose, onAdd }) {
 
       const savedVehicle = {
         ...(insertResult.data || baseVehicle),
-        vin: vin.trim().toUpperCase(),
-        serial_number: vin.trim().toUpperCase(),
-        mileage: normalizedMileage ? Number(normalizedMileage) : null,
-        image_url: optimizedPhoto,
-        photo_url: optimizedPhoto,
+        vin: persistedOptionalFields.vin ?? vin.trim().toUpperCase(),
+        serial_number: persistedOptionalFields.serial_number ?? vin.trim().toUpperCase(),
+        mileage: persistedOptionalFields.mileage ?? (normalizedMileage ? Number(normalizedMileage) : null),
+        image_url: persistedOptionalFields.image_url ?? optimizedPhoto,
+        photo_url: persistedOptionalFields.photo_url ?? optimizedPhoto,
       }
 
       saveVehicleExtras(user.id, savedVehicle.id, {
