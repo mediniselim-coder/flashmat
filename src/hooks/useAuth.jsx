@@ -3,7 +3,6 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
 const AUTH_CACHE_KEY = 'flashmat-auth-cache'
-const LEGACY_PROFILE_KEYS = ['id', 'full_name', 'email', 'phone', 'address', 'city', 'role']
 
 function readAuthCache() {
   if (typeof window === 'undefined') return { user: null, profile: null }
@@ -48,6 +47,33 @@ function buildProfileRecord(record = {}, authUser = null) {
     postal_code: record?.postal_code || metadata.postal_code || '',
     avatar_url: record?.avatar_url || metadata.avatar_url || '',
     role: record?.role || metadata.role || '',
+  }
+}
+
+function getMissingProfileColumn(error) {
+  const message = String(error?.message || '')
+  const match = message.match(/Could not find the '([^']+)' column/i)
+  return match?.[1] || null
+}
+
+async function upsertProfileWithFallback(profileRecord) {
+  let candidate = { ...profileRecord }
+
+  while (true) {
+    const result = await supabase
+      .from('profiles')
+      .upsert(candidate, { onConflict: 'id' })
+      .select()
+      .single()
+
+    if (!result.error) return result
+
+    const missingColumn = getMissingProfileColumn(result.error)
+    if (!missingColumn || missingColumn === 'id' || !(missingColumn in candidate)) {
+      return result
+    }
+
+    delete candidate[missingColumn]
   }
 }
 
@@ -171,44 +197,24 @@ export function AuthProvider({ children }) {
     }
     authPayload.data = nextMetadata
 
+    let activeUser = user
+
     if (Object.keys(authPayload).length > 0) {
       const { data, error } = await supabase.auth.updateUser(authPayload)
       if (error) throw error
-      if (data?.user) setUser(data.user)
+      if (data?.user) {
+        activeUser = data.user
+        setUser(data.user)
+      }
     }
 
-    let data = null
-    let error = null
-
-    const fullResult = await supabase
-      .from('profiles')
-      .upsert(nextProfile, { onConflict: 'id' })
-      .select()
-      .single()
-
-    data = fullResult.data
-    error = fullResult.error
-
-    if (error) {
-      const legacyProfile = Object.fromEntries(
-        Object.entries(nextProfile).filter(([key]) => LEGACY_PROFILE_KEYS.includes(key)),
-      )
-
-      const fallbackResult = await supabase
-        .from('profiles')
-        .upsert(legacyProfile, { onConflict: 'id' })
-        .select()
-        .single()
-
-      data = fallbackResult.data
-      error = fallbackResult.error
-    }
+    const { data, error } = await upsertProfileWithFallback(nextProfile)
 
     if (error) throw error
 
-    const resolvedProfile = buildProfileRecord(data || nextProfile, user)
+    const resolvedProfile = buildProfileRecord(data || nextProfile, activeUser)
     setProfile(resolvedProfile)
-    writeAuthCache(user, resolvedProfile)
+    writeAuthCache(activeUser, resolvedProfile)
     return resolvedProfile
   }
 
