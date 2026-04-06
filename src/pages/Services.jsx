@@ -130,7 +130,7 @@ export default function Services() {
 
         {filtered.length === 0 && (
           <div style={{ textAlign: 'center', padding: '80px 0', color: 'var(--ink3)' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>SR</div>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}><ServiceIcon code="ME" size={56} /></div>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, fontFamily: 'var(--display)' }}>Aucun service trouve</div>
             <div style={{ fontSize: 14 }}>Essayez un autre mot-cle</div>
           </div>

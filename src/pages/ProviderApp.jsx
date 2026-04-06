@@ -5,20 +5,21 @@ import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
+import AppIcon from '../components/AppIcon'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
-  { id: 'p-dashboard',   icon: 'TB', label: 'Tableau de bord' },
-  { id: 'p-tasks',       icon: 'TD', label: 'Taches du jour', badge: 5 },
-  { id: 'p-bookings',    icon: 'RS', label: 'Reservations', badge: 8 },
-  { id: 'p-schedule',    icon: 'CL', label: 'Calendrier' },
+  { id: 'p-dashboard',   icon: 'TB', label: 'Dashboard' },
+  { id: 'p-tasks',       icon: 'TD', label: 'Today Tasks', badge: 5 },
+  { id: 'p-bookings',    icon: 'RS', label: 'Bookings', badge: 8 },
+  { id: 'p-schedule',    icon: 'CL', label: 'Schedule' },
   { id: 'p-clients',     icon: 'CT', label: 'Clients' },
   { id: 'p-marketplace', icon: 'MP', label: 'Marketplace' },
   { id: 'p-promos',      icon: 'PM', label: 'Promotions' },
-  { id: 'p-profile',     icon: 'AT', label: 'Profil atelier' },
+  { id: 'p-profile',     icon: 'AT', label: 'Shop Profile' },
 ]
 
 function getProviderDraftStorageKey(user, profile) {
@@ -47,7 +48,7 @@ function writeProviderDraft(user, profile, payload) {
 }
 
 function formatFlashFixTime(value) {
-  if (!value) return 'Maintenant'
+  if (!value) return 'Now'
 
   try {
     return new Date(value).toLocaleString('fr-CA', {
@@ -63,11 +64,11 @@ function formatFlashFixTime(value) {
 
 function getTimelineLabel(step) {
   const labels = {
-    pending: 'Demande',
-    accepted: 'Acceptee',
-    en_route: 'En route',
-    onsite: 'Sur place',
-    completed: 'Terminee',
+    pending: 'Requested',
+    accepted: 'Accepted',
+    en_route: 'On the way',
+    onsite: 'On site',
+    completed: 'Completed',
   }
 
   return labels[step] || step
@@ -165,7 +166,7 @@ export default function ProviderApp() {
       vehicles: [booking.vehicleLabel],
       last: booking.datetimeLabel,
       total: booking.priceLabel,
-      status: 'Actif',
+      status: 'Active',
       cls: 'badge-green',
     })
     return acc
@@ -504,23 +505,23 @@ export default function ProviderApp() {
           <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
             <img src="/logo-dark.png" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
           </div>
-          <span className={`${styles.sbMode} ${styles.modeProvider}`}>FOURNISSEUR</span>
+          <span className={`${styles.sbMode} ${styles.modeProvider}`}>PROVIDER</span>
         </div>
         <nav className={styles.sbNav}>
           <div className={styles.sbSection}>
-            <div className={styles.sbLbl}>OpÃ©rations</div>
+            <div className={styles.sbLbl}>Operations</div>
             {NAV.slice(0,4).map(n => (
               <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
-                <span className={styles.ni}>{n.icon}</span>{n.label}
+                <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
                 {n.badge && <span className={styles.nBadge}>{n.badge}</span>}
               </button>
             ))}
           </div>
           <div className={styles.sbSection}>
-            <div className={styles.sbLbl}>Affaires</div>
+            <div className={styles.sbLbl}>Business</div>
             {NAV.slice(4).map(n => (
               <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
-                <span className={styles.ni}>{n.icon}</span>{n.label}
+                <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
               </button>
             ))}
           </div>
@@ -531,21 +532,21 @@ export default function ProviderApp() {
               <div className={styles.profileMenu}>
                 <div className={styles.profileMenuHeader}>
                   <div className={styles.profileMenuName}>{name}</div>
-                  <div className={styles.profileMenuRole}>Profil Fournisseur</div>
+                  <div className={styles.profileMenuRole}>Provider Profile</div>
                 </div>
-                <button className={styles.profileMenuItem} onClick={goHome}><span>AC</span><span>Accueil</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-dashboard')}><span>TB</span><span>Dashboard</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span>RS</span><span>Reservations</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span>MP</span><span>Marketplace</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-profile')}><span>AT</span><span>Profil atelier</span></button>
-                <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span>AI</span><span>Aide et support</span></button>
+                <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-dashboard')}><span><AppIcon code="TB" /></span><span>Dashboard</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span><AppIcon code="RS" /></span><span>Bookings</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span><AppIcon code="MP" /></span><span>Marketplace</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-profile')}><span><AppIcon code="AT" /></span><span>Shop Profile</span></button>
+                <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <div className={styles.profileMenuDivider} />
-                <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span>SO</span><span>Se deconnecter</span></button>
+                <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span><AppIcon code="SO" /></span><span>Sign Out</span></button>
               </div>
             )}
           <button type="button" className={styles.userChip} onClick={() => setProfileMenuOpen((open) => !open)}>
             <div className={`${styles.avatar} ${styles.avatarBlue}`}>{name.slice(0,2).toUpperCase()}</div>
-            <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>fournisseur · montreal</div></div>
+            <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>provider · montreal</div></div>
             <span style={{ marginLeft: 'auto', color: 'var(--ink3)', fontSize: 11 }}>←</span>
           </button>
           </div>
@@ -557,22 +558,22 @@ export default function ProviderApp() {
         <div className={styles.mobileTopbar}>
           <button className={styles.menuBtn} onClick={() => setSidebar(true)}>≡</button>
           <img src="/logo-dark.png" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
-          <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => go('p-bookings')}>+ RDV</button>
+          <button className="btn btn-blue" style={{fontSize:11,padding:'7px 12px'}} onClick={() => go('p-bookings')}>+ Jobs</button>
         </div>
 
         {/* â”€â”€ DASHBOARD â”€â”€ */}
         {pane === 'p-dashboard' && (
           <div>
             <div className={styles.pageHdr}>
-              <div><div className={styles.pageTitle}>Bonjour</div><div className={styles.pageSub}>{providerBookings.length} reservation(s) actives · {pendingFlashFix.length} urgence(s) FlashFix</div></div>
-              <button className="btn btn-green" onClick={() => go('p-bookings')}>Voir les reservations</button>
+              <div><div className={styles.pageTitle}>Hello</div><div className={styles.pageSub}>{providerBookings.length} active booking(s) · {pendingFlashFix.length} FlashFix urgent job(s)</div></div>
+              <button className="btn btn-green" onClick={() => go('p-bookings')}>View bookings</button>
             </div>
             <div className={styles.pad}>
               <div className={styles.statsGrid}>
-                <div className="stat-card sc-green"><div className="stat-lbl">Revenu enregistrÃ©</div><div className="stat-val">$<span style={{fontSize:22}}>{monthlyRevenue || 0}</span></div><div className="stat-sub">{bookingsDoneCount} service(s) terminÃ©s</div></div>
-                <div className="stat-card sc-blue"><div className="stat-lbl">RDV actifs</div><div className="stat-val">{providerBookings.length}</div><div className="stat-sub">rÃ©servations liÃ©es Ã  FlashMat</div></div>
-                <div className="stat-card sc-amber"><div className="stat-lbl">En attente</div><div className="stat-val">{bookingsPendingCount}</div><div className="stat-sub">rÃ©servation(s) Ã  traiter</div></div>
-                <div className="stat-card sc-purple"><div className="stat-lbl">Note moyenne</div><div className="stat-val">{averageRating}</div><div className="stat-sub">profil public atelier</div></div>
+                <div className="stat-card sc-green"><div className="stat-lbl">Recorded Revenue</div><div className="stat-val">$<span style={{fontSize:22}}>{monthlyRevenue || 0}</span></div><div className="stat-sub">{bookingsDoneCount} completed job(s)</div></div>
+                <div className="stat-card sc-blue"><div className="stat-lbl">Active Jobs</div><div className="stat-val">{providerBookings.length}</div><div className="stat-sub">bookings synced with FlashMat</div></div>
+                <div className="stat-card sc-amber"><div className="stat-lbl">Pending</div><div className="stat-val">{bookingsPendingCount}</div><div className="stat-sub">booking(s) to handle</div></div>
+                <div className="stat-card sc-purple"><div className="stat-lbl">Average Rating</div><div className="stat-val">{averageRating}</div><div className="stat-sub">public shop profile</div></div>
               </div>
 
               <div className={styles.g2}>
@@ -641,7 +642,7 @@ export default function ProviderApp() {
         {/* â”€â”€ TASKS â”€â”€ */}
         {pane === 'p-tasks' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Taches du jour</div><div className={styles.pageSub}>{tasks.filter(t=>!t.done).length} en cours</div></div><button className="btn btn-green" onClick={() => { setTasks(t => [{title:'Nouvelle tache',meta:'GN General',time:'Maintenant',done:false},...t]); toast('Tache ajoutee OK','success') }}>+ Ajouter</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Today Tasks</div><div className={styles.pageSub}>{tasks.filter(t=>!t.done).length} in progress</div></div><button className="btn btn-green" onClick={() => { setTasks(t => [{title:'New task',meta:'General',time:'Now',done:false},...t]); toast('Task added', 'success') }}>+ Add</button></div>
             <div className={styles.pad}>
               {tasks.map((t,i) => (
                 <div key={i} style={{display:'flex',gap:9,alignItems:'flex-start',padding:9,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:7,marginBottom:6,opacity:t.done?.55:1}}>
@@ -663,7 +664,7 @@ export default function ProviderApp() {
         {/* â”€â”€ BOOKINGS â”€â”€ */}
         {pane === 'p-bookings' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>RÃ©servations</div><div className={styles.pageSub}>{providerBookings.length} reservation(s) Â· {pendingFlashFix.length} urgence(s) FlashFix en attente</div></div></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Bookings</div><div className={styles.pageSub}>{providerBookings.length} booking(s) · {pendingFlashFix.length} pending FlashFix urgent job(s)</div></div></div>
             <div className={styles.pad}>
               {pendingFlashFix.length > 0 && (
                 <div style={{background:'linear-gradient(135deg,#111827 0%, #7c2d12 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
@@ -805,7 +806,7 @@ export default function ProviderApp() {
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Clients</div><div className={styles.pageSub}>{filteredClients.length} clients</div></div></div>
             <div className={styles.pad}>
-              <input className="form-input" placeholder="Rechercher un client..." value={clientQ} onChange={e => setClientQ(e.target.value)} style={{marginBottom:14}} />
+              <input className="form-input" placeholder="Search a client..." value={clientQ} onChange={e => setClientQ(e.target.value)} style={{marginBottom:14}} />
               <div className="panel" style={{overflowX:'auto'}}>
                 <table>
                   <thead><tr><th>Nom</th><th>VÃ©hicules</th><th>DerniÃ¨re visite</th><th>Total</th><th>Statut</th><th></th></tr></thead>
@@ -835,7 +836,7 @@ export default function ProviderApp() {
         {/* â”€â”€ PROMOS â”€â”€ */}
         {pane === 'p-promos' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Promotions</div><div className={styles.pageSub}>GÃ©rez vos offres clients</div></div></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Promotions</div><div className={styles.pageSub}>Manage your client offers</div></div></div>
             <div className={styles.pad}>
               <div className={styles.g2}>
                 <div>
@@ -873,7 +874,7 @@ export default function ProviderApp() {
         {/* â”€â”€ PROFILE â”€â”€ */}
         {pane === 'p-profile' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Profil atelier</div><div className={styles.pageSub}>Votre page publique FlashMat</div></div><button type="button" className="btn btn-green" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>{isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder'}</button></div>
+            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Shop Profile</div><div className={styles.pageSub}>Your public FlashMat page</div></div><button type="button" className="btn btn-green" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>{isSavingProfile ? 'Saving...' : 'Save'}</button></div>
             <div className={styles.pad}>
               {profileSaveNotice && (
                 <div style={{marginBottom:14,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,padding:'10px 14px',fontSize:12,color:'var(--ink2)'}}>
@@ -888,68 +889,68 @@ export default function ProviderApp() {
                   onClick={() => { void saveProviderProfileChanges() }}
                   disabled={isSavingProfile}
                 >
-                  {isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder le profil'}
+                  {isSavingProfile ? 'Saving...' : 'Save Profile'}
                 </button>
               </div>
               <div className={styles.g2}>
                 <div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">AT Informations</div></div>
+                    <div className="panel-hd"><div className="panel-title">Shop Information</div></div>
                     <div className="panel-body">
-                      <div className="form-group"><label className="form-label">Nom de l'atelier</label><input className="form-input" value={providerProfileForm.name} onChange={e => setProfileField('name', e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">Adresse</label><input className="form-input" value={providerProfileForm.address} onChange={e => setProfileField('address', e.target.value)} /></div>
-                      <div className="form-group"><label className="form-label">TÃ©lÃ©phone</label><input className="form-input" value={providerProfileForm.phone} onChange={e => setProfileField('phone', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Shop Name</label><input className="form-input" value={providerProfileForm.name} onChange={e => setProfileField('name', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={providerProfileForm.address} onChange={e => setProfileField('address', e.target.value)} /></div>
+                      <div className="form-group"><label className="form-label">Phone</label><input className="form-input" value={providerProfileForm.phone} onChange={e => setProfileField('phone', e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={providerProfileForm.email} onChange={e => setProfileField('email', e.target.value)} /></div>
                       <div className="form-group"><label className="form-label">Description</label><textarea className="form-input" rows={3} value={providerProfileForm.description} onChange={e => setProfileField('description', e.target.value)} style={{resize:'vertical'}} /></div>
                     </div>
                   </div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">Photos atelier</div></div>
+                    <div className="panel-hd"><div className="panel-title">Shop Photos</div></div>
                     <div className="panel-body">
                       <div className="form-group">
-                        <label className="form-label">Photo couverture</label>
+                        <label className="form-label">Cover Photo</label>
                         <input className="form-input" type="file" accept="image/*" onChange={updateCoverPhoto} />
                       </div>
                       {providerProfileForm.coverPhoto && (
                         <div style={{marginBottom:14}}>
-                          <img src={providerProfileForm.coverPhoto} alt="Couverture atelier" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                          <button type="button" className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Retirer la couverture</button>
+                          <img src={providerProfileForm.coverPhoto} alt="Shop cover" style={{width:'100%',height:160,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                          <button type="button" className="btn" style={{marginTop:8,fontSize:11}} onClick={removeCoverPhoto}>Remove cover</button>
                         </div>
                       )}
                       <div className="form-group">
-                        <label className="form-label">Galerie atelier</label>
+                        <label className="form-label">Gallery</label>
                         <input className="form-input" type="file" accept="image/*" multiple onChange={updateGalleryPhotos} />
                       </div>
                       {providerProfileForm.galleryPhotos.length > 0 && (
                         <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
                           {providerProfileForm.galleryPhotos.map((photo, index) => (
                             <div key={index} style={{position:'relative'}}>
-                              <img src={photo} alt={`Atelier ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
-                              <button type="button" className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Retirer</button>
+                              <img src={photo} alt={`Shop ${index + 1}`} style={{width:'100%',height:110,objectFit:'cover',borderRadius:12,border:'1px solid var(--border)'}} />
+                              <button type="button" className="btn" style={{position:'absolute',right:8,bottom:8,fontSize:10,padding:'4px 8px'}} onClick={() => removeGalleryPhoto(index)}>Remove</button>
                             </div>
                           ))}
                         </div>
                       )}
-                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Les photos sauvegardees ici seront visibles par les clients sur la page provider.</div>
+                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Photos saved here will be visible to clients on your provider page.</div>
                     </div>
                   </div>
                 </div>
                 <div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">â° Horaires</div></div>
+                    <div className="panel-hd"><div className="panel-title">Hours</div></div>
                     <div className="panel-body">
-                      {[['Mon', 'Lundi'], ['Tue', 'Mardi'], ['Wed', 'Mercredi'], ['Thu', 'Jeudi'], ['Fri', 'Vendredi'], ['Sat', 'Samedi'], ['Sun', 'Dimanche']].map(([key, label]) => (
+                      {[['Mon', 'Monday'], ['Tue', 'Tuesday'], ['Wed', 'Wednesday'], ['Thu', 'Thursday'], ['Fri', 'Friday'], ['Sat', 'Saturday'], ['Sun', 'Sunday']].map(([key, label]) => (
                         <div key={key} style={{display:'grid',gridTemplateColumns:'110px 1fr 1fr auto',gap:8,alignItems:'center',marginBottom:8}}>
                           <span style={{fontSize:11,color:'var(--ink2)'}}>{label}</span>
                           <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.open || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'open', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
                           <input className="form-input" type="time" value={providerProfileForm.editableHours[key]?.close || ''} disabled={providerProfileForm.editableHours[key]?.closed} onChange={e => updateHour(key, 'close', e.target.value)} style={providerProfileForm.editableHours[key]?.closed ? { opacity:.4 } : undefined} />
-                          <button type="button" className="btn" style={{fontSize:10}} onClick={() => toggleClosed(key)}>{providerProfileForm.editableHours[key]?.closed ? 'FermÃ©' : 'Ouvert'}</button>
+                          <button type="button" className="btn" style={{fontSize:10}} onClick={() => toggleClosed(key)}>{providerProfileForm.editableHours[key]?.closed ? 'Closed' : 'Open'}</button>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">SV Services offerts</div></div>
+                    <div className="panel-hd"><div className="panel-title">Services Offered</div></div>
                     <div className="panel-body">
                       <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
                         {PROVIDER_SERVICE_OPTIONS.map((service) => (
@@ -976,7 +977,7 @@ export default function ProviderApp() {
                           </button>
                         ))}
                       </div>
-                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Tous les services FlashMat sont charges ici, et les services selectionnes seront affiches sur la page publique du provider.</div>
+                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Selected services will be shown on your public provider page.</div>
                     </div>
                   </div>
                 </div>
@@ -989,7 +990,7 @@ export default function ProviderApp() {
                   onClick={() => { void saveProviderProfileChanges() }}
                   disabled={isSavingProfile}
                 >
-                  {isSavingProfile ? 'Sauvegarde...' : 'Sauvegarder maintenant'}
+                  {isSavingProfile ? 'Saving...' : 'Save Now'}
                 </button>
               </div>
             </div>
@@ -998,9 +999,9 @@ export default function ProviderApp() {
 
         {/* MOBILE BOTTOM NAV */}
         <nav className={styles.bottomNav}>
-          {[['p-dashboard','TB','Accueil'],['p-tasks','TD','Taches'],['p-bookings','RS','Resa'],['p-clients','CT','Clients'],['p-promos','PM','Promos']].map(([id,icon,label]) => (
+          {[['p-dashboard','TB','Home'],['p-tasks','TD','Tasks'],['p-bookings','RS','Bookings'],['p-clients','CT','Clients'],['p-promos','PM','Promos']].map(([id,icon,label]) => (
             <button key={id} className={`${styles.bnItem} ${pane===id?styles.bnActive:''}`} onClick={() => go(id)}>
-              <span style={{fontSize:18}}>{icon}</span><span>{label}</span>
+              <span style={{display:'inline-flex'}}><AppIcon code={icon} size={18} /></span><span>{label}</span>
             </button>
           ))}
         </nav>

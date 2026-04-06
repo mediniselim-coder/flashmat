@@ -33,7 +33,8 @@
 .navItem:hover { background: rgba(255,255,255,.06); color: #fff; }
 .navActive { background: linear-gradient(135deg, rgba(59,159,216,.14), rgba(26,58,143,.24)) !important; color: #fff !important; border: 1px solid rgba(90,184,240,.18); }
 .navActive .ni { color: #8fd9ff; }
-.ni { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; }
+.ni { font-size: 15px; flex-shrink: 0; width: 18px; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+.ni svg { display: block; }
 .nBadge { margin-left: auto; background: rgba(59,159,216,.16); color: #c9edff; font-family: var(--mono); font-size: 8px; padding: 2px 6px; border-radius: 8px; border: 1px solid rgba(59,159,216,.18); }
 .nBadgeBlue { background: rgba(59,159,216,.16); }
 
@@ -78,6 +79,8 @@
   text-align: left;
 }
 .profileMenuItem:hover { background: rgba(255,255,255,.06); }
+.profileMenuItem span:first-child { width: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profileMenuItem span:first-child svg { display: block; }
 .profileMenuDivider { height: 1px; background: rgba(120,180,220,.12); margin: 4px 0; }
 .profileMenuDanger { color: var(--red); }
 .profileMenuDanger:hover { background: rgba(239,68,68,.06); }

@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import NewListingModal from './NewListingModal'
 import { normalizeMarketplaceListing } from '../lib/marketplace'
+import ServiceIcon from './ServiceIcon'
 
 const CATS = ['Tous','Pièces moteur','Pneus & Jantes','Carrosserie','Freins & Suspension','Accessoires','Audio & Tech','Outils','Autres']
 const SORTS = [['recent','Plus récents'],['price_asc','Prix ↑'],['price_desc','Prix ↓']]
@@ -136,7 +137,9 @@ export default function Marketplace({ portal = 'client', openComposer = false })
                   </div>
                 ) : (
                   <div style={{ background:'linear-gradient(135deg, var(--bg3), var(--bg2))', padding:'20px 16px 16px', borderBottom:'1px solid var(--border)', display:'flex', gap:12, alignItems:'flex-start' }}>
-                    <div style={{ width:52, height:52, borderRadius:12, background:'var(--bg2)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, flexShrink:0 }}>{l.icon}</div>
+                    <div style={{ width:52, height:52, borderRadius:12, background:'var(--bg2)', border:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                      <ServiceIcon code={l.icon || 'PC'} size={42} />
+                    </div>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontWeight:700, fontSize:14, lineHeight:1.3, marginBottom:4 }}>{l.title}</div>
                       <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>

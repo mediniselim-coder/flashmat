@@ -7,6 +7,7 @@ import styles from './Landing.module.css'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 import ServiceIcon from '../components/ServiceIcon'
+import AppIcon from '../components/AppIcon'
 
 const SERVICES = [
   { id: 'flashfix',  name: 'FlashFix',      icon: 'FF', count: 8 },
@@ -430,7 +431,7 @@ export default function Landing() {
                   ['MP','Marketplace','Achat/vente pieces entre Montrealais'],
                 ].map(([ico, t, d]) => (
                   <div key={t} className={styles.pcFeat}>
-                    <span>{ico}</span>
+                    <span><AppIcon code={ico} size={16} /></span>
                     <div><strong>{t}</strong><br /><small>{d}</small></div>
                   </div>
                 ))}
@@ -449,7 +450,7 @@ export default function Landing() {
                   ['PP','Profil public','Visibilite FlashMat + Google'],
                 ].map(([ico, t, d]) => (
                   <div key={t} className={styles.pcFeat}>
-                    <span>{ico}</span>
+                    <span><AppIcon code={ico} size={16} /></span>
                     <div><strong>{t}</strong><br /><small>{d}</small></div>
                   </div>
                 ))}
