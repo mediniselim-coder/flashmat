@@ -310,24 +310,50 @@ export default function ClientApp() {
 
   async function handleVehicleDelete(vehicle) {
     if (!user?.id || !vehicle?.id) return
-    if (!window.confirm(`Remove ${vehicle.make} ${vehicle.model} ${vehicle.year} from your profile? FlashMat will keep the vehicle lifecycle by VIN.`)) {
+
+    const normalizedVin = String(vehicle.vin || vehicle.serial_number || '').trim().toUpperCase()
+    const hasTrackedVin = Boolean(normalizedVin)
+    const confirmMessage = hasTrackedVin
+      ? `Remove ${vehicle.make} ${vehicle.model} ${vehicle.year} from your profile? FlashMat will keep the vehicle lifecycle tied to VIN ${normalizedVin}.`
+      : `Delete ${vehicle.make} ${vehicle.model} ${vehicle.year} from your profile and database? This vehicle has no VIN, so FlashMat will remove it completely.`
+
+    if (!window.confirm(confirmMessage)) {
       return
     }
 
-    const { error } = await supabase
-      .from('vehicles')
-      .update({ owner_id: null })
-      .eq('id', vehicle.id)
-      .eq('owner_id', user.id)
+    let error = null
+
+    if (hasTrackedVin) {
+      const response = await supabase
+        .from('vehicles')
+        .update({ owner_id: null })
+        .eq('id', vehicle.id)
+        .eq('owner_id', user.id)
+
+      error = response.error
+    } else {
+      const response = await supabase
+        .from('vehicles')
+        .delete()
+        .eq('id', vehicle.id)
+        .eq('owner_id', user.id)
+
+      error = response.error
+    }
 
     if (error) {
-      toast(error.message || 'Unable to remove the vehicle from your profile', 'error')
+      toast(
+        error.message || (hasTrackedVin
+          ? 'Unable to remove the vehicle from your profile'
+          : 'Unable to delete the vehicle from the database'),
+        'error',
+      )
       return
     }
 
     removeVehicleExtras(user.id, vehicle.id)
     setMyVehicles((prev) => prev.filter((item) => String(item.id) !== String(vehicle.id)))
-    toast('Vehicle removed from your profile', 'success')
+    toast(hasTrackedVin ? 'Vehicle removed from your profile' : 'Vehicle deleted from FlashMat', 'success')
   }
 
   async function handleBookingConfirm(payload) {
