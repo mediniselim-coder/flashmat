@@ -21,6 +21,7 @@ import { normalizeMarketplaceListing } from '../lib/marketplace'
 import styles from './AppShell.module.css'
 
 const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
+const VEHICLE_RECORDS_STORAGE_KEY = 'flashmat-vehicle-records'
 
 const NAV = [
   { id: 'dashboard',     icon: 'TB', label: 'Dashboard' },
@@ -126,12 +127,31 @@ function getVehicleExtrasStorageKey(userId) {
   return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
 }
 
+function getVehicleRecordsStorageKey(userId) {
+  return `${VEHICLE_RECORDS_STORAGE_KEY}:${userId || 'anonymous'}`
+}
+
 function readVehicleExtrasMap(userId) {
   try {
     return JSON.parse(window.localStorage.getItem(getVehicleExtrasStorageKey(userId)) || '{}')
   } catch {
     return {}
   }
+}
+
+function readVehicleRecordsMap(userId) {
+  try {
+    return JSON.parse(window.localStorage.getItem(getVehicleRecordsStorageKey(userId)) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function saveVehicleRecord(userId, vehicle) {
+  if (!userId || !vehicle?.id) return
+  const current = readVehicleRecordsMap(userId)
+  current[vehicle.id] = vehicle
+  window.localStorage.setItem(getVehicleRecordsStorageKey(userId), JSON.stringify(current))
 }
 
 function removeVehicleExtras(userId, vehicleId) {
@@ -142,6 +162,16 @@ function removeVehicleExtras(userId, vehicleId) {
 
   delete current[vehicleId]
   window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
+}
+
+function removeVehicleRecord(userId, vehicleId) {
+  if (!vehicleId) return
+
+  const current = readVehicleRecordsMap(userId)
+  if (!current[vehicleId]) return
+
+  delete current[vehicleId]
+  window.localStorage.setItem(getVehicleRecordsStorageKey(userId), JSON.stringify(current))
 }
 
 function mergeVehicleExtras(vehicle, userId) {
@@ -176,7 +206,28 @@ export default function ClientApp() {
       .eq('owner_id', user.id)
       .then(({ data }) => {
         const ownedVehicles = (data || []).filter((vehicle) => String(vehicle.owner_id || '') === String(user.id))
-        setMyVehicles(ownedVehicles.map((vehicle) => mergeVehicleExtras(vehicle, user.id)))
+        const localVehicles = Object.values(readVehicleRecordsMap(user.id))
+          .filter((vehicle) => String(vehicle?.owner_id || '') === String(user.id))
+          .map((vehicle) => mergeVehicleExtras(vehicle, user.id))
+
+        const mergedVehicles = new Map()
+
+        ownedVehicles
+          .map((vehicle) => mergeVehicleExtras(vehicle, user.id))
+          .forEach((vehicle) => {
+            mergedVehicles.set(String(vehicle.id), vehicle)
+          })
+
+        localVehicles.forEach((vehicle) => {
+          if (!mergedVehicles.has(String(vehicle.id))) {
+            mergedVehicles.set(String(vehicle.id), vehicle)
+          }
+        })
+
+        setMyVehicles(
+          Array.from(mergedVehicles.values())
+            .sort((left, right) => new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime()),
+        )
       })
   }, [user?.id])
 
@@ -344,6 +395,7 @@ export default function ClientApp() {
   function openSecurityModal() { setProfileMenuOpen(false); setSecurityModalOpen(true) }
 
   function handleVehicleAdded(nextVehicle) {
+    saveVehicleRecord(user?.id, nextVehicle)
     setMyVehicles((prev) => [
       mergeVehicleExtras(nextVehicle, user?.id),
       ...prev.filter((item) => String(item.owner_id || '') === String(user?.id || '')),
@@ -353,6 +405,7 @@ export default function ClientApp() {
   }
 
   function handleVehicleSaved(nextVehicle) {
+    saveVehicleRecord(user?.id, nextVehicle)
     setMyVehicles((prev) => prev.map((item) => (
       String(item.id) === String(nextVehicle.id) ? mergeVehicleExtras(nextVehicle, user?.id) : item
     )))
@@ -423,6 +476,7 @@ export default function ClientApp() {
     }
 
     removeVehicleExtras(user.id, vehicle.id)
+    removeVehicleRecord(user.id, vehicle.id)
     setMyVehicles((prev) => prev.filter((item) => String(item.id) !== String(vehicle.id)))
     toast(hasTrackedVin ? 'Vehicle removed from your profile' : 'Vehicle deleted from FlashMat', 'success')
   }
