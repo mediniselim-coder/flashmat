@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { normalizeMarketplaceListing, serializeMarketplaceDescription } from '../lib/marketplace'
 
-const CATEGORIES = ['Pieces moteur','Pneus et jantes','Carrosserie','Freins et suspension','Accessoires','Audio et tech','Outils','Autres']
-const CONDITIONS = ['Neuf','Tres bon etat','Bon etat','Acceptable']
+const CATEGORIES = ['Engine Parts', 'Tires & Wheels', 'Bodywork', 'Brakes & Suspension', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
+const CONDITIONS = ['New', 'Very good', 'Good', 'Acceptable']
 const ICONS = ['ME','PN','VH','PR','PC','RW','VT','CR','BT','MP','TL','EL','AD','SH']
 
 export default function NewListingModal({ onClose, onCreated }) {
@@ -34,7 +34,7 @@ export default function NewListingModal({ onClose, onCreated }) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result)
-      reader.onerror = () => reject(new Error('Impossible de lire le fichier'))
+      reader.onerror = () => reject(new Error('Unable to read the file'))
       reader.readAsDataURL(file)
     })
   }
@@ -43,7 +43,7 @@ export default function NewListingModal({ onClose, onCreated }) {
     return new Promise((resolve, reject) => {
       const image = new Image()
       image.onload = () => resolve(image)
-      image.onerror = () => reject(new Error('Impossible de charger l image'))
+      image.onerror = () => reject(new Error('Unable to load the image'))
       image.src = src
     })
   }
@@ -59,7 +59,7 @@ export default function NewListingModal({ onClose, onCreated }) {
     canvas.height = height
     const context = canvas.getContext('2d')
 
-    if (!context) throw new Error('Impossible de preparer l image')
+    if (!context) throw new Error('Unable to prepare the image')
 
     context.drawImage(image, 0, 0, width, height)
     return canvas.toDataURL('image/jpeg', 0.8)
@@ -68,10 +68,10 @@ export default function NewListingModal({ onClose, onCreated }) {
   async function submit(e) {
     e.preventDefault()
     if (!user || !profile) {
-      setError('Connexion requise pour publier une annonce.')
+      setError('You need to sign in to publish a listing.')
       return
     }
-    if (!form.title.trim() || !form.price) { setError('Titre et prix requis.'); return }
+    if (!form.title.trim() || !form.price) { setError('Title and price are required.'); return }
     setLoading(true); setError('')
     try {
       const optimizedPhotos = await Promise.all(photos.map(p => optimizePhoto(p.file)))
@@ -83,7 +83,7 @@ export default function NewListingModal({ onClose, onCreated }) {
           icon: form.icon,
           phone: form.phone.trim(),
           imageUrl: optimizedPhotos[0] || '',
-          sellerName: profile?.full_name || 'Vendeur',
+          sellerName: profile?.full_name || 'Seller',
           sellerType: profile?.role || 'client',
           city: 'Montreal',
         }),
@@ -102,7 +102,7 @@ export default function NewListingModal({ onClose, onCreated }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 540, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
-          <div className="modal-title" style={{ marginBottom:0 }}>Publier une annonce</div>
+          <div className="modal-title" style={{ marginBottom:0 }}>Create a listing</div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>x</button>
         </div>
 
@@ -118,7 +118,7 @@ export default function NewListingModal({ onClose, onCreated }) {
                     style={{ position:'absolute', top:3, right:3, background:'rgba(0,0,0,.6)', border:'none', borderRadius:'50%', width:20, height:20, color:'#fff', fontSize:11, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', lineHeight:1 }}>
                     x
                   </button>
-                  {i === 0 && <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(22,199,132,.8)', fontSize:9, color:'#fff', textAlign:'center', padding:'2px 0', fontFamily:'var(--mono)' }}>PRINCIPALE</div>}
+                  {i === 0 && <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'rgba(22,199,132,.8)', fontSize:9, color:'#fff', textAlign:'center', padding:'2px 0', fontFamily:'var(--mono)' }}>PRIMARY</div>}
                 </div>
               ))}
               {photos.length < 4 && (
@@ -127,20 +127,20 @@ export default function NewListingModal({ onClose, onCreated }) {
                   onMouseEnter={e => { e.currentTarget.style.borderColor='var(--green)'; e.currentTarget.style.color='var(--green)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--ink3)' }}>
                   <span style={{ fontSize:22 }}>PH</span>
-                  <span style={{ fontSize:10, fontFamily:'var(--mono)' }}>Ajouter</span>
+                  <span style={{ fontSize:10, fontFamily:'var(--mono)' }}>Add</span>
                 </button>
               )}
               <input ref={fileRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={handleFiles} />
             </div>
             {photos.length === 0 && (
-              <div style={{ fontSize:11, color:'var(--ink3)', marginTop:6 }}>JPG, PNG, WebP Â· La 1Ã¨re photo sera la photo principale</div>
+              <div style={{ fontSize:11, color:'var(--ink3)', marginTop:6 }}>JPG, PNG, WebP · The first photo becomes the cover image</div>
             )}
           </div>
 
           {/* ICON (shown only if no photo) */}
           {photos.length === 0 && (
             <div className="form-group">
-              <label className="form-label">IcÃ´ne (si pas de photo)</label>
+              <label className="form-label">Icon fallback (if no photo)</label>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {ICONS.map(ico => (
                   <button key={ico} type="button" onClick={() => set('icon', ico)}
@@ -153,19 +153,19 @@ export default function NewListingModal({ onClose, onCreated }) {
           )}
 
           <div className="form-group">
-            <label className="form-label">Titre de l'annonce *</label>
-            <input className="form-input" placeholder="Ex: Pneus Michelin 205/55R16 â€” lot de 4" value={form.title} onChange={e => set('title', e.target.value)} required />
+            <label className="form-label">Listing title *</label>
+            <input className="form-input" placeholder="Example: Michelin tires 205/55R16 — set of 4" value={form.title} onChange={e => set('title', e.target.value)} required />
           </div>
 
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
             <div className="form-group">
-              <label className="form-label">CatÃ©gorie</label>
+              <label className="form-label">Category</label>
               <select className="form-select" value={form.category} onChange={e => set('category', e.target.value)}>
                 {CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Ã‰tat</label>
+              <label className="form-label">Condition</label>
               <select className="form-select" value={form.condition} onChange={e => set('condition', e.target.value)}>
                 {CONDITIONS.map(c => <option key={c}>{c}</option>)}
               </select>
@@ -178,24 +178,24 @@ export default function NewListingModal({ onClose, onCreated }) {
               <input className="form-input" type="number" min="0" step="0.01" placeholder="Ex: 150" value={form.price} onChange={e => set('price', e.target.value)} required />
             </div>
             <div className="form-group">
-              <label className="form-label">TÃ©lÃ©phone contact</label>
+              <label className="form-label">Contact phone</label>
               <input className="form-input" placeholder="514-xxx-xxxx" value={form.phone} onChange={e => set('phone', e.target.value)} />
             </div>
           </div>
 
           <div className="form-group">
             <label className="form-label">Description</label>
-            <textarea className="form-input" rows={3} placeholder="DÃ©crivez votre article, Ã©tat, raison de venteâ€¦" value={form.description} onChange={e => set('description', e.target.value)} style={{ resize:'vertical' }} />
+            <textarea className="form-input" rows={3} placeholder="Describe the item, condition, and reason for selling..." value={form.description} onChange={e => set('description', e.target.value)} style={{ resize:'vertical' }} />
           </div>
 
           {error && <div style={{ color:'var(--red)', fontSize:12, marginBottom:12 }}>{error}</div>}
 
           <div className="modal-actions">
-            <button type="button" className="btn" onClick={onClose}>Annuler</button>
+            <button type="button" className="btn" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn btn-green btn-lg" disabled={loading}>
               {loading
-                ? <><span className="spinner" style={{ width:16, height:16 }} /> Upload en cours...</>
-                : 'Publier l annonce'}
+                ? <><span className="spinner" style={{ width:16, height:16 }} /> Uploading...</>
+                : 'Publish listing'}
             </button>
           </div>
         </form>

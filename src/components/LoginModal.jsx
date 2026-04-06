@@ -46,20 +46,20 @@ export default function LoginModal({ onClose }) {
     setLoading(true)
     try {
       if (mode === 'signup') {
-        if (form.password !== form.confirmPassword) throw new Error('Les mots de passe ne correspondent pas')
-        if (form.password.length < 6) throw new Error('Le mot de passe doit avoir au moins 6 caracteres')
+        if (form.password !== form.confirmPassword) throw new Error('Passwords do not match')
+        if (form.password.length < 6) throw new Error('Password must be at least 6 characters')
         await signUp({ email: form.email, password: form.password, fullName: form.fullName, role })
-        toast('Compte cree ! Bienvenue', 'success')
+        toast('Account created. Welcome aboard.', 'success')
       } else {
         await signIn({ email: form.email, password: form.password })
-        toast('Connexion reussie !', 'success')
+        toast('Signed in successfully.', 'success')
       }
       const nextPath = consumePostLoginRedirect()
       const fallbackPath = mode === 'signup' ? (role === 'provider' ? '/app/provider' : '/app/client') : '/'
       onClose()
       navigate(nextPath || fallbackPath)
     } catch (err) {
-      toast(err.message || 'Une erreur est survenue', 'error')
+      toast(err.message || 'Something went wrong', 'error')
     } finally {
       setLoading(false)
     }
@@ -106,23 +106,23 @@ export default function LoginModal({ onClose }) {
         </div>
 
         <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6, letterSpacing: -0.5 }}>
-          {mode === 'login' ? 'Bon retour' : 'Creer un compte'}
+          {mode === 'login' ? 'Welcome back' : 'Create an account'}
         </h2>
         <p style={{ fontSize: 14, color: 'var(--ink2, #666)', marginBottom: 20 }}>
-          {mode === 'login' ? 'Connectez-vous a votre espace FlashMat' : 'Rejoignez le hub automobile de Montreal'}
+          {mode === 'login' ? 'Sign in to your FlashMat space' : "Join Montreal's automotive hub"}
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '14px 0 18px', fontSize: 11, color: '#999', fontFamily: 'monospace' }}>
           <div style={{ flex: 1, height: 1, background: 'var(--border, #eee)' }} />
-          connexion securisee
+          secure sign-in
           <div style={{ flex: 1, height: 1, background: 'var(--border, #eee)' }} />
         </div>
 
         {mode === 'signup' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
             {[
-              { r: 'client', title: 'Je suis client', sub: 'Je cherche des services auto' },
-              { r: 'provider', title: 'Je suis fournisseur', sub: "J'offre des services auto" },
+              { r: 'client', title: 'I am a client', sub: 'I am looking for auto services' },
+              { r: 'provider', title: 'I am a provider', sub: "I offer auto services" },
             ].map(({ r, title, sub }) => (
               <button
                 key={r}
@@ -146,7 +146,7 @@ export default function LoginModal({ onClose }) {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {mode === 'signup' && (
             <div className="form-group">
-              <label className="form-label">Nom complet</label>
+              <label className="form-label">Full name</label>
               <input
                 className="form-input"
                 type="text"
@@ -158,18 +158,18 @@ export default function LoginModal({ onClose }) {
             </div>
           )}
           <div className="form-group">
-            <label className="form-label">Adresse email</label>
+            <label className="form-label">Email address</label>
             <input
               className="form-input"
               type="email"
-              placeholder="vous@email.com"
+              placeholder="you@email.com"
               required
               value={form.email}
               onChange={e => set('email', e.target.value)}
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Mot de passe</label>
+            <label className="form-label">Password</label>
             <input
               className="form-input"
               type="password"
@@ -182,7 +182,7 @@ export default function LoginModal({ onClose }) {
           </div>
           {mode === 'signup' && (
             <div className="form-group">
-              <label className="form-label">Confirmer le mot de passe</label>
+              <label className="form-label">Confirm password</label>
               <input
                 className="form-input"
                 type="password"
@@ -203,18 +203,18 @@ export default function LoginModal({ onClose }) {
               marginTop: 8, opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Chargement...' : mode === 'login' ? 'Se connecter ->' : 'Creer mon compte ->'}
+            {loading ? 'Loading...' : mode === 'login' ? 'Sign in →' : 'Create my account →'}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 18, fontSize: 13, color: '#666' }}>
           {mode === 'login' ? (
-            <span>Pas encore de compte ?{' '}
-              <button onClick={() => setMode('signup')} style={switchBtnStyle}>S'inscrire gratuitement</button>
+            <span>Don't have an account yet?{' '}
+              <button onClick={() => setMode('signup')} style={switchBtnStyle}>Create one for free</button>
             </span>
           ) : (
-            <span>Deja un compte ?{' '}
-              <button onClick={() => setMode('login')} style={switchBtnStyle}>Se connecter</button>
+            <span>Already have an account?{' '}
+              <button onClick={() => setMode('login')} style={switchBtnStyle}>Sign in</button>
             </span>
           )}
         </div>

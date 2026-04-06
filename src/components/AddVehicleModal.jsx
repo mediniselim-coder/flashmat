@@ -76,7 +76,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
 
   async function handleSubmit() {
     if (!user?.id) {
-      setError('Connexion requise pour enregistrer un vehicule.')
+      setError('You need to sign in to save a vehicle.')
       return
     }
 
@@ -103,7 +103,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
       .single()
     setLoading(false)
     if (insertError) {
-      setError(insertError.message || 'Impossible d enregistrer le vehicule.')
+      setError(insertError.message || 'Unable to save the vehicle.')
       return
     }
 
@@ -115,7 +115,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div className="modal-title" style={{ marginBottom: 0 }}>Ajouter un vehicule</div>
+          <div className="modal-title" style={{ marginBottom: 0 }}>Add a vehicle</div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>X</button>
         </div>
 
@@ -170,7 +170,7 @@ export default function AddVehicleModal({ onClose, onAdd }) {
 
         {manualMode && (
           <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 12 }}>
-            Le catalogue detaille n est pas disponible pour le moment. Vous pouvez quand meme enregistrer votre vehicule manuellement.
+              The detailed catalog is not available right now. You can still save your vehicle manually.
           </div>
         )}
 
@@ -188,9 +188,9 @@ export default function AddVehicleModal({ onClose, onAdd }) {
         {error && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
         <div className="modal-actions">
-          <button className="btn" onClick={onClose}>Annuler</button>
+            <button className="btn" onClick={onClose}>Cancel</button>
           <button className="btn btn-green btn-lg" onClick={handleSubmit} disabled={!selectedMake || !selectedModel || !selectedYear || loading}>
-            {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Ajouter le vehicule'}
+              {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Add vehicle'}
           </button>
         </div>
       </div>

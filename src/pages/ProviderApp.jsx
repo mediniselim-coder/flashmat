@@ -447,12 +447,12 @@ export default function ProviderApp() {
       phone: '(514) 555-0199',
       arrivalWindow: '15-25 min',
     })
-    toast('Demande FlashFix acceptÃ©e', 'success')
+    toast('FlashFix request accepted', 'success')
   }
 
   function refuseFlashFixRequest(requestId) {
     providerRespondToFlashFix(requestId, 'refuse', name)
-    toast('Demande FlashFix refusÃ©e', 'success')
+    toast('FlashFix request declined', 'success')
   }
 
   function advanceFlashFixStatus(requestId, nextStatus) {
@@ -465,10 +465,10 @@ export default function ProviderApp() {
     })
     const labels = {
       en_route: 'Le provider est maintenant en route',
-      onsite: 'Le provider est arrivÃ© sur place',
-      completed: 'Intervention FlashFix terminÃ©e',
+      onsite: 'The provider has arrived on site',
+      completed: 'FlashFix intervention completed',
     }
-    toast(labels[nextStatus] || 'Mise Ã  jour envoyÃ©e', 'success')
+    toast(labels[nextStatus] || 'Update sent', 'success')
   }
 
   async function markBookingDone(booking) {
@@ -578,7 +578,7 @@ export default function ProviderApp() {
 
               <div className={styles.g2}>
                 <div className="panel">
-                  <div className="panel-hd"><div className="panel-title">FL File d'attente aujourd'hui</div></div>
+                  <div className="panel-hd"><div className="panel-title">FL Queue today</div></div>
                   <div style={{overflowX:'auto'}}>
                     <table>
                       <thead><tr><th>Heure</th><th>Client</th><th>Service</th><th>Statut</th><th></th></tr></thead>
@@ -589,7 +589,7 @@ export default function ProviderApp() {
                             <td style={{fontWeight:600}}>{q.client}</td>
                             <td>{q.service}</td>
                             <td><span className={`badge ${q.cls}`}>{q.label}</span></td>
-                            <td><button className={`btn ${q.done ? 'btn-green' : ''}`} style={{ fontSize:10, opacity:q.label === 'Planifie' ? .4 : 1 }} disabled={q.label === 'Planifie'} onClick={() => toast(`${q.client} notifie: Voiture prete OK`, 'success')}>Notifier</button></td>
+                            <td><button className={`btn ${q.done ? 'btn-green' : ''}`} style={{ fontSize:10, opacity:q.label === 'Planifie' ? .4 : 1 }} disabled={q.label === 'Planifie'} onClick={() => toast(`${q.client} notified: vehicle ready`, 'success')}>Notify</button></td>
                           </tr>
                         ))}
                       </tbody>
@@ -597,28 +597,28 @@ export default function ProviderApp() {
                   </div>
                   {operationalQueue.length === 0 && (
                     <div style={{padding:18,color:'var(--ink3)',fontSize:12}}>
-                      Aucune reservation reelle n alimente encore la file d attente.
+                      No live booking is feeding the queue yet.
                     </div>
                   )}
                 </div>
                 <div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">RV Revenu semaine</div></div>
+                    <div className="panel-hd"><div className="panel-title">RV Weekly revenue</div></div>
                     <div className="panel-body">
-                      {[['RÃ©servations', providerBookings.length], ['Clients uniques', providerClients.length], ['Services terminÃ©s', bookingsDoneCount], ['Urgences FlashFix', flashFixQueue.length]].map(([label, value]) => (
+                      {[['Bookings', providerBookings.length], ['Unique clients', providerClients.length], ['Completed services', bookingsDoneCount], ['FlashFix urgent jobs', flashFixQueue.length]].map(([label, value]) => (
                         <div key={label} style={{display:'flex',justifyContent:'space-between',padding:'10px 0',borderBottom:'1px solid var(--border)',fontSize:12}}>
                           <span style={{color:'var(--ink2)'}}>{label}</span>
                           <strong style={{color:'var(--ink)',fontFamily:'var(--mono)'}}>{value}</strong>
                         </div>
                       ))}
                       <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid var(--border)',display:'flex',justifyContent:'space-between'}}>
-                        <span style={{fontSize:11,color:'var(--ink2)'}}>Total enregistrÃ©</span>
+                        <span style={{fontSize:11,color:'var(--ink2)'}}>Recorded total</span>
                         <span style={{fontFamily:'var(--display)',fontSize:16,fontWeight:800,color:'var(--green)'}}>${monthlyRevenue || 0}</span>
                       </div>
                     </div>
                   </div>
                   <div className="panel">
-                    <div className="panel-hd"><div className="panel-title">BT Baies de travail</div></div>
+                    <div className="panel-hd"><div className="panel-title">BT Work bays</div></div>
                     {[1, 2, 3, 4].map((bayNumber) => {
                       const booking = providerBookings[bayNumber - 1]
                       const occupied = Boolean(booking && booking.status !== 'done')
@@ -627,9 +627,9 @@ export default function ProviderApp() {
                         <div style={{width:8,height:8,borderRadius:'50%',background:occupied ? 'var(--amber)' : 'var(--green)',flexShrink:0}}/>
                         <div style={{flex:1}}>
                           <div style={{fontWeight:600,fontSize:12}}>Baie {bayNumber}</div>
-                          <div style={{fontSize:10,color:'var(--ink2)'}}>{occupied ? `${booking.clientName} - ${booking.service}` : 'Disponible'}</div>
+                          <div style={{fontSize:10,color:'var(--ink2)'}}>{occupied ? `${booking.clientName} - ${booking.service}` : 'Available'}</div>
                         </div>
-                        <span className={`badge ${occupied ? 'badge-amber' : 'badge-green'}`}>{occupied ? 'OccupÃ©e' : 'Libre'}</span>
+                        <span className={`badge ${occupied ? 'badge-amber' : 'badge-green'}`}>{occupied ? 'Occupied' : 'Free'}</span>
                       </div>
                     )})}
                   </div>
@@ -670,14 +670,14 @@ export default function ProviderApp() {
                 <div style={{background:'linear-gradient(135deg,#111827 0%, #7c2d12 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'center',marginBottom:12}}>
                     <div>
-                      <div style={{fontSize:11,letterSpacing:1.4,textTransform:'uppercase',color:'rgba(255,255,255,.72)',marginBottom:6}}>Dispatch urgence</div>
-                      <div style={{fontFamily:'var(--display)',fontSize:22,fontWeight:800,lineHeight:1.1}}>{pendingFlashFix.length} mission(s) a traiter</div>
+                      <div style={{fontSize:11,letterSpacing:1.4,textTransform:'uppercase',color:'rgba(255,255,255,.72)',marginBottom:6}}>Emergency dispatch</div>
+                      <div style={{fontFamily:'var(--display)',fontSize:22,fontWeight:800,lineHeight:1.1}}>{pendingFlashFix.length} job(s) to handle</div>
                     </div>
-                    <span className="badge badge-amber">Urgence live</span>
+                    <span className="badge badge-amber">Live emergency</span>
                   </div>
                   <div style={{display:'grid',gridTemplateColumns:'repeat(3, minmax(0,1fr))',gap:10}}>
                     <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
-                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Plus proche mission</div>
+                      <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Closest job</div>
                       <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].location || 'Montreal'}</div>
                     </div>
                     <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
@@ -686,7 +686,7 @@ export default function ProviderApp() {
                     </div>
                     <div style={{background:'rgba(255,255,255,.08)',borderRadius:14,padding:12}}>
                       <div style={{fontSize:10,color:'rgba(255,255,255,.65)',marginBottom:4}}>Prix</div>
-                      <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].selectedOption?.price || 'A confirmer'}</div>
+                      <div style={{fontWeight:700,fontSize:14}}>{pendingFlashFix[0].selectedOption?.price || 'To confirm'}</div>
                     </div>
                   </div>
                 </div>
@@ -708,20 +708,20 @@ export default function ProviderApp() {
                         </div>
                         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
                           <span className="badge badge-gray">{request.customerName || 'Client FlashMat'}</span>
-                          <span className="badge badge-blue">{request.location || 'Position Ã  confirmer'}</span>
+                          <span className="badge badge-blue">{request.location || 'Location to confirm'}</span>
                           <span className="badge badge-green">{request.selectedOption?.title || 'Service FlashFix'}</span>
-                          <span className="badge badge-amber">{request.selectedOption?.price || 'Prix Ã  confirmer'}</span>
-                          <span className="badge badge-gray">ETA {request.selectedOption?.eta || 'Ã  confirmer'}</span>
+                          <span className="badge badge-amber">{request.selectedOption?.price || 'Price to confirm'}</span>
+                          <span className="badge badge-gray">ETA {request.selectedOption?.eta || 'to confirm'}</span>
                         </div>
                         <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',fontSize:11,color:'var(--ink2)',marginBottom:12}}>
-                          <span>{request.providerName ? `AssignÃ© Ã  ${request.providerName}` : 'Aucun provider assignÃ© pour le moment'}</span>
+                          <span>{request.providerName ? `Assigned to ${request.providerName}` : 'No provider assigned yet'}</span>
                           <span style={{fontFamily:'var(--mono)'}}>{formatFlashFixTime(latestEvent?.at || request.createdAt)}</span>
                         </div>
                         {request.providerProfile && (
                           <div style={{marginBottom:12,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:12,display:'grid',gridTemplateColumns:'1fr auto auto',gap:10,alignItems:'center'}}>
                             <div>
                               <div style={{fontSize:13,fontWeight:700,color:'var(--ink)'}}>{request.providerProfile.title}</div>
-                              <div style={{fontSize:11,color:'var(--ink2)'}}>{request.providerProfile.vehicle} Â· â­ {request.providerProfile.rating}</div>
+                              <div style={{fontSize:11,color:'var(--ink2)'}}>{request.providerProfile.vehicle} · ★ {request.providerProfile.rating}</div>
                             </div>
                             <span className="badge badge-blue">{request.providerProfile.arrivalWindow}</span>
                             <span className="badge badge-gray">{request.providerProfile.phone}</span>
@@ -730,18 +730,18 @@ export default function ProviderApp() {
                         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                           {request.status === 'pending' && (
                             <>
-                              <button className="btn btn-green" onClick={() => acceptFlashFixRequest(request.id)}>Accepter</button>
-                              <button className="btn" onClick={() => refuseFlashFixRequest(request.id)}>Refuser</button>
+                              <button className="btn btn-green" onClick={() => acceptFlashFixRequest(request.id)}>Accept</button>
+                              <button className="btn" onClick={() => refuseFlashFixRequest(request.id)}>Decline</button>
                             </>
                           )}
                           {request.status === 'accepted' && (
-                            <button className="btn btn-blue" onClick={() => advanceFlashFixStatus(request.id, 'en_route')}>Je pars maintenant</button>
+                            <button className="btn btn-blue" onClick={() => advanceFlashFixStatus(request.id, 'en_route')}>Leave now</button>
                           )}
                           {request.status === 'en_route' && (
-                            <button className="btn btn-amber" onClick={() => advanceFlashFixStatus(request.id, 'onsite')}>Je suis sur place</button>
+                            <button className="btn btn-amber" onClick={() => advanceFlashFixStatus(request.id, 'onsite')}>I am on site</button>
                           )}
                           {request.status === 'onsite' && (
-                            <button className="btn btn-green" onClick={() => advanceFlashFixStatus(request.id, 'completed')}>Terminer l intervention</button>
+                            <button className="btn btn-green" onClick={() => advanceFlashFixStatus(request.id, 'completed')}>Complete job</button>
                           )}
                         </div>
                         <div style={{display:'grid',gridTemplateColumns:'repeat(5, minmax(0,1fr))',gap:8,marginTop:12}}>
@@ -761,7 +761,7 @@ export default function ProviderApp() {
                                 background:item.current ? 'var(--blue)' : item.done ? 'var(--green)' : 'var(--bg3)',
                                 border:item.current ? 'none' : '1px solid var(--border)',
                               }}>
-                                {item.done ? 'â€¢' : ''}
+                                {item.done ? '•' : ''}
                               </div>
                               <div style={{fontSize:10,color:item.current ? 'var(--ink)' : 'var(--ink3)',fontWeight:item.current ? 700 : 500}}>{getTimelineLabel(item.step)}</div>
                             </div>
@@ -774,7 +774,7 @@ export default function ProviderApp() {
               )}
               <div className="panel" style={{overflowX:'auto'}}>
                 <table>
-                  <thead><tr><th>Client</th><th>Service</th><th>VÃ©hicule</th><th>Date & Heure</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
+                  <thead><tr><th>Client</th><th>Service</th><th>Vehicle</th><th>Date & Time</th><th>Price</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {providerBookings.map((b) => (
                       <tr key={b.id}>
@@ -785,7 +785,7 @@ export default function ProviderApp() {
                         <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{b.priceLabel}</td>
                         <td><span className={`badge ${b.statusClass}`}>{b.statusLabel}</span></td>
                         <td style={{display:'flex',gap:4}}>
-                          <button className="btn btn-green" style={{fontSize:10,opacity:b.status==='done'?.4:1}} disabled={b.status==='done'} onClick={() => markBookingDone(b)}>Pret</button>
+                          <button className="btn btn-green" style={{fontSize:10,opacity:b.status==='done'?.4:1}} disabled={b.status==='done'} onClick={() => markBookingDone(b)}>Ready</button>
                         </td>
                       </tr>
                     ))}
@@ -794,7 +794,7 @@ export default function ProviderApp() {
               </div>
               {providerBookings.length === 0 && (
                 <div style={{textAlign:'center',padding:28,color:'var(--ink3)'}}>
-                  Aucune reservation enregistree pour le moment.
+                  No bookings recorded yet.
                 </div>
               )}
             </div>
@@ -809,7 +809,7 @@ export default function ProviderApp() {
               <input className="form-input" placeholder="Search a client..." value={clientQ} onChange={e => setClientQ(e.target.value)} style={{marginBottom:14}} />
               <div className="panel" style={{overflowX:'auto'}}>
                 <table>
-                  <thead><tr><th>Nom</th><th>VÃ©hicules</th><th>DerniÃ¨re visite</th><th>Total</th><th>Statut</th><th></th></tr></thead>
+                  <thead><tr><th>Name</th><th>Vehicles</th><th>Last visit</th><th>Total</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {filteredClients.map((c,i) => (
                       <tr key={i}>
@@ -818,7 +818,7 @@ export default function ProviderApp() {
                         <td style={{fontFamily:'var(--mono)',fontSize:11}}>{c.last}</td>
                         <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{c.total}</td>
                         <td><span className={`badge ${c.cls}`}>{c.status}</span></td>
-                        <td><button className="btn" style={{fontSize:10}} onClick={() => go('p-bookings')}>Voir rÃ©sa</button></td>
+                        <td><button className="btn" style={{fontSize:10}} onClick={() => go('p-bookings')}>View bookings</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -826,7 +826,7 @@ export default function ProviderApp() {
               </div>
               {filteredClients.length === 0 && (
                 <div style={{textAlign:'center',padding:28,color:'var(--ink3)'}}>
-                  Aucun client reel n apparait encore. Les clients seront listes ici apres les premieres reservations.
+                  No live clients appear yet. Clients will show here after the first bookings.
                 </div>
               )}
             </div>
@@ -841,25 +841,25 @@ export default function ProviderApp() {
               <div className={styles.g2}>
                 <div>
                   <div style={{background:'linear-gradient(135deg,var(--green-bg),var(--blue-bg))',border:'1px solid var(--border)',borderRadius:10,padding:18}}>
-                    <div style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--ink)',marginBottom:8}}>Promotions prÃªtes Ã  brancher</div>
+                    <div style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--ink)',marginBottom:8}}>Promotions ready to connect</div>
                     <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.7}}>
-                      Cette zone n affiche plus de campagnes inventees. Creez une vraie offre, puis rattachez-la a vos clients ou a vos reservations FlashMat.
+                      This area no longer shows invented campaigns. Create a real offer, then attach it to your clients or your FlashMat bookings.
                     </div>
                     <div style={{marginTop:12,display:'flex',gap:6,flexWrap:'wrap'}}>
-                      <span className="badge badge-blue">Sans donnees demo</span>
-                      <span className="badge badge-gray">A connecter au module promo</span>
+                      <span className="badge badge-blue">No demo data</span>
+                      <span className="badge badge-gray">Ready for the promo module</span>
                     </div>
                   </div>
                 </div>
                 <div className="panel">
-                  <div className="panel-hd"><div className="panel-title">PM Nouvelle promo</div></div>
+                  <div className="panel-hd"><div className="panel-title">PM New promotion</div></div>
                   <div className="panel-body">
                     <div className="form-group"><label className="form-label">Service</label><input className="form-input" value={promoSvc} onChange={e => setPromoSvc(e.target.value)} /></div>
-                    <div className="form-group"><label className="form-label">RÃ©duction</label><input className="form-input" value={promoVal} onChange={e => setPromoVal(e.target.value)} placeholder="Ex: 20% ou $15"/></div>
-                    <div className="form-group"><label className="form-label">Date de fin</label><input className="form-input" type="date" /></div>
-                    <div className="form-group"><label className="form-label">Message</label><input className="form-input" placeholder="Message personnalisÃ©â€¦"/></div>
+                    <div className="form-group"><label className="form-label">Discount</label><input className="form-input" value={promoVal} onChange={e => setPromoVal(e.target.value)} placeholder="Example: 20% or $15"/></div>
+                    <div className="form-group"><label className="form-label">End date</label><input className="form-input" type="date" /></div>
+                    <div className="form-group"><label className="form-label">Message</label><input className="form-input" placeholder="Custom message..."/></div>
                     <button className="btn btn-green" style={{width:'100%',justifyContent:'center'}} onClick={() => go('p-clients')}>
-                      GÃ©rer les clients â†’
+                      Manage clients →
                     </button>
                   </div>
                 </div>

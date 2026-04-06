@@ -1,28 +1,28 @@
 ﻿import { supabase } from './supabase'
 
 const STATUS_META = {
-  pending: { label: 'En attente', cls: 'badge-amber' },
-  confirmed: { label: 'Confirme', cls: 'badge-green' },
-  progress: { label: 'En cours', cls: 'badge-blue' },
-  done: { label: 'Termine', cls: 'badge-green' },
-  cancelled: { label: 'Annule', cls: 'badge-gray' },
+  pending: { label: 'Pending', cls: 'badge-amber' },
+  confirmed: { label: 'Confirmed', cls: 'badge-green' },
+  progress: { label: 'In progress', cls: 'badge-blue' },
+  done: { label: 'Completed', cls: 'badge-green' },
+  cancelled: { label: 'Cancelled', cls: 'badge-gray' },
 }
 
 function formatBookingDate(date, timeSlot) {
-  if (!date && !timeSlot) return 'A confirmer'
+  if (!date && !timeSlot) return 'To confirm'
 
   const datePart = date
     ? new Date(`${date}T00:00:00`).toLocaleDateString('fr-CA', {
       month: 'short',
       day: 'numeric',
     })
-    : 'Date a confirmer'
+    : 'Date to confirm'
 
-  return `${datePart} Â· ${timeSlot || 'Heure a confirmer'}`
+  return `${datePart} · ${timeSlot || 'Time to confirm'}`
 }
 
 export function getBookingStatusMeta(status) {
-  return STATUS_META[status] || { label: status || 'En attente', cls: 'badge-gray' }
+  return STATUS_META[status] || { label: status || 'Pending', cls: 'badge-gray' }
 }
 
 export function normalizeBookingRecord(booking) {
@@ -33,13 +33,13 @@ export function normalizeBookingRecord(booking) {
 
   return {
     ...booking,
-    clientName: clientProfile?.full_name || booking.clientName || 'Client FlashMat',
-    providerName: providerProfile?.shop_name || providerProfile?.name || booking.providerName || 'Atelier FlashMat',
+    clientName: clientProfile?.full_name || booking.clientName || 'FlashMat Client',
+    providerName: providerProfile?.shop_name || providerProfile?.name || booking.providerName || 'FlashMat Shop',
     vehicleLabel: vehicle
-      ? `${vehicle.make} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}${vehicle.plate ? ` Â· ${vehicle.plate}` : ''}`
-      : booking.vehicleLabel || 'Vehicule a confirmer',
+      ? `${vehicle.make} ${vehicle.model}${vehicle.year ? ` ${vehicle.year}` : ''}${vehicle.plate ? ` · ${vehicle.plate}` : ''}`
+      : booking.vehicleLabel || 'Vehicle to confirm',
     datetimeLabel: formatBookingDate(booking.date, booking.time_slot),
-    priceLabel: booking.price || 'Prix a confirmer',
+    priceLabel: booking.price || 'Price to confirm',
     statusLabel: statusMeta.label,
     statusClass: statusMeta.cls,
   }
@@ -89,7 +89,7 @@ export async function createBooking(input) {
     date: input.date || null,
     time_slot: input.timeSlot || null,
     notes: input.notes || '',
-    price: input.price || 'Prix a confirmer',
+    price: input.price || 'Price to confirm',
     status: 'confirmed',
   }
 

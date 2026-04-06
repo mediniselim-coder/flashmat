@@ -1,19 +1,19 @@
-﻿import { useEffect, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import styles from './VehicleDoctor.module.css'
 
 const INPUT_MODES = [
-  { id: 'text', label: 'Texte libre' },
-  { id: 'photo', label: 'Photo du problÃ¨me' },
-  { id: 'audio', label: 'Note vocale' },
+  { id: 'text', label: 'Free text' },
+  { id: 'photo', label: 'Problem photo' },
+  { id: 'audio', label: 'Voice note' },
 ]
 
 const QUICK_CASES = [
-  'Ma voiture grince quand je freine',
-  'Le moteur chauffe dans le trafic',
-  'La batterie semble faible le matin',
-  'Jâ€™ai un pneu qui perd de lâ€™air',
+  'My car squeaks when I brake',
+  'The engine gets hot in traffic',
+  'The battery feels weak in the morning',
+  'One of my tires keeps losing air',
 ]
 
 const CASE_LIBRARY = [
@@ -1163,14 +1163,14 @@ function normalizeAiDiagnosisResponse(response, fallbackDiagnosis) {
     ...fallbackDiagnosis,
     type: response.type === 'maintenance' ? 'maintenance' : 'repair',
     probableIssue,
-    confidence: String(response.confidence || fallbackDiagnosis.confidence || 'Moyenne').trim(),
-    urgency: String(response.urgency || fallbackDiagnosis.urgency || 'A verifier').trim(),
-    estimate: String(response.estimate || fallbackDiagnosis.estimate || 'Diagnostic cible').trim(),
-    duration: String(response.duration || fallbackDiagnosis.duration || 'A confirmer').trim(),
+    confidence: String(response.confidence || fallbackDiagnosis.confidence || 'Medium').trim(),
+    urgency: String(response.urgency || fallbackDiagnosis.urgency || 'To verify').trim(),
+    estimate: String(response.estimate || fallbackDiagnosis.estimate || 'Targeted diagnosis').trim(),
+    duration: String(response.duration || fallbackDiagnosis.duration || 'To confirm').trim(),
     priceNote: String(response.priceNote || fallbackDiagnosis.priceNote || '').trim(),
     durationNote: String(response.durationNote || fallbackDiagnosis.durationNote || '').trim(),
     summary,
-    guidanceTitle: String(response.guidanceTitle || fallbackDiagnosis.guidanceTitle || 'Points cles').trim(),
+    guidanceTitle: String(response.guidanceTitle || fallbackDiagnosis.guidanceTitle || 'Key takeaways').trim(),
     guidanceItems,
     searchCat: ['mechanic', 'tire', 'body', 'glass', 'tow', 'wash'].includes(response.searchCat)
       ? response.searchCat
@@ -1192,12 +1192,106 @@ async function fetchAnthropicDiagnosis(input, fallbackDiagnosis) {
   })
 
   if (!response.ok) {
-    throw new Error('Le service de diagnostic n a pas repondu correctement')
+    throw new Error('The diagnostic service did not respond correctly')
   }
 
   const data = await response.json()
   return data?.diagnosis || null
 }
+
+function repairMojibake(value) {
+  if (typeof value !== 'string') return value
+  let repaired = value
+  try {
+    const secondPass = decodeURIComponent(escape(repaired))
+    if (secondPass && secondPass !== repaired) repaired = secondPass
+  } catch {}
+  return repaired
+    .replace(/ï¿½/g, '')
+    .replaceAll('??', '?')
+    .replaceAll('???', '?')
+    .replaceAll('???', '...')
+    .replaceAll('???', '?')
+    .replaceAll('???', "'")
+    .replaceAll('???', '"')
+    .replaceAll('???', '"')
+    .replaceAll('???', '-')
+    .replaceAll('???', '-')
+}
+
+function translateDiagnosisText(value) {
+  let text = repairMojibake(String(value || ''))
+  const phraseMap = [
+    ['Conseil de vidange et d entretien courant', 'Oil change and routine maintenance guidance'],
+    ['Porte arriere possiblement bloquee apres impact', 'Rear door may be jammed after the impact'],
+    ['Probleme de phare avant ou d eclairage', 'Front headlight or lighting problem'],
+    ['Plaquettes de frein usees', 'Worn brake pads'],
+    ['Batterie faible ou alternateur a verifier', 'Weak battery or alternator to inspect'],
+    ['Fuite lente ou crevaison sur un pneu', 'Slow leak or puncture in one tire'],
+    ['Surchauffe liee au liquide de refroidissement', 'Overheating linked to the cooling system'],
+    ['Diagnostic encore incertain', 'Diagnosis still uncertain'],
+    ['?lev?e', 'High'],
+    ['Elev?e', 'High'],
+    ['Moyenne ? ?lev?e', 'Medium to high'],
+    ['Moyenne a ?lev?e', 'Medium to high'],
+    ['Moyenne', 'Medium'],
+    ['Faible ? moyenne', 'Low to medium'],
+    ['A traiter rapidement', 'Handle soon'],
+    ['? traiter rapidement', 'Handle soon'],
+    ['? faire v?rifier rapidement', 'Check soon'],
+    ['? faire avant un long trajet', 'Handle before a long trip'],
+    ['Urgent si l aiguille monte vite', 'Urgent if the gauge rises quickly'],
+    ['? planifier selon le kilom?trage', 'Plan based on mileage'],
+    ['? planifier aujourd?hui', 'Plan for today'],
+    ['Quoi faire maintenant', 'What to do now'],
+    ['Quoi v?rifier', 'What to check'],
+    ['Ce que vous devez savoir', 'What you should know'],
+    ['Points cl?s', 'Key takeaways'],
+    ['Aujourd?hui', 'Today'],
+    ['Demain', 'Tomorrow'],
+    ['Disponible', 'Available'],
+    ['Inspection rapide', 'Quick inspection'],
+    ['Avis ?lev?s', 'Highly rated'],
+    ['R?servation express', 'Express booking'],
+    ['Entretien', 'Maintenance'],
+    ['Fiable', 'Reliable'],
+    ['Proche', 'Nearby'],
+    ['Petit budget', 'Budget-friendly'],
+    ['Sans rendez-vous', 'Walk-in'],
+    ['Pneus', 'Tires'],
+    ['Freins', 'Brakes'],
+    ['Carrosserie', 'Bodywork'],
+    ['?clairage', 'Lighting'],
+    ['?lectrique', 'Electrical']
+  ]
+  for (const [from, to] of phraseMap) text = text.split(from).join(to)
+  return text
+}
+
+function translateDiagnosisDisplay(rawDiagnosis) {
+  if (!rawDiagnosis) return null
+  return {
+    ...rawDiagnosis,
+    probableIssue: translateDiagnosisText(rawDiagnosis.probableIssue),
+    confidence: translateDiagnosisText(rawDiagnosis.confidence),
+    urgency: translateDiagnosisText(rawDiagnosis.urgency),
+    estimate: translateDiagnosisText(rawDiagnosis.estimate),
+    duration: translateDiagnosisText(rawDiagnosis.duration),
+    priceNote: translateDiagnosisText(rawDiagnosis.priceNote),
+    durationNote: translateDiagnosisText(rawDiagnosis.durationNote),
+    summary: translateDiagnosisText(rawDiagnosis.summary),
+    guidanceTitle: translateDiagnosisText(rawDiagnosis.guidanceTitle),
+    guidanceItems: (rawDiagnosis.guidanceItems || []).map((item) => translateDiagnosisText(item)),
+    matches: (rawDiagnosis.matches || []).map((match) => ({
+      ...match,
+      name: translateDiagnosisText(match.name),
+      eta: translateDiagnosisText(match.eta),
+      price: translateDiagnosisText(match.price),
+      tags: (match.tags || []).map((tag) => translateDiagnosisText(tag)),
+    })),
+  }
+}
+
 export default function VehicleDoctor({ compact = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
@@ -1210,12 +1304,13 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const [diagnosis, setDiagnosis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasFreshResult, setHasFreshResult] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('DÃ©crivez le symptÃ´me puis lancez le diagnostic.')
-  const ctaLabel = user && profile?.role === 'client' ? 'RÃ©server en 10 sec' : 'Se connecter et rÃ©server'
+  const [statusMessage, setStatusMessage] = useState('Describe the symptom, then run the diagnosis.')
+  const ctaLabel = user && profile?.role === 'client' ? 'Book in 10 sec' : 'Sign in to book'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
+  const displayDiagnosis = useMemo(() => translateDiagnosisDisplay(diagnosis), [diagnosis])
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
-    ? 'Conseil entretien FlashMat'
-    : 'Diagnostic automatique FlashMat'
+    ? 'FlashMat maintenance guidance'
+    : 'FlashMat automatic diagnosis'
 
   useEffect(() => {
     return () => {
@@ -1237,7 +1332,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
   function analyze(nextDraft) {
     const value = (nextDraft || draft).trim()
     if (!value) {
-      setStatusMessage('DÃ©crivez un symptÃ´me pour lancer le diagnostic.')
+      setStatusMessage('Describe a symptom to start the diagnosis.')
       return
     }
 
@@ -1247,7 +1342,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
     setDraft(value)
     setIsAnalyzing(true)
     setHasFreshResult(false)
-    setStatusMessage('Analyse du symptôme en cours...')
+    setStatusMessage('Analyzing the symptom...')
 
     const analysisId = Date.now()
     latestAnalysisRef.current = analysisId
@@ -1255,12 +1350,12 @@ export default function VehicleDoctor({ compact = false, userName }) {
     analyzeTimeoutRef.current = window.setTimeout(async () => {
       const localDiagnosis = detectCaseStable(value)
       let finalDiagnosis = localDiagnosis
-      let finalStatus = 'Diagnostic prêt. Consultez le résultat et les garages suggérés.'
+      let finalStatus = 'Diagnosis ready. Review the result and suggested garages.'
 
       setDiagnosis(localDiagnosis)
 
       if (shouldTryAiDiagnosis(value, localDiagnosis)) {
-        setStatusMessage('Analyse approfondie du symptôme en cours...')
+        setStatusMessage('Running an advanced diagnosis...')
 
         try {
           const aiDiagnosis = await fetchAnthropicDiagnosis(value, localDiagnosis)
@@ -1268,13 +1363,13 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
           if (aiDiagnosis) {
             finalDiagnosis = aiDiagnosis
-            finalStatus = 'Diagnostic prêt. Vérifiez la synthèse et les actions conseillées.'
+            finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
           } else {
-            finalStatus = 'Diagnostic prêt. Vérifiez la synthèse et les actions conseillées.'
+            finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
           }
         } catch {
           if (latestAnalysisRef.current !== analysisId) return
-          finalStatus = 'Diagnostic prêt. Vérifiez la synthèse et les actions conseillées.'
+          finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
         }
       }
 
@@ -1301,14 +1396,14 @@ export default function VehicleDoctor({ compact = false, userName }) {
         {compact ? (
           <div className={styles.compactHeader}>
             <div>
-              <div className={styles.eyebrow}>FlashMat Diagnostic</div>
-              <h2 className={styles.compactTitle}>Votre Docteur Automobile</h2>
+              <div className={styles.eyebrow}>FlashMat Diagnosis</div>
+              <h2 className={styles.compactTitle}>Your Auto Doctor</h2>
               <p className={styles.compactSub}>
-                Décrivez le symptôme, ajoutez bientôt une photo ou un audio, et FlashMat propose un problème probable,
-                un prix estimé, une durée et les garages disponibles les plus pertinents.
+                Describe the symptom, then FlashMat can estimate the likely issue,
+                the price range, repair time, and the most relevant nearby garages.
               </p>
             </div>
-            <div className={styles.confidence}>Bonjour {userName || 'client'}</div>
+            <div className={styles.confidence}>Hello {userName || 'client'}</div>
           </div>
         ) : null}
 
@@ -1316,13 +1411,13 @@ export default function VehicleDoctor({ compact = false, userName }) {
           <div>
             {!compact ? (
               <>
-                <div className={styles.eyebrow}>Docteur Automobile</div>
+                <div className={styles.eyebrow}>Auto Doctor</div>
                 <h2 className={styles.title}>
-                  Le docteur <span>pour voiture</span>
+                  The doctor <span>for your car</span>
                 </h2>
                 <p className={styles.subtitle}>
-                  Décrivez votre problème, envoyez bientôt une photo ou une note vocale, puis laissez FlashMat
-                  estimer la panne, le prix, le temps de réparation et vous connecter au meilleur mécanicien dispo.
+                  Describe the problem, soon add a photo or voice note, and let FlashMat
+                  estimate the issue, price, repair time, and connect you with the best available mechanic.
                 </p>
               </>
             ) : null}
@@ -1345,15 +1440,15 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 className={styles.textarea}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Ex: ma voiture fait un bruit quand je freine, l’auto vibre et une lumière s’allume au tableau de bord."
+                placeholder="Example: my car makes noise when I brake, the steering wheel vibrates, and a warning light appears on the dashboard."
               />
               <div className={styles.helper}>
                 <span>
-                  {inputMode === 'text' && 'Décrivez les bruits, vibrations, odeurs ou voyants.'}
-                  {inputMode === 'photo' && 'Le mode photo peut déjà lancer le diagnostic après description du symptôme.'}
-                  {inputMode === 'audio' && 'Le mode audio est prévu dans le flow: la note vocale alimentera le diagnostic.'}
+                  {inputMode === 'text' && 'Describe noises, vibrations, smells, or warning lights.'}
+                  {inputMode === 'photo' && 'Photo mode will support the diagnosis once the symptom is described.'}
+                  {inputMode === 'audio' && 'Audio mode is planned so a voice note can feed the diagnosis flow.'}
                 </span>
-                <strong>Montréal · estimation + matching</strong>
+                <strong>Montreal · AI estimate + matching</strong>
               </div>
             </div>
 
@@ -1364,14 +1459,14 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 onClick={() => analyze()}
                 disabled={isAnalyzing}
               >
-                {isAnalyzing ? 'Analyse en cours...' : 'Lancer le diagnostic'}
+                {isAnalyzing ? 'Analyzing...' : 'Run diagnosis'}
               </button>
               <button
                 type="button"
                 className={styles.secondaryBtn}
                 onClick={() => openMatchingSearch(effectiveSearchCat)}
               >
-                Voir les garages disponibles
+                View available garages
               </button>
             </div>
 
@@ -1393,26 +1488,26 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <div className={styles.stats}>
               <div className={styles.statCard}>
-                <div className={styles.statLabel}>Diagnostic auto</div>
+                <div className={styles.statLabel}>Auto diagnosis</div>
                 <div className={styles.statValue}>1 min</div>
-                <div className={styles.statSub}>Résultat clair avant de réserver</div>
+                <div className={styles.statSub}>Clear result before you book</div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statLabel}>Prix en temps réel</div>
-                <div className={styles.statValue}>{diagnosis?.estimate || 'â€”'}</div>
+                <div className={styles.statLabel}>Real-time pricing</div>
+                <div className={styles.statValue}>{displayDiagnosis?.estimate || '—'}</div>
                 <div className={styles.statSub}>
                   {diagnosis?.type === 'maintenance'
-                    ? 'Repère simple pour savoir quand planifier le service'
+                    ? 'A simple timing guide for scheduling maintenance'
                     : diagnosis
-                      ? 'Fourchette basée sur le problème probable'
-                      : 'Lancez le diagnostic pour une estimation'}
+                      ? 'Range based on the most likely issue'
+                      : 'Run the diagnosis for an estimate'}
                 </div>
               </div>
               <div className={styles.statCard}>
-                <div className={styles.statLabel}>Réservation rapide</div>
-                <div className={styles.statValue}>{diagnosis ? '3 garages' : 'â€”'}</div>
+                <div className={styles.statLabel}>Fast booking</div>
+                <div className={styles.statValue}>{displayDiagnosis ? '3 garages' : '—'}</div>
                 <div className={styles.statSub}>
-                  {diagnosis ? 'Proches, disponibles, déjà filtrés' : 'Des suggestions apparaîtront après analyse'}
+                  {displayDiagnosis ? 'Nearby, available, already filtered' : 'Suggestions will appear after the diagnosis'}
                 </div>
               </div>
             </div>
@@ -1427,17 +1522,17 @@ export default function VehicleDoctor({ compact = false, userName }) {
               <div>
                 <div className={styles.resultEyebrow}>{resultEyebrowLabel}</div>
                 <h3 className={styles.resultTitle}>
-                  {diagnosis ? diagnosis.probableIssue : 'Prêt à analyser votre véhicule'}
+                  {displayDiagnosis ? displayDiagnosis.probableIssue : 'Ready to analyze your vehicle'}
                 </h3>
               </div>
               <div className={styles.confidence}>
-                {diagnosis ? `Confiance ${diagnosis.confidence}` : 'Aucun diagnostic'}
+                {displayDiagnosis ? `Confidence ${displayDiagnosis.confidence}` : 'No diagnosis yet'}
               </div>
             </div>
 
             <div className={styles.statusRow}>
               <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
-                {isAnalyzing ? 'Analyse...' : 'Diagnostic prêt'}
+                {isAnalyzing ? 'Analyzing...' : 'Diagnosis ready'}
               </span>
               <span className={styles.statusText}>{statusMessage}</span>
             </div>
@@ -1445,41 +1540,41 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <p className={styles.summary}>
               {diagnosis
-                ? diagnosis.summary
-                : 'Décrivez un bruit, une vibration, un voyant ou un comportement étrange, puis cliquez sur le bouton pour obtenir une estimation.'}
+                ? displayDiagnosis.summary
+                : 'Describe a noise, vibration, warning light, or unusual behavior, then click the button to get an estimate.'}
             </p>
 
             {diagnosis ? (
               <div className={styles.badgeRow}>
                 <span className={`${styles.badge} ${diagnosis.urgency.toLowerCase().includes('urgent') || diagnosis.urgency.toLowerCase().includes('rapidement') ? styles.badgeWarn : styles.badgeSafe}`}>
-                  {diagnosis.urgency}
+                  {displayDiagnosis?.urgency || diagnosis.urgency}
                 </span>
-                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching à Montréal</span>
+                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching in Montreal</span>
               </div>
             ) : null}
 
             <div className={styles.metricGrid}>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Quand le faire' : 'Prix estimé'}</div>
-                <div className={styles.metricValue}>{diagnosis?.estimate || 'â€”'}</div>
+                <div className={styles.metricLabel}>{displayDiagnosis?.type === 'maintenance' ? 'When to do it' : 'Estimated price'}</div>
+                <div className={styles.metricValue}>{displayDiagnosis?.estimate || '—'}</div>
                 <div className={styles.metricSub}>
-                  {diagnosis?.priceNote || 'L’estimation apparaîtra après l’analyse'}
+                  {displayDiagnosis?.priceNote || 'The estimate will appear after the analysis'}
                 </div>
               </div>
               <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{diagnosis?.type === 'maintenance' ? 'Repère dans le temps' : 'Temps de réparation'}</div>
-                <div className={styles.metricValue}>{diagnosis?.duration || 'â€”'}</div>
+                <div className={styles.metricLabel}>{displayDiagnosis?.type === 'maintenance' ? 'Timeline guide' : 'Repair time'}</div>
+                <div className={styles.metricValue}>{displayDiagnosis?.duration || '—'}</div>
                 <div className={styles.metricSub}>
-                  {diagnosis?.durationNote || 'La durée estimée apparaîtra après l’analyse'}
+                  {displayDiagnosis?.durationNote || 'The estimated duration will appear after the analysis'}
                 </div>
               </div>
             </div>
 
             {diagnosis?.guidanceItems?.length ? (
               <div className={styles.guidanceCard}>
-                <div className={styles.guidanceTitle}>{diagnosis.guidanceTitle || 'À retenir'}</div>
+                <div className={styles.guidanceTitle}>{displayDiagnosis?.guidanceTitle || 'Key takeaways'}</div>
                 <div className={styles.guidanceList}>
-                  {diagnosis.guidanceItems.map((item) => (
+                  {displayDiagnosis.guidanceItems.map((item) => (
                     <div key={item} className={styles.guidanceItem}>{item}</div>
                   ))}
                 </div>
@@ -1488,18 +1583,18 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
             <div className={styles.matchSection}>
               <div className={styles.matchHeader}>
-                <h4 className={styles.matchTitle}>3 garages suggérés aujourd’hui</h4>
-                <span className={styles.matchHint}>Proches + compatibles + dispo</span>
+                <h4 className={styles.matchTitle}>3 suggested garages today</h4>
+                <span className={styles.matchHint}>Nearby + compatible + available</span>
               </div>
 
               <div className={styles.matchList}>
-                {diagnosis ? diagnosis.matches.map((match) => (
+                {displayDiagnosis ? displayDiagnosis.matches.map((match) => (
                   <div key={match.name} className={styles.matchCard}>
                     <div className={styles.matchTop}>
                       <div>
                         <div className={styles.matchName}>{match.name}</div>
                         <div className={styles.matchMeta}>
-                          â­ {match.rating} Â· {match.distance} Â· {match.eta}
+                          ★ {match.rating} · {match.distance} · {match.eta}
                         </div>
                       </div>
                       <div className={styles.matchPrice}>{match.price}</div>
@@ -1515,13 +1610,13 @@ export default function VehicleDoctor({ compact = false, userName }) {
                         className={styles.reserveBtn}
                         onClick={() => openMatchingSearch(effectiveSearchCat)}
                       >
-                        RÃ©server
+                        Book now
                       </button>
                     </div>
                   </div>
                 )) : (
                   <div className={styles.emptyState}>
-                    Lancez un diagnostic pour voir les garages les plus pertinents.
+                    Run a diagnosis to see the most relevant garages.
                   </div>
                 )}
               </div>
@@ -1540,7 +1635,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 className={styles.ctaGhost}
                 onClick={() => navigate('/services')}
               >
-                Explorer tous les services
+                Explore all services
               </button>
             </div>
           </div>
@@ -1549,3 +1644,6 @@ export default function VehicleDoctor({ compact = false, userName }) {
     </section>
   )
 }
+
+
+
