@@ -166,7 +166,7 @@ const styles = {
     background: 'linear-gradient(180deg, #061826 0%, #081f31 100%)',
     color: '#d9e7f3',
     borderTop: '1px solid rgba(120,180,220,0.12)',
-    marginTop: '10vh',
+    marginTop: '20vh',
   },
   shell: {
     maxWidth: 1440,
