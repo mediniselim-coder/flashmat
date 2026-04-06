@@ -39,6 +39,31 @@ const SEARCH_CATS = [
   ['parking', 'Parking'],
 ]
 
+const CLIENT_PANE_PATHS = {
+  dashboard: '/app/client/dashboard',
+  bookings: '/app/client/bookings',
+  search: '/app/client/search',
+  vehicles: '/app/client/vehicles',
+  maintenance: '/app/client/maintenance',
+  marketplace: '/app/client/marketplace',
+  flashscore: '/app/client/flashscore',
+  notifications: '/app/client/alerts',
+}
+
+const VALID_CLIENT_PANES = new Set(Object.keys(CLIENT_PANE_PATHS))
+
+function getPaneFromClientPath(pathname) {
+  const cleanPath = pathname.replace(/\/+$/, '')
+  const segment = cleanPath.split('/')[3] || 'dashboard'
+
+  if (segment === 'alerts') return 'notifications'
+  return VALID_CLIENT_PANES.has(segment) ? segment : 'dashboard'
+}
+
+function getClientPathSegment(pathname) {
+  return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
+}
+
 function readPendingServiceSearch() {
   try {
     const raw = window.sessionStorage.getItem('flashmat-pending-service-search')
@@ -130,12 +155,9 @@ export default function ClientApp() {
   const navigate = useNavigate()
   const location = useLocation()
   const routeParams = new URLSearchParams(location.search)
-  const routePane = routeParams.get('pane')
   const routeCat = routeParams.get('cat')
   const pendingSearch = readPendingServiceSearch()
-  const initialPane = routePane || pendingSearch?.pane || location.state?.pane || 'dashboard'
   const initialSearchCat = routeCat || pendingSearch?.cat || location.state?.searchCat || 'all'
-  const [pane, setPane] = useState(initialPane)
   const [sidebarOpen, setSidebar] = useState(false)
   const [bookingModal, setBookingModal] = useState(false)
   const [selectedBookingProvider, setSelectedBookingProvider] = useState(null)
@@ -146,6 +168,8 @@ export default function ClientApp() {
   const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
+  const rawPaneSegment = getClientPathSegment(location.pathname)
+  const pane = getPaneFromClientPath(location.pathname)
 
   const name = profile?.full_name || 'Alex'
   const activeFlashFixRequests = flashFixRequests.filter((r) => r.channel === 'flashfix' && r.status !== 'completed')
@@ -177,15 +201,25 @@ export default function ClientApp() {
     return () => { window.removeEventListener('storage', syncFlashFixRequests); window.removeEventListener(FLASHFIX_UPDATED_EVENT, syncFlashFixRequests) }
   }, [])
 
-  useEffect(() => { if (location.pathname === '/app/marketplace') setPane('marketplace') }, [location.pathname])
-
   useEffect(() => {
-    if (routePane) setPane(routePane)
-    if (routeCat) { setSearchCat(routeCat); clearPendingServiceSearch(); return }
-    if (location.pathname.startsWith('/app/client') && pendingSearch?.cat) {
-      setPane(pendingSearch.pane || 'search'); setSearchCat(pendingSearch.cat); clearPendingServiceSearch()
+    if (routeCat) {
+      setSearchCat(routeCat)
+      clearPendingServiceSearch()
+      return
     }
-  }, [location.pathname, pendingSearch, routePane, routeCat])
+
+    if (location.pathname.startsWith('/app/client') && pendingSearch?.cat) {
+      const targetPane = pendingSearch.pane && VALID_CLIENT_PANES.has(pendingSearch.pane) ? pendingSearch.pane : 'search'
+      setSearchCat(pendingSearch.cat)
+      clearPendingServiceSearch()
+      navigate(`${CLIENT_PANE_PATHS[targetPane]}?cat=${encodeURIComponent(pendingSearch.cat)}`, { replace: true })
+      return
+    }
+
+    if (location.pathname.startsWith('/app/client') && rawPaneSegment !== 'alerts' && !VALID_CLIENT_PANES.has(rawPaneSegment)) {
+      navigate(CLIENT_PANE_PATHS.dashboard, { replace: true })
+    }
+  }, [location.pathname, navigate, pendingSearch, rawPaneSegment, routeCat])
 
   async function fetchProviders() {
     setProvLoading(true)
@@ -205,7 +239,11 @@ export default function ClientApp() {
     return matchCat && matchQ
   })
 
-  function go(id) { setPane(id); setSidebar(false) }
+  function go(id, options = {}) {
+    const nextPath = CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
+    setSidebar(false)
+    navigate(nextPath, options)
+  }
   function openBooking(provider = null) {
     if (!myVehicles.length) { toast('Add a vehicle first to book a service', 'error'); setAddVehicleModal(true); return }
     setSelectedBookingProvider(provider); setBookingModal(true)
@@ -217,7 +255,7 @@ export default function ClientApp() {
   async function handleBookingConfirm(payload) {
     if (!user?.id) throw new Error('Client login required')
     const createdBooking = await createBooking({ clientId: user.id, providerId: payload.provider.id, vehicleId: payload.vehicle?.id, service: payload.service, serviceIcon: payload.serviceIcon, date: payload.date, timeSlot: payload.timeSlot, notes: payload.notes, price: payload.price })
-    setBookings((current) => [createdBooking, ...current]); setSelectedBookingProvider(null); setPane('bookings'); toast('Booking confirmed', 'success')
+    setBookings((current) => [createdBooking, ...current]); setSelectedBookingProvider(null); go('bookings'); toast('Booking confirmed', 'success')
   }
 
   const averageFlashScore = myVehicles.length ? Math.round(myVehicles.reduce((sum, v) => sum + Number(v.flash_score || 0), 0) / myVehicles.length) : 0
@@ -580,7 +618,7 @@ export default function ClientApp() {
           </div>
         )}
 
-        {pane === 'marketplace' && <Marketplace portal="client" openComposer={location.pathname === '/app/marketplace'} />}
+        {pane === 'marketplace' && <Marketplace portal="client" openComposer={location.pathname === '/app/client/marketplace' || location.pathname === '/app/marketplace'} />}
 
         {pane === 'flashscore' && (
           <div>

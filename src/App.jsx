@@ -21,7 +21,7 @@ function AuthCallback() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const role = session.user.user_metadata?.role || "client"
-        navigate(role === "provider" ? "/app/provider" : "/app/client", { replace: true })
+        navigate(role === "provider" ? "/app/provider" : "/app/client/dashboard", { replace: true })
       } else {
         navigate("/auth", { replace: true })
       }
@@ -45,7 +45,7 @@ function ProtectedRoute({ children, requiredRole }) {
   }
 
   if (requiredRole && profile?.role !== requiredRole) {
-    return <Navigate to={profile?.role === "provider" ? "/app/provider" : "/app/client"} replace />
+    return <Navigate to={profile?.role === "provider" ? "/app/provider" : "/app/client/dashboard"} replace />
   }
 
   return children
@@ -66,14 +66,7 @@ export default function App() {
           <Route path="/marketplace" element={<PublicMarketplace />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />
-          <Route
-            path="/app/marketplace"
-            element={
-              <ProtectedRoute requiredRole="client">
-                <ClientApp />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/app/client" element={<Navigate to="/app/client/dashboard" replace />} />
           <Route
             path="/app/client/*"
             element={
@@ -82,6 +75,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/app/marketplace" element={<Navigate to="/app/client/marketplace" replace />} />
           <Route
             path="/app/provider/*"
             element={
