@@ -1,4 +1,6 @@
 ﻿const STORAGE_KEY = 'flashmat-provider-overrides'
+const STORAGE_KEY_PREFIX = 'flashmat-provider-overrides'
+const AUTH_CACHE_KEY = 'flashmat-auth-cache'
 const DESCRIPTION_META_PREFIX = '<!--FLASHMAT_PROVIDER_META:'
 const DESCRIPTION_META_SUFFIX = '-->'
 
@@ -68,12 +70,25 @@ function safeWindow() {
   return typeof window !== 'undefined' ? window : null
 }
 
+function getScopedStorageKey() {
+  const win = safeWindow()
+  if (!win) return `${STORAGE_KEY_PREFIX}:anonymous`
+
+  try {
+    const rawAuth = win.localStorage.getItem(AUTH_CACHE_KEY)
+    const parsedAuth = rawAuth ? JSON.parse(rawAuth) : null
+    return `${STORAGE_KEY_PREFIX}:${parsedAuth?.user?.id || 'anonymous'}`
+  } catch {
+    return `${STORAGE_KEY_PREFIX}:anonymous`
+  }
+}
+
 function readRawOverrides() {
   const win = safeWindow()
   if (!win) return {}
 
   try {
-    const raw = win.localStorage.getItem(STORAGE_KEY)
+    const raw = win.localStorage.getItem(getScopedStorageKey())
     return raw ? JSON.parse(raw) : {}
   } catch {
     return {}
@@ -84,7 +99,7 @@ function writeRawOverrides(overrides) {
   const win = safeWindow()
   if (!win) return
 
-  win.localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides))
+  win.localStorage.setItem(getScopedStorageKey(), JSON.stringify(overrides))
   win.dispatchEvent(new CustomEvent('flashmat-provider-profile-updated'))
 }
 

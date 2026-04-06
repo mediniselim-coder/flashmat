@@ -3,10 +3,15 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 
 const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
+const VEHICLE_RECORDS_STORAGE_KEY = 'flashmat-vehicle-records'
 const DEFAULT_COLOR = '#315AA9'
 
 function getVehicleExtrasStorageKey(userId) {
   return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
+}
+
+function getVehicleRecordsStorageKey(userId) {
+  return `${VEHICLE_RECORDS_STORAGE_KEY}:${userId || 'anonymous'}`
 }
 
 function readVehicleExtras(userId) {
@@ -25,6 +30,21 @@ function saveVehicleExtras(userId, vehicleId, extras) {
     ...extras,
   }
   window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
+}
+
+function readVehicleRecords(userId) {
+  try {
+    return JSON.parse(window.localStorage.getItem(getVehicleRecordsStorageKey(userId)) || '{}')
+  } catch {
+    return {}
+  }
+}
+
+function saveVehicleRecord(userId, vehicle) {
+  if (!userId || !vehicle?.id) return
+  const current = readVehicleRecords(userId)
+  current[vehicle.id] = vehicle
+  window.localStorage.setItem(getVehicleRecordsStorageKey(userId), JSON.stringify(current))
 }
 
 function fileToDataUrl(file) {
@@ -304,6 +324,7 @@ export default function AddVehicleModal({
           color: savedVehicle.color,
           plate: savedVehicle.plate,
         })
+        saveVehicleRecord(user.id, savedVehicle)
 
         onAdd(savedVehicle)
         onClose()
@@ -374,6 +395,7 @@ export default function AddVehicleModal({
       color: savedVehicle.color,
       plate: savedVehicle.plate,
     })
+    saveVehicleRecord(user.id, savedVehicle)
 
     onAdd(savedVehicle)
     onClose()
@@ -417,6 +439,7 @@ export default function AddVehicleModal({
       color: updatedVehicle.color,
       plate: updatedVehicle.plate,
     })
+    saveVehicleRecord(user.id, updatedVehicle)
 
     onSave(updatedVehicle)
     onClose()

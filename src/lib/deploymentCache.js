@@ -1,26 +1,17 @@
 const APP_VERSION_STORAGE_KEY = 'flashmat-app-version'
 const APP_RELOAD_STORAGE_KEY = 'flashmat-app-version-reload'
-const PERSISTENT_STORAGE_PREFIXES = [
-  'flashmat-vehicle-extras:',
+const TRANSIENT_SESSION_KEYS = [
+  'flashmat-post-login-redirect',
+  'flashmat-pending-service-search',
 ]
 
 function safeWindow() {
   return typeof window !== 'undefined' ? window : null
 }
 
-function clearFlashMatStorage(storage) {
+function clearTransientSessionState(storage) {
   if (!storage) return
-
-  const keysToRemove = []
-  for (let index = 0; index < storage.length; index += 1) {
-    const key = storage.key(index)
-    const shouldPreserve = key && PERSISTENT_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix))
-    if (key && key.startsWith('flashmat-') && !shouldPreserve) {
-      keysToRemove.push(key)
-    }
-  }
-
-  keysToRemove.forEach((key) => storage.removeItem(key))
+  TRANSIENT_SESSION_KEYS.forEach((key) => storage.removeItem(key))
 }
 
 async function clearBrowserCaches(win) {
@@ -53,8 +44,7 @@ export async function applyDeploymentVersion() {
     return
   }
 
-  clearFlashMatStorage(win.localStorage)
-  clearFlashMatStorage(win.sessionStorage)
+  clearTransientSessionState(win.sessionStorage)
   await clearBrowserCaches(win)
   win.localStorage.setItem(APP_VERSION_STORAGE_KEY, currentVersion)
 

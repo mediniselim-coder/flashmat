@@ -10,9 +10,12 @@ function readAuthCache() {
     const raw = window.localStorage.getItem(AUTH_CACHE_KEY)
     if (!raw) return { user: null, profile: null }
     const parsed = JSON.parse(raw)
+    const nextUser = parsed?.user ?? null
+    const nextProfile = parsed?.profile ?? null
+    const profileMatchesUser = !nextUser || !nextProfile || String(nextProfile.id || '') === String(nextUser.id || '')
     return {
-      user: parsed?.user ?? null,
-      profile: parsed?.profile ?? null,
+      user: nextUser,
+      profile: profileMatchesUser ? nextProfile : null,
     }
   } catch {
     return { user: null, profile: null }
@@ -107,7 +110,8 @@ export function AuthProvider({ children }) {
 
       setUser(session?.user ?? null)
       if (session?.user) {
-        writeAuthCache(session.user, profile ?? cachedAuth.profile ?? null)
+        setProfile(null)
+        writeAuthCache(session.user, null)
         fetchProfile(session.user.id, session.user)
       }
       else {
