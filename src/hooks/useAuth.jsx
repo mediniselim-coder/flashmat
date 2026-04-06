@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
 const AUTH_CACHE_KEY = 'flashmat-auth-cache'
+const LEGACY_PROFILE_KEYS = ['id', 'full_name', 'email', 'phone', 'address', 'city', 'role']
 
 function readAuthCache() {
   if (typeof window === 'undefined') return { user: null, profile: null }
@@ -29,6 +30,24 @@ function writeAuthCache(user, profile) {
     window.localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user, profile }))
   } catch {
     // Ignore storage failures and keep the in-memory state.
+  }
+}
+
+function buildProfileRecord(record = {}, authUser = null) {
+  const metadata = authUser?.user_metadata || {}
+
+  return {
+    ...record,
+    id: record?.id || authUser?.id || null,
+    email: record?.email || authUser?.email || '',
+    full_name: record?.full_name || metadata.full_name || '',
+    phone: record?.phone || metadata.phone || '',
+    address: record?.address || metadata.address || '',
+    city: record?.city || metadata.city || '',
+    province: record?.province || metadata.province || '',
+    postal_code: record?.postal_code || metadata.postal_code || '',
+    avatar_url: record?.avatar_url || metadata.avatar_url || '',
+    role: record?.role || metadata.role || '',
   }
 }
 
@@ -85,7 +104,7 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
-    const nextProfile = data ?? profile ?? cachedAuth.profile ?? null
+    const nextProfile = buildProfileRecord(data ?? profile ?? cachedAuth.profile ?? {}, authUser)
     setProfile(nextProfile)
     writeAuthCache(authUser, nextProfile)
     setLoading(false)
@@ -131,15 +150,26 @@ export function AuthProvider({ children }) {
   async function updateProfile(updates = {}) {
     if (!user?.id) throw new Error('You need to be signed in to update your profile.')
 
-    const nextProfile = {
+    const nextProfile = buildProfileRecord({
       ...(profile || {}),
       ...updates,
+      email: profile?.email || user.email || '',
       id: user.id,
-    }
+    }, user)
 
     const authPayload = {}
-    if (updates.full_name) authPayload.data = { ...(user.user_metadata || {}), full_name: updates.full_name, role: profile?.role || user.user_metadata?.role || 'client' }
-    if (updates.email && updates.email !== user.email) authPayload.email = updates.email
+    const nextMetadata = {
+      ...(user.user_metadata || {}),
+      full_name: nextProfile.full_name,
+      role: nextProfile.role || profile?.role || user.user_metadata?.role || 'client',
+      phone: nextProfile.phone || '',
+      address: nextProfile.address || '',
+      city: nextProfile.city || '',
+      province: nextProfile.province || '',
+      postal_code: nextProfile.postal_code || '',
+      avatar_url: nextProfile.avatar_url || '',
+    }
+    authPayload.data = nextMetadata
 
     if (Object.keys(authPayload).length > 0) {
       const { data, error } = await supabase.auth.updateUser(authPayload)
@@ -147,15 +177,36 @@ export function AuthProvider({ children }) {
       if (data?.user) setUser(data.user)
     }
 
-    const { data, error } = await supabase
+    let data = null
+    let error = null
+
+    const fullResult = await supabase
       .from('profiles')
       .upsert(nextProfile, { onConflict: 'id' })
       .select()
       .single()
 
+    data = fullResult.data
+    error = fullResult.error
+
+    if (error) {
+      const legacyProfile = Object.fromEntries(
+        Object.entries(nextProfile).filter(([key]) => LEGACY_PROFILE_KEYS.includes(key)),
+      )
+
+      const fallbackResult = await supabase
+        .from('profiles')
+        .upsert(legacyProfile, { onConflict: 'id' })
+        .select()
+        .single()
+
+      data = fallbackResult.data
+      error = fallbackResult.error
+    }
+
     if (error) throw error
 
-    const resolvedProfile = data || nextProfile
+    const resolvedProfile = buildProfileRecord(data || nextProfile, user)
     setProfile(resolvedProfile)
     writeAuthCache(user, resolvedProfile)
     return resolvedProfile
