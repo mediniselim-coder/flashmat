@@ -13,6 +13,7 @@ import SellVehicleModal from '../components/SellVehicleModal'
 import ClientProfileModal from '../components/ClientProfileModal'
 import HelpSupportModal from '../components/HelpSupportModal'
 import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
+import WalletModal from '../components/WalletModal'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
@@ -219,6 +220,7 @@ export default function ClientApp() {
   const [searchCat, setSearchCat] = useState(initialSearchCat)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
+  const [walletModalOpen, setWalletModalOpen] = useState(false)
   const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
@@ -336,6 +338,7 @@ export default function ClientApp() {
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
   function openClientProfileModal() { setProfileMenuOpen(false); setClientProfileModalOpen(true) }
+  function openWalletModal() { setProfileMenuOpen(false); setWalletModalOpen(true) }
   function openHelpSupportModal() { setProfileMenuOpen(false); setHelpSupportModalOpen(true) }
   function openSecurityModal() { setProfileMenuOpen(false); setSecurityModalOpen(true) }
 
@@ -514,9 +517,9 @@ export default function ClientApp() {
                   <div className={styles.profileMenuRole}>Client Profile</div>
                 </div>
                 <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="PP" /></span><span>Edit Profile</span></button>
-                <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
+                <button className={styles.profileMenuItem} onClick={openWalletModal}><span><AppIcon code="WL" /></span><span>Wallet</span></button>
                 <button className={styles.profileMenuItem} onClick={openSecurityModal}><span><AppIcon code="AL" /></span><span>Security & Privacy</span></button>
-                <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
+                <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <div className={styles.profileMenuDivider} />
                 <button className={`${styles.profileMenuItem} ${styles.profileMenuDanger}`} onClick={handleSignOut}><span><AppIcon code="SO" /></span><span>Sign Out</span></button>
               </div>
@@ -999,6 +1002,7 @@ export default function ClientApp() {
         />
       )}
       {clientProfileModalOpen && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
+      {walletModalOpen && <WalletModal onClose={() => setWalletModalOpen(false)} />}
       {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
       {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
     </div>
