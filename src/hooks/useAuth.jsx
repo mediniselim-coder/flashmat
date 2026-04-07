@@ -108,12 +108,12 @@ function buildProfileRecord(record = {}, authUser = null) {
     id: record?.id || authUser?.id || null,
     email: record?.email || authUser?.email || '',
     full_name: record?.full_name || metadata.full_name || '',
-    phone: record?.phone || metadata.phone || '',
-    address: record?.address || metadata.address || '',
-    city: record?.city || metadata.city || '',
-    province: record?.province || metadata.province || '',
-    postal_code: record?.postal_code || metadata.postal_code || '',
-    avatar_url: record?.avatar_url || metadata.avatar_url || '',
+    phone: record?.phone || '',
+    address: record?.address || '',
+    city: record?.city || '',
+    province: record?.province || '',
+    postal_code: record?.postal_code || '',
+    avatar_url: record?.avatar_url || '',
     role: record?.role || metadata.role || '',
   }
 }
@@ -252,8 +252,36 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function shrinkAuthMetadata(activeUser = user, activeProfile = profile) {
+    if (!activeUser?.id) return activeUser
+
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        ...(activeUser.user_metadata || {}),
+        full_name: activeProfile?.full_name || activeUser.user_metadata?.full_name || '',
+        role: activeProfile?.role || activeUser.user_metadata?.role || 'client',
+        phone: null,
+        address: null,
+        city: null,
+        province: null,
+        postal_code: null,
+        avatar_url: null,
+      },
+    })
+
+    if (error) throw error
+    if (data?.user) {
+      setUser(data.user)
+      return data.user
+    }
+
+    return activeUser
+  }
+
   async function deleteAccount() {
     if (!user?.id) throw new Error('You need to be signed in to delete your account.')
+
+    await shrinkAuthMetadata(user, profile)
 
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
     if (sessionError) throw sessionError
@@ -314,12 +342,12 @@ export function AuthProvider({ children }) {
       ...(user.user_metadata || {}),
       full_name: nextProfile.full_name,
       role: nextProfile.role || profile?.role || user.user_metadata?.role || 'client',
-      phone: nextProfile.phone || '',
-      address: nextProfile.address || '',
-      city: nextProfile.city || '',
-      province: nextProfile.province || '',
-      postal_code: nextProfile.postal_code || '',
-      avatar_url: nextProfile.avatar_url || '',
+      phone: null,
+      address: null,
+      city: null,
+      province: null,
+      postal_code: null,
+      avatar_url: null,
     }
     authPayload.data = nextMetadata
 
