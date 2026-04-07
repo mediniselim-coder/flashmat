@@ -72,6 +72,34 @@ function clearCurrentUserScopedStorage(userId = '') {
   }
 }
 
+function clearSupabaseBrowserSession() {
+  if (typeof window === 'undefined') return
+
+  try {
+    const keysToRemove = []
+
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index)
+      if (!key) continue
+
+      if (
+        key.startsWith('sb-')
+        || key.includes('-auth-token')
+        || key.includes('supabase.auth.token')
+      ) {
+        keysToRemove.push(key)
+      }
+    }
+
+    keysToRemove.forEach((key) => {
+      window.localStorage.removeItem(key)
+      window.sessionStorage.removeItem(key)
+    })
+  } catch {
+    // Ignore browser storage cleanup failures.
+  }
+}
+
 function buildProfileRecord(record = {}, authUser = null) {
   const metadata = authUser?.user_metadata || {}
 
@@ -212,10 +240,16 @@ export function AuthProvider({ children }) {
 
   async function signOut() {
     explicitSignOutRef.current = true
-    await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
-    writeAuthCache(null, null)
+    try {
+      await supabase.auth.signOut({ scope: 'local' })
+    } finally {
+      clearSupabaseBrowserSession()
+      setUser(null)
+      setProfile(null)
+      writeAuthCache(null, null)
+      explicitSignOutRef.current = false
+      setLoading(false)
+    }
   }
 
   async function deleteAccount() {
@@ -250,9 +284,11 @@ export function AuthProvider({ children }) {
     explicitSignOutRef.current = true
     clearCurrentUserScopedStorage(user.id)
     try {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'local' })
     } catch {
       // Ignore remote sign-out failures after the user row is already gone.
+    } finally {
+      clearSupabaseBrowserSession()
     }
     setUser(null)
     setProfile(null)
