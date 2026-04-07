@@ -2,7 +2,10 @@ import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabaseServiceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+  || process.env.SUPABASE_SERVICE_ROLE
+  || process.env.SUPABASE_SECRET_KEY
 
 function getBearerToken(req) {
   const header = req.headers.authorization || req.headers.Authorization || ''
@@ -17,7 +20,9 @@ export default async function handler(req, res) {
   }
 
   if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-    return res.status(503).json({ error: 'Delete account service is not configured' })
+    return res.status(503).json({
+      error: 'Delete account service is not configured. Add SUPABASE_SERVICE_ROLE_KEY in Vercel environment variables and redeploy.',
+    })
   }
 
   const accessToken = getBearerToken(req)
@@ -52,7 +57,7 @@ export default async function handler(req, res) {
 
     const { error: deleteError } = await adminClient.auth.admin.deleteUser(authData.user.id)
     if (deleteError) {
-      return res.status(500).json({ error: deleteError.message || 'Unable to delete account' })
+      return res.status(500).json({ error: deleteError.message || 'Unable to delete account from Supabase Auth' })
     }
 
     return res.status(200).json({ success: true })

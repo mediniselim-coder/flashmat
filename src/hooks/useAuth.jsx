@@ -267,7 +267,10 @@ export function AuthProvider({ children }) {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
       },
+      credentials: 'same-origin',
     })
 
     let payload = null
