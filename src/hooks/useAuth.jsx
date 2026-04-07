@@ -35,6 +35,10 @@ function writeAuthCache(user, profile) {
   }
 }
 
+function matchesIdentity(record, userId = '') {
+  return String(record?.id || '') === String(userId || '')
+}
+
 function clearCurrentUserScopedStorage(userId = '') {
   if (typeof window === 'undefined') return
 
@@ -167,7 +171,11 @@ export function AuthProvider({ children }) {
       .select('*')
       .eq('id', userId)
       .single()
-    const nextProfile = buildProfileRecord(data ?? profile ?? cachedAuth.profile ?? {}, authUser)
+
+    const safeCurrentProfile = matchesIdentity(profile, userId) ? profile : null
+    const safeCachedProfile = matchesIdentity(cachedAuth.profile, userId) ? cachedAuth.profile : null
+    const nextProfile = buildProfileRecord(data ?? safeCurrentProfile ?? safeCachedProfile ?? {}, authUser)
+
     setProfile(nextProfile)
     writeAuthCache(authUser, nextProfile)
     setLoading(false)
@@ -255,7 +263,7 @@ export function AuthProvider({ children }) {
     if (!user?.id) throw new Error('You need to be signed in to update your profile.')
 
     const nextProfile = buildProfileRecord({
-      ...(profile || {}),
+      ...(matchesIdentity(profile, user.id) ? profile : {}),
       ...updates,
       email: profile?.email || user.email || '',
       id: user.id,
