@@ -271,6 +271,7 @@ export function AuthProvider({ children }) {
         'Cache-Control': 'no-store',
       },
       credentials: 'same-origin',
+      body: JSON.stringify({ accessToken }),
     })
 
     let payload = null
@@ -281,7 +282,7 @@ export function AuthProvider({ children }) {
     }
 
     if (!response.ok) {
-      throw new Error(payload?.error || 'Unable to delete your account right now.')
+      throw new Error(payload?.error || `Unable to delete your account right now. (HTTP ${response.status})`)
     }
 
     explicitSignOutRef.current = true

@@ -13,6 +13,12 @@ function getBearerToken(req) {
   return match?.[1] || ''
 }
 
+function getRequestToken(req) {
+  const bearerToken = getBearerToken(req)
+  if (bearerToken) return bearerToken
+  return String(req.body?.accessToken || '').trim()
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST')
@@ -25,7 +31,7 @@ export default async function handler(req, res) {
     })
   }
 
-  const accessToken = getBearerToken(req)
+  const accessToken = getRequestToken(req)
   if (!accessToken) {
     return res.status(401).json({ error: 'Missing access token' })
   }
