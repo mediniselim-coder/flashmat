@@ -86,15 +86,15 @@ export default function ServiceProviders() {
             <div className={styles.providerResultsCard}>
               <div className={styles.providerSidebarSection}>
                 <div className={styles.providerSidebarEyebrow}>Provider finder</div>
-                <div className={styles.providerSidebarTitle}>Top providers near Montreal</div>
-                <div className={styles.providerSidebarSub}>
-                  Search by service or neighborhood, refine with tags, then compare providers before you book.
-                </div>
+                <div className={styles.providerSidebarTitle}>Find providers near Montreal</div>
               </div>
 
               <div className={styles.providerSidebarSection}>
-                <div style={{ fontFamily: 'var(--display)', fontSize: 20, fontWeight: 800, letterSpacing: '-.4px', color: 'var(--ink)', marginBottom: 10 }}>
+                <div style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 800, letterSpacing: '-.5px', color: 'var(--ink)', marginBottom: 10 }}>
                   {provLoading ? 'Loading providers…' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''} available`}
+                </div>
+                <div className={styles.providerSidebarSub} style={{ marginBottom: 12 }}>
+                  Search by service or neighborhood, then refine with tags to narrow the best matches.
                 </div>
                 <div className={styles.providerSearchBar}>
                   <input
@@ -188,9 +188,9 @@ export default function ServiceProviders() {
             <div className={styles.providerMapCard}>
               <div style={{ padding: 16 }}>
                 {!provLoading && filtered.length > 0 ? (
-                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height="calc(100vh - 132px)" />
+                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height="calc(100vh - 116px)" />
                 ) : (
-                  <div style={{ height: 'calc(100vh - 132px)', minHeight: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ height: 'calc(100vh - 116px)', minHeight: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
                     {provLoading ? 'Loading map…' : 'No providers match these filters yet.'}
                   </div>
                 )}
