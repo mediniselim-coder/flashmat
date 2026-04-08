@@ -77,16 +77,15 @@ export default function ServiceProviders() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)' }}>
+    <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
       <NavBar activePage="services" />
 
-      <div className={styles.pad} style={{ paddingTop: 24 }}>
+      <div className={styles.pad} style={{ padding: '20px 24px 24px', height: 'calc(100vh - 74px)', overflow: 'hidden' }}>
         <div className={styles.providerExplorer}>
           <div className={styles.providerSidebar}>
             <div className={styles.providerResultsCard}>
               <div className={styles.providerSidebarSection}>
-                <div className={styles.providerSidebarEyebrow}>Provider finder</div>
-                <div className={styles.providerSidebarTitle}>Find providers near Montreal</div>
+                <div className={styles.providerSidebarTitle}>Find a provider</div>
               </div>
 
               <div className={styles.providerSidebarSection}>

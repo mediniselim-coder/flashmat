@@ -340,13 +340,15 @@
   grid-template-columns: minmax(420px, 1.18fr) minmax(360px, 0.82fr);
   gap: 18px;
   align-items: start;
-  min-height: calc(100vh - 120px);
+  height: 100%;
+  min-height: 0;
 }
 
 .providerSidebar {
   min-width: 0;
   position: sticky;
   top: 84px;
+  height: 100%;
 }
 
 .providerSidebarCard,
@@ -362,6 +364,7 @@
   min-width: 0;
   position: sticky;
   top: 84px;
+  height: 100%;
 }
 
 .providerSidebarSection {
@@ -412,7 +415,8 @@
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 120px);
+  height: 100%;
+  min-height: 0;
 }
 
 .providerMapCard {
@@ -421,6 +425,7 @@
   border-radius: 16px;
   box-shadow: 0 14px 28px rgba(15, 30, 61, 0.07);
   overflow: hidden;
+  height: 100%;
 }
 
 .providerResultsHeader {
@@ -451,7 +456,8 @@
   gap: 10px;
   overflow: auto;
   padding-right: 4px;
-  max-height: calc(100vh - 390px);
+  min-height: 0;
+  flex: 1;
 }
 
 .providerCard {
@@ -513,5 +519,9 @@
   .providerMapColumn { position: static; top: auto; }
   .providerExplorer,
   .providerResultsCard { min-height: auto; }
+  .providerExplorer,
+  .providerSidebar,
+  .providerMapColumn,
+  .providerMapCard { height: auto; }
   .providerList { max-height: none; overflow: visible; }
 }
