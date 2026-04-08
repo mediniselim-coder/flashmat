@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import ProviderMap from '../components/ProviderMap'
-import SiteFooter from '../components/SiteFooter'
 import { supabase } from '../lib/supabase'
 import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
@@ -81,16 +80,7 @@ export default function ServiceProviders() {
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)' }}>
       <NavBar activePage="services" />
 
-      <div className={styles.pageHdr} style={{ paddingTop: 28 }}>
-        <div>
-          <div className={styles.pageTitle}>Find a provider</div>
-          <div className={styles.pageSub}>
-            {provLoading ? 'Loading providers…' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''} available`}
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.pad}>
+      <div className={styles.pad} style={{ paddingTop: 24 }}>
         <div className={styles.providerExplorer}>
           <div className={styles.providerSidebar}>
             <div className={styles.providerResultsCard}>
@@ -103,6 +93,9 @@ export default function ServiceProviders() {
               </div>
 
               <div className={styles.providerSidebarSection}>
+                <div style={{ fontFamily: 'var(--display)', fontSize: 20, fontWeight: 800, letterSpacing: '-.4px', color: 'var(--ink)', marginBottom: 10 }}>
+                  {provLoading ? 'Loading providers…' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''} available`}
+                </div>
                 <div className={styles.providerSearchBar}>
                   <input
                     className="form-input"
@@ -193,18 +186,11 @@ export default function ServiceProviders() {
 
           <div className={styles.providerMapColumn}>
             <div className={styles.providerMapCard}>
-              <div className={styles.providerMapHeader}>
-                <div className={styles.providerSidebarEyebrow}>Map view</div>
-                <div className={styles.providerMapTitle}>Browse the provider map</div>
-                <div className={styles.providerMapSub}>
-                  Use the map on the right to zoom, pan, and open provider pins while the search and results stay visible on the left.
-                </div>
-              </div>
               <div style={{ padding: 16 }}>
                 {!provLoading && filtered.length > 0 ? (
-                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height={720} />
+                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height="calc(100vh - 132px)" />
                 ) : (
-                  <div style={{ height: 720, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <div style={{ height: 'calc(100vh - 132px)', minHeight: 560, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
                     {provLoading ? 'Loading map…' : 'No providers match these filters yet.'}
                   </div>
                 )}
@@ -213,8 +199,6 @@ export default function ServiceProviders() {
           </div>
         </div>
       </div>
-
-      <SiteFooter portal="public" />
     </div>
   )
 }

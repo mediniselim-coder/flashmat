@@ -358,7 +358,7 @@
 .providerMapColumn {
   min-width: 0;
   position: sticky;
-  top: 104px;
+  top: 84px;
 }
 
 .providerSidebarSection {
@@ -415,26 +415,6 @@
   border-radius: 16px;
   box-shadow: 0 14px 28px rgba(15, 30, 61, 0.07);
   overflow: hidden;
-}
-
-.providerMapHeader {
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(59,159,216,.06), rgba(255,255,255,0));
-}
-
-.providerMapTitle {
-  font-family: var(--display);
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -.4px;
-  color: var(--ink);
-  margin-bottom: 4px;
-}
-
-.providerMapSub {
-  font-size: 12px;
-  color: var(--ink2);
 }
 
 .providerResultsHeader {
