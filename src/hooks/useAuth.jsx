@@ -7,7 +7,7 @@ const AUTH_CACHE_KEY = 'flashmat-auth-cache'
 function readAuthCache() {
   if (typeof window === 'undefined') return { user: null, profile: null }
   try {
-    const raw = window.localStorage.getItem(AUTH_CACHE_KEY)
+    const raw = window.sessionStorage.getItem(AUTH_CACHE_KEY)
     if (!raw) return { user: null, profile: null }
     const parsed = JSON.parse(raw)
     const nextUser = parsed?.user ?? null
@@ -26,10 +26,10 @@ function writeAuthCache(user, profile) {
   if (typeof window === 'undefined') return
   try {
     if (!user && !profile) {
-      window.localStorage.removeItem(AUTH_CACHE_KEY)
+      window.sessionStorage.removeItem(AUTH_CACHE_KEY)
       return
     }
-    window.localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user, profile }))
+    window.sessionStorage.setItem(AUTH_CACHE_KEY, JSON.stringify({ user, profile }))
   } catch {
     // Ignore storage failures and keep the in-memory state.
   }

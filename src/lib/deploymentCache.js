@@ -14,18 +14,6 @@ function clearTransientSessionState(storage) {
   TRANSIENT_SESSION_KEYS.forEach((key) => storage.removeItem(key))
 }
 
-async function clearBrowserCaches(win) {
-  if ('caches' in win) {
-    const cacheKeys = await win.caches.keys()
-    await Promise.all(cacheKeys.map((key) => win.caches.delete(key)))
-  }
-
-  if ('serviceWorker' in navigator) {
-    const registrations = await navigator.serviceWorker.getRegistrations()
-    await Promise.all(registrations.map((registration) => registration.unregister()))
-  }
-}
-
 export async function applyDeploymentVersion() {
   const win = safeWindow()
   if (!win) return
@@ -45,7 +33,6 @@ export async function applyDeploymentVersion() {
   }
 
   clearTransientSessionState(win.sessionStorage)
-  await clearBrowserCaches(win)
   win.localStorage.setItem(APP_VERSION_STORAGE_KEY, currentVersion)
 
   if (reloadMarker === currentVersion) {
