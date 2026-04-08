@@ -231,6 +231,15 @@ export default function ProviderApp() {
     label: booking.statusLabel,
     done: booking.status === 'done',
   }))
+  const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+  const rawPaneSegment = getProviderPathSegment(location.pathname)
+  const pane = getProviderPaneFromPath(location.pathname)
+  const selectedServiceTypeSet = new Set(providerProfileForm.serviceTypes || [])
+  const availableServiceGroups = PROVIDER_SERVICE_TYPE_OPTIONS.filter((group) => selectedServiceTypeSet.has(group.id))
+  const selectedServiceTotal = providerProfileForm.services.length
+  const selectedTypeTotal = providerProfileForm.serviceTypes.length
+  const servicesCompletion = Math.min(100, Math.round((selectedServiceTotal / Math.max(1, selectedTypeTotal * 3)) * 100))
+
   useEffect(() => {
     if (location.pathname.startsWith('/app/provider') && rawPaneSegment !== 'provider' && !VALID_PROVIDER_SEGMENTS.has(rawPaneSegment)) {
       navigate(PROVIDER_PANE_PATHS['p-dashboard'], { replace: true })
@@ -245,15 +254,6 @@ export default function ProviderApp() {
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
-
-  const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
-  const rawPaneSegment = getProviderPathSegment(location.pathname)
-  const pane = getProviderPaneFromPath(location.pathname)
-  const selectedServiceTypeSet = new Set(providerProfileForm.serviceTypes || [])
-  const availableServiceGroups = PROVIDER_SERVICE_TYPE_OPTIONS.filter((group) => selectedServiceTypeSet.has(group.id))
-  const selectedServiceTotal = providerProfileForm.services.length
-  const selectedTypeTotal = providerProfileForm.serviceTypes.length
-  const servicesCompletion = Math.min(100, Math.round((selectedServiceTotal / Math.max(1, selectedTypeTotal * 3)) * 100))
 
   useEffect(() => {
     function syncFlashFixRequests() {
