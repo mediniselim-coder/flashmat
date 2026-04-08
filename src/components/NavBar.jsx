@@ -248,7 +248,7 @@ export default function NavBar({ activePage }) {
   return (
     <>
       <div ref={rootRef} style={styles.root}>
-        <nav style={{ ...styles.nav, padding: isCompact ? '0 14px' : '0 20px', gap: isCompact ? 14 : 24 }}>
+        <nav style={{ ...styles.nav, padding: isCompact ? '0 12px' : '0 16px', gap: isCompact ? 12 : 18 }}>
           <div style={styles.leftGroup}>
             <button
               type="button"
@@ -263,7 +263,7 @@ export default function NavBar({ activePage }) {
             </button>
 
             <button type="button" style={styles.logoButton} onClick={() => navigateTo('/')}>
-              <img src="/logo-dark.png" alt="FlashMat" style={{ height: isCompact ? 34 : 40, objectFit: 'contain' }} />
+              <img src="/logo-dark.png" alt="FlashMat" style={{ height: isCompact ? 24 : 28, objectFit: 'contain' }} />
             </button>
           </div>
 
@@ -286,7 +286,7 @@ export default function NavBar({ activePage }) {
           </div>
 
           <div style={styles.rightGroup}>
-            <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? { ...styles.urgentButtonActive, padding: isCompact ? '10px 14px' : '12px 16px' } : { ...styles.urgentButton, padding: isCompact ? '10px 14px' : '12px 16px' }}>
+              <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? { ...styles.urgentButtonActive, padding: isCompact ? '7px 12px' : '8px 13px' } : { ...styles.urgentButton, padding: isCompact ? '7px 12px' : '8px 13px' }}>
               {isMobile ? 'Urgence' : 'FlashFix Urgence'}
             </button>
 
@@ -672,24 +672,24 @@ function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2
 const styles = {
   root: { position: 'sticky', top: 0, zIndex: 120 },
   nav: {
-    height: 72,
+    height: 50,
     display: 'grid',
     gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
-    gap: 24,
-    padding: '0 20px',
+    gap: 18,
+    padding: '0 16px',
     background: 'linear-gradient(180deg, #07253d 0%, #082237 100%)',
     borderBottom: '1px solid rgba(120, 180, 220, 0.12)',
     boxShadow: '0 18px 38px rgba(4, 18, 32, 0.22)',
   },
-  leftGroup: { display: 'flex', alignItems: 'center', gap: 14 },
-  centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 },
-  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10 },
+  leftGroup: { display: 'flex', alignItems: 'center', gap: 10 },
+  centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   menuButton: {
     position: 'relative',
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     border: '1px solid rgba(142, 196, 234, 0.16)',
     background: 'rgba(255,255,255,0.04)',
     color: '#f5fbff',
@@ -699,9 +699,9 @@ const styles = {
   },
   menuButtonActive: {
     position: 'relative',
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     border: '1px solid rgba(90,184,240,0.22)',
     background: 'rgba(90,184,240,0.12)',
     color: '#ffffff',
@@ -712,9 +712,9 @@ const styles = {
   logoButton: { display: 'inline-flex', alignItems: 'center', background: 'transparent', border: 'none', padding: 0 },
   appIcon: {
     position: 'relative',
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     border: '1px solid transparent',
     background: 'transparent',
     color: 'rgba(234, 244, 255, 0.8)',
@@ -724,9 +724,9 @@ const styles = {
   },
   appIconActive: {
     position: 'relative',
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     border: '1px solid rgba(90, 184, 240, 0.24)',
     background: 'rgba(90, 184, 240, 0.09)',
     color: '#ffffff',
@@ -752,20 +752,20 @@ const styles = {
   urgentButton: {
     border: 'none',
     borderRadius: 999,
-    padding: '12px 16px',
+    padding: '8px 13px',
     background: 'linear-gradient(135deg, #ff5f50 0%, #ef4444 100%)',
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 800,
     boxShadow: '0 12px 26px rgba(239,68,68,0.3)',
   },
   urgentButtonActive: {
     border: 'none',
     borderRadius: 999,
-    padding: '12px 16px',
+    padding: '8px 13px',
     background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 800,
   },
   loginLink: {
@@ -794,10 +794,10 @@ const styles = {
     gap: 8,
     border: '1px solid rgba(142,196,234,0.16)',
     borderRadius: 999,
-    padding: '11px 16px',
+    padding: '8px 12px',
     background: 'rgba(255,255,255,0.04)',
     color: '#ecf7ff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 700,
     whiteSpace: 'nowrap',
   },
@@ -809,7 +809,7 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(255,255,255,0.05)',
     color: '#ecf7ff',
-    padding: '8px 10px 8px 8px',
+    padding: '5px 8px 5px 5px',
   },
   accountButtonActive: {
     display: 'inline-flex',
@@ -819,13 +819,13 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(90,184,240,0.12)',
     color: '#ecf7ff',
-    padding: '8px 10px 8px 8px',
+    padding: '5px 8px 5px 5px',
   },
   accountAvatar: {
-    width: 32, height: 32, borderRadius: '50%',
+    width: 26, height: 26, borderRadius: '50%',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b9fd8 100%)',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    color: '#fff', fontSize: 13, fontWeight: 800, overflow: 'hidden',
+    color: '#fff', fontSize: 12, fontWeight: 800, overflow: 'hidden',
   },
   accountAvatarImage: {
     width: '100%',
@@ -833,7 +833,7 @@ const styles = {
     objectFit: 'cover',
     display: 'block',
   },
-  accountText: { maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 700 },
+  accountText: { maxWidth: 108, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 700 },
   scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
   drawer: {
     position: 'fixed',
@@ -997,7 +997,7 @@ const styles = {
   },
   panelWrap: {
     position: 'fixed',
-    top: 92,
+    top: 64,
     left: 0,
     right: 0,
     display: 'flex',
@@ -1041,7 +1041,7 @@ const styles = {
   visualBadge: { alignSelf: 'flex-start', padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,0.16)', color: '#fff', fontSize: 13, fontWeight: 700, backdropFilter: 'blur(8px)' },
   visualCta: { alignSelf: 'center', display: 'inline-flex', alignItems: 'center', gap: 10, border: 'none', borderRadius: 16, padding: '14px 22px', background: '#ffffff', color: '#17314a', fontSize: 15, fontWeight: 700, boxShadow: '0 12px 28px rgba(4,18,32,0.18)' },
   panelClose: { marginTop: 18, border: 'none', background: 'transparent', color: '#506a86', fontSize: 14, fontWeight: 700 },
-  profilePopup: { position: 'absolute', right: 0, top: 56, width: 280, borderRadius: 18, overflow: 'hidden', background: '#0b2740', border: '1px solid rgba(120,180,220,0.12)', boxShadow: '0 24px 42px rgba(4,18,32,0.32)' },
+  profilePopup: { position: 'absolute', right: 0, top: 50, width: 280, borderRadius: 18, overflow: 'hidden', background: '#0b2740', border: '1px solid rgba(120,180,220,0.12)', boxShadow: '0 24px 42px rgba(4,18,32,0.32)' },
   profileHeader: { padding: 18, borderBottom: '1px solid rgba(255,255,255,0.08)', background: 'linear-gradient(135deg, rgba(59,159,216,0.14), rgba(26,58,143,0.18))' },
   profileHeaderRow: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   profileTitle: { color: '#fff', fontWeight: 800, fontSize: 16, marginBottom: 4 },
