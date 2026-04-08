@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import AppIcon from '../components/AppIcon'
 import NavBar from '../components/NavBar'
 import ProviderMap from '../components/ProviderMap'
 import { supabase } from '../lib/supabase'
@@ -27,6 +28,22 @@ function slugify(name) {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .trim()
+}
+
+function getProviderIconCode(provider) {
+  const categories = provider.serviceCategories || []
+  const typeLabel = String(provider.type_label || '').toLowerCase()
+
+  if (categories.includes('mechanic') || typeLabel.includes('mechanic')) return 'ME'
+  if (categories.includes('wash') || typeLabel.includes('wash') || typeLabel.includes('detailing')) return 'LV'
+  if (categories.includes('tire') || typeLabel.includes('tire')) return 'PN'
+  if (categories.includes('body') || typeLabel.includes('body') || typeLabel.includes('collision')) return 'CR'
+  if (categories.includes('glass') || typeLabel.includes('glass') || typeLabel.includes('windshield')) return 'VT'
+  if (categories.includes('tow') || typeLabel.includes('tow')) return 'RW'
+  if (categories.includes('parts') || typeLabel.includes('part')) return 'PC'
+  if (categories.includes('parking') || typeLabel.includes('parking')) return 'PK'
+
+  return 'SV'
 }
 
 export default function ServiceProviders() {
@@ -138,7 +155,7 @@ export default function ServiceProviders() {
                       onClick={() => openProviderProfile(provider)}
                     >
                       <div className={styles.providerCardIcon}>
-                        {provider.icon || 'ME'}
+                        <AppIcon code={getProviderIconCode(provider)} size={24} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className={styles.providerCardTitle}>{provider.name}</div>
