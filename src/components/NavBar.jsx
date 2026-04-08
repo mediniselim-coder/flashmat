@@ -672,7 +672,7 @@ function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2
 const styles = {
   root: { position: 'sticky', top: 0, zIndex: 120 },
   nav: {
-    height: 44,
+    height: 50,
     display: 'grid',
     gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
@@ -687,8 +687,8 @@ const styles = {
   rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   menuButton: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: 11,
     border: '1px solid rgba(142, 196, 234, 0.16)',
     background: 'rgba(255,255,255,0.04)',
@@ -699,8 +699,8 @@ const styles = {
   },
   menuButtonActive: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: 11,
     border: '1px solid rgba(90,184,240,0.22)',
     background: 'rgba(90,184,240,0.12)',
@@ -712,8 +712,8 @@ const styles = {
   logoButton: { display: 'inline-flex', alignItems: 'center', background: 'transparent', border: 'none', padding: 0 },
   appIcon: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: 11,
     border: '1px solid transparent',
     background: 'transparent',
@@ -724,8 +724,8 @@ const styles = {
   },
   appIconActive: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: 11,
     border: '1px solid rgba(90, 184, 240, 0.24)',
     background: 'rgba(90, 184, 240, 0.09)',
@@ -809,7 +809,7 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(255,255,255,0.05)',
     color: '#ecf7ff',
-    padding: '4px 8px 4px 4px',
+    padding: '5px 8px 5px 5px',
   },
   accountButtonActive: {
     display: 'inline-flex',
@@ -819,10 +819,10 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(90,184,240,0.12)',
     color: '#ecf7ff',
-    padding: '4px 8px 4px 4px',
+    padding: '5px 8px 5px 5px',
   },
   accountAvatar: {
-    width: 24, height: 24, borderRadius: '50%',
+    width: 26, height: 26, borderRadius: '50%',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b9fd8 100%)',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     color: '#fff', fontSize: 12, fontWeight: 800, overflow: 'hidden',
@@ -997,7 +997,7 @@ const styles = {
   },
   panelWrap: {
     position: 'fixed',
-    top: 58,
+    top: 64,
     left: 0,
     right: 0,
     display: 'flex',
