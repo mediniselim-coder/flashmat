@@ -7,6 +7,9 @@ import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
 import ProviderProfileModal from '../components/ProviderProfileModal'
+import MessageCenterModal from '../components/MessageCenterModal'
+import NotificationCenterModal from '../components/NotificationCenterModal'
+import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_CATEGORY_ICONS, PROVIDER_SERVICE_CATEGORY_LABELS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
@@ -170,6 +173,9 @@ export default function ProviderApp() {
   const [sidebarOpen, setSidebar] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
+  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
+  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [tasks, setTasks]       = useState([
     { title: 'Vidange - Sarah K. (Honda Fit)', meta: 'ME Mecanique · Baie 2', time: '10h30', done: false },
     { title: 'Rotation + equilibrage - Marc D. (BMW)', meta: 'PN Pneus · Baie 1', time: '11h00', done: false },
@@ -199,6 +205,7 @@ export default function ProviderApp() {
 
   const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
   const providerLogo = profile?.avatar_url || ''
+  const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
   const bookingsDoneCount = providerBookings.filter((booking) => booking.status === 'done').length
@@ -254,6 +261,17 @@ export default function ProviderApp() {
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
+  function openMessageCenter(threadId = '') {
+    setProfileMenuOpen(false)
+    setNotificationCenterOpen(false)
+    setFocusedThreadId(threadId || '')
+    setMessageCenterOpen(true)
+  }
+  function openNotificationCenter() {
+    setProfileMenuOpen(false)
+    setMessageCenterOpen(false)
+    setNotificationCenterOpen(true)
+  }
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -641,6 +659,8 @@ export default function ProviderApp() {
                 </div>
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
                 <button className={styles.profileMenuItem} onClick={() => { setProfileMenuOpen(false); setProviderProfileModalOpen(true) }}><span><AppIcon code="AT" /></span><span>Edit Profile</span></button>
+                <button className={styles.profileMenuItem} onClick={() => openMessageCenter()}><span><AppIcon code="RS" /></span><span>Messages {unreadMessages > 0 ? `(${unreadMessages})` : ''}</span></button>
+                <button className={styles.profileMenuItem} onClick={openNotificationCenter}><span><AppIcon code="AL" /></span><span>Notifications {unreadNotifications > 0 ? `(${unreadNotifications})` : ''}</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span><AppIcon code="RS" /></span><span>Bookings</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-services')}><span><AppIcon code="SV" /></span><span>My Services</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span><AppIcon code="MP" /></span><span>Marketplace</span></button>
@@ -1255,6 +1275,26 @@ export default function ProviderApp() {
           onSaved={() => {
             void fetchProfile(user?.id)
           }}
+        />
+      )}
+      {messageCenterOpen && user && profile && (
+        <MessageCenterModal
+          open={messageCenterOpen}
+          onClose={() => {
+            setMessageCenterOpen(false)
+            setFocusedThreadId('')
+          }}
+          user={user}
+          profile={profile}
+          initialThreadId={focusedThreadId}
+        />
+      )}
+      {notificationCenterOpen && user && (
+        <NotificationCenterModal
+          open={notificationCenterOpen}
+          onClose={() => setNotificationCenterOpen(false)}
+          user={user}
+          onOpenMessages={(threadId) => openMessageCenter(threadId)}
         />
       )}
 

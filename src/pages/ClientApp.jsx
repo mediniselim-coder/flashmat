@@ -14,6 +14,9 @@ import ClientProfileModal from '../components/ClientProfileModal'
 import HelpSupportModal from '../components/HelpSupportModal'
 import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import WalletModal from '../components/WalletModal'
+import MessageCenterModal from '../components/MessageCenterModal'
+import NotificationCenterModal from '../components/NotificationCenterModal'
+import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
 import { mergeProviderProfile } from '../lib/providerProfiles'
@@ -274,12 +277,16 @@ export default function ClientApp() {
   const [walletModalOpen, setWalletModalOpen] = useState(false)
   const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
+  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
+  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
   const name = profile?.full_name || 'Alex'
   const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
+  const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
   const activeFlashFixRequests = flashFixRequests.filter((r) => r.channel === 'flashfix' && r.status !== 'completed')
   const latestFlashFixEvents = flashFixRequests
     .filter((r) => r.channel === 'flashfix')
@@ -393,6 +400,17 @@ export default function ClientApp() {
   function openWalletModal() { setProfileMenuOpen(false); setWalletModalOpen(true) }
   function openHelpSupportModal() { setProfileMenuOpen(false); setHelpSupportModalOpen(true) }
   function openSecurityModal() { setProfileMenuOpen(false); setSecurityModalOpen(true) }
+  function openMessageCenter(threadId = '') {
+    setProfileMenuOpen(false)
+    setNotificationCenterOpen(false)
+    setFocusedThreadId(threadId || '')
+    setMessageCenterOpen(true)
+  }
+  function openNotificationCenter() {
+    setProfileMenuOpen(false)
+    setMessageCenterOpen(false)
+    setNotificationCenterOpen(true)
+  }
 
   function handleVehicleAdded(nextVehicle) {
     saveVehicleRecord(user?.id, nextVehicle)
@@ -573,6 +591,8 @@ export default function ClientApp() {
                 </div>
                 <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="PP" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={openWalletModal}><span><AppIcon code="WL" /></span><span>Wallet</span></button>
+                <button className={styles.profileMenuItem} onClick={() => openMessageCenter()}><span><AppIcon code="RS" /></span><span>Messages {unreadMessages > 0 ? `(${unreadMessages})` : ''}</span></button>
+                <button className={styles.profileMenuItem} onClick={openNotificationCenter}><span><AppIcon code="AL" /></span><span>Notifications {unreadNotifications > 0 ? `(${unreadNotifications})` : ''}</span></button>
                 <button className={styles.profileMenuItem} onClick={openSecurityModal}><span><AppIcon code="AL" /></span><span>Security & Privacy</span></button>
                 <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <div className={styles.profileMenuDivider} />
@@ -1066,6 +1086,26 @@ export default function ClientApp() {
       {walletModalOpen && <WalletModal onClose={() => setWalletModalOpen(false)} />}
       {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
       {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
+      {messageCenterOpen && user && profile && (
+        <MessageCenterModal
+          open={messageCenterOpen}
+          onClose={() => {
+            setMessageCenterOpen(false)
+            setFocusedThreadId('')
+          }}
+          user={user}
+          profile={profile}
+          initialThreadId={focusedThreadId}
+        />
+      )}
+      {notificationCenterOpen && user && (
+        <NotificationCenterModal
+          open={notificationCenterOpen}
+          onClose={() => setNotificationCenterOpen(false)}
+          user={user}
+          onOpenMessages={(threadId) => openMessageCenter(threadId)}
+        />
+      )}
     </div>
   )
 }

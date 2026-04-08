@@ -1,9 +1,12 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useInboxSummary } from '../hooks/useInbox'
 import LoginModal from './LoginModal'
 import ClientProfileModal from './ClientProfileModal'
 import ProviderProfileModal from './ProviderProfileModal'
+import MessageCenterModal from './MessageCenterModal'
+import NotificationCenterModal from './NotificationCenterModal'
 
 const PRIMARY_ITEMS = [
   {
@@ -124,6 +127,9 @@ export default function NavBar({ activePage }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
+  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
+  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
+  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -133,6 +139,7 @@ export default function NavBar({ activePage }) {
   const isProvider = profile?.role === 'provider'
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
   const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
+  const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -182,6 +189,19 @@ export default function NavBar({ activePage }) {
     setProfileOpen(false)
   }
 
+  function openMessages(threadId = '') {
+    closeFloatingUi()
+    setFocusedThreadId(threadId || '')
+    setNotificationCenterOpen(false)
+    setMessageCenterOpen(true)
+  }
+
+  function openNotifications() {
+    closeFloatingUi()
+    setMessageCenterOpen(false)
+    setNotificationCenterOpen(true)
+  }
+
   function navigateTo(path) {
     closeFloatingUi()
     navigate(path)
@@ -211,6 +231,8 @@ export default function NavBar({ activePage }) {
     if (isProvider) {
       return [
         { icon: <DashboardIcon />, label: 'Dashboard', action: () => navigateTo('/app/provider') },
+        { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
+        { icon: <BellIcon />, label: 'Notifications', action: () => openNotifications() },
         { icon: <ProvidersIcon />, label: 'Profil atelier', action: () => navigateTo('/app/provider') },
         { icon: <MarketplaceIcon />, label: 'Marketplace fournisseur', action: () => navigateTo('/app/provider') },
         { icon: <DoctorIcon />, label: 'Support FlashMat', action: () => setProfileOpen(false) },
@@ -219,11 +241,13 @@ export default function NavBar({ activePage }) {
   
           return [
            { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
+           { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
+           { icon: <BellIcon />, label: 'Notifications', action: () => openNotifications() },
            { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
            { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
            { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
         ]
-    }, [isProvider, navigate, profile, user])
+    }, [isProvider, navigate, openMessages, openNotifications, profile, user])
 
   const siteSearchEntries = useMemo(() => {
     const dynamicEntries = PRIMARY_ITEMS.flatMap((item) =>
@@ -289,6 +313,22 @@ export default function NavBar({ activePage }) {
           </div>
 
           <div style={styles.rightGroup}>
+            {user && profile ? (
+              <>
+                <HeaderUtilityButton
+                  label="Messages"
+                  icon={<MessageIcon />}
+                  badge={unreadMessages}
+                  onClick={() => openMessages()}
+                />
+                <HeaderUtilityButton
+                  label="Notifications"
+                  icon={<BellIcon />}
+                  badge={unreadNotifications}
+                  onClick={openNotifications}
+                />
+              </>
+            ) : null}
               <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? { ...styles.urgentButtonActive, padding: isCompact ? '7px 12px' : '8px 13px' } : { ...styles.urgentButton, padding: isCompact ? '7px 12px' : '8px 13px' }}>
               {isMobile ? 'Urgence' : 'FlashFix Urgence'}
             </button>
@@ -425,6 +465,26 @@ export default function NavBar({ activePage }) {
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
       {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
       {providerProfileModalOpen && isProvider && <ProviderProfileModal onClose={() => setProviderProfileModalOpen(false)} />}
+      {messageCenterOpen && user && profile && (
+        <MessageCenterModal
+          open={messageCenterOpen}
+          onClose={() => {
+            setMessageCenterOpen(false)
+            setFocusedThreadId('')
+          }}
+          user={user}
+          profile={profile}
+          initialThreadId={focusedThreadId}
+        />
+      )}
+      {notificationCenterOpen && user && (
+        <NotificationCenterModal
+          open={notificationCenterOpen}
+          onClose={() => setNotificationCenterOpen(false)}
+          user={user}
+          onOpenMessages={(threadId) => openMessages(threadId)}
+        />
+      )}
     </>
   )
 }
@@ -650,6 +710,15 @@ function PopupItem({ icon, label, onClick, danger = false }) {
   )
 }
 
+function HeaderUtilityButton({ icon, label, badge = 0, onClick }) {
+  return (
+    <button type="button" style={styles.utilityButton} onClick={onClick} aria-label={label} title={label}>
+      {icon}
+      {badge > 0 ? <span style={styles.utilityBadge}>{badge > 9 ? '9+' : badge}</span> : null}
+    </button>
+  )
+}
+
 function Svg({ children, style }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" style={style || styles.svg}>
@@ -664,6 +733,8 @@ function ProvidersIcon() { return <Svg><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 
 function DoctorIcon() { return <Svg><path d="M12 4v16" /><path d="M5 11h14" /><circle cx="12" cy="12" r="8" /></Svg> }
 function MarketplaceIcon() { return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg> }
 function UserIcon() { return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg> }
+function BellIcon() { return <Svg><path d="M6 9a6 6 0 1 1 12 0v4l1.5 2.5H4.5L6 13V9Z" /><path d="M10 19a2 2 0 0 0 4 0" /></Svg> }
+function MessageIcon() { return <Svg><path d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /><path d="M8 11h8" /><path d="M8 14h5" /></Svg> }
 function SettingsIcon() { return <Svg><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V20a2 2 0 1 1-4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H4a2 2 0 1 1 0-4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9V4a2 2 0 1 1 4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6H20a2 2 0 1 1 0 4h-.2a1 1 0 0 0-.9.7Z" /></Svg> }
 function SearchIcon() { return <Svg><circle cx="11" cy="11" r="6" /><path d="m20 20-4.35-4.35" /></Svg> }
 function MapPinIcon() { return <Svg style={{ width: 16, height: 16 }}><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z" /><circle cx="12" cy="10" r="2.3" /></Svg> }
@@ -688,6 +759,35 @@ const styles = {
   leftGroup: { display: 'flex', alignItems: 'center', gap: 10 },
   centerGroup: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 },
   rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
+  utilityButton: {
+    position: 'relative',
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    border: '1px solid rgba(142, 196, 234, 0.16)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#ecf7ff',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  utilityBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 999,
+    padding: '0 5px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#ff5a4f',
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 800,
+    boxShadow: '0 8px 18px rgba(255,90,79,0.32)',
+  },
   menuButton: {
     position: 'relative',
     width: 40,
