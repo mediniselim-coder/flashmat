@@ -58,6 +58,18 @@ function InfoCard({ title, children, style }) {
   )
 }
 
+function SectionHeading({ title, subtitle, action }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+      <div>
+        <div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--ink)', marginBottom: 8 }}>{title}</div>
+        {subtitle ? <div style={{ fontSize: 13, color: 'var(--ink2)' }}>{subtitle}</div> : null}
+      </div>
+      {action || null}
+    </div>
+  )
+}
+
 export default function ProviderProfile() {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
@@ -219,18 +231,18 @@ export default function ProviderProfile() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <NavBar activePage="providers" />
       <div style={{ maxWidth: 1360, margin: '18px auto 0', padding: '0 20px' }}>
-        <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(184, 203, 229, .65)', background: provider.coverPhoto ? `center / cover no-repeat url(${provider.coverPhoto})` : 'linear-gradient(135deg, #0d2336 0%, #173b5f 44%, #2f7de1 100%)', minHeight: 334, boxShadow: '0 24px 60px rgba(15, 30, 61, 0.14)' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,24,42,.14) 0%, rgba(7,24,42,.45) 50%, rgba(7,24,42,.8) 100%)' }} />
+        <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(184, 203, 229, .65)', background: provider.coverPhoto ? `center / cover no-repeat url(${provider.coverPhoto})` : 'linear-gradient(135deg, #0d2336 0%, #173b5f 44%, #2f7de1 100%)', minHeight: 308, boxShadow: '0 24px 60px rgba(15, 30, 61, 0.14)' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,24,42,.14) 0%, rgba(7,24,42,.42) 45%, rgba(7,24,42,.8) 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 18%, rgba(255,255,255,.16), transparent 34%)' }} />
-          <div style={{ position: 'relative', zIndex: 1, minHeight: 334, display: 'grid', alignItems: 'end', justifyItems: 'center', padding: '34px 34px 28px' }}>
+          <div style={{ position: 'relative', zIndex: 1, minHeight: 308, display: 'grid', alignItems: 'end', justifyItems: 'center', padding: '28px 34px 24px' }}>
             <div style={{ width: '100%', display: 'grid', justifyItems: 'center', textAlign: 'center', maxWidth: 960 }}>
-              <div style={{ width: 102, height: 102, borderRadius: 26, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 18px 34px rgba(0,0,0,.24)', overflow: 'hidden', margin: '0 auto 18px' }}>
+              <div style={{ width: 96, height: 96, borderRadius: 24, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 18px 34px rgba(0,0,0,.24)', overflow: 'hidden', margin: '0 auto 16px' }}>
                 {provider.logoImageUrl ? <img src={provider.logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, color: '#143252' }}>{provider.logo}</div>}
               </div>
               <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 11px', borderRadius: 999, background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.14)', color: '#dbe7f6', fontSize: 11, fontWeight: 700, marginBottom: 14 }}>Provider profile</div>
-                <h1 style={{ fontFamily: 'var(--display)', fontSize: 58, lineHeight: 0.94, fontWeight: 800, color: '#fff', letterSpacing: '-0.06em', marginBottom: 14 }}>{provider.name}</h1>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 11px', borderRadius: 999, background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.14)', color: '#dbe7f6', fontSize: 11, fontWeight: 700, marginBottom: 12 }}>Provider profile</div>
+                <h1 style={{ fontFamily: 'var(--display)', fontSize: 52, lineHeight: 0.94, fontWeight: 800, color: '#fff', letterSpacing: '-0.06em', marginBottom: 12 }}>{provider.name}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
                   <span style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.address}</span>
                   <span style={{ color: 'rgba(255,255,255,.42)' }}>{DOT}</span>
                   <a href={`tel:${provider.phone}`} style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.phone}</a>
@@ -257,13 +269,37 @@ export default function ProviderProfile() {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{(provider.highlights || provider.services || []).slice(0, 6).map((item) => <span key={item} className="badge badge-blue">{item}</span>)}</div>
         </section>
 
-        <div className="providerLayout" style={{ maxWidth: 'none', padding: '28px 4px 44px' }}>
+        <div className="providerLayout" style={{ maxWidth: 'none', padding: '28px 4px 44px', gridTemplateColumns: 'minmax(0,1.46fr) minmax(320px,.72fr)' }}>
           <div style={{ display: 'grid', gap: 24 }}>
-            <InfoCard>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 12 }}>Provider overview</div>
-              <div style={{ fontFamily: 'var(--display)', fontSize: 34, lineHeight: 1.02, letterSpacing: '-0.05em', color: 'var(--ink)', marginBottom: 14 }}>Built for appointments, repairs, and repeat trust.</div>
-              <p style={{ fontSize: 15, color: 'var(--ink2)', lineHeight: 1.8 }}>{provider.description}</p>
-            </InfoCard>
+            {provider.staffMembers?.length > 0 ? (
+              <InfoCard>
+                <SectionHeading title="Team spotlight" subtitle="Meet the people clients see when they book through this provider." />
+                <div style={{ display: 'grid', gap: 14 }}>
+                  {provider.staffMembers.slice(0, 2).map((member) => (
+                    <div key={member.id || `${member.name}-${member.role}`} style={{ display: 'grid', gridTemplateColumns: '98px minmax(0, 1fr)', gap: 18, alignItems: 'center', padding: 16, borderRadius: 18, border: '1px solid var(--border)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
+                      <div style={{ width: 98, height: 98, borderRadius: 22, overflow: 'hidden', background: '#f1f6fd' }}>
+                        {member.photo_url ? <img src={member.photo_url} alt={member.name || 'Staff member'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: 36, fontWeight: 800, color: 'var(--blue)' }}>{String(member.name || 'S').slice(0, 1).toUpperCase()}</div>}
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: 'var(--display)', fontSize: 28, lineHeight: 1.04, letterSpacing: '-0.04em', color: 'var(--ink)', marginBottom: 6 }}>{member.name || 'FlashMat staff'}</div>
+                        <div style={{ fontSize: 14, color: 'var(--ink2)', marginBottom: 10 }}>{member.role || 'Team member'}</div>
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 13, color: 'var(--ink2)' }}>
+                          <span>{provider.address}</span>
+                          {member.phone || provider.phone ? <span>{member.phone || provider.phone}</span> : null}
+                          {member.email ? <span>{member.email}</span> : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </InfoCard>
+            ) : (
+              <InfoCard>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 12 }}>Provider overview</div>
+                <div style={{ fontFamily: 'var(--display)', fontSize: 34, lineHeight: 1.02, letterSpacing: '-0.05em', color: 'var(--ink)', marginBottom: 14 }}>Built for appointments, repairs, and repeat trust.</div>
+                <p style={{ fontSize: 15, color: 'var(--ink2)', lineHeight: 1.8 }}>{provider.description}</p>
+              </InfoCard>
+            )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
               <InfoCard>
@@ -280,18 +316,19 @@ export default function ProviderProfile() {
             </div>
 
             <InfoCard>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
-                <div><div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--ink)', marginBottom: 8 }}>Expertise of {provider.name}</div><div style={{ fontSize: 13, color: 'var(--ink2)' }}>Explore the specialties clients most often book with this provider.</div></div>
-                <button className="btn btn-outline" onClick={requestBookingAccess}>Request service</button>
-              </div>
+              <SectionHeading
+                title={`Expertise of ${provider.name}`}
+                subtitle="Explore the specialties clients most often book with this provider."
+                action={<button className="btn btn-outline" onClick={requestBookingAccess}>Request service</button>}
+              />
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                 {(provider.services || []).slice(0, 3).map((service, index) => <button key={service} type="button" onClick={requestBookingAccess} style={{ textAlign: 'left', border: '1px solid var(--border)', background: index === 0 ? 'linear-gradient(135deg, rgba(14,40,66,.96) 0%, rgba(47,125,225,.74) 100%)' : 'var(--bg3)', color: index === 0 ? '#fff' : 'var(--ink)', borderRadius: 18, padding: 18, minHeight: 170, display: 'grid', alignContent: 'space-between', gap: 22 }}><div style={{ transform: 'scale(.9)', transformOrigin: 'top left' }}><ServiceIcon code={provider.icon || 'ME'} size={64} /></div><div><div style={{ fontFamily: 'var(--display)', fontSize: 25, lineHeight: 1.04, letterSpacing: '-0.04em', marginBottom: 10 }}>{service}</div><div style={{ fontSize: 13, lineHeight: 1.7, color: index === 0 ? 'rgba(255,255,255,.78)' : 'var(--ink2)' }}>Book this service directly from the provider profile.</div></div></button>)}
               </div>
             </InfoCard>
 
-            {galleryImages.length > 0 ? <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--ink)', marginBottom: 8 }}>Business highlights</div><div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 20 }}>A visual snapshot of the workspace, results, and services shown by this provider.</div><div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
+            {galleryImages.length > 0 ? <InfoCard><SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." /><div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
 
-            {providerProducts.length > 0 ? <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--ink)', marginBottom: 8 }}>Provider products</div><div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 20 }}>Items currently published by this provider through FlashMat Marketplace.</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>{providerProducts.map((item) => <div key={item.id} style={{ display: 'grid', gap: 12 }}><div style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / .92', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{item.image_url ? <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ServiceIcon code={item.icon || 'PC'} size={86} /></div>}</div><div><div style={{ fontFamily: 'var(--display)', fontSize: 17, lineHeight: 1.2, color: 'var(--ink)', marginBottom: 6 }}>{item.title}</div><div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 8 }}>{item.category}</div><div style={{ fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--blue)', marginBottom: 10 }}>{formatPrice(item.price)}</div><button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>View item</button></div></div>)}</div></InfoCard> : null}
+            {providerProducts.length > 0 ? <InfoCard><SectionHeading title="Provider products" subtitle="Items currently published by this provider through FlashMat Marketplace." /><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>{providerProducts.map((item) => <div key={item.id} style={{ display: 'grid', gap: 12 }}><div style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / .92', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{item.image_url ? <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ServiceIcon code={item.icon || 'PC'} size={86} /></div>}</div><div><div style={{ fontFamily: 'var(--display)', fontSize: 17, lineHeight: 1.2, color: 'var(--ink)', marginBottom: 6 }}>{item.title}</div><div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 8 }}>{item.category}</div><div style={{ fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--blue)', marginBottom: 10 }}>{formatPrice(item.price)}</div><button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>View item</button></div></div>)}</div></InfoCard> : null}
 
             <InfoCard>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
@@ -309,7 +346,7 @@ export default function ProviderProfile() {
             <InfoCard style={{ position: 'sticky', top: 82, padding: 0 }}>
               <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)' }}>
                 <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-                  <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                   <Marker position={providerCoords}><Popup>{provider.name}<br />{provider.address}</Popup></Marker>
                 </MapContainer>
               </div>
@@ -319,8 +356,6 @@ export default function ProviderProfile() {
             </InfoCard>
 
             {spotlightReview ? <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 14, textAlign: 'center' }}>Review spotlight</div><div style={{ width: 78, height: 78, borderRadius: '50%', margin: '0 auto 12px', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{spotlightReview.avatar_url ? <img src={spotlightReview.avatar_url} alt={spotlightReview.user} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontFamily: 'var(--display)', fontSize: 28, fontWeight: 800, color: 'var(--blue)' }}>{spotlightReview.user.slice(0, 1).toUpperCase()}</span>}</div><div style={{ color: '#f59e0b', fontSize: 18, marginBottom: 8, textAlign: 'center' }}>{renderStarsSafe(spotlightReview.rating)}</div><div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, textAlign: 'center' }}>{spotlightReview.comment}</div><div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>{spotlightReview.user} {DOT} {spotlightReview.date}</div></InfoCard> : null}
-
-            {provider.staffMembers?.length > 0 ? <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 14 }}>Team members</div><div style={{ display: 'grid', gap: 14 }}>{provider.staffMembers.map((member) => <div key={member.id || `${member.name}-${member.role}`} style={{ border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}><div style={{ aspectRatio: '1 / 1.05', background: '#f0f6ff', overflow: 'hidden' }}>{member.photo_url ? <img src={member.photo_url} alt={member.name || 'Staff member'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: 42, fontWeight: 800, color: 'var(--blue)' }}>{String(member.name || 'S').slice(0, 1).toUpperCase()}</div>}</div><div style={{ padding: 16, textAlign: 'center' }}><div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 800, color: 'var(--ink)', marginBottom: 6 }}>{member.name || 'FlashMat staff'}</div><div style={{ fontSize: 13, color: 'var(--ink2)' }}>{member.role || 'Team member'}</div></div></div>)}</div></InfoCard> : null}
 
             <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 10 }}>Contact</div><a href={`tel:${provider.phone}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 6 }}>{provider.phone}</a>{provider.email ? <a href={`mailto:${provider.email}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 8 }}>{provider.email}</a> : null}<div style={{ color: 'var(--ink2)', fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>{provider.address}</div><button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={requestBookingAccess}>Book through FlashMat</button></InfoCard>
           </aside>
