@@ -56,6 +56,39 @@ const CATEGORY_ICONS = {
   tuning: 'PR',
 }
 
+function toNumberOrNull(value) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function parseProviderCoords(provider) {
+  if (Array.isArray(provider?.coords) && provider.coords.length === 2) {
+    const lat = toNumberOrNull(provider.coords[0])
+    const lng = toNumberOrNull(provider.coords[1])
+    if (lat !== null && lng !== null) return [lat, lng]
+  }
+
+  const latitude = toNumberOrNull(
+    provider?.latitude
+    ?? provider?.lat
+    ?? provider?.location_lat
+    ?? provider?.locationLat,
+  )
+  const longitude = toNumberOrNull(
+    provider?.longitude
+    ?? provider?.lng
+    ?? provider?.lon
+    ?? provider?.location_lng
+    ?? provider?.locationLng,
+  )
+
+  if (latitude !== null && longitude !== null) {
+    return [latitude, longitude]
+  }
+
+  return null
+}
+
 export const DEFAULT_PROVIDER_HOURS = {
   Mon: { closed: false, open: '08:00', close: '17:00' },
   Tue: { closed: false, open: '08:00', close: '17:00' },
@@ -338,7 +371,7 @@ export function normalizeProviderRecord(provider) {
     reviews: Number(provider.reviews ?? 0),
     is_open: provider.is_open ?? true,
     providerEmail: provider.providerEmail || provider.email || '',
-    coords: provider.coords || [45.5088, -73.554],
+    coords: parseProviderCoords(provider),
     highlights: provider.highlights || services,
     editableHours: normalizedHours,
     hours: hoursToDisplayMap(normalizedHours),

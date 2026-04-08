@@ -7,6 +7,7 @@ import BookingModal from '../components/BookingModal'
 import SiteFooter from '../components/SiteFooter'
 import { createBooking } from '../lib/bookings'
 import { mergeProviderProfile, normalizeProviderRecord } from '../lib/providerProfiles'
+import { geocodeAddress, hasValidCoords } from '../lib/googleMaps'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
@@ -37,7 +38,6 @@ export default function ProviderProfile() {
       ...normalizeProviderRecord(data),
       slug,
       logo: data.logo || data.icon || '🔧',
-      coords: [45.5088, -73.5540],
       hours: data.hours || { Mon:'08:00-17:00',Tue:'08:00-17:00',Wed:'08:00-17:00',Thu:'08:00-17:00',Fri:'08:00-17:00',Sat:'Ferme',Sun:'Ferme' },
       team: [],
       reviews_list: [],
@@ -71,6 +71,29 @@ export default function ProviderProfile() {
       setLoading(false)
     })
   }, [searchParams, slug])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function ensureProviderCoords() {
+      if (!provider?.address || hasValidCoords(provider?.coords)) return
+
+      try {
+        const coords = await geocodeAddress(provider.address)
+        if (!cancelled && hasValidCoords(coords)) {
+          setProvider((current) => (current ? { ...current, coords } : current))
+        }
+      } catch {
+        // Keep the profile usable even if geocoding is unavailable.
+      }
+    }
+
+    ensureProviderCoords()
+
+    return () => {
+      cancelled = true
+    }
+  }, [provider?.address, provider?.coords])
 
   useEffect(() => {
     function syncProviderProfile() {
@@ -151,6 +174,8 @@ export default function ProviderProfile() {
       <button className="btn btn-green" onClick={() => navigate('/')}>Retour à l'accueil</button>
     </div>
   )
+
+  const providerCoords = hasValidCoords(provider.coords) ? provider.coords : [45.5017, -73.5673]
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
@@ -332,9 +357,9 @@ export default function ProviderProfile() {
           <div className="panel">
             <div className="panel-hd"><div className="panel-title">📍 Localisation</div></div>
             <div style={{ height: 220, borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
-              <MapContainer center={provider.coords} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
+              <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom={false}>
                 <TileLayer attribution='&copy; OpenStreetMap' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={provider.coords}>
+                <Marker position={providerCoords}>
                   <Popup>{provider.name}<br />{provider.address}</Popup>
                 </Marker>
               </MapContainer>

@@ -1,6 +1,8 @@
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useEffect, useMemo, useState } from 'react'
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
+import { geocodeAddress, hasValidCoords } from '../lib/googleMaps'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -9,20 +11,84 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-const COORDS = {
-  'Garage Los Santos': [45.5579, -73.5949],
-  'CS Lave Auto Decarie': [45.4736, -73.6317],
-  'Dube Pneu et Mecan.': [45.5523, -73.6012],
-  'JA Automobile': [45.5801, -73.5456],
-  'Garage Meca. MK': [45.5234, -73.5789],
-  'Remorquage Elite 24/7': [45.5088, -73.5540],
-  'Lave-Auto 365': [45.4951, -73.6234],
-  'Speedy Glass Montreal': [45.5012, -73.5678],
+const DEFAULT_CENTER = [45.5017, -73.5673]
+
+function MapViewportUpdater({ coordsList }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!coordsList.length) {
+      map.setView(DEFAULT_CENTER, 11)
+      return
+    }
+
+    if (coordsList.length === 1) {
+      map.setView(coordsList[0], 14)
+      return
+    }
+
+    const bounds = L.latLngBounds(coordsList)
+    map.fitBounds(bounds, { padding: [36, 36] })
+  }, [coordsList, map])
+
+  return null
 }
 
 export default function ProviderMap({ providers, onSelect }) {
+  const [providersWithCoords, setProvidersWithCoords] = useState([])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function resolveProviderCoords() {
+      const nextProviders = await Promise.all(
+        (providers || []).map(async (provider) => {
+          if (hasValidCoords(provider?.coords)) {
+            return { ...provider, mapCoords: provider.coords.map(Number) }
+          }
+
+          try {
+            const geocoded = await geocodeAddress(provider?.address)
+            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : null }
+          } catch {
+            return { ...provider, mapCoords: null }
+          }
+        }),
+      )
+
+      if (!cancelled) {
+        setProvidersWithCoords(nextProviders.filter((provider) => hasValidCoords(provider.mapCoords)))
+      }
+    }
+
+    resolveProviderCoords()
+
+    return () => {
+      cancelled = true
+    }
+  }, [providers])
+
+  const coordsList = useMemo(
+    () => providersWithCoords.map((provider) => provider.mapCoords),
+    [providersWithCoords],
+  )
+
+  const mapCenter = coordsList[0] || DEFAULT_CENTER
+
   return (
-    <div className="flashmat-provider-map" style={{ height: 380, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)', marginBottom: 16, position: 'relative', zIndex: 0, isolation: 'isolate' }}>
+    <div
+      className="flashmat-provider-map"
+      style={{
+        height: 380,
+        borderRadius: 12,
+        overflow: 'hidden',
+        border: '1px solid var(--border)',
+        marginBottom: 16,
+        position: 'relative',
+        zIndex: 0,
+        isolation: 'isolate',
+      }}
+    >
       <style>{`
         .flashmat-provider-map .leaflet-container { z-index: 0 !important; }
         .flashmat-provider-map .leaflet-pane { z-index: 1 !important; }
@@ -31,28 +97,37 @@ export default function ProviderMap({ providers, onSelect }) {
         .flashmat-provider-map .leaflet-control,
         .flashmat-provider-map .leaflet-popup { z-index: 2 !important; }
       `}</style>
-      <MapContainer center={[45.5088, -73.5540]} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={false}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {providers.map((p, i) => {
-          const coords = COORDS[p.name] || [45.5088 + (Math.random()-0.5)*0.08, -73.5540 + (Math.random()-0.5)*0.08]
-          return (
-            <Marker key={i} position={coords}>
-              <Popup>
-                <div style={{ minWidth: 160 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{p.name}</div>
-                  <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>{p.type_label} - {p.rating} etoiles</div>
-                  <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>{p.phone}</div>
-                  <button onClick={() => onSelect && onSelect(p)} style={{ background: '#16c784', border: 'none', color: '#fff', padding: '5px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 11, fontWeight: 600, width: '100%' }}>
-                    Reserver
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          )
-        })}
+      <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={false}>
+        <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <MapViewportUpdater coordsList={coordsList} />
+        {providersWithCoords.map((provider) => (
+          <Marker key={provider.id || provider.name} position={provider.mapCoords}>
+            <Popup>
+              <div style={{ minWidth: 180 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{provider.name}</div>
+                <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>{provider.type_label} - {provider.rating} stars</div>
+                <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>{provider.address}</div>
+                <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>{provider.phone}</div>
+                <button
+                  onClick={() => onSelect && onSelect(provider)}
+                  style={{
+                    background: '#16c784',
+                    border: 'none',
+                    color: '#fff',
+                    padding: '5px 12px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    width: '100%',
+                  }}
+                >
+                  Book now
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
       </MapContainer>
     </div>
   )

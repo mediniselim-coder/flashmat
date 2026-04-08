@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { loadGoogleMapsApi } from '../lib/googleMaps'
 
-const GOOGLE_PLACES_SCRIPT_ID = 'flashmat-google-places'
 const GOOGLE_PLACES_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
 function fileToDataUrl(file) {
@@ -10,39 +10,6 @@ function fileToDataUrl(file) {
     reader.onload = () => resolve(reader.result)
     reader.onerror = () => reject(new Error('Unable to read the image file'))
     reader.readAsDataURL(file)
-  })
-}
-
-function loadGooglePlacesApi() {
-  if (typeof window === 'undefined') {
-    return Promise.reject(new Error('Google Places is only available in the browser.'))
-  }
-
-  if (window.google?.maps?.places) {
-    return Promise.resolve(window.google)
-  }
-
-  if (!GOOGLE_PLACES_KEY) {
-    return Promise.reject(new Error('Google Places API key is not configured.'))
-  }
-
-  return new Promise((resolve, reject) => {
-    const existing = document.getElementById(GOOGLE_PLACES_SCRIPT_ID)
-
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.google), { once: true })
-      existing.addEventListener('error', () => reject(new Error('Unable to load Google Places.')), { once: true })
-      return
-    }
-
-    const script = document.createElement('script')
-    script.id = GOOGLE_PLACES_SCRIPT_ID
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_PLACES_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
-    script.onload = () => resolve(window.google)
-    script.onerror = () => reject(new Error('Unable to load Google Places.'))
-    document.head.appendChild(script)
   })
 }
 
@@ -103,7 +70,7 @@ export default function ClientProfileModal({ onClose }) {
       if (!addressInputRef.current || autocompleteRef.current) return
 
       try {
-        const google = await loadGooglePlacesApi()
+        const google = await loadGoogleMapsApi(['places'])
         if (cancelled || !addressInputRef.current) return
 
         const autocomplete = new google.maps.places.Autocomplete(addressInputRef.current, {
