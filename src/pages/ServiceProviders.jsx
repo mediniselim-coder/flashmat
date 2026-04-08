@@ -86,15 +86,12 @@ export default function ServiceProviders() {
             <div className={styles.providerResultsCard}>
               <div className={styles.providerSidebarSection}>
                 <div className={styles.providerSidebarTitle}>Find a provider</div>
+                <div className={styles.providerSidebarSub} style={{ marginTop: 8 }}>
+                  Search by service or neighborhood, then refine with tags to narrow the best matches.
+                </div>
               </div>
 
               <div className={styles.providerSidebarSection}>
-                <div style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 800, letterSpacing: '-.5px', color: 'var(--ink)', marginBottom: 10 }}>
-                  {provLoading ? 'Loading providers…' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''} available`}
-                </div>
-                <div className={styles.providerSidebarSub} style={{ marginBottom: 12 }}>
-                  Search by service or neighborhood, then refine with tags to narrow the best matches.
-                </div>
                 <div className={styles.providerSearchBar}>
                   <input
                     className="form-input"
@@ -122,7 +119,7 @@ export default function ServiceProviders() {
                 <div>
                   <div className={styles.providerResultsTitle}>Provider listings</div>
                   <div className={styles.providerResultsSub}>
-                    {provLoading ? 'Loading providers…' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''} ready to compare`}
+                    {provLoading ? 'Loading providers...' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
                   </div>
                 </div>
               </div>
@@ -130,7 +127,7 @@ export default function ServiceProviders() {
               {provLoading ? (
                 <div style={{ textAlign: 'center', padding: 60 }}>
                   <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers…</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers...</div>
                 </div>
               ) : (
                 <div className={styles.providerList}>
@@ -141,7 +138,7 @@ export default function ServiceProviders() {
                       onClick={() => openProviderProfile(provider)}
                     >
                       <div className={styles.providerCardIcon}>
-                        {provider.icon || '🔧'}
+                        {provider.icon || 'ME'}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className={styles.providerCardTitle}>{provider.name}</div>
@@ -190,7 +187,7 @@ export default function ServiceProviders() {
                   <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height="calc(100vh - 116px)" />
                 ) : (
                   <div style={{ height: 'calc(100vh - 116px)', minHeight: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                    {provLoading ? 'Loading map…' : 'No providers match these filters yet.'}
+                    {provLoading ? 'Loading map...' : 'No providers match these filters yet.'}
                   </div>
                 )}
               </div>
