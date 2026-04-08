@@ -9,7 +9,7 @@ import AppIcon from '../components/AppIcon'
 import ProviderProfileModal from '../components/ProviderProfileModal'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
-import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
+import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_CATEGORY_ICONS, PROVIDER_SERVICE_CATEGORY_LABELS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const NAV = [
@@ -18,10 +18,19 @@ const NAV = [
   { id: 'p-bookings',    icon: 'RS', label: 'Bookings', badge: 8 },
   { id: 'p-schedule',    icon: 'CL', label: 'Schedule' },
   { id: 'p-clients',     icon: 'CT', label: 'Clients' },
+  { id: 'p-services',    icon: 'SV', label: 'My Services' },
   { id: 'p-marketplace', icon: 'MP', label: 'Marketplace' },
   { id: 'p-promos',      icon: 'PM', label: 'Promotions' },
   { id: 'p-profile',     icon: 'AT', label: 'Shop Profile' },
 ]
+
+const SERVICE_TYPE_ORDER = ['mechanic', 'wash', 'tire', 'body', 'glass', 'tow', 'parts', 'parking', 'tuning']
+const PROVIDER_SERVICE_TYPE_OPTIONS = SERVICE_TYPE_ORDER.map((type) => ({
+  id: type,
+  label: PROVIDER_SERVICE_CATEGORY_LABELS[type] || type,
+  icon: PROVIDER_SERVICE_CATEGORY_ICONS[type] || 'SV',
+  services: PROVIDER_SERVICE_OPTIONS.filter((service) => service.category === type),
+}))
 
 function getProviderDraftStorageKey(user, profile) {
   return `flashmat-provider-profile-draft:${user?.id || profile?.email || 'anonymous'}`
@@ -143,6 +152,7 @@ export default function ProviderApp() {
     phone: '(514) 374-2829',
     email: profile?.email || user?.email || '',
     description: 'Mecaniciens certifies ASE. Specialistes toutes marques. Devis gratuit.',
+    serviceTypes: ['mechanic'],
     services: ['Mecanique generale', 'Vidange', 'Freins'],
     editableHours: DEFAULT_PROVIDER_HOURS,
     coverPhoto: '',
@@ -189,6 +199,8 @@ export default function ProviderApp() {
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
 
   const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+  const selectedServiceTypeSet = new Set(providerProfileForm.serviceTypes || [])
+  const availableServiceGroups = PROVIDER_SERVICE_TYPE_OPTIONS.filter((group) => selectedServiceTypeSet.has(group.id))
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -258,6 +270,7 @@ export default function ProviderApp() {
         phone: nextForm.phone || '',
         email: nextForm.email || profile?.email || user?.email || '',
         description: nextForm.description || '',
+        serviceTypes: nextForm.serviceTypes || inferTypeMeta(nextForm.services || []).serviceTypes || [],
         services: nextForm.services || [],
         editableHours: nextForm.editableHours || DEFAULT_PROVIDER_HOURS,
         coverPhoto: nextForm.coverPhoto || nextForm.cover || '',
@@ -330,6 +343,30 @@ export default function ProviderApp() {
     })
   }
 
+  function toggleServiceType(typeId) {
+    setProviderProfileForm((current) => {
+      const selectedTypes = new Set(current.serviceTypes || [])
+      if (selectedTypes.has(typeId)) {
+        selectedTypes.delete(typeId)
+      } else {
+        selectedTypes.add(typeId)
+      }
+
+      const nextTypes = SERVICE_TYPE_ORDER.filter((type) => selectedTypes.has(type))
+      const allowedServices = new Set(
+        PROVIDER_SERVICE_OPTIONS
+          .filter((service) => nextTypes.includes(service.category))
+          .map((service) => service.label),
+      )
+
+      return {
+        ...current,
+        serviceTypes: nextTypes,
+        services: current.services.filter((service) => allowedServices.has(service)),
+      }
+    })
+  }
+
   function updateHour(day, field, value) {
     setProviderProfileForm((current) => ({
       ...current,
@@ -359,9 +396,9 @@ export default function ProviderApp() {
   async function saveProviderProfileChanges() {
     if (isSavingProfile) return
 
-    if (!providerProfileForm.name || !providerProfileForm.address || !providerProfileForm.phone || !providerProfileForm.description || providerProfileForm.services.length === 0) {
+    if (!providerProfileForm.name || !providerProfileForm.address || !providerProfileForm.phone || !providerProfileForm.description || providerProfileForm.serviceTypes.length === 0 || providerProfileForm.services.length === 0) {
       setProfileSaveNotice('Completez tous les champs obligatoires avant de sauvegarder.')
-      toast('Completez le nom, l adresse, le telephone, la description et au moins un service', 'error')
+      toast('Completez le nom, l adresse, le telephone, la description, au moins un type et au moins un service', 'error')
       return
     }
 
@@ -379,6 +416,7 @@ export default function ProviderApp() {
       phone: providerProfileForm.phone,
       email: providerProfileForm.email,
       description: providerProfileForm.description,
+      serviceTypes: providerProfileForm.serviceTypes,
       services: providerProfileForm.services,
       editableHours: providerProfileForm.editableHours,
       hours: publicHours,
@@ -418,6 +456,7 @@ export default function ProviderApp() {
         address: providerProfileForm.address,
         phone: providerProfileForm.phone,
         description: serializeProviderDescription(providerProfileForm.description, {
+          serviceTypes: providerProfileForm.serviceTypes,
           editableHours: providerProfileForm.editableHours,
           hours: publicHours,
           coverPhoto: providerProfileForm.coverPhoto,
@@ -550,6 +589,7 @@ export default function ProviderApp() {
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
                 <button className={styles.profileMenuItem} onClick={() => { setProfileMenuOpen(false); setProviderProfileModalOpen(true) }}><span><AppIcon code="AT" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span><AppIcon code="RS" /></span><span>Bookings</span></button>
+                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-services')}><span><AppIcon code="SV" /></span><span>My Services</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span><AppIcon code="MP" /></span><span>Marketplace</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-profile')}><span><AppIcon code="AT" /></span><span>Shop Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={() => setProfileMenuOpen(false)}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
@@ -887,6 +927,112 @@ export default function ProviderApp() {
           </div>
         )}
 
+        {/* â”€â”€ MY SERVICES â”€â”€ */}
+        {pane === 'p-services' && (
+          <div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>My Services</div>
+                <div className={styles.pageSub}>Choose your provider types, then activate only the sub-services that fit your shop.</div>
+              </div>
+              <button type="button" className="btn btn-green" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>
+                {isSavingProfile ? 'Saving...' : 'Save Services'}
+              </button>
+            </div>
+            <div className={styles.pad}>
+              {profileSaveNotice && (
+                <div style={{marginBottom:14,background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:12,padding:'10px 14px',fontSize:12,color:'var(--ink2)'}}>
+                  {profileSaveNotice}
+                </div>
+              )}
+              <div className={styles.providerServicesLayout}>
+                <div className={`panel ${styles.providerServicesSummaryCard}`}>
+                  <div className="panel-hd">
+                    <div className="panel-title">Provider Types</div>
+                  </div>
+                  <div className="panel-body">
+                    <div className={styles.providerServicesIntro}>
+                      Select the business categories that truly match your shop. FlashMat will only show compatible sub-services after that.
+                    </div>
+                    <div className={styles.providerTypeGrid}>
+                      {PROVIDER_SERVICE_TYPE_OPTIONS.map((type) => {
+                        const active = selectedServiceTypeSet.has(type.id)
+                        return (
+                          <button
+                            key={type.id}
+                            type="button"
+                            className={`${styles.providerTypeCard} ${active ? styles.providerTypeCardActive : ''}`}
+                            onClick={() => toggleServiceType(type.id)}
+                          >
+                            <span className={styles.providerTypeIcon}><AppIcon code={type.icon} /></span>
+                            <span>
+                              <strong>{type.label}</strong>
+                              <small>{type.services.length} services</small>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="panel">
+                  <div className="panel-hd">
+                    <div className="panel-title">Sub-services</div>
+                  </div>
+                  <div className="panel-body">
+                    {availableServiceGroups.length === 0 ? (
+                      <div className={styles.providerServicesEmpty}>
+                        Start by choosing at least one provider type. Your available sub-services will appear here automatically.
+                      </div>
+                    ) : (
+                      <div className={styles.providerServiceGroups}>
+                        {availableServiceGroups.map((group) => (
+                          <div key={group.id} className={styles.providerServiceGroupCard}>
+                            <div className={styles.providerServiceGroupHeader}>
+                              <div className={styles.providerServiceGroupIdentity}>
+                                <span className={styles.providerServiceGroupIcon}><AppIcon code={group.icon} /></span>
+                                <div>
+                                  <div className={styles.providerServiceGroupTitle}>{group.label}</div>
+                                  <div className={styles.providerServiceGroupMeta}>Only services from this provider type appear in the public profile and search filters.</div>
+                                </div>
+                              </div>
+                            </div>
+                            <div className={styles.providerServiceOptionGrid}>
+                              {group.services.map((service) => {
+                                const active = providerProfileForm.services.includes(service.label)
+                                return (
+                                  <button
+                                    key={service.id}
+                                    type="button"
+                                    className={`${styles.providerServiceOption} ${active ? styles.providerServiceOptionActive : ''}`}
+                                    onClick={() => toggleService(service.label)}
+                                  >
+                                    <span className={styles.providerServiceOptionIcon}><AppIcon code={service.icon} /></span>
+                                    <span>{service.label}</span>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <div className={styles.providerServicesFooter}>
+                      <div className={styles.providerServicesCounter}>
+                        {providerProfileForm.services.length} active sub-service{providerProfileForm.services.length > 1 ? 's' : ''} across {providerProfileForm.serviceTypes.length} provider type{providerProfileForm.serviceTypes.length > 1 ? 's' : ''}
+                      </div>
+                      <button type="button" className="btn btn-blue" onClick={() => go('p-profile')}>
+                        Back to Shop Profile
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* â”€â”€ MARKETPLACE â”€â”€ */}
         {pane === 'p-marketplace' && <Marketplace portal="provider" />}
 
@@ -971,32 +1117,24 @@ export default function ProviderApp() {
                   <div className="panel">
                     <div className="panel-hd"><div className="panel-title">Services Offered</div></div>
                     <div className="panel-body">
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(2, minmax(0, 1fr))',gap:10}}>
-                        {PROVIDER_SERVICE_OPTIONS.map((service) => (
-                          <button
-                            key={service.id}
-                            type="button"
-                            onClick={() => toggleService(service.label)}
-                            style={{
-                              display:'flex',
-                              alignItems:'center',
-                              gap:8,
-                              textAlign:'left',
-                              border:`1px solid ${providerProfileForm.services.includes(service.label) ? 'var(--green)' : 'var(--border)'}`,
-                              background: providerProfileForm.services.includes(service.label) ? 'var(--green-bg)' : 'var(--bg3)',
-                              borderRadius:10,
-                              padding:'10px 12px',
-                              cursor:'pointer',
-                              fontSize:12,
-                              fontWeight:600,
-                            }}
-                          >
-                            <span>{service.icon}</span>
-                            <span>{service.label}</span>
-                          </button>
-                        ))}
+                      <div className={styles.providerServicesSummaryHead}>
+                        <div>
+                          <div className={styles.providerServicesSummaryTitle}>Your selected services</div>
+                          <div className={styles.providerServicesSummaryText}>Manage provider types and sub-services from a dedicated workspace so your public profile stays clean and accurate.</div>
+                        </div>
+                        <button type="button" className="btn btn-blue" onClick={() => go('p-services')}>
+                          Open My Services
+                        </button>
                       </div>
-                      <div style={{marginTop:12,fontSize:11,color:'var(--ink3)'}}>Selected services will be shown on your public provider page.</div>
+                      <div className={styles.providerServicesSummaryPills}>
+                        {providerProfileForm.services.length > 0 ? (
+                          providerProfileForm.services.map((service) => (
+                            <span key={service} className={styles.providerServicesSummaryPill}>{service}</span>
+                          ))
+                        ) : (
+                          <span className={styles.providerServicesSummaryText}>No services selected yet.</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1035,7 +1173,7 @@ export default function ProviderApp() {
         />
       )}
 
-      {pane !== 'p-profile' && <FlashAI portal="provider" userName={name} />}
+      {pane !== 'p-profile' && pane !== 'p-services' && <FlashAI portal="provider" userName={name} />}
     </div>
   )
 }

@@ -56,6 +56,9 @@ const CATEGORY_ICONS = {
   tuning: 'PR',
 }
 
+export const PROVIDER_SERVICE_CATEGORY_LABELS = CATEGORY_LABELS
+export const PROVIDER_SERVICE_CATEGORY_ICONS = CATEGORY_ICONS
+
 function toNumberOrNull(value) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
@@ -353,6 +356,13 @@ export function normalizeProviderRecord(provider) {
     || meta.hours
     || provider.hours,
   )
+  const explicitServiceTypes = Array.isArray(provider.serviceTypes || meta.serviceTypes)
+    ? (provider.serviceTypes || meta.serviceTypes)
+        .map((entry) => String(entry || '').trim().toLowerCase())
+        .filter(Boolean)
+    : []
+  const derivedServiceTypes = getProviderServiceCategories(services, provider.type || '')
+  const serviceTypes = explicitServiceTypes.length > 0 ? explicitServiceTypes : derivedServiceTypes
 
   return {
     ...provider,
@@ -381,6 +391,7 @@ export function normalizeProviderRecord(provider) {
     staffMembers: Array.isArray(provider.staffMembers || meta.staffMembers)
       ? (provider.staffMembers || meta.staffMembers)
       : [],
+    serviceTypes,
   }
 }
 
@@ -413,6 +424,9 @@ export function mergeProviderProfile(provider) {
       galleryPhotos: normalizedProvider.galleryPhotos || normalizedProvider.gallery_photos || [],
       logoImageUrl: normalizedProvider.logoImageUrl || normalizedProvider.logo_image_url || '',
       staffMembers: Array.isArray(normalizedProvider.staffMembers) ? normalizedProvider.staffMembers : [],
+      serviceTypes: Array.isArray(normalizedProvider.serviceTypes) && normalizedProvider.serviceTypes.length > 0
+        ? normalizedProvider.serviceTypes
+        : getProviderServiceCategories(normalizedProvider?.services || [], normalizedProvider?.type || ''),
       hours: normalizedProvider.hours && normalizedProvider.hours.Mon ? normalizedProvider.hours : hoursToDisplayMap(normalizeProviderHours(normalizedProvider.hours)),
     }
   }
@@ -430,6 +444,11 @@ export function mergeProviderProfile(provider) {
     staffMembers: Array.isArray(override.staffMembers || normalizedProvider.staffMembers)
       ? (override.staffMembers || normalizedProvider.staffMembers)
       : [],
+    serviceTypes: Array.isArray(override.serviceTypes) && override.serviceTypes.length > 0
+      ? override.serviceTypes
+      : (Array.isArray(normalizedProvider.serviceTypes) && normalizedProvider.serviceTypes.length > 0
+        ? normalizedProvider.serviceTypes
+        : getProviderServiceCategories(mergedServices, override.type || normalizedProvider.type || '')),
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
     type: override.type || normalizedProvider.type || mergedTypeMeta.type,
