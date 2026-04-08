@@ -1,11 +1,29 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { geocodeAddress, hasValidCoords } from '../lib/googleMaps'
+import { geocodeAddress, hasValidCoords, loadGoogleMapsApi } from '../lib/googleMaps'
 
 const DEFAULT_CENTER = [45.5017, -73.5673]
+
+const GOOGLE_INTERFACE_MAP_STYLE = [
+  { featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#878787' }] },
+  { featureType: 'all', elementType: 'labels.text.stroke', stylers: [{ visibility: 'on' }, { color: '#ffffff' }, { weight: 1 }] },
+  { featureType: 'administrative', elementType: 'geometry.fill', stylers: [{ color: '#fefefe' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#d6d6d6' }, { weight: 1 }] },
+  { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f5f2ea' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#dff3e4' }] },
+  { featureType: 'poi.park', elementType: 'geometry.fill', stylers: [{ color: '#cfead6' }] },
+  { featureType: 'road.highway', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#d8d1c5' }] },
+  { featureType: 'road.arterial', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.arterial', elementType: 'geometry.stroke', stylers: [{ color: '#e6e0d6' }] },
+  { featureType: 'road.local', elementType: 'geometry.fill', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.local', elementType: 'geometry.stroke', stylers: [{ color: '#f1ece4' }] },
+  { featureType: 'transit.line', elementType: 'geometry', stylers: [{ color: '#bcd9f5' }] },
+  { featureType: 'water', elementType: 'geometry.fill', stylers: [{ color: '#cce7f6' }] },
+]
 
 function hashString(value) {
   return String(value || '').split('').reduce((accumulator, char) => {
@@ -58,7 +76,7 @@ function ProviderGlyph({ code, size = 18, color = '#f8fbff' }) {
           <path d="m14.5 6.5 3 3" />
           <path d="m5 19 6.5-6.5" />
           <path d="m3.5 14.5 6 6" />
-          <path d="m13 4 7 7" />
+          <path d="M13 4l7 7" />
         </svg>
       )
     case 'wash':
@@ -116,10 +134,10 @@ function ProviderGlyph({ code, size = 18, color = '#f8fbff' }) {
         <svg {...common}>
           <path d="M12 3v5" />
           <path d="M12 16v5" />
-          <path d="M4.2 7.3l4.3 2.5" />
-          <path d="M15.5 14.2l4.3 2.5" />
-          <path d="M4.2 16.7l4.3-2.5" />
-          <path d="M15.5 9.8l4.3-2.5" />
+          <path d="m4.2 7.3 4.3 2.5" />
+          <path d="m15.5 14.2 4.3 2.5" />
+          <path d="m4.2 16.7 4.3-2.5" />
+          <path d="m15.5 9.8 4.3-2.5" />
           <circle cx="12" cy="12" r="3.2" />
         </svg>
       )
@@ -140,7 +158,7 @@ function ProviderGlyph({ code, size = 18, color = '#f8fbff' }) {
   }
 }
 
-function createMarkerIcon(provider) {
+function createLeafletMarkerIcon(provider) {
   const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
   const iconMarkup = renderToStaticMarkup(<ProviderGlyph code={getProviderIconCode(provider)} size={18} />)
   const fallbackMarkup = `
@@ -198,6 +216,146 @@ function createMarkerIcon(provider) {
   })
 }
 
+function createGoogleFallbackMarker(provider) {
+  const glyph = encodeURIComponent(renderToStaticMarkup(<ProviderGlyph code={getProviderIconCode(provider)} size={18} />))
+
+  return `data:image/svg+xml;charset=UTF-8,
+    <svg xmlns='http://www.w3.org/2000/svg' width='52' height='68' viewBox='0 0 52 68'>
+      <defs>
+        <linearGradient id='flashmatMarker' x1='0%' y1='0%' x2='100%' y2='100%'>
+          <stop offset='0%' stop-color='%23143252'/>
+          <stop offset='100%' stop-color='%233b9fd8'/>
+        </linearGradient>
+        <filter id='shadow' x='-50%' y='-50%' width='200%' height='200%'>
+          <feDropShadow dx='0' dy='10' stdDeviation='7' flood-color='%23122845' flood-opacity='0.22'/>
+        </filter>
+      </defs>
+      <g filter='url(%23shadow)'>
+        <path d='M26 5c-10.493 0-19 8.507-19 19 0 15.062 19 38 19 38s19-22.938 19-38c0-10.493-8.507-19-19-19Z' fill='url(%23flashmatMarker)'/>
+        <circle cx='26' cy='24' r='13' fill='white' fill-opacity='0.18'/>
+        <foreignObject x='17' y='15' width='18' height='18'>${glyph}</foreignObject>
+      </g>
+    </svg>`.replace(/\n\s+/g, '')
+}
+
+function createPopupMarkup(provider, actionId) {
+  const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
+
+  return renderToStaticMarkup(
+    <div style={{ minWidth: 248, maxWidth: 272 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '46px minmax(0, 1fr)', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ width: 46, height: 46, borderRadius: 16, overflow: 'hidden', background: '#edf5ff', border: '1px solid rgba(20,50,82,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {logoImageUrl ? (
+            <img src={logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: 34, height: 34, borderRadius: 14, background: 'linear-gradient(135deg, #143252 0%, #3b9fd8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ProviderGlyph code={getProviderIconCode(provider)} size={18} />
+            </div>
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--display)', fontSize: 19, lineHeight: 1.02, letterSpacing: '-0.03em', fontWeight: 800, color: '#10253d', marginBottom: 4 }}>
+            {provider.name}
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 999, background: 'rgba(59,159,216,0.08)', color: '#3b84ba', fontSize: 11, fontWeight: 700 }}>
+            {provider.type_label || 'Provider'}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
+          <span style={{ color: '#f59e0b' }}>★</span>
+          <span>{Number(provider.rating || 0).toFixed(1)}</span>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
+          {provider.reviews || 0} reviews
+        </div>
+      </div>
+
+      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 4 }}>{provider.address}</div>
+      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 14 }}>{provider.phone || 'Phone available on profile'}</div>
+
+      <button
+        id={actionId}
+        style={{
+          width: '100%',
+          border: 'none',
+          borderRadius: 12,
+          padding: '11px 14px',
+          background: 'linear-gradient(135deg, #143252 0%, #2b5fd7 100%)',
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 800,
+          boxShadow: '0 12px 24px rgba(20,50,82,.18)',
+          cursor: 'pointer',
+        }}
+      >
+        Book with FlashMat
+      </button>
+    </div>,
+  )
+}
+
+function ProviderPopupCard({ provider, onSelect }) {
+  const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
+
+  return (
+    <div style={{ minWidth: 248, maxWidth: 272 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '46px minmax(0, 1fr)', gap: 12, alignItems: 'center', marginBottom: 12 }}>
+        <div style={{ width: 46, height: 46, borderRadius: 16, overflow: 'hidden', background: '#edf5ff', border: '1px solid rgba(20,50,82,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {logoImageUrl ? (
+            <img src={logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: 34, height: 34, borderRadius: 14, background: 'linear-gradient(135deg, #143252 0%, #3b9fd8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ProviderGlyph code={getProviderIconCode(provider)} size={18} />
+            </div>
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--display)', fontSize: 19, lineHeight: 1.02, letterSpacing: '-0.03em', fontWeight: 800, color: '#10253d', marginBottom: 4 }}>
+            {provider.name}
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 999, background: 'rgba(59,159,216,0.08)', color: '#3b84ba', fontSize: 11, fontWeight: 700 }}>
+            {provider.type_label || 'Provider'}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
+          <span style={{ color: '#f59e0b' }}>★</span>
+          <span>{Number(provider.rating || 0).toFixed(1)}</span>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
+          {provider.reviews || 0} reviews
+        </div>
+      </div>
+
+      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 4 }}>{provider.address}</div>
+      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 14 }}>{provider.phone || 'Phone available on profile'}</div>
+
+      <button
+        onClick={() => onSelect?.(provider)}
+        style={{
+          width: '100%',
+          border: 'none',
+          borderRadius: 12,
+          padding: '11px 14px',
+          background: 'linear-gradient(135deg, #143252 0%, #2b5fd7 100%)',
+          color: '#fff',
+          fontSize: 12,
+          fontWeight: 800,
+          boxShadow: '0 12px 24px rgba(20,50,82,.18)',
+          cursor: 'pointer',
+        }}
+      >
+        Book with FlashMat
+      </button>
+    </div>
+  )
+}
+
 function MapViewportUpdater({ coordsList }) {
   const map = useMap()
 
@@ -219,96 +377,7 @@ function MapViewportUpdater({ coordsList }) {
   return null
 }
 
-function ProviderPopupCard({ provider, onSelect }) {
-  const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
-
-  return (
-    <div style={{ minWidth: 248, maxWidth: 272 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '46px minmax(0, 1fr)', gap: 12, alignItems: 'center', marginBottom: 12 }}>
-        <div style={{ width: 46, height: 46, borderRadius: 16, overflow: 'hidden', background: '#edf5ff', border: '1px solid rgba(20,50,82,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {logoImageUrl ? (
-            <img src={logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ width: 34, height: 34, borderRadius: 14, background: 'linear-gradient(135deg, #143252 0%, #3b9fd8 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ProviderGlyph code={getProviderIconCode(provider)} size={18} />
-            </div>
-          )}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--display)', fontSize: 19, lineHeight: 1.02, letterSpacing: '-0.03em', fontWeight: 800, color: '#10253d', marginBottom: 4 }}>{provider.name}</div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 999, background: 'rgba(59,159,216,0.08)', color: '#3b84ba', fontSize: 11, fontWeight: 700 }}>
-            {provider.type_label || 'Provider'}
-          </div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
-          <span style={{ color: '#f59e0b' }}>★</span>
-          <span>{Number(provider.rating || 0).toFixed(1)}</span>
-        </div>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 10px', borderRadius: 999, background: '#f6f9fd', color: '#47617b', fontSize: 11, fontWeight: 700 }}>
-          {provider.reviews || 0} reviews
-        </div>
-      </div>
-
-      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 4 }}>{provider.address}</div>
-      <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 14 }}>{provider.phone || 'Phone available on profile'}</div>
-
-      <button
-        onClick={() => onSelect && onSelect(provider)}
-        style={{
-          width: '100%',
-          border: 'none',
-          borderRadius: 12,
-          padding: '11px 14px',
-          background: 'linear-gradient(135deg, #143252 0%, #2b5fd7 100%)',
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 800,
-          boxShadow: '0 12px 24px rgba(20,50,82,.18)',
-        }}
-      >
-        Book with FlashMat
-      </button>
-    </div>
-  )
-}
-
-export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true, height = 380 }) {
-  const [providersWithCoords, setProvidersWithCoords] = useState([])
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function resolveProviderCoords() {
-      const nextProviders = await Promise.all(
-        (providers || []).map(async (provider) => {
-          if (hasValidCoords(provider?.coords)) {
-            return { ...provider, mapCoords: provider.coords.map(Number) }
-          }
-
-          try {
-            const geocoded = await geocodeAddress(provider?.address)
-            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : buildApproximateCoords(provider) }
-          } catch {
-            return { ...provider, mapCoords: buildApproximateCoords(provider) }
-          }
-        }),
-      )
-
-      if (!cancelled) {
-        setProvidersWithCoords(nextProviders.filter((provider) => hasValidCoords(provider.mapCoords)))
-      }
-    }
-
-    resolveProviderCoords()
-
-    return () => {
-      cancelled = true
-    }
-  }, [providers])
-
+function LeafletProviderMap({ providersWithCoords, onSelect, scrollWheelZoom, height }) {
   const coordsList = useMemo(
     () => providersWithCoords.map((provider) => provider.mapCoords),
     [providersWithCoords],
@@ -386,7 +455,7 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
         <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <MapViewportUpdater coordsList={coordsList} />
         {providersWithCoords.map((provider) => (
-          <Marker key={provider.id || provider.name} position={provider.mapCoords} icon={createMarkerIcon(provider)}>
+          <Marker key={provider.id || provider.name} position={provider.mapCoords} icon={createLeafletMarkerIcon(provider)}>
             <Popup>
               <ProviderPopupCard provider={provider} onSelect={onSelect} />
             </Popup>
@@ -394,5 +463,204 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
         ))}
       </MapContainer>
     </div>
+  )
+}
+
+function GoogleProviderMap({ providersWithCoords, onSelect, scrollWheelZoom, height, onFallback }) {
+  const containerRef = useRef(null)
+  const mapRef = useRef(null)
+  const googleRef = useRef(null)
+  const markersRef = useRef([])
+  const infoWindowRef = useRef(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    loadGoogleMapsApi()
+      .then((google) => {
+        if (cancelled || !containerRef.current) return
+
+        googleRef.current = google
+        mapRef.current = new google.maps.Map(containerRef.current, {
+          center: { lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] },
+          zoom: 12,
+          disableDefaultUI: true,
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+          gestureHandling: scrollWheelZoom ? 'greedy' : 'cooperative',
+          clickableIcons: false,
+          backgroundColor: '#f5f2ea',
+          styles: GOOGLE_INTERFACE_MAP_STYLE,
+        })
+
+        infoWindowRef.current = new google.maps.InfoWindow({
+          maxWidth: 286,
+        })
+      })
+      .catch(() => {
+        if (!cancelled) {
+          onFallback?.()
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [onFallback, scrollWheelZoom])
+
+  useEffect(() => {
+    const google = googleRef.current
+    const map = mapRef.current
+    if (!google || !map) return
+
+    markersRef.current.forEach((marker) => {
+      google.maps.event.clearInstanceListeners(marker)
+      marker.setMap(null)
+    })
+    markersRef.current = []
+
+    if (!providersWithCoords.length) {
+      map.setCenter({ lat: DEFAULT_CENTER[0], lng: DEFAULT_CENTER[1] })
+      map.setZoom(11)
+      return
+    }
+
+    const bounds = new google.maps.LatLngBounds()
+
+    providersWithCoords.forEach((provider, index) => {
+      const position = {
+        lat: Number(provider.mapCoords[0]),
+        lng: Number(provider.mapCoords[1]),
+      }
+
+      bounds.extend(position)
+
+      const marker = new google.maps.Marker({
+        map,
+        position,
+        title: provider.name,
+        zIndex: 100 + index,
+        icon: {
+          url: createGoogleFallbackMarker(provider),
+          scaledSize: new google.maps.Size(42, 54),
+          anchor: new google.maps.Point(21, 46),
+        },
+      })
+
+      marker.addListener('click', () => {
+        const actionId = `flashmat-map-action-${provider.id || hashString(provider.name)}`
+        infoWindowRef.current?.setContent(createPopupMarkup(provider, actionId))
+        infoWindowRef.current?.open({ map, anchor: marker })
+
+        google.maps.event.addListenerOnce(infoWindowRef.current, 'domready', () => {
+          const actionButton = document.getElementById(actionId)
+          if (actionButton) {
+            actionButton.addEventListener('click', () => onSelect?.(provider), { once: true })
+          }
+        })
+      })
+
+      markersRef.current.push(marker)
+    })
+
+    if (providersWithCoords.length === 1) {
+      map.setCenter(bounds.getCenter())
+      map.setZoom(14)
+      return
+    }
+
+    map.fitBounds(bounds, 60)
+  }, [onSelect, providersWithCoords])
+
+  return (
+    <div
+      style={{
+        height,
+        borderRadius: 20,
+        overflow: 'hidden',
+        border: '1px solid rgba(184, 203, 229, .68)',
+        marginBottom: 16,
+        position: 'relative',
+        zIndex: 0,
+        isolation: 'isolate',
+        boxShadow: '0 22px 44px rgba(15, 30, 61, 0.10)',
+        background: '#f5f2ea',
+      }}
+    >
+      <style>{`
+        .flashmat-google-provider-map button[title="Zoom in"],
+        .flashmat-google-provider-map button[title="Zoom out"] {
+          background: rgba(255,255,255,.94) !important;
+          border-radius: 14px !important;
+          box-shadow: 0 16px 32px rgba(15,30,61,.12) !important;
+        }
+      `}</style>
+      <div
+        ref={containerRef}
+        className="flashmat-google-provider-map"
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
+  )
+}
+
+export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true, height = 380 }) {
+  const [providersWithCoords, setProvidersWithCoords] = useState([])
+  const [forceLeafletFallback, setForceLeafletFallback] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function resolveProviderCoords() {
+      const nextProviders = await Promise.all(
+        (providers || []).map(async (provider) => {
+          if (hasValidCoords(provider?.coords)) {
+            return { ...provider, mapCoords: provider.coords.map(Number) }
+          }
+
+          try {
+            const geocoded = await geocodeAddress(provider?.address)
+            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : buildApproximateCoords(provider) }
+          } catch {
+            return { ...provider, mapCoords: buildApproximateCoords(provider) }
+          }
+        }),
+      )
+
+      if (!cancelled) {
+        setProvidersWithCoords(nextProviders.filter((provider) => hasValidCoords(provider.mapCoords)))
+      }
+    }
+
+    resolveProviderCoords()
+
+    return () => {
+      cancelled = true
+    }
+  }, [providers])
+
+  const useGoogleMap = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY) && !forceLeafletFallback
+
+  if (useGoogleMap) {
+    return (
+      <GoogleProviderMap
+        providersWithCoords={providersWithCoords}
+        onSelect={onSelect}
+        scrollWheelZoom={scrollWheelZoom}
+        height={height}
+        onFallback={() => setForceLeafletFallback(true)}
+      />
+    )
+  }
+
+  return (
+    <LeafletProviderMap
+      providersWithCoords={providersWithCoords}
+      onSelect={onSelect}
+      scrollWheelZoom={scrollWheelZoom}
+      height={height}
+    />
   )
 }
