@@ -201,6 +201,9 @@ export default function ProviderApp() {
   const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
   const selectedServiceTypeSet = new Set(providerProfileForm.serviceTypes || [])
   const availableServiceGroups = PROVIDER_SERVICE_TYPE_OPTIONS.filter((group) => selectedServiceTypeSet.has(group.id))
+  const selectedServiceTotal = providerProfileForm.services.length
+  const selectedTypeTotal = providerProfileForm.serviceTypes.length
+  const servicesCompletion = Math.min(100, Math.round((selectedServiceTotal / Math.max(1, selectedTypeTotal * 3)) * 100))
 
   useEffect(() => {
     function syncFlashFixRequests() {
@@ -933,7 +936,7 @@ export default function ProviderApp() {
             <div className={styles.pageHdr}>
               <div>
                 <div className={styles.pageTitle}>My Services</div>
-                <div className={styles.pageSub}>Choose your provider types, then activate only the sub-services that fit your shop.</div>
+                <div className={styles.pageSub}>Build your provider offer step by step so FlashMat shows the right services to the right clients.</div>
               </div>
               <button type="button" className="btn btn-green" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>
                 {isSavingProfile ? 'Saving...' : 'Save Services'}
@@ -945,6 +948,32 @@ export default function ProviderApp() {
                   {profileSaveNotice}
                 </div>
               )}
+              <div className={styles.providerServicesHero}>
+                <div className={styles.providerServicesHeroMain}>
+                  <div className={styles.providerServicesHeroEyebrow}>FlashMat service builder</div>
+                  <div className={styles.providerServicesHeroTitle}>Start with your shop type, then fine-tune what you really offer.</div>
+                  <div className={styles.providerServicesHeroText}>
+                    A mechanic should not appear for detailing, and a car wash should not appear for brake repair. FlashMat uses this setup to keep search and bookings accurate.
+                  </div>
+                  <div className={styles.providerServicesHeroTags}>
+                    <span className={styles.providerServicesHeroTag}>Provider types: {selectedTypeTotal}</span>
+                    <span className={styles.providerServicesHeroTag}>Active services: {selectedServiceTotal}</span>
+                    <span className={styles.providerServicesHeroTag}>Profile ready: {servicesCompletion}%</span>
+                  </div>
+                </div>
+                <div className={styles.providerServicesHeroAside}>
+                  <div className={styles.providerServicesProgressCard}>
+                    <div className={styles.providerServicesProgressLabel}>Service setup progress</div>
+                    <div className={styles.providerServicesProgressValue}>{servicesCompletion}%</div>
+                    <div className={styles.providerServicesProgressTrack}>
+                      <span style={{ width: `${servicesCompletion}%` }} />
+                    </div>
+                    <div className={styles.providerServicesProgressHint}>
+                      Select one or more provider types, then activate the exact sub-services you want to publish.
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className={styles.providerServicesLayout}>
                 <div className={`panel ${styles.providerServicesSummaryCard}`}>
                   <div className="panel-hd">
@@ -952,7 +981,7 @@ export default function ProviderApp() {
                   </div>
                   <div className="panel-body">
                     <div className={styles.providerServicesIntro}>
-                      Select the business categories that truly match your shop. FlashMat will only show compatible sub-services after that.
+                      Choose the big categories that define your business. The interface will instantly narrow the matching sub-services on the right.
                     </div>
                     <div className={styles.providerTypeGrid}>
                       {PROVIDER_SERVICE_TYPE_OPTIONS.map((type) => {
@@ -997,6 +1026,7 @@ export default function ProviderApp() {
                                   <div className={styles.providerServiceGroupMeta}>Only services from this provider type appear in the public profile and search filters.</div>
                                 </div>
                               </div>
+                              <div className={styles.providerServiceGroupBadge}>{group.services.filter((service) => providerProfileForm.services.includes(service.label)).length}/{group.services.length} selected</div>
                             </div>
                             <div className={styles.providerServiceOptionGrid}>
                               {group.services.map((service) => {
@@ -1022,9 +1052,14 @@ export default function ProviderApp() {
                       <div className={styles.providerServicesCounter}>
                         {providerProfileForm.services.length} active sub-service{providerProfileForm.services.length > 1 ? 's' : ''} across {providerProfileForm.serviceTypes.length} provider type{providerProfileForm.serviceTypes.length > 1 ? 's' : ''}
                       </div>
-                      <button type="button" className="btn btn-blue" onClick={() => go('p-profile')}>
-                        Back to Shop Profile
-                      </button>
+                      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                        <button type="button" className="btn" onClick={() => go('p-profile')}>
+                          Back to Shop Profile
+                        </button>
+                        <button type="button" className="btn btn-blue" onClick={() => { void saveProviderProfileChanges() }} disabled={isSavingProfile}>
+                          {isSavingProfile ? 'Saving...' : 'Publish my services'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
