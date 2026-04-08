@@ -50,7 +50,7 @@ function MapViewportUpdater({ coordsList }) {
   return null
 }
 
-export default function ProviderMap({ providers, onSelect }) {
+export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true }) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function ProviderMap({ providers, onSelect }) {
         .flashmat-provider-map .leaflet-control,
         .flashmat-provider-map .leaflet-popup { z-index: 2 !important; }
       `}</style>
-      <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={false}>
+      <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
         <TileLayer attribution="&copy; OpenStreetMap" url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <MapViewportUpdater coordsList={coordsList} />
         {providersWithCoords.map((provider) => (
