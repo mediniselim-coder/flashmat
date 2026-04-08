@@ -8,15 +8,15 @@ import { mergeProviderProfile } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
 const SEARCH_CATS = [
-  ['all', 'All'],
-  ['mechanic', 'Mechanics'],
-  ['wash', 'Car Wash'],
-  ['tire', 'Tires'],
-  ['body', 'Bodywork'],
-  ['glass', 'Glass'],
-  ['tow', 'Towing'],
-  ['parts', 'Parts'],
-  ['parking', 'Parking'],
+  ['all', 'All', 'TB'],
+  ['mechanic', 'Mechanics', 'ME'],
+  ['wash', 'Car Wash', 'LV'],
+  ['tire', 'Tires', 'PN'],
+  ['body', 'Bodywork', 'CR'],
+  ['glass', 'Glass', 'VT'],
+  ['tow', 'Towing', 'RW'],
+  ['parts', 'Parts', 'PC'],
+  ['parking', 'Parking', 'PK'],
 ]
 
 function slugify(name) {
@@ -46,6 +46,12 @@ function getProviderIconCode(provider) {
   return 'SV'
 }
 
+function getProviderDistance(index, provider) {
+  if (provider.distance) return provider.distance
+  const base = 1.4 + index * 1.3
+  return `${base.toFixed(1)} km`
+}
+
 export default function ServiceProviders() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,6 +60,7 @@ export default function ServiceProviders() {
   const [provLoading, setProvLoading] = useState(false)
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(params.get('cat') || 'all')
+  const [sortBy, setSortBy] = useState('recommended')
 
   useEffect(() => {
     setSearchCat(params.get('cat') || 'all')
@@ -81,133 +88,222 @@ export default function ServiceProviders() {
     navigate(`/provider/${slugify(provider.name)}?n=${providerName}${bookingQuery}`)
   }
 
-  const filtered = providers.filter((provider) => {
-    const matchCat = searchCat === 'all' || provider.serviceCategories?.includes(searchCat)
-    const q = searchQ.toLowerCase()
-    const matchQ = !q
-      || provider.name?.toLowerCase().includes(q)
-      || provider.type_label?.toLowerCase().includes(q)
-      || provider.address?.toLowerCase().includes(q)
-      || provider.services?.some((service) => service.toLowerCase().includes(q))
+  const filtered = useMemo(() => {
+    const visible = providers.filter((provider) => {
+      const matchCat = searchCat === 'all' || provider.serviceCategories?.includes(searchCat)
+      const q = searchQ.toLowerCase()
+      const matchQ = !q
+        || provider.name?.toLowerCase().includes(q)
+        || provider.type_label?.toLowerCase().includes(q)
+        || provider.address?.toLowerCase().includes(q)
+        || provider.services?.some((service) => service.toLowerCase().includes(q))
 
-    return matchCat && matchQ
-  })
+      return matchCat && matchQ
+    })
+
+    return [...visible].sort((left, right) => {
+      if (sortBy === 'rating') return (right.rating || 0) - (left.rating || 0)
+      if (sortBy === 'name') return String(left.name || '').localeCompare(String(right.name || ''))
+      return (right.rating || 0) - (left.rating || 0)
+    })
+  }, [providers, searchCat, searchQ, sortBy])
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
       <NavBar activePage="services" />
 
-      <div className={styles.pad} style={{ padding: '20px 24px 24px', height: 'calc(100vh - 74px)', overflow: 'hidden' }}>
-        <div className={styles.providerExplorer}>
-          <div className={styles.providerSidebar}>
-            <div className={styles.providerResultsCard}>
-              <div className={styles.providerSidebarSection}>
-                <div className={styles.providerSidebarTitle}>Find a provider</div>
-                <div className={styles.providerSidebarSub} style={{ marginTop: 8 }}>
-                  Search by service or neighborhood, then refine with tags to narrow the best matches.
-                </div>
+      <div className={styles.pad} style={{ padding: '18px 22px 20px', height: 'calc(100vh - 74px)', overflow: 'hidden' }}>
+        <div className={styles.providerExplorerModern}>
+          <div className={styles.providerFinderColumn}>
+            <div className={styles.providerSearchHero}>
+              <div className={styles.providerSidebarTitle}>Find a provider</div>
+              <div className={styles.providerSidebarSub}>
+                Search mechanics, car wash, parts, or a neighborhood, then compare the best local providers before you book.
               </div>
 
-              <div className={styles.providerSidebarSection}>
-                <div className={styles.providerSearchBar}>
-                  <input
-                    className="form-input"
-                    placeholder="Search for a service or neighborhood..."
-                    value={searchQ}
-                    onChange={(event) => setSearchQ(event.target.value)}
-                    style={{ flex: 1, fontSize: 14 }}
-                  />
-                  {searchQ && <button className="btn" onClick={() => setSearchQ('')}>Clear</button>}
-                </div>
+              <div className={styles.providerHeroSearchBar}>
+                <span className={styles.providerHeroSearchIcon}>
+                  <AppIcon code="SV" size={18} />
+                </span>
+                <input
+                  className={`form-input ${styles.providerHeroInput}`}
+                  placeholder="Search mechanics, car wash, or location..."
+                  value={searchQ}
+                  onChange={(event) => setSearchQ(event.target.value)}
+                />
+                {searchQ && (
+                  <button className="btn" onClick={() => setSearchQ('')}>
+                    Clear
+                  </button>
+                )}
               </div>
+            </div>
 
-              <div className={styles.providerSidebarSection}>
-                <div className={styles.providerSidebarEyebrow}>Categories</div>
-                <div className={styles.providerTags}>
-                  {SEARCH_CATS.map(([category, label]) => (
-                    <button key={category} className={`btn ${searchCat === category ? 'btn-green' : ''}`} onClick={() => setSearchCat(category)}>
-                      {label}
+            <div className={styles.providerFinderBody}>
+              <aside className={styles.providerFilterRail}>
+                <div className={styles.providerFilterTitle}>
+                  <AppIcon code="TB" size={16} />
+                  <span>Filters</span>
+                </div>
+
+                <div className={styles.providerFilterList}>
+                  {SEARCH_CATS.filter(([category]) => category !== 'all').map(([category, label, icon]) => (
+                    <button
+                      key={category}
+                      className={`${styles.providerFilterItem} ${searchCat === category ? styles.providerFilterItemActive : ''}`}
+                      onClick={() => setSearchCat(category)}
+                    >
+                      <span className={styles.providerFilterItemIcon}>
+                        <AppIcon code={icon} size={16} />
+                      </span>
+                      <span>{label}</span>
                     </button>
                   ))}
                 </div>
-              </div>
 
-              <div className={styles.providerResultsHeader}>
-                <div>
-                  <div className={styles.providerResultsTitle}>Provider listings</div>
-                  <div className={styles.providerResultsSub}>
-                    {provLoading ? 'Loading providers...' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
+                <button
+                  className={`${styles.providerFilterItem} ${searchCat === 'all' ? styles.providerFilterItemActive : ''}`}
+                  onClick={() => setSearchCat('all')}
+                >
+                  <span className={styles.providerFilterItemIcon}>
+                    <AppIcon code="TB" size={16} />
+                  </span>
+                  <span>All services</span>
+                </button>
+              </aside>
+
+              <section className={styles.providerListingPane}>
+                <div className={styles.providerResultsHeaderModern}>
+                  <div>
+                    <div className={styles.providerResultsTitleModern}>
+                      Showing {provLoading ? 'providers...' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''}`}
+                    </div>
+                    <div className={styles.providerResultsSubModern}>
+                      Refine by category, compare ratings, then open a profile or book directly.
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {provLoading ? (
-                <div style={{ textAlign: 'center', padding: 60 }}>
-                  <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers...</div>
-                </div>
-              ) : (
-                <div className={styles.providerList}>
-                  {filtered.map((provider, index) => (
-                    <div
-                      key={provider.id || index}
-                      className={styles.providerCard}
-                      onClick={() => openProviderProfile(provider)}
+                  <label className={styles.providerSort}>
+                    <span>Sort</span>
+                    <select
+                      className={styles.providerSortSelect}
+                      value={sortBy}
+                      onChange={(event) => setSortBy(event.target.value)}
                     >
-                      <div className={styles.providerCardIcon}>
-                        <AppIcon code={getProviderIconCode(provider)} size={24} />
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className={styles.providerCardTitle}>{provider.name}</div>
-                        <div className={styles.providerCardMeta}>
-                          {provider.type_label} · {provider.address} · ★{provider.rating} ({provider.reviews} reviews) · {provider.phone}
+                      <option value="recommended">Recommended</option>
+                      <option value="rating">Top rated</option>
+                      <option value="name">Name</option>
+                    </select>
+                  </label>
+                </div>
+
+                {provLoading ? (
+                  <div style={{ textAlign: 'center', padding: 60 }}>
+                    <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers...</div>
+                  </div>
+                ) : (
+                  <div className={styles.providerListModern}>
+                    {filtered.map((provider, index) => (
+                      <div
+                        key={provider.id || index}
+                        className={styles.providerCardModern}
+                        onClick={() => openProviderProfile(provider)}
+                      >
+                        {index === 0 && sortBy === 'recommended' ? (
+                          <div className={styles.providerRecommendedBadge}>Recommended</div>
+                        ) : null}
+
+                        <div className={styles.providerCardTop}>
+                          <div className={styles.providerCardIdentity}>
+                            <div className={styles.providerCardIconModern}>
+                              <AppIcon code={getProviderIconCode(provider)} size={28} />
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div className={styles.providerCardTitleModern}>{provider.name}</div>
+                              <div className={styles.providerCardTypePill}>{provider.type_label}</div>
+                            </div>
+                          </div>
+                          <div className={styles.providerCardLocation}>{provider.distance || 'Montreal'}</div>
                         </div>
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+
+                        <div className={styles.providerCardRatingRow}>
+                          <span className={styles.providerStars}>★★★★★</span>
+                          <span>{getProviderDistance(index, provider)}</span>
+                          <span>•</span>
+                          <span>{provider.address}</span>
+                        </div>
+
+                        <div className={styles.providerCardServices}>
                           {(provider.services || []).slice(0, 4).map((service) => (
-                            <span key={service} className="badge badge-gray">{service}</span>
+                            <span key={service} className={styles.providerServicePill}>{service}</span>
                           ))}
                         </div>
+
+                        <div className={styles.providerCardFooter}>
+                          <div className={styles.providerCardContact}>
+                            <AppIcon code="CT" size={15} />
+                            <span>{provider.phone || 'Phone available on profile'}</span>
+                          </div>
+
+                          <div className={styles.providerCardButtons}>
+                            <button
+                              className="btn"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                openProviderProfile(provider, false)
+                              }}
+                            >
+                              View
+                            </button>
+                            <button
+                              className="btn btn-green"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                openProviderProfile(provider, true)
+                              }}
+                            >
+                              Book
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                      <div className={styles.providerCardActions}>
-                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink3)' }}>{provider.distance || 'Montreal'}</span>
-                        <span className={`badge ${provider.is_open ? 'badge-green' : 'badge-amber'}`}>{provider.is_open ? '● Open' : '● Closed'}</span>
-                        <button
-                          className="btn btn-green"
-                          style={{ fontSize: 10, padding: '5px 12px' }}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            openProviderProfile(provider, true)
-                          }}
-                        >
-                          Book
+                    ))}
+
+                    {filtered.length === 0 && (
+                      <div className={styles.providerEmptyState}>
+                        <div className={styles.providerEmptyIcon}>
+                          <AppIcon code="SV" size={26} />
+                        </div>
+                        <div className={styles.providerEmptyTitle}>No providers found</div>
+                        <div className={styles.providerEmptyText}>
+                          Try another neighborhood, service type, or reset the current filters.
+                        </div>
+                        <button className="btn" style={{ marginTop: 12 }} onClick={() => { setSearchQ(''); setSearchCat('all') }}>
+                          Reset filters
                         </button>
                       </div>
-                    </div>
-                  ))}
-
-                  {filtered.length === 0 && (
-                    <div style={{ textAlign: 'center', color: 'var(--ink3)', padding: 60 }}>
-                      <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                      <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No providers found</div>
-                      <button className="btn" style={{ marginTop: 12 }} onClick={() => { setSearchQ(''); setSearchCat('all') }}>Reset filters</button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
 
-          <div className={styles.providerMapColumn}>
-            <div className={styles.providerMapCard}>
-              <div style={{ padding: 16 }}>
-                {!provLoading && filtered.length > 0 ? (
-                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height="calc(100vh - 116px)" />
-                ) : (
-                  <div style={{ height: 'calc(100vh - 116px)', minHeight: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                    {provLoading ? 'Loading map...' : 'No providers match these filters yet.'}
-                  </div>
-                )}
-              </div>
+          <div className={styles.providerMapColumnModern}>
+            <div className={styles.providerMapCardModern}>
+              {!provLoading && filtered.length > 0 ? (
+                <ProviderMap
+                  providers={filtered}
+                  onSelect={(provider) => openProviderProfile(provider, true)}
+                  scrollWheelZoom
+                  height="100%"
+                />
+              ) : (
+                <div className={styles.providerMapEmpty}>
+                  {provLoading ? 'Loading map...' : 'No providers match these filters yet.'}
+                </div>
+              )}
             </div>
           </div>
         </div>
