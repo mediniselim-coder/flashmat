@@ -337,15 +337,13 @@
 
 .providerExplorer {
   display: grid;
-  grid-template-columns: minmax(320px, 0.92fr) minmax(0, 1.18fr);
+  grid-template-columns: minmax(360px, 0.98fr) minmax(420px, 1.22fr);
   gap: 18px;
   align-items: start;
 }
 
 .providerSidebar {
   min-width: 0;
-  position: sticky;
-  top: 104px;
 }
 
 .providerSidebarCard,
@@ -355,6 +353,12 @@
   border-radius: 16px;
   box-shadow: 0 10px 24px rgba(15, 30, 61, 0.05);
   overflow: hidden;
+}
+
+.providerMapColumn {
+  min-width: 0;
+  position: sticky;
+  top: 104px;
 }
 
 .providerSidebarSection {
@@ -403,6 +407,34 @@
 
 .providerResultsCard {
   padding: 12px;
+}
+
+.providerMapCard {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 14px 28px rgba(15, 30, 61, 0.07);
+  overflow: hidden;
+}
+
+.providerMapHeader {
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(59,159,216,.06), rgba(255,255,255,0));
+}
+
+.providerMapTitle {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.4px;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.providerMapSub {
+  font-size: 12px;
+  color: var(--ink2);
 }
 
 .providerResultsHeader {
@@ -488,5 +520,6 @@
 
 @media (max-width: 768px) {
   .providerExplorer { grid-template-columns: 1fr; }
-  .providerSidebar { position: static; top: auto; }
+  .providerSidebar,
+  .providerMapColumn { position: static; top: auto; }
 }

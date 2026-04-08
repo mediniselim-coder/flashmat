@@ -93,12 +93,12 @@ export default function ServiceProviders() {
       <div className={styles.pad}>
         <div className={styles.providerExplorer}>
           <div className={styles.providerSidebar}>
-            <div className={styles.providerSidebarCard}>
+            <div className={styles.providerResultsCard}>
               <div className={styles.providerSidebarSection}>
                 <div className={styles.providerSidebarEyebrow}>Provider finder</div>
-                <div className={styles.providerSidebarTitle}>Search near you</div>
+                <div className={styles.providerSidebarTitle}>Top providers near Montreal</div>
                 <div className={styles.providerSidebarSub}>
-                  Search by service or neighborhood, then use the map to zoom in on the providers that fit your need.
+                  Search by service or neighborhood, refine with tags, then compare providers before you book.
                 </div>
               </div>
 
@@ -126,81 +126,90 @@ export default function ServiceProviders() {
                 </div>
               </div>
 
-              <div className={styles.providerSidebarSection} style={{ paddingBottom: 12 }}>
+              <div className={styles.providerResultsHeader}>
+                <div>
+                  <div className={styles.providerResultsTitle}>Provider listings</div>
+                  <div className={styles.providerResultsSub}>
+                    {provLoading ? 'Loading providers…' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''} ready to compare`}
+                  </div>
+                </div>
+              </div>
+
+              {provLoading ? (
+                <div style={{ textAlign: 'center', padding: 60 }}>
+                  <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers…</div>
+                </div>
+              ) : (
+                <div className={styles.providerList}>
+                  {filtered.map((provider, index) => (
+                    <div
+                      key={provider.id || index}
+                      className={styles.providerCard}
+                      onClick={() => openProviderProfile(provider)}
+                    >
+                      <div className={styles.providerCardIcon}>
+                        {provider.icon || '🔧'}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className={styles.providerCardTitle}>{provider.name}</div>
+                        <div className={styles.providerCardMeta}>
+                          {provider.type_label} · {provider.address} · ★{provider.rating} ({provider.reviews} reviews) · {provider.phone}
+                        </div>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {(provider.services || []).slice(0, 4).map((service) => (
+                            <span key={service} className="badge badge-gray">{service}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className={styles.providerCardActions}>
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink3)' }}>{provider.distance || 'Montreal'}</span>
+                        <span className={`badge ${provider.is_open ? 'badge-green' : 'badge-amber'}`}>{provider.is_open ? '● Open' : '● Closed'}</span>
+                        <button
+                          className="btn btn-green"
+                          style={{ fontSize: 10, padding: '5px 12px' }}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            openProviderProfile(provider, true)
+                          }}
+                        >
+                          Book
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {filtered.length === 0 && (
+                    <div style={{ textAlign: 'center', color: 'var(--ink3)', padding: 60 }}>
+                      <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+                      <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No providers found</div>
+                      <button className="btn" style={{ marginTop: 12 }} onClick={() => { setSearchQ(''); setSearchCat('all') }}>Reset filters</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.providerMapColumn}>
+            <div className={styles.providerMapCard}>
+              <div className={styles.providerMapHeader}>
+                <div className={styles.providerSidebarEyebrow}>Map view</div>
+                <div className={styles.providerMapTitle}>Browse the provider map</div>
+                <div className={styles.providerMapSub}>
+                  Use the map on the right to zoom, pan, and open provider pins while the search and results stay visible on the left.
+                </div>
+              </div>
+              <div style={{ padding: 16 }}>
                 {!provLoading && filtered.length > 0 ? (
-                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom />
+                  <ProviderMap providers={filtered} onSelect={(provider) => openProviderProfile(provider, true)} scrollWheelZoom height={720} />
                 ) : (
-                  <div style={{ height: 380, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12 }}>
+                  <div style={{ height: 720, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ink3)', fontSize: 12, background: 'var(--bg3)', borderRadius: 12, border: '1px solid var(--border)' }}>
                     {provLoading ? 'Loading map…' : 'No providers match these filters yet.'}
                   </div>
                 )}
               </div>
             </div>
-          </div>
-
-          <div className={styles.providerResultsCard}>
-            <div className={styles.providerResultsHeader}>
-              <div>
-                <div className={styles.providerResultsTitle}>Available providers</div>
-                <div className={styles.providerResultsSub}>
-                  Compare providers on the right while the map and filters stay available on the left.
-                </div>
-              </div>
-            </div>
-
-            {provLoading ? (
-              <div style={{ textAlign: 'center', padding: 60 }}>
-                <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers…</div>
-              </div>
-            ) : (
-              <div className={styles.providerList}>
-                {filtered.map((provider, index) => (
-                  <div
-                    key={provider.id || index}
-                    className={styles.providerCard}
-                    onClick={() => openProviderProfile(provider)}
-                  >
-                    <div className={styles.providerCardIcon}>
-                      {provider.icon || '🔧'}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className={styles.providerCardTitle}>{provider.name}</div>
-                      <div className={styles.providerCardMeta}>
-                        {provider.type_label} · {provider.address} · ★{provider.rating} ({provider.reviews} reviews) · {provider.phone}
-                      </div>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {(provider.services || []).slice(0, 4).map((service) => (
-                          <span key={service} className="badge badge-gray">{service}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className={styles.providerCardActions}>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink3)' }}>{provider.distance || 'Montreal'}</span>
-                      <span className={`badge ${provider.is_open ? 'badge-green' : 'badge-amber'}`}>{provider.is_open ? '● Open' : '● Closed'}</span>
-                      <button
-                        className="btn btn-green"
-                        style={{ fontSize: 10, padding: '5px 12px' }}
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          openProviderProfile(provider, true)
-                        }}
-                      >
-                        Book
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                {filtered.length === 0 && (
-                  <div style={{ textAlign: 'center', color: 'var(--ink3)', padding: 60 }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-                    <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, marginBottom: 6 }}>No providers found</div>
-                    <button className="btn" style={{ marginTop: 12 }} onClick={() => { setSearchQ(''); setSearchCat('all') }}>Reset filters</button>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

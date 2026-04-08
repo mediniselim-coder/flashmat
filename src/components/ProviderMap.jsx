@@ -50,7 +50,7 @@ function MapViewportUpdater({ coordsList }) {
   return null
 }
 
-export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true }) {
+export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true, height = 380 }) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
 
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
     <div
       className="flashmat-provider-map"
       style={{
-        height: 380,
+        height,
         borderRadius: 12,
         overflow: 'hidden',
         border: '1px solid var(--border)',
