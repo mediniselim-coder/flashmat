@@ -310,7 +310,11 @@ export default function ProviderProfile() {
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,19,32,.38)' }} />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 980, margin: '0 auto' }}>
           <div style={{ width: 96, height: 96, borderRadius: 20, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, margin: '0 auto 18px', boxShadow: '0 10px 28px rgba(0,0,0,.22)' }}>
-            {provider.logo}
+            {provider.logoImageUrl ? (
+              <img src={provider.logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 20 }} />
+            ) : (
+              provider.logo
+            )}
           </div>
           <h1 style={{ fontFamily: 'var(--display)', fontSize: 38, fontWeight: 800, color: '#fff', marginBottom: 10, letterSpacing: '-0.04em' }}>{provider.name}</h1>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, flexWrap: 'wrap', fontSize: 13, color: 'rgba(255,255,255,.86)', marginBottom: 14 }}>
@@ -389,6 +393,31 @@ export default function ProviderProfile() {
             </div>
           </div>
 
+          {provider.staffMembers?.length > 0 && (
+            <div className="panel">
+              <div className="panel-hd"><div className="panel-title">Team</div></div>
+              <div className="panel-body">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+                  {provider.staffMembers.map((member) => (
+                    <div key={member.id || `${member.name}-${member.role}`} style={{ border: '1px solid var(--border)', borderRadius: 14, background: 'var(--bg3)', padding: 14 }}>
+                      <div style={{ width: 68, height: 68, borderRadius: 18, overflow: 'hidden', marginBottom: 12, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {member.photo_url ? (
+                          <img src={member.photo_url} alt={member.name || 'Staff member'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 22, color: 'var(--blue)' }}>
+                            {String(member.name || 'S').slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 16, color: 'var(--ink)' }}>{member.name || 'FlashMat staff'}</div>
+                      <div style={{ marginTop: 4, fontSize: 12, color: 'var(--ink2)', lineHeight: 1.6 }}>{member.role || 'Team member'}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {(provider.galleryPhotos?.length > 0 || provider.gallery?.length > 0) && (
             <div className="panel">
               <div className="panel-hd"><div className="panel-title">Gallery</div></div>
@@ -437,6 +466,18 @@ export default function ProviderProfile() {
                       {reviewSaving ? 'Saving...' : 'Save review'}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {!user && (
+                <div style={{ fontSize: 13, color: 'var(--ink3)' }}>
+                  Sign in with a client account to leave a review.
+                </div>
+              )}
+
+              {user && profile?.role !== 'client' && (
+                <div style={{ fontSize: 13, color: 'var(--ink3)' }}>
+                  Reviews can only be submitted by logged-in client accounts.
                 </div>
               )}
 

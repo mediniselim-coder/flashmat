@@ -377,6 +377,10 @@ export function normalizeProviderRecord(provider) {
     hours: hoursToDisplayMap(normalizedHours),
     coverPhoto: provider.coverPhoto || provider.cover_photo || provider.cover || meta.coverPhoto || '',
     galleryPhotos: provider.galleryPhotos || provider.gallery_photos || meta.galleryPhotos || [],
+    logoImageUrl: provider.logoImageUrl || provider.logo_image_url || meta.logoImageUrl || '',
+    staffMembers: Array.isArray(provider.staffMembers || meta.staffMembers)
+      ? (provider.staffMembers || meta.staffMembers)
+      : [],
   }
 }
 
@@ -407,6 +411,8 @@ export function mergeProviderProfile(provider) {
       editableHours: normalizeProviderHours(normalizedProvider.editableHours || normalizedProvider.hours),
       coverPhoto: normalizedProvider.coverPhoto || normalizedProvider.cover_photo || normalizedProvider.cover || '',
       galleryPhotos: normalizedProvider.galleryPhotos || normalizedProvider.gallery_photos || [],
+      logoImageUrl: normalizedProvider.logoImageUrl || normalizedProvider.logo_image_url || '',
+      staffMembers: Array.isArray(normalizedProvider.staffMembers) ? normalizedProvider.staffMembers : [],
       hours: normalizedProvider.hours && normalizedProvider.hours.Mon ? normalizedProvider.hours : hoursToDisplayMap(normalizeProviderHours(normalizedProvider.hours)),
     }
   }
@@ -420,6 +426,10 @@ export function mergeProviderProfile(provider) {
     services: mergedServices,
     coverPhoto: override.coverPhoto || normalizedProvider.coverPhoto || normalizedProvider.cover_photo || normalizedProvider.cover || '',
     galleryPhotos: override.galleryPhotos || normalizedProvider.galleryPhotos || normalizedProvider.gallery_photos || [],
+    logoImageUrl: override.logoImageUrl || normalizedProvider.logoImageUrl || normalizedProvider.logo_image_url || '',
+    staffMembers: Array.isArray(override.staffMembers || normalizedProvider.staffMembers)
+      ? (override.staffMembers || normalizedProvider.staffMembers)
+      : [],
     editableHours: mergedHours,
     hours: hoursToDisplayMap(mergedHours),
     type: override.type || normalizedProvider.type || mergedTypeMeta.type,

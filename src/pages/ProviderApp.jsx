@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
+import ProviderProfileModal from '../components/ProviderProfileModal'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
@@ -121,6 +122,7 @@ export default function ProviderApp() {
   const [pane, setPane]         = useState('p-dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
   const [tasks, setTasks]       = useState([
     { title: 'Vidange - Sarah K. (Honda Fit)', meta: 'ME Mecanique · Baie 2', time: '10h30', done: false },
     { title: 'Rotation + equilibrage - Marc D. (BMW)', meta: 'PN Pneus · Baie 1', time: '11h00', done: false },
@@ -148,6 +150,7 @@ export default function ProviderApp() {
   })
 
   const name = providerProfileForm.name || profile?.full_name || 'Garage Los Santos'
+  const providerLogo = profile?.avatar_url || ''
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
   const bookingsDoneCount = providerBookings.filter((booking) => booking.status === 'done').length
@@ -364,6 +367,12 @@ export default function ProviderApp() {
 
     const typeMeta = inferTypeMeta(providerProfileForm.services)
     const publicHours = hoursToDisplayMap(providerProfileForm.editableHours)
+    const currentMerged = mergeProviderProfile({
+      ...providerProfileForm,
+      name: providerProfileForm.name,
+      providerEmail: providerProfileForm.email,
+      logoImageUrl: profile?.avatar_url || '',
+    })
     const payload = {
       name: providerProfileForm.name,
       address: providerProfileForm.address,
@@ -375,6 +384,8 @@ export default function ProviderApp() {
       hours: publicHours,
       coverPhoto: providerProfileForm.coverPhoto,
       galleryPhotos: providerProfileForm.galleryPhotos,
+      logoImageUrl: currentMerged.logoImageUrl || profile?.avatar_url || '',
+      staffMembers: currentMerged.staffMembers || [],
       ...typeMeta,
     }
 
@@ -411,6 +422,8 @@ export default function ProviderApp() {
           hours: publicHours,
           coverPhoto: providerProfileForm.coverPhoto,
           galleryPhotos: providerProfileForm.galleryPhotos,
+          logoImageUrl: currentMerged.logoImageUrl || profile?.avatar_url || '',
+          staffMembers: currentMerged.staffMembers || [],
         }),
         services: providerProfileForm.services,
         rating: 5,
@@ -535,7 +548,7 @@ export default function ProviderApp() {
                   <div className={styles.profileMenuRole}>Provider Profile</div>
                 </div>
                 <button className={styles.profileMenuItem} onClick={goHome}><span><AppIcon code="AC" /></span><span>Home</span></button>
-                <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-dashboard')}><span><AppIcon code="TB" /></span><span>Dashboard</span></button>
+                <button className={styles.profileMenuItem} onClick={() => { setProfileMenuOpen(false); setProviderProfileModalOpen(true) }}><span><AppIcon code="AT" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-bookings')}><span><AppIcon code="RS" /></span><span>Bookings</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-marketplace')}><span><AppIcon code="MP" /></span><span>Marketplace</span></button>
                 <button className={styles.profileMenuItem} onClick={() => goFromProfileMenu('p-profile')}><span><AppIcon code="AT" /></span><span>Shop Profile</span></button>
@@ -545,7 +558,13 @@ export default function ProviderApp() {
               </div>
             )}
           <button type="button" className={styles.userChip} onClick={() => setProfileMenuOpen((open) => !open)}>
-            <div className={`${styles.avatar} ${styles.avatarBlue}`}>{name.slice(0,2).toUpperCase()}</div>
+            <div className={`${styles.avatar} ${styles.avatarBlue}`} style={{ overflow:'hidden' }}>
+              {providerLogo ? (
+                <img src={providerLogo} alt={name} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              ) : (
+                name.slice(0,2).toUpperCase()
+              )}
+            </div>
             <div><div className={styles.userName}>{name}</div><div className={styles.userRole}>provider · montreal</div></div>
             <span style={{ marginLeft: 'auto', color: 'var(--ink3)', fontSize: 11 }}>←</span>
           </button>
@@ -1006,6 +1025,15 @@ export default function ProviderApp() {
           ))}
         </nav>
       </div>
+
+      {providerProfileModalOpen && (
+        <ProviderProfileModal
+          onClose={() => setProviderProfileModalOpen(false)}
+          onSaved={() => {
+            void fetchProfile(user?.id)
+          }}
+        />
+      )}
 
       {pane !== 'p-profile' && <FlashAI portal="provider" userName={name} />}
     </div>

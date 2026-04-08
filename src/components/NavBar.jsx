@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './LoginModal'
 import ClientProfileModal from './ClientProfileModal'
+import ProviderProfileModal from './ProviderProfileModal'
 
 const PRIMARY_ITEMS = [
   {
@@ -119,6 +120,7 @@ export default function NavBar({ activePage }) {
   const [loginOpen, setLoginOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
+  const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -317,17 +319,19 @@ export default function NavBar({ activePage }) {
                           <div style={styles.profileTitle}>{displayName}</div>
                           <div style={styles.profileSubtitle}>{isProvider ? 'Profil fournisseur' : 'Profil client'}</div>
                         </div>
-                        {!isProvider && (
-                          <button
-                            type="button"
-                            onClick={() => { setProfileOpen(false); setClientProfileModalOpen(true) }}
-                            style={styles.profileSettingsButton}
-                            aria-label="Edit profile"
-                            title="Edit profile"
-                          >
-                            <SettingsIcon />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileOpen(false)
+                            if (isProvider) setProviderProfileModalOpen(true)
+                            else setClientProfileModalOpen(true)
+                          }}
+                          style={styles.profileSettingsButton}
+                          aria-label={isProvider ? 'Edit provider profile' : 'Edit profile'}
+                          title={isProvider ? 'Edit provider profile' : 'Edit profile'}
+                        >
+                          <SettingsIcon />
+                        </button>
                       </div>
                     </div>
                     <div style={{ padding: 10 }}>
@@ -417,6 +421,7 @@ export default function NavBar({ activePage }) {
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
       {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
+      {providerProfileModalOpen && isProvider && <ProviderProfileModal onClose={() => setProviderProfileModalOpen(false)} />}
     </>
   )
 }
