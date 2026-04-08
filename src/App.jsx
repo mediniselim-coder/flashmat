@@ -62,6 +62,7 @@ export default function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/services" element={<Services />} />
+          <Route path="/providers" element={<ServiceProviders />} />
           <Route path="/services/providers" element={<ServiceProviders />} />
           <Route path="/doctor" element={<AutoDoctor />} />
           <Route path="/urgence" element={<FlashFixUrgence />} />

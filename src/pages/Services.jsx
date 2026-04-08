@@ -33,7 +33,7 @@ export default function Services() {
   }
 
   function goToFilteredSearch(categoryId) {
-    navigate(`/services/providers?cat=${encodeURIComponent(categoryId)}`)
+    navigate(`/providers?cat=${encodeURIComponent(categoryId)}`)
   }
 
   const filtered = SERVICES.filter(s =>

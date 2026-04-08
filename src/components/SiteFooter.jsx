@@ -6,7 +6,7 @@ const BASE_COLUMNS = [
     links: [
       { label: 'Accueil', to: '/' },
       { label: 'Services', to: '/services' },
-      { label: 'Providers', to: '/services/providers' },
+      { label: 'Providers', to: '/providers' },
       { label: 'Marketplace', to: '/marketplace' },
     ],
   },
@@ -15,7 +15,7 @@ const BASE_COLUMNS = [
     links: [
       { label: 'Docteur Automobile', to: '/doctor' },
       { label: 'FlashFix Urgence', to: '/urgence' },
-      { label: 'Trouver un atelier', to: '/services/providers' },
+      { label: 'Trouver un atelier', to: '/providers' },
       { label: 'Profil fournisseur', to: '/auth?role=provider' },
     ],
   },

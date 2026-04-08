@@ -110,7 +110,7 @@ export default function ServiceProviders() {
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
-      <NavBar activePage="services" />
+      <NavBar activePage="providers" />
 
       <div className={styles.pad} style={{ padding: '18px 22px 20px', height: 'calc(100vh - 74px)', overflow: 'hidden' }}>
         <div className={styles.providerExplorerModern}>
@@ -118,7 +118,7 @@ export default function ServiceProviders() {
             <div className={styles.providerSearchHero}>
               <div className={styles.providerSidebarTitle}>Find a provider</div>
               <div className={styles.providerSidebarSub}>
-                Search mechanics, car wash, parts, or a neighborhood, then compare the best local providers before you book.
+                Search garages, mechanics, detailing, or a neighborhood, then compare trusted providers before you book.
               </div>
 
               <div className={styles.providerHeroSearchBar}>
@@ -127,7 +127,7 @@ export default function ServiceProviders() {
                 </span>
                 <input
                   className={`form-input ${styles.providerHeroInput}`}
-                  placeholder="Search mechanics, car wash, or location..."
+                  placeholder="Search a provider, service, or location..."
                   value={searchQ}
                   onChange={(event) => setSearchQ(event.target.value)}
                 />
@@ -179,7 +179,7 @@ export default function ServiceProviders() {
                       Showing {provLoading ? 'providers...' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''}`}
                     </div>
                     <div className={styles.providerResultsSubModern}>
-                      Refine by category, compare ratings, then open a profile or book directly.
+                      Compare providers, open profiles, and book without leaving FlashMat.
                     </div>
                   </div>
 
@@ -228,9 +228,9 @@ export default function ServiceProviders() {
                         </div>
 
                         <div className={styles.providerCardRatingRow}>
-                          <span className={styles.providerStars}>★★★★★</span>
+                          <span className={styles.providerStars}>5.0 rating</span>
                           <span>{getProviderDistance(index, provider)}</span>
-                          <span>•</span>
+                          <span>|</span>
                           <span>{provider.address}</span>
                         </div>
 
