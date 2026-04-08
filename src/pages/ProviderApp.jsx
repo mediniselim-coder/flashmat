@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { supabase } from '../lib/supabase'
@@ -23,6 +23,44 @@ const NAV = [
   { id: 'p-promos',      icon: 'PM', label: 'Promotions' },
   { id: 'p-profile',     icon: 'AT', label: 'Shop Profile' },
 ]
+
+const PROVIDER_PANE_PATHS = {
+  'p-dashboard': '/app/provider/dashboard',
+  'p-tasks': '/app/provider/tasks',
+  'p-bookings': '/app/provider/bookings',
+  'p-schedule': '/app/provider/schedule',
+  'p-clients': '/app/provider/clients',
+  'p-services': '/app/provider/services',
+  'p-marketplace': '/app/provider/marketplace',
+  'p-promos': '/app/provider/promotions',
+  'p-profile': '/app/provider/profile',
+}
+
+const VALID_PROVIDER_PANES = new Set(Object.keys(PROVIDER_PANE_PATHS))
+const VALID_PROVIDER_SEGMENTS = new Set(['dashboard', 'tasks', 'bookings', 'schedule', 'clients', 'services', 'marketplace', 'promotions', 'profile'])
+
+function getProviderPaneFromPath(pathname) {
+  const cleanPath = pathname.replace(/\/+$/, '')
+  const segment = cleanPath.split('/')[3] || 'dashboard'
+
+  const normalized = {
+    dashboard: 'p-dashboard',
+    tasks: 'p-tasks',
+    bookings: 'p-bookings',
+    schedule: 'p-schedule',
+    clients: 'p-clients',
+    services: 'p-services',
+    marketplace: 'p-marketplace',
+    promotions: 'p-promos',
+    profile: 'p-profile',
+  }[segment]
+
+  return normalized && VALID_PROVIDER_PANES.has(normalized) ? normalized : 'p-dashboard'
+}
+
+function getProviderPathSegment(pathname) {
+  return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
+}
 
 const SERVICE_TYPE_ORDER = ['mechanic', 'wash', 'tire', 'body', 'glass', 'tow', 'parts', 'parking', 'tuning']
 const PROVIDER_SERVICE_TYPE_OPTIONS = SERVICE_TYPE_ORDER.map((type) => ({
@@ -127,8 +165,8 @@ export default function ProviderApp() {
   const { profile, user, fetchProfile, signOut } = useAuth()
   const { toast }            = useToast()
   const navigate             = useNavigate()
+  const location             = useLocation()
 
-  const [pane, setPane]         = useState('p-dashboard')
   const [sidebarOpen, setSidebar] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
@@ -193,12 +231,24 @@ export default function ProviderApp() {
     label: booking.statusLabel,
     done: booking.status === 'done',
   }))
-  function go(id) { setPane(id); setSidebar(false) }
+  useEffect(() => {
+    if (location.pathname.startsWith('/app/provider') && rawPaneSegment !== 'provider' && !VALID_PROVIDER_SEGMENTS.has(rawPaneSegment)) {
+      navigate(PROVIDER_PANE_PATHS['p-dashboard'], { replace: true })
+    }
+  }, [location.pathname, navigate, rawPaneSegment])
+
+  function go(id, options = {}) {
+    const nextPath = PROVIDER_PANE_PATHS[id] || PROVIDER_PANE_PATHS['p-dashboard']
+    setSidebar(false)
+    navigate(nextPath, options)
+  }
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
 
   const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
+  const rawPaneSegment = getProviderPathSegment(location.pathname)
+  const pane = getProviderPaneFromPath(location.pathname)
   const selectedServiceTypeSet = new Set(providerProfileForm.serviceTypes || [])
   const availableServiceGroups = PROVIDER_SERVICE_TYPE_OPTIONS.filter((group) => selectedServiceTypeSet.has(group.id))
   const selectedServiceTotal = providerProfileForm.services.length
