@@ -15,6 +15,8 @@ import FlashFixUrgence from "./pages/FlashFixUrgence"
 import PublicMarketplace from "./pages/PublicMarketplace"
 import VehicleDetails from "./pages/VehicleDetails"
 import PublicVehicleListing from "./pages/PublicVehicleListing"
+import Community from "./pages/Community"
+import Pricing from "./pages/Pricing"
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -67,6 +69,8 @@ export default function App() {
           <Route path="/doctor" element={<AutoDoctor />} />
           <Route path="/urgence" element={<FlashFixUrgence />} />
           <Route path="/marketplace" element={<PublicMarketplace />} />
+          <Route path="/community" element={<Community />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/marketplace/vehicles/:listingId" element={<PublicVehicleListing />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />

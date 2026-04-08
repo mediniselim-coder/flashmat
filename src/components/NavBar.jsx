@@ -88,8 +88,8 @@ const MENU_SECTIONS = [
   { label: 'Services', to: '/services' },
   { label: 'Providers', to: '/providers' },
   { label: 'Shop', to: '/marketplace' },
-  { label: 'Community', to: '/' },
-  { label: 'Pricing', to: '/services' },
+  { label: 'Community', to: '/community' },
+  { label: 'Pricing', to: '/pricing' },
   { label: 'Contact', to: '/' },
 ]
 
@@ -107,6 +107,8 @@ const SITE_SEARCH_ENTRIES = [
   { label: 'Docteur Automobile', section: 'Diagnostic', to: '/doctor', keywords: ['diagnostic', 'obd', 'code', 'symptome', 'panne'] },
   { label: 'FlashFix Urgence', section: 'Urgence', to: '/urgence', keywords: ['urgence', 'panne', 'rapidement', 'flashfix'] },
   { label: 'Marketplace', section: 'Marketplace', to: '/marketplace', keywords: ['pieces', 'annonces', 'offres', 'shop'] },
+  { label: 'Community', section: 'Community', to: '/community', keywords: ['community', 'forum', 'guides', 'stories', 'events'] },
+  { label: 'Pricing', section: 'Pricing', to: '/pricing', keywords: ['pricing', 'plans', 'subscription', 'provider plans', 'tarifs'] },
   { label: 'Marketplace client', section: 'Marketplace', to: '/app/marketplace', keywords: ['client', 'annonces', 'pieces'] },
   { label: 'Connexion', section: 'Compte', to: '/auth', keywords: ['login', 'signup', 'compte', 'auth'] },
   { label: 'Espace client', section: 'Compte', to: '/app/client', keywords: ['client', 'dashboard', 'reservations', 'vehicules'] },
