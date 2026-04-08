@@ -19,11 +19,31 @@ alter table public.vehicles add column if not exists image_url text;
 alter table public.vehicles add column if not exists photo_url text;
 alter table public.vehicles add column if not exists updated_at timestamp with time zone default now();
 
+-- 2B. Provider reviews: add dedicated customer review storage
+create table if not exists public.provider_reviews (
+  id                uuid default gen_random_uuid() primary key,
+  provider_id       uuid not null references public.providers(id) on delete cascade,
+  client_id         uuid not null references public.profiles(id) on delete cascade,
+  client_name       text not null,
+  client_avatar_url text,
+  rating            integer not null check (rating between 1 and 5),
+  comment           text,
+  created_at        timestamp with time zone default now(),
+  updated_at        timestamp with time zone default now(),
+  unique (provider_id, client_id)
+);
+
+alter table public.provider_reviews add column if not exists client_avatar_url text;
+alter table public.provider_reviews add column if not exists updated_at timestamp with time zone default now();
+alter table public.provider_reviews enable row level security;
+
 -- 3. Helpful indexes
 create index if not exists idx_profiles_role on public.profiles(role);
 create index if not exists idx_vehicles_owner_id on public.vehicles(owner_id);
 create index if not exists idx_vehicles_vin on public.vehicles(vin) where vin is not null;
 create index if not exists idx_vehicles_serial_number on public.vehicles(serial_number) where serial_number is not null;
+create index if not exists idx_provider_reviews_provider_id on public.provider_reviews(provider_id);
+create index if not exists idx_provider_reviews_client_id on public.provider_reviews(client_id);
 
 -- 4. Backfill profile details from auth metadata where available
 update public.profiles as p
@@ -108,6 +128,40 @@ on public.vehicles
 for delete
 using (auth.uid() = owner_id);
 
+drop policy if exists "provider_reviews_read" on public.provider_reviews;
+drop policy if exists "provider_reviews_insert_own" on public.provider_reviews;
+drop policy if exists "provider_reviews_update_own" on public.provider_reviews;
+drop policy if exists "provider_reviews_delete_own" on public.provider_reviews;
+
+create policy "provider_reviews_read"
+on public.provider_reviews
+for select
+using (true);
+
+create policy "provider_reviews_insert_own"
+on public.provider_reviews
+for insert
+with check (
+  auth.uid() = client_id
+  and exists (
+    select 1
+    from public.profiles
+    where public.profiles.id = auth.uid()
+      and public.profiles.role = 'client'
+  )
+);
+
+create policy "provider_reviews_update_own"
+on public.provider_reviews
+for update
+using (auth.uid() = client_id)
+with check (auth.uid() = client_id);
+
+create policy "provider_reviews_delete_own"
+on public.provider_reviews
+for delete
+using (auth.uid() = client_id);
+
 -- 6. Keep updated_at fresh automatically
 create or replace function public.set_updated_at()
 returns trigger
@@ -128,6 +182,43 @@ drop trigger if exists vehicles_set_updated_at on public.vehicles;
 create trigger vehicles_set_updated_at
 before update on public.vehicles
 for each row execute function public.set_updated_at();
+
+create or replace function public.refresh_provider_review_stats()
+returns trigger
+language plpgsql
+as $$
+declare
+  target_provider_id uuid;
+begin
+  target_provider_id := coalesce(new.provider_id, old.provider_id);
+
+  update public.providers
+  set
+    rating = coalesce((
+      select round(avg(rating)::numeric, 1)
+      from public.provider_reviews
+      where provider_id = target_provider_id
+    ), 0),
+    reviews = (
+      select count(*)
+      from public.provider_reviews
+      where provider_id = target_provider_id
+    )
+  where id = target_provider_id;
+
+  return coalesce(new, old);
+end;
+$$;
+
+drop trigger if exists provider_reviews_set_updated_at on public.provider_reviews;
+create trigger provider_reviews_set_updated_at
+before update on public.provider_reviews
+for each row execute function public.set_updated_at();
+
+drop trigger if exists provider_reviews_refresh_provider_stats on public.provider_reviews;
+create trigger provider_reviews_refresh_provider_stats
+after insert or update or delete on public.provider_reviews
+for each row execute function public.refresh_provider_review_stats();
 
 -- 7. Allow a signed-in user to delete their own account safely
 create or replace function public.delete_my_account()

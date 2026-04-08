@@ -53,6 +53,20 @@ create table public.providers (
   created_at  timestamp with time zone default now()
 );
 
+-- 3B. TABLE PROVIDER_REVIEWS (avis clients sur les fournisseurs)
+create table public.provider_reviews (
+  id                uuid default gen_random_uuid() primary key,
+  provider_id       uuid not null references public.providers(id) on delete cascade,
+  client_id         uuid not null references public.profiles(id) on delete cascade,
+  client_name       text not null,
+  client_avatar_url text,
+  rating            integer not null check (rating between 1 and 5),
+  comment           text,
+  created_at        timestamp with time zone default now(),
+  updated_at        timestamp with time zone default now(),
+  unique (provider_id, client_id)
+);
+
 -- 4. TABLE BOOKINGS (réservations)
 create table public.bookings (
   id           uuid default gen_random_uuid() primary key,
@@ -102,6 +116,7 @@ create table public.marketplace (
 alter table public.profiles      enable row level security;
 alter table public.vehicles      enable row level security;
 alter table public.providers     enable row level security;
+alter table public.provider_reviews enable row level security;
 alter table public.bookings      enable row level security;
 alter table public.notifications enable row level security;
 alter table public.marketplace   enable row level security;
@@ -130,6 +145,36 @@ create policy "vehicles_delete_own" on public.vehicles for delete using (auth.ui
 -- Providers: publics en lecture, propriétaire en écriture
 create policy "providers_read"  on public.providers for select using (true);
 create policy "providers_write" on public.providers for all  using (auth.uid() = id);
+
+-- Provider reviews: publics en lecture, clients authentifiÃ©s en gÃ©rance de leurs avis
+create policy "provider_reviews_read"
+on public.provider_reviews
+for select
+using (true);
+
+create policy "provider_reviews_insert_own"
+on public.provider_reviews
+for insert
+with check (
+  auth.uid() = client_id
+  and exists (
+    select 1
+    from public.profiles
+    where public.profiles.id = auth.uid()
+      and public.profiles.role = 'client'
+  )
+);
+
+create policy "provider_reviews_update_own"
+on public.provider_reviews
+for update
+using (auth.uid() = client_id)
+with check (auth.uid() = client_id);
+
+create policy "provider_reviews_delete_own"
+on public.provider_reviews
+for delete
+using (auth.uid() = client_id);
 
 -- Bookings: client ou fournisseur concerné
 create policy "bookings_client"   on public.bookings for all using (auth.uid() = client_id);
@@ -162,6 +207,54 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ============================================================
+-- REVIEWS AGGREGATION
+-- ============================================================
+create or replace function public.refresh_provider_review_stats()
+returns trigger
+language plpgsql
+as $$
+declare
+  target_provider_id uuid;
+begin
+  target_provider_id := coalesce(new.provider_id, old.provider_id);
+
+  update public.providers
+  set
+    rating = coalesce((
+      select round(avg(rating)::numeric, 1)
+      from public.provider_reviews
+      where provider_id = target_provider_id
+    ), 0),
+    reviews = (
+      select count(*)
+      from public.provider_reviews
+      where provider_id = target_provider_id
+    )
+  where id = target_provider_id;
+
+  return coalesce(new, old);
+end;
+$$;
+
+create or replace function public.set_review_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger provider_reviews_set_updated_at
+before update on public.provider_reviews
+for each row execute function public.set_review_updated_at();
+
+create trigger provider_reviews_refresh_provider_stats
+after insert or update or delete on public.provider_reviews
+for each row execute function public.refresh_provider_review_stats();
 
 -- ============================================================
 -- SELF-SERVICE ACCOUNT DELETION

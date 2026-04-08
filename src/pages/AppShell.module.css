@@ -349,7 +349,9 @@
   font-size: 12px;
   color: var(--ink2);
   line-height: 1.6;
-  max-width: 52ch;
+  max-width: none;
+  margin-top: 14px;
+  white-space: nowrap;
 }
 
 .providerExplorerModern {
@@ -429,6 +431,52 @@
   flex-direction: column;
   gap: 8px;
   min-height: 0;
+}
+
+.providerFilterSection {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.providerFilterSectionTitle {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin: 0 6px 8px;
+}
+
+.providerRatingFilters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.providerRatingFilterButton {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 11px;
+  padding: 9px 11px;
+  color: var(--ink2);
+  text-align: left;
+  cursor: pointer;
+  transition: all .18s ease;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.providerRatingFilterButton:hover {
+  background: var(--bg3);
+  color: var(--ink);
+}
+
+.providerRatingFilterButtonActive {
+  background: rgba(59,159,216,.1);
+  border-color: rgba(59,159,216,.16);
+  color: var(--blue);
 }
 
 .providerFilterTitle {
@@ -777,6 +825,10 @@
 @media (max-width: 768px) {
   .providerSidebarTitle {
     font-size: 30px;
+  }
+
+  .providerSidebarSub {
+    white-space: normal;
   }
 
   .providerFinderBody {

@@ -61,6 +61,7 @@ export default function ServiceProviders() {
   const [searchQ, setSearchQ] = useState('')
   const [searchCat, setSearchCat] = useState(params.get('cat') || 'all')
   const [sortBy, setSortBy] = useState('recommended')
+  const [minRating, setMinRating] = useState(0)
 
   useEffect(() => {
     setSearchCat(params.get('cat') || 'all')
@@ -97,16 +98,18 @@ export default function ServiceProviders() {
         || provider.type_label?.toLowerCase().includes(q)
         || provider.address?.toLowerCase().includes(q)
         || provider.services?.some((service) => service.toLowerCase().includes(q))
+      const matchRating = Number(provider.rating || 0) >= minRating
 
-      return matchCat && matchQ
+      return matchCat && matchQ && matchRating
     })
 
     return [...visible].sort((left, right) => {
       if (sortBy === 'rating') return (right.rating || 0) - (left.rating || 0)
+      if (sortBy === 'reviews') return (right.reviews || 0) - (left.reviews || 0)
       if (sortBy === 'name') return String(left.name || '').localeCompare(String(right.name || ''))
       return (right.rating || 0) - (left.rating || 0)
     })
-  }, [providers, searchCat, searchQ, sortBy])
+  }, [providers, searchCat, searchQ, sortBy, minRating])
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
@@ -118,7 +121,7 @@ export default function ServiceProviders() {
             <div className={styles.providerSearchHero}>
               <div className={styles.providerSidebarTitle}>Find a provider</div>
               <div className={styles.providerSidebarSub}>
-                Search garages, mechanics, detailing, or a neighborhood, then compare trusted providers before you book.
+                Search garages, mechanics, detailing, or a neighborhood to compare trusted providers before you book.
               </div>
 
               <div className={styles.providerHeroSearchBar}>
@@ -170,6 +173,21 @@ export default function ServiceProviders() {
                   </span>
                   <span>All services</span>
                 </button>
+
+                <div className={styles.providerFilterSection}>
+                  <div className={styles.providerFilterSectionTitle}>Reviews</div>
+                  <div className={styles.providerRatingFilters}>
+                    {[0, 4, 4.5].map((value) => (
+                      <button
+                        key={value}
+                        className={`${styles.providerRatingFilterButton} ${minRating === value ? styles.providerRatingFilterButtonActive : ''}`}
+                        onClick={() => setMinRating(value)}
+                      >
+                        {value === 0 ? 'All ratings' : `${value}+ stars`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </aside>
 
               <section className={styles.providerListingPane}>
@@ -192,6 +210,7 @@ export default function ServiceProviders() {
                     >
                       <option value="recommended">Recommended</option>
                       <option value="rating">Top rated</option>
+                      <option value="reviews">Most reviewed</option>
                       <option value="name">Name</option>
                     </select>
                   </label>
@@ -228,10 +247,12 @@ export default function ServiceProviders() {
                         </div>
 
                         <div className={styles.providerCardRatingRow}>
-                          <span className={styles.providerStars}>5.0 rating</span>
+                          <span className={styles.providerStars}>{Number(provider.rating || 0).toFixed(1)} stars</span>
                           <span>{getProviderDistance(index, provider)}</span>
                           <span>|</span>
                           <span>{provider.address}</span>
+                          <span>|</span>
+                          <span>{provider.reviews || 0} reviews</span>
                         </div>
 
                         <div className={styles.providerCardServices}>
