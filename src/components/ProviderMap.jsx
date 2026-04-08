@@ -13,6 +13,22 @@ L.Icon.Default.mergeOptions({
 
 const DEFAULT_CENTER = [45.5017, -73.5673]
 
+function hashString(value) {
+  return String(value || '').split('').reduce((accumulator, char) => {
+    return ((accumulator << 5) - accumulator + char.charCodeAt(0)) | 0
+  }, 0)
+}
+
+function buildApproximateCoords(provider) {
+  const hash = Math.abs(hashString(`${provider?.name || ''}|${provider?.address || ''}`))
+  const latOffset = ((hash % 1000) / 1000 - 0.5) * 0.12
+  const lngOffset = ((((hash / 1000) | 0) % 1000) / 1000 - 0.5) * 0.18
+  return [
+    Number((DEFAULT_CENTER[0] + latOffset).toFixed(6)),
+    Number((DEFAULT_CENTER[1] + lngOffset).toFixed(6)),
+  ]
+}
+
 function MapViewportUpdater({ coordsList }) {
   const map = useMap()
 
@@ -49,9 +65,9 @@ export default function ProviderMap({ providers, onSelect }) {
 
           try {
             const geocoded = await geocodeAddress(provider?.address)
-            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : null }
+            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : buildApproximateCoords(provider) }
           } catch {
-            return { ...provider, mapCoords: null }
+            return { ...provider, mapCoords: buildApproximateCoords(provider) }
           }
         }),
       )

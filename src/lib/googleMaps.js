@@ -22,6 +22,24 @@ function buildScriptSrc(libraries = []) {
   return `https://maps.googleapis.com/maps/api/js?${params.toString()}`
 }
 
+function normalizeGeocodeQuery(address) {
+  const query = String(address || '').trim()
+  if (!query) return ''
+
+  const normalized = query.toLowerCase()
+  const hasCity = normalized.includes('montreal') || normalized.includes('montréal')
+  const hasProvince = normalized.includes('qc') || normalized.includes('quebec') || normalized.includes('québec')
+  const hasCountry = normalized.includes('canada')
+
+  const suffix = [
+    hasCity ? '' : 'Montreal',
+    hasProvince ? '' : 'QC',
+    hasCountry ? '' : 'Canada',
+  ].filter(Boolean).join(', ')
+
+  return suffix ? `${query}, ${suffix}` : query
+}
+
 export function hasValidCoords(coords) {
   return Array.isArray(coords)
     && coords.length === 2
@@ -117,7 +135,7 @@ function setCachedGeocode(addressKey, coords) {
 }
 
 export async function geocodeAddress(address) {
-  const query = String(address || '').trim()
+  const query = normalizeGeocodeQuery(address)
   if (!query) return null
 
   const addressKey = query.toLowerCase()
@@ -133,7 +151,7 @@ export async function geocodeAddress(address) {
         address: query,
         region: 'ca',
         componentRestrictions: {
-          country: ['CA', 'US'],
+          country: 'CA',
         },
       },
       (results, status) => {
