@@ -17,6 +17,7 @@ import VehicleDetails from "./pages/VehicleDetails"
 import PublicVehicleListing from "./pages/PublicVehicleListing"
 import Community from "./pages/Community"
 import Pricing from "./pages/Pricing"
+import Contact from "./pages/Contact"
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -71,6 +72,7 @@ export default function App() {
           <Route path="/marketplace" element={<PublicMarketplace />} />
           <Route path="/community" element={<Community />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/marketplace/vehicles/:listingId" element={<PublicVehicleListing />} />
           <Route path="/provider/:slug" element={<ProviderProfile />} />
           <Route path="/app/search" element={<Navigate to="/" replace />} />

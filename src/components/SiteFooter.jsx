@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 const BASE_COLUMNS = [
   {
@@ -39,8 +40,11 @@ const LEGAL_LINKS = [
 
 export default function SiteFooter({ portal = 'public' }) {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
+  const isLoggedIn = Boolean(user)
+  const accountRoute = profile?.role === 'provider' ? '/app/provider/dashboard' : '/app/client/dashboard'
 
-  const portalCard = getPortalCard(portal)
+  const portalCard = getPortalCard(portal, { isLoggedIn, accountRoute, role: profile?.role || 'client' })
   const columns = [
     ...BASE_COLUMNS,
     {
@@ -86,7 +90,19 @@ export default function SiteFooter({ portal = 'public' }) {
             <div style={styles.helpText}>Connexion client, espace fournisseur ou urgence routiere: on vous dirige au bon endroit sans friction.</div>
             <div style={styles.helpActions}>
               <button type="button" style={styles.primaryButton} onClick={() => navigate('/urgence')}>FlashFix Urgence</button>
-              <button type="button" style={styles.secondaryButton} onClick={openLogin}>Connexion</button>
+              <button
+                type="button"
+                style={styles.secondaryButton}
+                onClick={() => {
+                  if (isLoggedIn) {
+                    navigate(accountRoute)
+                    return
+                  }
+                  openLogin()
+                }}
+              >
+                {isLoggedIn ? 'Mon espace' : 'Connexion'}
+              </button>
             </div>
           </div>
         </div>
@@ -114,7 +130,16 @@ export default function SiteFooter({ portal = 'public' }) {
           </div>
           <div style={styles.bottomRight}>
             {LEGAL_LINKS.map((item) => (
-              <button key={item} type="button" style={styles.legalButton}>
+              <button
+                key={item}
+                type="button"
+                style={styles.legalButton}
+                onClick={() => {
+                  if (item === 'Contact') {
+                    navigate('/contact')
+                  }
+                }}
+              >
                 {item}
               </button>
             ))}
@@ -125,7 +150,7 @@ export default function SiteFooter({ portal = 'public' }) {
   )
 }
 
-function getPortalCard(portal) {
+function getPortalCard(portal, { isLoggedIn = false, accountRoute = '/app/client/dashboard', role = 'client' } = {}) {
   if (portal === 'client') {
     return {
       title: 'Espace client',
@@ -152,12 +177,19 @@ function getPortalCard(portal) {
 
   return {
     title: 'Compte FlashMat',
-    links: [
-      { label: 'Connexion client', action: 'login' },
-      { label: 'Devenir fournisseur', to: '/auth?role=provider' },
-      { label: 'Espace client', to: '/app/client' },
-      { label: 'Espace fournisseur', to: '/app/provider' },
-    ],
+    links: isLoggedIn
+      ? [
+          { label: 'Mon espace', to: accountRoute },
+          { label: role === 'provider' ? 'Profil atelier' : 'Mon profil', to: accountRoute },
+          { label: 'Providers', to: '/providers' },
+          { label: 'Marketplace', to: '/marketplace' },
+        ]
+      : [
+          { label: 'Connexion client', action: 'login' },
+          { label: 'Devenir fournisseur', to: '/auth?role=provider' },
+          { label: 'Espace client', to: '/app/client' },
+          { label: 'Espace fournisseur', to: '/app/provider' },
+        ],
   }
 }
 
