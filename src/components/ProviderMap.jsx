@@ -329,13 +329,13 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
         zIndex: 0,
         isolation: 'isolate',
         boxShadow: '0 22px 44px rgba(15, 30, 61, 0.10)',
-        background: '#eef4fb',
+        background: '#dfeaf6',
       }}
     >
       <style>{`
         .flashmat-provider-map .leaflet-container {
           z-index: 0 !important;
-          background: #eef4fb;
+          background: #dfeaf6;
           font-family: var(--font, Inter, sans-serif);
         }
         .flashmat-provider-map .leaflet-pane { z-index: 1 !important; }
@@ -383,7 +383,7 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
         }
       `}</style>
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
-        <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+        <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <MapViewportUpdater coordsList={coordsList} />
         {providersWithCoords.map((provider) => (
           <Marker key={provider.id || provider.name} position={provider.mapCoords} icon={createMarkerIcon(provider)}>
