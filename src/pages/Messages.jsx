@@ -374,15 +374,15 @@ const styles = {
     background: 'linear-gradient(180deg, #edf4ff 0%, #f7fbff 100%)',
   },
   main: {
-    paddingTop: 'var(--nav-h, 64px)',
+    marginTop: 'var(--nav-h, 64px)',
     height: 'calc(100vh - var(--nav-h, 64px))',
+    overflow: 'hidden',
   },
   shell: {
     width: '100%',
-    height: 'calc(100vh - var(--nav-h, 64px))',
+    height: '100%',
     display: 'grid',
     gridTemplateColumns: '360px minmax(0, 1fr) 300px',
-    borderTop: '1px solid rgba(120,171,218,0.16)',
     background: '#ffffff',
     overflow: 'hidden',
   },
