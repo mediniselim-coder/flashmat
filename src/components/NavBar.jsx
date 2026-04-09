@@ -7,6 +7,7 @@ import ClientProfileModal from './ClientProfileModal'
 import ProviderProfileModal from './ProviderProfileModal'
 import MessageCenterModal from './MessageCenterModal'
 import NotificationCenterModal from './NotificationCenterModal'
+import FloatingPanelBoundary from './FloatingPanelBoundary'
 
 const PRIMARY_ITEMS = [
   {
@@ -466,24 +467,33 @@ export default function NavBar({ activePage }) {
       {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
       {providerProfileModalOpen && isProvider && <ProviderProfileModal onClose={() => setProviderProfileModalOpen(false)} />}
       {messageCenterOpen && user && profile && (
-        <MessageCenterModal
-          open={messageCenterOpen}
+        <FloatingPanelBoundary
           onClose={() => {
             setMessageCenterOpen(false)
             setFocusedThreadId('')
           }}
-          user={user}
-          profile={profile}
-          initialThreadId={focusedThreadId}
-        />
+        >
+          <MessageCenterModal
+            open={messageCenterOpen}
+            onClose={() => {
+              setMessageCenterOpen(false)
+              setFocusedThreadId('')
+            }}
+            user={user}
+            profile={profile}
+            initialThreadId={focusedThreadId}
+          />
+        </FloatingPanelBoundary>
       )}
       {notificationCenterOpen && user && (
-        <NotificationCenterModal
-          open={notificationCenterOpen}
-          onClose={() => setNotificationCenterOpen(false)}
-          user={user}
-          onOpenMessages={(threadId) => openMessages(threadId)}
-        />
+        <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
+          <NotificationCenterModal
+            open={notificationCenterOpen}
+            onClose={() => setNotificationCenterOpen(false)}
+            user={user}
+            onOpenMessages={(threadId) => openMessages(threadId)}
+          />
+        </FloatingPanelBoundary>
       )}
     </>
   )

@@ -303,45 +303,65 @@ export async function fetchConversationThreads(userId, role) {
 export function subscribeToInbox(userId, { onNotificationsChange, onThreadsChange, onMessagesChange } = {}) {
   if (!userId) return () => {}
 
-  const channels = [
-    supabase
-      .channel(`flashmat-notifications-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => {
-        onNotificationsChange?.()
-      })
-      .subscribe(),
-    supabase
-      .channel(`flashmat-messages-recipient-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` }, () => {
+  const channels = []
+
+  function registerChannel(name, config, callback) {
+    const channel = supabase.channel(name)
+    channel.on('postgres_changes', config, () => {
+      try {
+        callback?.()
+      } catch (error) {
+        console.error(`Inbox callback failed for ${name}`, error)
+      }
+    })
+    channels.push(channel.subscribe())
+  }
+
+  try {
+    registerChannel(
+      `flashmat-notifications-${userId}`,
+      { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      onNotificationsChange,
+    )
+    registerChannel(
+      `flashmat-messages-recipient-${userId}`,
+      { event: '*', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` },
+      () => {
         onMessagesChange?.()
         onThreadsChange?.()
         onNotificationsChange?.()
-      })
-      .subscribe(),
-    supabase
-      .channel(`flashmat-messages-sender-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `sender_id=eq.${userId}` }, () => {
+      },
+    )
+    registerChannel(
+      `flashmat-messages-sender-${userId}`,
+      { event: '*', schema: 'public', table: 'messages', filter: `sender_id=eq.${userId}` },
+      () => {
         onMessagesChange?.()
         onThreadsChange?.()
-      })
-      .subscribe(),
-    supabase
-      .channel(`flashmat-threads-client-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_threads', filter: `client_id=eq.${userId}` }, () => {
-        onThreadsChange?.()
-      })
-      .subscribe(),
-    supabase
-      .channel(`flashmat-threads-provider-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'message_threads', filter: `provider_id=eq.${userId}` }, () => {
-        onThreadsChange?.()
-      })
-      .subscribe(),
-  ]
+      },
+    )
+    registerChannel(
+      `flashmat-threads-client-${userId}`,
+      { event: '*', schema: 'public', table: 'message_threads', filter: `client_id=eq.${userId}` },
+      onThreadsChange,
+    )
+    registerChannel(
+      `flashmat-threads-provider-${userId}`,
+      { event: '*', schema: 'public', table: 'message_threads', filter: `provider_id=eq.${userId}` },
+      onThreadsChange,
+    )
+  } catch (error) {
+    console.error('Unable to subscribe to inbox channels', error)
+    return () => {}
+  }
 
   return () => {
     channels.forEach((channel) => {
-      supabase.removeChannel(channel)
+      try {
+        supabase.removeChannel(channel)
+      } catch (error) {
+        console.error('Unable to remove inbox channel', error)
+      }
     })
   }
 }

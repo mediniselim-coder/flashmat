@@ -16,6 +16,7 @@ import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import WalletModal from '../components/WalletModal'
 import MessageCenterModal from '../components/MessageCenterModal'
 import NotificationCenterModal from '../components/NotificationCenterModal'
+import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings } from '../lib/bookings'
@@ -1087,24 +1088,33 @@ export default function ClientApp() {
       {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
       {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
       {messageCenterOpen && user && profile && (
-        <MessageCenterModal
-          open={messageCenterOpen}
+        <FloatingPanelBoundary
           onClose={() => {
             setMessageCenterOpen(false)
             setFocusedThreadId('')
           }}
-          user={user}
-          profile={profile}
-          initialThreadId={focusedThreadId}
-        />
+        >
+          <MessageCenterModal
+            open={messageCenterOpen}
+            onClose={() => {
+              setMessageCenterOpen(false)
+              setFocusedThreadId('')
+            }}
+            user={user}
+            profile={profile}
+            initialThreadId={focusedThreadId}
+          />
+        </FloatingPanelBoundary>
       )}
       {notificationCenterOpen && user && (
-        <NotificationCenterModal
-          open={notificationCenterOpen}
-          onClose={() => setNotificationCenterOpen(false)}
-          user={user}
-          onOpenMessages={(threadId) => openMessageCenter(threadId)}
-        />
+        <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
+          <NotificationCenterModal
+            open={notificationCenterOpen}
+            onClose={() => setNotificationCenterOpen(false)}
+            user={user}
+            onOpenMessages={(threadId) => openMessageCenter(threadId)}
+          />
+        </FloatingPanelBoundary>
       )}
     </div>
   )

@@ -9,6 +9,7 @@ import AppIcon from '../components/AppIcon'
 import ProviderProfileModal from '../components/ProviderProfileModal'
 import MessageCenterModal from '../components/MessageCenterModal'
 import NotificationCenterModal from '../components/NotificationCenterModal'
+import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
 import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
@@ -1278,24 +1279,33 @@ export default function ProviderApp() {
         />
       )}
       {messageCenterOpen && user && profile && (
-        <MessageCenterModal
-          open={messageCenterOpen}
+        <FloatingPanelBoundary
           onClose={() => {
             setMessageCenterOpen(false)
             setFocusedThreadId('')
           }}
-          user={user}
-          profile={profile}
-          initialThreadId={focusedThreadId}
-        />
+        >
+          <MessageCenterModal
+            open={messageCenterOpen}
+            onClose={() => {
+              setMessageCenterOpen(false)
+              setFocusedThreadId('')
+            }}
+            user={user}
+            profile={profile}
+            initialThreadId={focusedThreadId}
+          />
+        </FloatingPanelBoundary>
       )}
       {notificationCenterOpen && user && (
-        <NotificationCenterModal
-          open={notificationCenterOpen}
-          onClose={() => setNotificationCenterOpen(false)}
-          user={user}
-          onOpenMessages={(threadId) => openMessageCenter(threadId)}
-        />
+        <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
+          <NotificationCenterModal
+            open={notificationCenterOpen}
+            onClose={() => setNotificationCenterOpen(false)}
+            user={user}
+            onOpenMessages={(threadId) => openMessageCenter(threadId)}
+          />
+        </FloatingPanelBoundary>
       )}
 
       {pane !== 'p-profile' && pane !== 'p-services' && <FlashAI portal="provider" userName={name} />}
