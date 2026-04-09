@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useToast } from '../hooks/useToast'
+import { PROVIDER_SERVICE_OPTIONS } from '../lib/providerProfiles'
 
-const SERVICES = [
+const GENERIC_SERVICES = [
   { id: 'oil', icon: 'ME', label: 'Oil Change + Filter', price: '$75-$95' },
   { id: 'brakes', icon: 'ME', label: 'Brakes / Pads', price: '$150-$250' },
   { id: 'tires', icon: 'PN', label: 'Tire Rotation', price: '$45-$65' },
@@ -39,6 +40,22 @@ export default function BookingModal({
 
   const openProviders = providers.filter((entry) => entry.is_open === true || entry.is_open === 'true')
   const selectedVehicle = vehicles.find((entry) => String(entry.id) === vehicleId) || vehicles[0] || null
+
+  const activeProvider = provider || initialProvider
+  const displayServices = useMemo(() => {
+    const providerServices = activeProvider?.services
+    if (providerServices?.length > 0) {
+      return providerServices.map((label) => {
+        const opt = PROVIDER_SERVICE_OPTIONS.find(
+          (o) => o.label.toLowerCase() === String(label).toLowerCase()
+        )
+        return opt
+          ? { id: opt.id, label: opt.label, icon: opt.icon, price: 'Price to confirm' }
+          : { id: label, label: String(label), icon: 'SV', price: 'Price to confirm' }
+      })
+    }
+    return GENERIC_SERVICES
+  }, [activeProvider])
 
   async function confirm() {
     setLoading(true)
@@ -98,7 +115,7 @@ export default function BookingModal({
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--ink3)', marginBottom: 12 }}>Choose a service</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflowY: 'auto' }}>
-              {SERVICES.map((entry) => (
+              {displayServices.map((entry) => (
                 <div
                   key={entry.id}
                   onClick={() => setService(entry)}
