@@ -158,7 +158,7 @@ const styles = {
   },
   panel: {
     position: 'absolute',
-    top: 88,
+    top: 74,
     right: 20,
     width: 'min(360px, calc(100vw - 24px))',
     maxHeight: 'min(72vh, 640px)',
