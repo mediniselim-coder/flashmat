@@ -12,7 +12,7 @@ import NotificationCenterModal from '../components/NotificationCenterModal'
 import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, advanceFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, providerRespondToFlashFix, readFlashFixRequests } from '../lib/flashfix'
-import { createNotification, fetchProviderBookings, updateBookingStatus } from '../lib/bookings'
+import { createNotification, fetchProviderBookings, getBookingStatusMeta, updateBookingStatus } from '../lib/bookings'
 import { DEFAULT_PROVIDER_HOURS, PROVIDER_SERVICE_CATEGORY_ICONS, PROVIDER_SERVICE_CATEGORY_LABELS, PROVIDER_SERVICE_OPTIONS, hoursToDisplayMap, inferTypeMeta, mergeProviderProfile, saveProviderOverride, serializeProviderDescription } from '../lib/providerProfiles'
 import styles from './AppShell.module.css'
 
@@ -177,13 +177,7 @@ export default function ProviderApp() {
   const [messageCenterOpen, setMessageCenterOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
   const [focusedThreadId, setFocusedThreadId] = useState('')
-  const [tasks, setTasks]       = useState([
-    { title: 'Vidange - Sarah K. (Honda Fit)', meta: 'ME Mecanique · Baie 2', time: '10h30', done: false },
-    { title: 'Rotation + equilibrage - Marc D. (BMW)', meta: 'PN Pneus · Baie 1', time: '11h00', done: false },
-    { title: 'Commander liquide de frein - stock bas', meta: 'IV Inventaire', time: 'Avant 15h', done: false },
-    { title: 'Plaquettes - Alex M. (Honda Civic)', meta: 'OK Complete', time: '09h00', done: true },
-    { title: 'Ouverture + inspection matinale', meta: 'OK Fait a 8h05', time: '08h00', done: true },
-  ])
+  const [tasks, setTasks]       = useState([])
   const [promoSvc, setPromoSvc] = useState('Vidange')
   const [promoVal, setPromoVal] = useState('20%')
   const [clientQ, setClientQ]   = useState('')
@@ -302,6 +296,39 @@ export default function ProviderApp() {
 
     loadProviderBookings()
   }, [user?.id])
+
+  useEffect(() => {
+    if (providerBookings.length === 0) return
+    const today = new Date().toISOString().split('T')[0]
+    const bookingTasks = providerBookings
+      .filter(b => !b.date || b.date === today)
+      .map(b => ({
+        bookingId: b.id,
+        title: `${b.service} — ${b.clientName}${b.vehicleLabel && b.vehicleLabel !== 'Vehicle to confirm' ? ` (${b.vehicleLabel})` : ''}`,
+        meta: b.statusLabel,
+        time: b.timeSlot || b.date || 'To confirm',
+        done: b.status === 'done',
+      }))
+    setTasks(prev => {
+      const customTasks = prev.filter(t => !t.bookingId)
+      return [...bookingTasks, ...customTasks]
+    })
+  }, [providerBookings])
+
+  async function toggleTask(i) {
+    const task = tasks[i]
+    if (task.bookingId) {
+      const newStatus = task.done ? 'confirmed' : 'done'
+      try {
+        await updateBookingStatus(task.bookingId, newStatus)
+        const meta = getBookingStatusMeta(newStatus)
+        setProviderBookings(prev => prev.map(b =>
+          b.id === task.bookingId ? { ...b, status: newStatus, statusLabel: meta.label, statusClass: meta.cls } : b
+        ))
+      } catch { /* ignore */ }
+    }
+    setTasks(prev => prev.map((x, j) => j === i ? { ...x, done: !x.done } : x))
+  }
 
   useEffect(() => {
     async function loadProviderProfile() {
@@ -780,7 +807,7 @@ export default function ProviderApp() {
               {tasks.map((t,i) => (
                 <div key={i} style={{display:'flex',gap:9,alignItems:'flex-start',padding:9,background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:7,marginBottom:6,opacity:t.done?.55:1}}>
                   <div style={{width:16,height:16,borderRadius:4,border:`2px solid ${t.done?'var(--green)':'var(--ink3)'}`,background:t.done?'var(--green)':'transparent',flexShrink:0,marginTop:1,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:9,color:'#fff'}}
-                    onClick={() => setTasks(prev => prev.map((x,j) => j===i?{...x,done:!x.done}:x))}>
+                    onClick={() => toggleTask(i)}>
                     {t.done?'OK':''}
                   </div>
                   <div style={{flex:1}}>
