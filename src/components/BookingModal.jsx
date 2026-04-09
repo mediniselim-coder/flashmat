@@ -2,6 +2,17 @@ import { useState, useMemo } from 'react'
 import { useToast } from '../hooks/useToast'
 import { PROVIDER_SERVICE_OPTIONS } from '../lib/providerProfiles'
 
+const SERVICE_PRICES = {
+  'mechanic-general': '$80–$150', 'oil-change': '$75–$95', 'brakes': '$150–$250',
+  'suspension': '$120–$300', 'diagnostic': '$60–$120', 'ac': '$100–$150',
+  'tires': '$45–$65', 'alignment': '$80–$120', 'balancing': '$45–$80',
+  'flat-repair': '$25–$50', 'wash': '$35–$55', 'detailing': '$120–$280',
+  'ceramic': '$300–$800', 'body': '$200+', 'paint': '$300+', 'dent': '$80–$250',
+  'glass': '$80–$200', 'windshield': '$200–$500', 'towing': '$79+',
+  'roadside': '$59+', 'battery': '$39–$79', 'lockout': '$49–$99',
+  'parts': 'Selon pièce', 'parking': 'Selon abonnement', 'performance': '$150+',
+}
+
 const GENERIC_SERVICES = [
   { id: 'oil', icon: 'ME', label: 'Oil Change + Filter', price: '$75-$95' },
   { id: 'brakes', icon: 'ME', label: 'Brakes / Pads', price: '$150-$250' },
@@ -50,7 +61,7 @@ export default function BookingModal({
           (o) => o.label.toLowerCase() === String(label).toLowerCase()
         )
         return opt
-          ? { id: opt.id, label: opt.label, icon: opt.icon, price: 'Price to confirm' }
+          ? { id: opt.id, label: opt.label, icon: opt.icon, price: SERVICE_PRICES[opt.id] || 'Price to confirm' }
           : { id: label, label: String(label), icon: 'SV', price: 'Price to confirm' }
       })
     }
