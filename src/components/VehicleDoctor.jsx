@@ -982,6 +982,39 @@ function buildAdvancedDiagnosis(matches, normalized) {
   const topMatches = matches.slice(0, 3)
   if (!topMatches.length) return buildConservativeFallback()
 
+  const topIds = topMatches.map((entry) => entry.candidate.id)
+  const hasNoStart = topIds.includes('battery') || inputIncludesAny(normalized, ['demarre pas', 'ne demarre pas'])
+  const hasTireIssue = topIds.includes('tires') || inputIncludesAny(normalized, ['pneu', 'pneus', 'creve', 'crevee', 'crevaison', 'a plat'])
+  const hasEngineConcern = inputIncludesAny(normalized, ['bruit moteur', 'bruit au moteur', 'moteur', 'claque', 'cogne', 'grondement', 'bruit'])
+
+  if (hasNoStart && hasTireIssue && hasEngineConcern) {
+    return {
+      ...DEFAULT_CASE,
+      type: 'repair',
+      probableIssue: 'Plusieurs problemes critiques a traiter avant de reprendre la route',
+      confidence: 'Elevee',
+      urgency: 'Urgent - ne pas conduire',
+      estimate: 'Remorquage ou diagnostic prioritaire recommande',
+      duration: 'Evaluation immediate puis devis selon les problemes confirmes',
+      priceNote: 'Quand la voiture ne demarre pas, qu un pneu est creve et qu un bruit moteur est present, il faut verifier plusieurs systemes avant toute tentative de reprise de route.',
+      durationNote: 'Le garage ou le service mobile doit d abord securiser le vehicule, confirmer la cause du non-demarrage et verifier si le bruit moteur signale un dommage mecanique plus grave.',
+      searchCat: 'tow',
+      summary: 'Le symptome decrit combine un probleme de demarrage, un pneu creve et un bruit au moteur. FlashMat considere cela comme un cas prioritaire a traiter globalement, pas comme une seule panne isolee.',
+      guidanceTitle: 'Ce qu il faut faire maintenant',
+      guidanceItems: [
+        'Ne tentez pas de reprendre la route tant que le pneu et le bruit moteur ne sont pas verifies.',
+        'Expliquez clairement: la voiture ne demarre pas, un pneu est creve et un bruit moteur est present.',
+        'Demandez un controle prioritaire du demarrage, du pneu et du moteur avant toute reparation ciblee.',
+        'Si le vehicule est immobilise dans un endroit non securitaire, demandez un remorquage ou une intervention mobile.',
+      ],
+      matches: [
+        { name: 'Remorquage Elite 24/7', rating: '4.6', distance: 'Mobile', eta: '15-25 min', price: 'Prise en charge prioritaire', tags: ['Urgent', 'Remorquage', 'Disponible'] },
+        { name: 'Garage Mecanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd hui 13h10', price: 'Diagnostic multi-systemes', tags: ['Demarrage', 'Moteur', 'Prioritaire'] },
+        { name: 'Dube Pneu et Mecan.', rating: '4.3', distance: '2.1 km', eta: 'Aujourd hui 14h00', price: 'Controle pneu + mecanique', tags: ['Pneus', 'Mecanique', 'Disponible'] },
+      ],
+    }
+  }
+
   const names = topMatches.map((entry) => entry.candidate.probableIssue.toLowerCase())
   const first = topMatches[0].candidate
   const confidence = topMatches[0].score >= 10 ? 'Moyenne a elevee' : 'Moyenne'
