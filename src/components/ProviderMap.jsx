@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
+import 'leaflet.markercluster/dist/MarkerCluster.css'
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 import L from 'leaflet'
+import 'leaflet.markercluster'
 import { geocodeAddress, hasValidCoords } from '../lib/googleMaps'
 
 const DEFAULT_CENTER = [45.5017, -73.5673]
@@ -219,7 +222,7 @@ function MapViewportUpdater({ coordsList }) {
   return null
 }
 
-function ProviderPopupCard({ provider, onSelect }) {
+function ProviderPopupCard({ provider }) {
   const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
 
   return (
@@ -256,7 +259,9 @@ function ProviderPopupCard({ provider, onSelect }) {
       <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 14 }}>{provider.phone || 'Phone available on profile'}</div>
 
       <button
-        onClick={() => onSelect?.(provider)}
+        type="button"
+        className="flashmat-popup-cta"
+        data-provider-id={provider.id || provider.name}
         style={{
           width: '100%',
           border: 'none',
@@ -274,6 +279,76 @@ function ProviderPopupCard({ provider, onSelect }) {
       </button>
     </div>
   )
+}
+
+function ClusteredProviderMarkers({ providers, onSelect }) {
+  const map = useMap()
+
+  useEffect(() => {
+    const clusterGroup = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      spiderfyOnMaxZoom: true,
+      zoomToBoundsOnClick: true,
+      removeOutsideVisibleBounds: true,
+      maxClusterRadius: 46,
+      iconCreateFunction(cluster) {
+        const count = cluster.getChildCount()
+        return L.divIcon({
+          className: 'flashmat-provider-cluster',
+          html: `
+            <div style="
+              width:50px;
+              height:50px;
+              border-radius:25px;
+              background:radial-gradient(circle at 30% 30%, rgba(111,190,255,.96), rgba(37,99,235,.95) 58%, rgba(20,50,82,.98) 100%);
+              box-shadow:0 20px 34px rgba(20,50,82,.22), inset 0 0 0 1px rgba(255,255,255,.24);
+              color:#ffffff;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-family:var(--display);
+              font-size:16px;
+              font-weight:800;
+              letter-spacing:-0.03em;
+            ">${count}</div>
+          `,
+          iconSize: [50, 50],
+          iconAnchor: [25, 25],
+        })
+      },
+    })
+
+    providers.forEach((provider) => {
+      const marker = L.marker(provider.mapCoords, { icon: createMarkerIcon(provider) })
+      const popupMarkup = renderToStaticMarkup(<ProviderPopupCard provider={provider} />)
+
+      marker.bindPopup(popupMarkup, {
+        closeButton: true,
+        minWidth: 260,
+        maxWidth: 292,
+      })
+
+      marker.on('popupopen', (event) => {
+        const popupElement = event.popup?.getElement()
+        const button = popupElement?.querySelector('.flashmat-popup-cta')
+        if (!button) return
+
+        const handleClick = () => onSelect?.(provider)
+        button.addEventListener('click', handleClick, { once: true })
+      })
+
+      clusterGroup.addLayer(marker)
+    })
+
+    map.addLayer(clusterGroup)
+
+    return () => {
+      map.removeLayer(clusterGroup)
+      clusterGroup.clearLayers()
+    }
+  }, [map, onSelect, providers])
+
+  return null
 }
 
 export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true, height = 380 }) {
@@ -382,17 +457,15 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
           top: 10px !important;
           right: 10px !important;
         }
+        .flashmat-provider-map .leaflet-marker-icon.flashmat-provider-cluster {
+          background: transparent;
+          border: none;
+        }
       `}</style>
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
         <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <MapViewportUpdater coordsList={coordsList} />
-        {providersWithCoords.map((provider) => (
-          <Marker key={provider.id || provider.name} position={provider.mapCoords} icon={createMarkerIcon(provider)}>
-            <Popup>
-              <ProviderPopupCard provider={provider} onSelect={onSelect} />
-            </Popup>
-          </Marker>
-        ))}
+        <ClusteredProviderMarkers providers={providersWithCoords} onSelect={onSelect} />
       </MapContainer>
     </div>
   )
