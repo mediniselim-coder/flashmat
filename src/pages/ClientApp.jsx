@@ -28,14 +28,20 @@ const VEHICLE_RECORDS_STORAGE_KEY = 'flashmat-vehicle-records'
 
 const NAV = [
   { id: 'dashboard',     icon: 'TB', label: 'Dashboard' },
-  { id: 'bookings',      icon: 'RS', label: 'Bookings', badge: true },
-  { id: 'search',        icon: 'SV', label: 'Find a Service' },
   { id: 'vehicles',      icon: 'VH', label: 'My Vehicles' },
+  { id: 'bookings',      icon: 'RS', label: 'Bookings', badge: true },
   { id: 'maintenance',   icon: 'EN', label: 'Maintenance' },
+  { id: 'search',        icon: 'SV', label: 'Find a Service' },
   { id: 'marketplace',   icon: 'MP', label: 'Marketplace' },
   { id: 'flashscore',    icon: 'FS', label: 'FlashScore' },
   { id: 'notifications', icon: 'AL', label: 'Alerts', badge: true },
 ]
+
+const NAV_SECTIONS = {
+  core: ['dashboard', 'vehicles', 'bookings'],
+  tools: ['maintenance', 'search', 'marketplace'],
+  notifications: ['flashscore', 'notifications'],
+}
 
 const SEARCH_CATS = [
   ['all', 'All'],
@@ -562,7 +568,7 @@ export default function ClientApp() {
         <nav className={styles.sbNav}>
           <div className={styles.sbSection}>
             <div className={styles.sbLbl}>Core</div>
-            {NAV.slice(0,4).map(n => (
+            {NAV.filter((n) => NAV_SECTIONS.core.includes(n.id)).map(n => (
               <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
                 <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
               </button>
@@ -570,7 +576,15 @@ export default function ClientApp() {
           </div>
           <div className={styles.sbSection}>
             <div className={styles.sbLbl}>Tools</div>
-            {NAV.slice(4).map(n => (
+            {NAV.filter((n) => NAV_SECTIONS.tools.includes(n.id)).map(n => (
+              <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
+                <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.sbSection}>
+            <div className={styles.sbLbl}>Notifications</div>
+            {NAV.filter((n) => NAV_SECTIONS.notifications.includes(n.id)).map(n => (
               <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
                 <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
               </button>
