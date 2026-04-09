@@ -263,6 +263,20 @@ export default function ClientApp() {
 
     attachVehicleListings()
   }, [myVehicles.length, user?.id])
+
+  useEffect(() => {
+    if (myVehicles.length === 0) {
+      setSelectedMaintenanceVehicleId('')
+      return
+    }
+
+    setSelectedMaintenanceVehicleId((current) => (
+      myVehicles.some((vehicle) => String(vehicle.id) === String(current))
+        ? current
+        : String(myVehicles[0].id)
+    ))
+  }, [myVehicles])
+
   const { toast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -285,6 +299,7 @@ export default function ClientApp() {
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
+  const [selectedMaintenanceVehicleId, setSelectedMaintenanceVehicleId] = useState('')
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
@@ -509,39 +524,55 @@ export default function ClientApp() {
 
   const averageFlashScore = myVehicles.length ? Math.round(myVehicles.reduce((sum, v) => sum + Number(v.flash_score || 0), 0) / myVehicles.length) : 0
   const nextServiceLabel = myVehicles[0] ? 'Recommended soon' : 'Add a vehicle'
-  const maintenanceItems = myVehicles.slice(0, 4).map((v, i) => {
-    const suggestions = [
-      {
-        icon: 'VG',
-        title: 'Oil & fluids review',
-        meta: v.mileage ? `${v.mileage.toLocaleString?.() || v.mileage} km logged on ${v.make} ${v.model}` : `${v.make} ${v.model} ${v.year}`,
-        detail: 'Good moment to verify oil life, coolant, and brake fluid levels.',
-      },
-      {
-        icon: 'PN',
-        title: 'Tires and alignment check',
-        meta: `${v.make} ${v.model} ${v.year}`,
-        detail: 'Recommended before longer trips and after pothole-heavy weeks.',
-      },
-      {
-        icon: 'BT',
-        title: 'Battery and charging health',
-        meta: `${v.make} ${v.model} ${v.year}`,
-        detail: 'Useful seasonal check to avoid weak starts and voltage issues.',
-      },
-      {
-        icon: 'FR',
-        title: 'Brake inspection',
-        meta: `${v.make} ${v.model} ${v.year}`,
-        detail: 'Pads, rotors, and braking feel should be reviewed proactively.',
-      },
-    ]
-    return suggestions[i] || suggestions[0]
-  })
+  const selectedMaintenanceVehicle = myVehicles.find((vehicle) => String(vehicle.id) === String(selectedMaintenanceVehicleId)) || myVehicles[0] || null
+  const selectedMaintenanceVehicleLabel = selectedMaintenanceVehicle
+    ? `${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}${selectedMaintenanceVehicle.year ? ` ${selectedMaintenanceVehicle.year}` : ''}`
+    : ''
+  const selectedMaintenanceVehicleMeta = selectedMaintenanceVehicle
+    ? [
+        selectedMaintenanceVehicle.plate || null,
+        selectedMaintenanceVehicle.mileage ? `${Number(selectedMaintenanceVehicle.mileage).toLocaleString()} km` : null,
+        selectedMaintenanceVehicle.flash_score ? `${selectedMaintenanceVehicle.flash_score}% FlashScore` : null,
+      ].filter(Boolean).join(' • ')
+    : ''
+  const maintenanceItems = selectedMaintenanceVehicle
+    ? [
+        {
+          icon: 'VG',
+          title: 'Fluids and oil checkpoint',
+          meta: selectedMaintenanceVehicle.mileage
+            ? `${Number(selectedMaintenanceVehicle.mileage).toLocaleString()} km currently logged on ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}`
+            : selectedMaintenanceVehicleLabel,
+          detail: 'Review oil life, coolant condition, washer fluid, and brake fluid before the next appointment.',
+        },
+        {
+          icon: 'PN',
+          title: 'Tires, pressure, and alignment',
+          meta: selectedMaintenanceVehicleLabel,
+          detail: 'Recommended before long drives, after seasonal tire swaps, or when the car feels slightly off-center.',
+        },
+        {
+          icon: 'BT',
+          title: 'Battery and charging health',
+          meta: selectedMaintenanceVehicleLabel,
+          detail: 'A smart seasonal checkpoint to avoid weak starts, voltage drops, and accessory power issues.',
+        },
+        {
+          icon: 'FR',
+          title: 'Brake wear review',
+          meta: selectedMaintenanceVehicleLabel,
+          detail: 'Pads, rotors, and braking response should be checked proactively before noise or vibration shows up.',
+        },
+      ]
+    : []
   const vehicleServiceHistory = bookings
+    .filter((booking) => {
+      if (!selectedMaintenanceVehicle) return true
+      return String(booking.vehicle_id || booking.vehicle?.id || '') === String(selectedMaintenanceVehicle.id)
+    })
     .map((booking) => ({
       id: booking.id,
-      icon: 'RS',
+      icon: booking.service_icon || 'RS',
       title: booking.service,
       meta: `${booking.providerName} • ${booking.vehicleLabel}`,
       detail: `${booking.datetimeLabel} • ${booking.priceLabel}`,
@@ -912,36 +943,117 @@ export default function ClientApp() {
 
         {pane === 'maintenance' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Maintenance</div></div></div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>Maintenance</div>
+                <div className={styles.pageSub}>Choose a vehicle first, then review FlashMat suggestions and service history tailored to it.</div>
+              </div>
+            </div>
             <div className={styles.pad}>
+              <div className="panel" style={{ marginBottom: 18 }}>
+                <div className="panel-hd">
+                  <div>
+                    <div className="panel-title">Step 1 · Choose a vehicle</div>
+                    <div className={styles.muted}>FlashMat will focus maintenance guidance on the exact vehicle you want to review.</div>
+                  </div>
+                </div>
+                <div className="panel-body">
+                  {myVehicles.length > 0 ? (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                        {myVehicles.map((vehicle) => {
+                          const isSelected = String(vehicle.id) === String(selectedMaintenanceVehicle?.id || '')
+                          return (
+                            <button
+                              key={vehicle.id}
+                              type="button"
+                              onClick={() => setSelectedMaintenanceVehicleId(String(vehicle.id))}
+                              style={{
+                                textAlign: 'left',
+                                borderRadius: 16,
+                                border: `1px solid ${isSelected ? 'rgba(37,99,235,.32)' : 'var(--border)'}`,
+                                background: isSelected ? 'linear-gradient(180deg, rgba(59,130,246,.12), rgba(59,130,246,.04))' : 'var(--bg3)',
+                                padding: 16,
+                                display: 'grid',
+                                gap: 8,
+                                boxShadow: isSelected ? '0 12px 28px rgba(28, 76, 167, .12)' : 'none',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                                  <span style={{ width: 42, height: 42, borderRadius: 14, background: isSelected ? 'rgba(37,99,235,.12)' : 'rgba(37,99,235,.08)', color: 'var(--blue)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <AppIcon code="VH" size={20} />
+                                  </span>
+                                  <span>
+                                    <span style={{ display: 'block', fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.1 }}>
+                                      {vehicle.make} {vehicle.model}
+                                    </span>
+                                    <span style={{ display: 'block', fontSize: 13, color: 'var(--ink2)', marginTop: 4 }}>
+                                      {vehicle.year}{vehicle.plate ? ` • ${vehicle.plate}` : ''}
+                                    </span>
+                                  </span>
+                                </span>
+                                {isSelected ? <span className="badge badge-blue">Active</span> : null}
+                              </div>
+                              <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.55 }}>
+                                {vehicle.mileage ? `${Number(vehicle.mileage).toLocaleString()} km tracked` : 'Mileage not added yet'}{vehicle.flash_score ? ` • ${vehicle.flash_score}% FlashScore` : ''}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {selectedMaintenanceVehicle ? (
+                        <div style={{ marginTop: 14, padding: 16, borderRadius: 16, border: '1px solid rgba(37,99,235,.14)', background: 'linear-gradient(135deg, rgba(28,76,167,.06), rgba(59,130,246,.03))', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                          <div>
+                            <div style={{ fontFamily: 'var(--display)', fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{selectedMaintenanceVehicleLabel}</div>
+                            <div style={{ fontSize: 13, color: 'var(--ink2)', marginTop: 5 }}>{selectedMaintenanceVehicleMeta || 'Complete this vehicle profile to unlock more precise maintenance guidance.'}</div>
+                          </div>
+                          <button className="btn" onClick={() => goToVehicle(selectedMaintenanceVehicle.id)}>Open vehicle profile</button>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <div className={styles.historyEmpty}>
+                      <div style={{ color: 'var(--blue)', marginBottom: 10, display: 'flex', justifyContent: 'center' }}><AppIcon code="VH" size={26} /></div>
+                      <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 20, color: 'var(--ink)', marginBottom: 8 }}>Add a vehicle to begin</div>
+                      <div style={{ fontSize: 14, lineHeight: 1.7 }}>Maintenance is organized vehicle by vehicle so FlashMat can track recommendations and history accurately.</div>
+                      <button className="btn btn-blue" style={{ marginTop: 16 }} onClick={openAddVehicleModal}>Add vehicle</button>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className={styles.g2} style={{alignItems:'start'}}>
                 <div className="panel">
                   <div className="panel-hd">
                     <div>
-                      <div className="panel-title">Intelligent maintenance suggestions</div>
-                      <div className={styles.muted}>FlashMat builds recommendations from your garage, mileage, and recent activity.</div>
+                      <div className="panel-title">Step 2 · Intelligent maintenance suggestions</div>
+                      <div className={styles.muted}>
+                        {selectedMaintenanceVehicle
+                          ? `Recommendations tuned for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
+                          : 'FlashMat builds recommendations from your garage, mileage, and recent activity.'}
+                      </div>
                     </div>
                   </div>
                   <div className="panel-body">
-                    {myVehicles.length > 0 && (
-                      <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:14,padding:16,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
-                        <span style={{color:'var(--red)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
+                    {selectedMaintenanceVehicle && (
+                      <div style={{background:'linear-gradient(135deg, rgba(37,99,235,.08), rgba(37,99,235,.03))',border:'1px solid rgba(37,99,235,.18)',borderRadius:16,padding:16,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
+                        <span style={{color:'var(--blue)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
                         <div style={{flex:1}}>
-                          <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>Priority suggestion — {myVehicles[0].make} {myVehicles[0].model}</div>
-                          <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.55}}>Preventive maintenance is recommended this week based on your current vehicle profile.</div>
+                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:4}}>Priority suggestion for {selectedMaintenanceVehicle.make} {selectedMaintenanceVehicle.model}</div>
+                          <div style={{fontSize:13,color:'var(--ink2)',lineHeight:1.6}}>Preventive maintenance is recommended this week based on this vehicle profile, recent usage, and current FlashScore signals.</div>
                         </div>
-                        <button className="btn btn-green" onClick={() => openBooking()}>Book now</button>
+                        <button className="btn btn-blue" onClick={() => openBooking()}>Book now</button>
                       </div>
                     )}
                     {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle to unlock maintenance intelligence',meta:'FlashMat will personalize reminders per vehicle.',detail:'Mileage, model, and service activity help generate better recommendations.'}]).map(item => (
-                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:14,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
+                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:16,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
                         <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={item.icon} size={20} /></span>
                         <div style={{flex:1}}>
-                          <div style={{fontWeight:700,fontSize:14,color:'var(--ink)',marginBottom:4}}>{item.title}</div>
-                          <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{item.meta}</div>
-                          <div style={{fontSize:11,color:'var(--ink3)',lineHeight:1.6}}>{item.detail}</div>
+                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:5}}>{item.title}</div>
+                          <div style={{fontSize:13,color:'var(--ink2)',marginBottom:5}}>{item.meta}</div>
+                          <div style={{fontSize:12,color:'var(--ink3)',lineHeight:1.65}}>{item.detail}</div>
                         </div>
-                        <button className="btn" style={{fontSize:11}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add vehicle'}</button>
+                        <button className="btn" style={{fontSize:12}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add vehicle'}</button>
                       </div>
                     ))}
                   </div>
@@ -949,23 +1061,27 @@ export default function ClientApp() {
                 <div className="panel">
                   <div className="panel-hd">
                     <div>
-                      <div className="panel-title">Service history</div>
-                      <div className={styles.muted}>Track completed and upcoming work across the vehicles in your client profile.</div>
+                      <div className="panel-title">Step 3 · Service history</div>
+                      <div className={styles.muted}>
+                        {selectedMaintenanceVehicle
+                          ? `Everything already booked or completed for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
+                          : 'Track completed and upcoming work across the vehicles in your client profile.'}
+                      </div>
                     </div>
                   </div>
                   <div className="panel-body">
                     {vehicleServiceHistory.length > 0 ? (
                       <div style={{display:'grid',gap:10}}>
                         {vehicleServiceHistory.map((entry) => (
-                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:14,display:'flex',gap:12,alignItems:'flex-start'}}>
+                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:16,display:'flex',gap:12,alignItems:'flex-start'}}>
                             <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={entry.icon} size={18} /></span>
                             <div style={{flex:1}}>
                               <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',marginBottom:4}}>
-                                <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>{entry.title}</div>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:17,color:'var(--ink)'}}>{entry.title}</div>
                                 <span className={`badge ${entry.statusClass}`}>{entry.statusLabel}</span>
                               </div>
-                              <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
-                              <div style={{fontSize:11,color:'var(--ink3)'}}>{entry.detail}</div>
+                              <div style={{fontSize:13,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
+                              <div style={{fontSize:12,color:'var(--ink3)'}}>{entry.detail}</div>
                             </div>
                           </div>
                         ))}
@@ -973,8 +1089,12 @@ export default function ClientApp() {
                     ) : (
                       <div className={styles.historyEmpty}>
                         <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="RS" size={24} /></div>
-                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
-                        <div style={{fontSize:13,lineHeight:1.7}}>Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.</div>
+                        <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:20,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
+                        <div style={{fontSize:14,lineHeight:1.7}}>
+                          {selectedMaintenanceVehicle
+                            ? `Your booked services for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model} will appear here once you schedule maintenance or roadside work through FlashMat.`
+                            : 'Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.'}
+                        </div>
                       </div>
                     )}
                   </div>
