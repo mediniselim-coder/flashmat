@@ -314,25 +314,34 @@ export default function NavBar({ activePage }) {
           </div>
 
           <div style={styles.rightGroup}>
+            <button
+              type="button"
+              onClick={() => navigateTo('/urgence')}
+              style={
+                activePage === 'urgence'
+                  ? { ...styles.urgentButtonActive, padding: isCompact ? '8px 13px' : '9px 15px' }
+                  : { ...styles.urgentButton, padding: isCompact ? '8px 13px' : '9px 15px' }
+              }
+            >
+              {isMobile ? 'Urgence' : 'FlashFix Urgence'}
+            </button>
+
             {user && profile ? (
               <>
-                <HeaderUtilityButton
-                  label="Messages"
-                  icon={<MessageIcon />}
-                  badge={unreadMessages}
-                  onClick={() => openMessages()}
-                />
                 <HeaderUtilityButton
                   label="Notifications"
                   icon={<BellIcon />}
                   badge={unreadNotifications}
                   onClick={openNotifications}
                 />
+                <HeaderUtilityButton
+                  label="Messages"
+                  icon={<MessageIcon />}
+                  badge={unreadMessages}
+                  onClick={() => openMessages()}
+                />
               </>
             ) : null}
-              <button type="button" onClick={() => navigateTo('/urgence')} style={activePage === 'urgence' ? { ...styles.urgentButtonActive, padding: isCompact ? '7px 12px' : '8px 13px' } : { ...styles.urgentButton, padding: isCompact ? '7px 12px' : '8px 13px' }}>
-              {isMobile ? 'Urgence' : 'FlashFix Urgence'}
-            </button>
 
             {user && profile ? (
               <div style={{ position: 'relative' }}>
@@ -756,7 +765,7 @@ function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2
 const styles = {
   root: { position: 'sticky', top: 0, zIndex: 120 },
   nav: {
-    height: 56,
+    height: 64,
     display: 'grid',
     gridTemplateColumns: '1fr auto 1fr',
     alignItems: 'center',
@@ -771,8 +780,8 @@ const styles = {
   rightGroup: { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 },
   utilityButton: {
     position: 'relative',
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     border: '1px solid rgba(142, 196, 234, 0.16)',
     background: 'rgba(255,255,255,0.05)',
@@ -865,20 +874,20 @@ const styles = {
   urgentButton: {
     border: 'none',
     borderRadius: 999,
-    padding: '8px 13px',
+    padding: '9px 15px',
     background: 'linear-gradient(135deg, #ff5f50 0%, #ef4444 100%)',
     color: '#fff',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: 800,
     boxShadow: '0 12px 26px rgba(239,68,68,0.3)',
   },
   urgentButtonActive: {
     border: 'none',
     borderRadius: 999,
-    padding: '8px 13px',
+    padding: '9px 15px',
     background: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)',
     color: '#fff',
-    fontSize: 12,
+    fontSize: 12.5,
     fontWeight: 800,
   },
   loginLink: {
@@ -922,7 +931,7 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(255,255,255,0.05)',
     color: '#ecf7ff',
-    padding: '6px 9px 6px 6px',
+    padding: '7px 10px 7px 7px',
   },
   accountButtonActive: {
     display: 'inline-flex',
@@ -932,10 +941,10 @@ const styles = {
     borderRadius: 999,
     background: 'rgba(90,184,240,0.12)',
     color: '#ecf7ff',
-    padding: '6px 9px 6px 6px',
+    padding: '7px 10px 7px 7px',
   },
   accountAvatar: {
-    width: 28, height: 28, borderRadius: '50%',
+    width: 30, height: 30, borderRadius: '50%',
     background: 'linear-gradient(135deg, #1e40af 0%, #3b9fd8 100%)',
     display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
     color: '#fff', fontSize: 12, fontWeight: 800, overflow: 'hidden',
