@@ -237,7 +237,6 @@ export default function NavBar({ activePage }) {
       return [
         { icon: <DashboardIcon />, label: 'Dashboard', action: () => navigateTo('/app/provider') },
         { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
-        { icon: <BellIcon />, label: 'Notifications', action: () => openNotifications() },
         { icon: <ProvidersIcon />, label: 'Profil atelier', action: () => navigateTo('/app/provider') },
         { icon: <MarketplaceIcon />, label: 'Marketplace fournisseur', action: () => navigateTo('/app/provider') },
         { icon: <DoctorIcon />, label: 'Support FlashMat', action: () => setProfileOpen(false) },
@@ -246,9 +245,8 @@ export default function NavBar({ activePage }) {
   
           return [
            { icon: <DashboardIcon />, label: 'Tableau de bord', action: () => navigateTo('/app/client/dashboard') },
-           { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
-           { icon: <BellIcon />, label: 'Notifications', action: () => openNotifications() },
            { icon: <CarIcon />, label: 'Mes vehicules', action: () => navigateTo('/app/client/vehicles') },
+           { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
            { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
            { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
         ]
