@@ -950,19 +950,21 @@ export default function ClientApp() {
               </div>
             </div>
             <div className={styles.pad}>
-              <div className="panel" style={{ marginBottom: 18 }}>
+              <div className="panel" style={{ marginBottom: 16 }}>
                 <div className="panel-hd">
                   <div>
-                    <div className="panel-title">Step 1 · Choose a vehicle</div>
-                    <div className={styles.muted}>FlashMat will focus maintenance guidance on the exact vehicle you want to review.</div>
+                    <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 1</div>
+                    <div className="panel-title" style={{ fontSize: 22 }}>Choose a vehicle</div>
+                    <div className={styles.muted} style={{ fontSize: 12 }}>FlashMat will focus maintenance guidance on the exact vehicle you want to review.</div>
                   </div>
                 </div>
                 <div className="panel-body">
                   {myVehicles.length > 0 ? (
                     <>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 12 }}>
                         {myVehicles.map((vehicle) => {
                           const isSelected = String(vehicle.id) === String(selectedMaintenanceVehicle?.id || '')
+                          const vehicleImage = vehicle.image_url || vehicle.photo_url || '/vehicle-fallback.svg'
                           return (
                             <button
                               key={vehicle.id}
@@ -973,40 +975,53 @@ export default function ClientApp() {
                                 borderRadius: 16,
                                 border: `1px solid ${isSelected ? 'rgba(37,99,235,.32)' : 'var(--border)'}`,
                                 background: isSelected ? 'linear-gradient(180deg, rgba(59,130,246,.12), rgba(59,130,246,.04))' : 'var(--bg3)',
-                                padding: 16,
+                                padding: 12,
                                 display: 'grid',
-                                gap: 8,
+                                gap: 10,
                                 boxShadow: isSelected ? '0 12px 28px rgba(28, 76, 167, .12)' : 'none',
                               }}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                                  <span style={{ width: 42, height: 42, borderRadius: 14, background: isSelected ? 'rgba(37,99,235,.12)' : 'rgba(37,99,235,.08)', color: 'var(--blue)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <AppIcon code="VH" size={20} />
+                              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'flex-start', gap: 10, minWidth: 0, flex: 1 }}>
+                                  <span style={{ width: 84, height: 62, borderRadius: 14, overflow: 'hidden', border: '1px solid rgba(37,99,235,.14)', background: 'rgba(37,99,235,.06)', flexShrink: 0 }}>
+                                    <img
+                                      src={vehicleImage}
+                                      alt={`${vehicle.make} ${vehicle.model}`}
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    />
                                   </span>
-                                  <span>
-                                    <span style={{ display: 'block', fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.1 }}>
+                                  <span style={{ minWidth: 0 }}>
+                                    <span style={{ display: 'block', fontFamily: 'var(--display)', fontSize: 16, fontWeight: 800, color: 'var(--ink)', lineHeight: 1.08 }}>
                                       {vehicle.make} {vehicle.model}
                                     </span>
-                                    <span style={{ display: 'block', fontSize: 13, color: 'var(--ink2)', marginTop: 4 }}>
+                                    <span style={{ display: 'block', fontSize: 12, color: 'var(--ink2)', marginTop: 4 }}>
                                       {vehicle.year}{vehicle.plate ? ` • ${vehicle.plate}` : ''}
+                                    </span>
+                                    <span style={{ display: 'block', fontSize: 11, color: 'var(--ink3)', marginTop: 6, lineHeight: 1.5 }}>
+                                      {vehicle.mileage ? `${Number(vehicle.mileage).toLocaleString()} km tracked` : 'Mileage not added yet'}{vehicle.flash_score ? ` • ${vehicle.flash_score}% FlashScore` : ''}
                                     </span>
                                   </span>
                                 </span>
                                 {isSelected ? <span className="badge badge-blue">Active</span> : null}
-                              </div>
-                              <div style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.55 }}>
-                                {vehicle.mileage ? `${Number(vehicle.mileage).toLocaleString()} km tracked` : 'Mileage not added yet'}{vehicle.flash_score ? ` • ${vehicle.flash_score}% FlashScore` : ''}
                               </div>
                             </button>
                           )
                         })}
                       </div>
                       {selectedMaintenanceVehicle ? (
-                        <div style={{ marginTop: 14, padding: 16, borderRadius: 16, border: '1px solid rgba(37,99,235,.14)', background: 'linear-gradient(135deg, rgba(28,76,167,.06), rgba(59,130,246,.03))', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                          <div>
-                            <div style={{ fontFamily: 'var(--display)', fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>{selectedMaintenanceVehicleLabel}</div>
-                            <div style={{ fontSize: 13, color: 'var(--ink2)', marginTop: 5 }}>{selectedMaintenanceVehicleMeta || 'Complete this vehicle profile to unlock more precise maintenance guidance.'}</div>
+                        <div style={{ marginTop: 14, padding: 14, borderRadius: 16, border: '1px solid rgba(37,99,235,.14)', background: 'linear-gradient(135deg, rgba(28,76,167,.06), rgba(59,130,246,.03))', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                            <span style={{ width: 74, height: 54, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(37,99,235,.14)', background: 'rgba(37,99,235,.06)', flexShrink: 0 }}>
+                              <img
+                                src={selectedMaintenanceVehicle.image_url || selectedMaintenanceVehicle.photo_url || '/vehicle-fallback.svg'}
+                                alt={selectedMaintenanceVehicleLabel}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              />
+                            </span>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontFamily: 'var(--display)', fontSize: 17, fontWeight: 800, color: 'var(--ink)' }}>{selectedMaintenanceVehicleLabel}</div>
+                              <div style={{ fontSize: 12, color: 'var(--ink2)', marginTop: 4 }}>{selectedMaintenanceVehicleMeta || 'Complete this vehicle profile to unlock more precise maintenance guidance.'}</div>
+                            </div>
                           </div>
                           <button className="btn" onClick={() => goToVehicle(selectedMaintenanceVehicle.id)}>Open vehicle profile</button>
                         </div>
@@ -1026,7 +1041,8 @@ export default function ClientApp() {
                 <div className="panel">
                   <div className="panel-hd">
                     <div>
-                      <div className="panel-title">Step 2 · Intelligent maintenance suggestions</div>
+                      <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 2</div>
+                      <div className="panel-title" style={{ fontSize: 21 }}>Maintenance suggestions</div>
                       <div className={styles.muted}>
                         {selectedMaintenanceVehicle
                           ? `Recommendations tuned for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
@@ -1036,22 +1052,22 @@ export default function ClientApp() {
                   </div>
                   <div className="panel-body">
                     {selectedMaintenanceVehicle && (
-                      <div style={{background:'linear-gradient(135deg, rgba(37,99,235,.08), rgba(37,99,235,.03))',border:'1px solid rgba(37,99,235,.18)',borderRadius:16,padding:16,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
+                      <div style={{background:'linear-gradient(135deg, rgba(37,99,235,.08), rgba(37,99,235,.03))',border:'1px solid rgba(37,99,235,.18)',borderRadius:16,padding:14,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
                         <span style={{color:'var(--blue)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
                         <div style={{flex:1}}>
-                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:4}}>Priority suggestion for {selectedMaintenanceVehicle.make} {selectedMaintenanceVehicle.model}</div>
-                          <div style={{fontSize:13,color:'var(--ink2)',lineHeight:1.6}}>Preventive maintenance is recommended this week based on this vehicle profile, recent usage, and current FlashScore signals.</div>
+                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>Priority suggestion for {selectedMaintenanceVehicle.make} {selectedMaintenanceVehicle.model}</div>
+                          <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>Preventive maintenance is recommended this week based on this vehicle profile, recent usage, and current FlashScore signals.</div>
                         </div>
                         <button className="btn btn-blue" onClick={() => openBooking()}>Book now</button>
                       </div>
                     )}
                     {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle to unlock maintenance intelligence',meta:'FlashMat will personalize reminders per vehicle.',detail:'Mileage, model, and service activity help generate better recommendations.'}]).map(item => (
-                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:16,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
+                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
                         <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={item.icon} size={20} /></span>
                         <div style={{flex:1}}>
-                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:5}}>{item.title}</div>
-                          <div style={{fontSize:13,color:'var(--ink2)',marginBottom:5}}>{item.meta}</div>
-                          <div style={{fontSize:12,color:'var(--ink3)',lineHeight:1.65}}>{item.detail}</div>
+                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:5}}>{item.title}</div>
+                          <div style={{fontSize:12,color:'var(--ink2)',marginBottom:5}}>{item.meta}</div>
+                          <div style={{fontSize:11,color:'var(--ink3)',lineHeight:1.65}}>{item.detail}</div>
                         </div>
                         <button className="btn" style={{fontSize:12}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add vehicle'}</button>
                       </div>
@@ -1061,7 +1077,8 @@ export default function ClientApp() {
                 <div className="panel">
                   <div className="panel-hd">
                     <div>
-                      <div className="panel-title">Step 3 · Service history</div>
+                      <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 3</div>
+                      <div className="panel-title" style={{ fontSize: 21 }}>Service history</div>
                       <div className={styles.muted}>
                         {selectedMaintenanceVehicle
                           ? `Everything already booked or completed for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
@@ -1073,15 +1090,15 @@ export default function ClientApp() {
                     {vehicleServiceHistory.length > 0 ? (
                       <div style={{display:'grid',gap:10}}>
                         {vehicleServiceHistory.map((entry) => (
-                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:16,display:'flex',gap:12,alignItems:'flex-start'}}>
+                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',gap:12,alignItems:'flex-start'}}>
                             <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={entry.icon} size={18} /></span>
                             <div style={{flex:1}}>
                               <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',marginBottom:4}}>
-                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:17,color:'var(--ink)'}}>{entry.title}</div>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:15,color:'var(--ink)'}}>{entry.title}</div>
                                 <span className={`badge ${entry.statusClass}`}>{entry.statusLabel}</span>
                               </div>
-                              <div style={{fontSize:13,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
-                              <div style={{fontSize:12,color:'var(--ink3)'}}>{entry.detail}</div>
+                              <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
+                              <div style={{fontSize:11,color:'var(--ink3)'}}>{entry.detail}</div>
                             </div>
                           </div>
                         ))}
@@ -1089,8 +1106,8 @@ export default function ClientApp() {
                     ) : (
                       <div className={styles.historyEmpty}>
                         <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="RS" size={24} /></div>
-                        <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:20,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
-                        <div style={{fontSize:14,lineHeight:1.7}}>
+                        <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
+                        <div style={{fontSize:12,lineHeight:1.7}}>
                           {selectedMaintenanceVehicle
                             ? `Your booked services for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model} will appear here once you schedule maintenance or roadside work through FlashMat.`
                             : 'Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.'}
