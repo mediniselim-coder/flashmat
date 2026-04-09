@@ -5,7 +5,7 @@ import { useInboxSummary } from '../hooks/useInbox'
 import LoginModal from './LoginModal'
 import ClientProfileModal from './ClientProfileModal'
 import ProviderProfileModal from './ProviderProfileModal'
-import MessageCenterModal from './MessageCenterModal'
+import MessageInboxPopover from './MessageInboxPopover'
 import NotificationCenterModal from './NotificationCenterModal'
 import FloatingPanelBoundary from './FloatingPanelBoundary'
 
@@ -128,9 +128,8 @@ export default function NavBar({ activePage }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
-  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
+  const [messagePopoverOpen, setMessagePopoverOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
-  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -188,18 +187,23 @@ export default function NavBar({ activePage }) {
     setMenuOpen(false)
     setPanelOpen(null)
     setProfileOpen(false)
+    setMessagePopoverOpen(false)
   }
 
   function openMessages(threadId = '') {
     closeFloatingUi()
-    setFocusedThreadId(threadId || '')
     setNotificationCenterOpen(false)
-    setMessageCenterOpen(true)
+    navigate(threadId ? `/messages?thread=${threadId}` : '/messages')
+  }
+
+  function toggleMessagesPopover() {
+    closeFloatingUi()
+    setNotificationCenterOpen(false)
+    setMessagePopoverOpen((current) => !current)
   }
 
   function openNotifications() {
     closeFloatingUi()
-    setMessageCenterOpen(false)
     setNotificationCenterOpen(true)
   }
 
@@ -338,7 +342,7 @@ export default function NavBar({ activePage }) {
                   label="Messages"
                   icon={<MessageIcon />}
                   badge={unreadMessages}
-                  onClick={() => openMessages()}
+                  onClick={toggleMessagesPopover}
                 />
               </>
             ) : null}
@@ -393,6 +397,16 @@ export default function NavBar({ activePage }) {
                       <PopupItem icon={<LogoutIcon />} label="Se deconnecter" onClick={handleSignOut} danger />
                     </div>
                   </div>
+                )}
+                {messagePopoverOpen && (
+                  <MessageInboxPopover
+                    open={messagePopoverOpen}
+                    onClose={() => setMessagePopoverOpen(false)}
+                    onOpenThread={(threadId) => openMessages(threadId)}
+                    onOpenAll={() => openMessages()}
+                    user={user}
+                    profile={profile}
+                  />
                 )}
               </div>
             ) : (
@@ -474,25 +488,6 @@ export default function NavBar({ activePage }) {
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
       {clientProfileModalOpen && !isProvider && <ClientProfileModal onClose={() => setClientProfileModalOpen(false)} />}
       {providerProfileModalOpen && isProvider && <ProviderProfileModal onClose={() => setProviderProfileModalOpen(false)} />}
-      {messageCenterOpen && user && profile && (
-        <FloatingPanelBoundary
-          onClose={() => {
-            setMessageCenterOpen(false)
-            setFocusedThreadId('')
-          }}
-        >
-          <MessageCenterModal
-            open={messageCenterOpen}
-            onClose={() => {
-              setMessageCenterOpen(false)
-              setFocusedThreadId('')
-            }}
-            user={user}
-            profile={profile}
-            initialThreadId={focusedThreadId}
-          />
-        </FloatingPanelBoundary>
-      )}
       {notificationCenterOpen && user && (
         <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
           <NotificationCenterModal

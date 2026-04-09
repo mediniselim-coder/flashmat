@@ -14,7 +14,6 @@ import ClientProfileModal from '../components/ClientProfileModal'
 import HelpSupportModal from '../components/HelpSupportModal'
 import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import WalletModal from '../components/WalletModal'
-import MessageCenterModal from '../components/MessageCenterModal'
 import NotificationCenterModal from '../components/NotificationCenterModal'
 import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
@@ -278,9 +277,7 @@ export default function ClientApp() {
   const [walletModalOpen, setWalletModalOpen] = useState(false)
   const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
-  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
-  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
@@ -404,12 +401,10 @@ export default function ClientApp() {
   function openMessageCenter(threadId = '') {
     setProfileMenuOpen(false)
     setNotificationCenterOpen(false)
-    setFocusedThreadId(threadId || '')
-    setMessageCenterOpen(true)
+    navigate(threadId ? `/messages?thread=${threadId}` : '/messages')
   }
   function openNotificationCenter() {
     setProfileMenuOpen(false)
-    setMessageCenterOpen(false)
     setNotificationCenterOpen(true)
   }
 
@@ -1087,25 +1082,6 @@ export default function ClientApp() {
       {walletModalOpen && <WalletModal onClose={() => setWalletModalOpen(false)} />}
       {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
       {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
-      {messageCenterOpen && user && profile && (
-        <FloatingPanelBoundary
-          onClose={() => {
-            setMessageCenterOpen(false)
-            setFocusedThreadId('')
-          }}
-        >
-          <MessageCenterModal
-            open={messageCenterOpen}
-            onClose={() => {
-              setMessageCenterOpen(false)
-              setFocusedThreadId('')
-            }}
-            user={user}
-            profile={profile}
-            initialThreadId={focusedThreadId}
-          />
-        </FloatingPanelBoundary>
-      )}
       {notificationCenterOpen && user && (
         <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
           <NotificationCenterModal

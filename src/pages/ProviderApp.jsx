@@ -7,7 +7,6 @@ import FlashAI from '../components/FlashAI'
 import Marketplace from '../components/Marketplace'
 import AppIcon from '../components/AppIcon'
 import ProviderProfileModal from '../components/ProviderProfileModal'
-import MessageCenterModal from '../components/MessageCenterModal'
 import NotificationCenterModal from '../components/NotificationCenterModal'
 import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
@@ -174,9 +173,7 @@ export default function ProviderApp() {
   const [sidebarOpen, setSidebar] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
-  const [messageCenterOpen, setMessageCenterOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
-  const [focusedThreadId, setFocusedThreadId] = useState('')
   const [tasks, setTasks]       = useState([])
   const [promoSvc, setPromoSvc] = useState('Vidange')
   const [promoVal, setPromoVal] = useState('20%')
@@ -259,12 +256,10 @@ export default function ProviderApp() {
   function openMessageCenter(threadId = '') {
     setProfileMenuOpen(false)
     setNotificationCenterOpen(false)
-    setFocusedThreadId(threadId || '')
-    setMessageCenterOpen(true)
+    navigate(threadId ? `/messages?thread=${threadId}` : '/messages')
   }
   function openNotificationCenter() {
     setProfileMenuOpen(false)
-    setMessageCenterOpen(false)
     setNotificationCenterOpen(true)
   }
 
@@ -1304,25 +1299,6 @@ export default function ProviderApp() {
             void fetchProfile(user?.id)
           }}
         />
-      )}
-      {messageCenterOpen && user && profile && (
-        <FloatingPanelBoundary
-          onClose={() => {
-            setMessageCenterOpen(false)
-            setFocusedThreadId('')
-          }}
-        >
-          <MessageCenterModal
-            open={messageCenterOpen}
-            onClose={() => {
-              setMessageCenterOpen(false)
-              setFocusedThreadId('')
-            }}
-            user={user}
-            profile={profile}
-            initialThreadId={focusedThreadId}
-          />
-        </FloatingPanelBoundary>
       )}
       {notificationCenterOpen && user && (
         <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
