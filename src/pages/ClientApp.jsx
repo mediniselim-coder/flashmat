@@ -29,17 +29,17 @@ const VEHICLE_RECORDS_STORAGE_KEY = 'flashmat-vehicle-records'
 const NAV = [
   { id: 'dashboard',     icon: 'TB', label: 'Dashboard' },
   { id: 'vehicles',      icon: 'VH', label: 'My Vehicles' },
+  { id: 'search',        icon: 'SV', label: 'Find a Service' },
   { id: 'bookings',      icon: 'RS', label: 'Bookings', badge: true },
   { id: 'maintenance',   icon: 'EN', label: 'Maintenance' },
-  { id: 'search',        icon: 'SV', label: 'Find a Service' },
   { id: 'marketplace',   icon: 'MP', label: 'Marketplace' },
   { id: 'flashscore',    icon: 'FS', label: 'FlashScore' },
   { id: 'notifications', icon: 'AL', label: 'Alerts', badge: true },
 ]
 
 const NAV_SECTIONS = {
-  core: ['dashboard', 'vehicles', 'bookings'],
-  tools: ['maintenance', 'search', 'marketplace'],
+  core: ['dashboard', 'vehicles', 'search'],
+  tools: ['bookings', 'maintenance', 'marketplace'],
   notifications: ['flashscore', 'notifications'],
 }
 
@@ -509,7 +509,46 @@ export default function ClientApp() {
 
   const averageFlashScore = myVehicles.length ? Math.round(myVehicles.reduce((sum, v) => sum + Number(v.flash_score || 0), 0) / myVehicles.length) : 0
   const nextServiceLabel = myVehicles[0] ? 'Recommended soon' : 'Add a vehicle'
-  const maintenanceItems = myVehicles.slice(0, 3).map((v, i) => ({ icon: ['VG', 'PN', 'BT'][i] || 'ME', title: i === 0 ? 'Oil change recommended' : i === 1 ? 'Tire inspection' : 'Battery test', meta: `${v.make} ${v.model} ${v.year}` }))
+  const maintenanceItems = myVehicles.slice(0, 4).map((v, i) => {
+    const suggestions = [
+      {
+        icon: 'VG',
+        title: 'Oil & fluids review',
+        meta: v.mileage ? `${v.mileage.toLocaleString?.() || v.mileage} km logged on ${v.make} ${v.model}` : `${v.make} ${v.model} ${v.year}`,
+        detail: 'Good moment to verify oil life, coolant, and brake fluid levels.',
+      },
+      {
+        icon: 'PN',
+        title: 'Tires and alignment check',
+        meta: `${v.make} ${v.model} ${v.year}`,
+        detail: 'Recommended before longer trips and after pothole-heavy weeks.',
+      },
+      {
+        icon: 'BT',
+        title: 'Battery and charging health',
+        meta: `${v.make} ${v.model} ${v.year}`,
+        detail: 'Useful seasonal check to avoid weak starts and voltage issues.',
+      },
+      {
+        icon: 'FR',
+        title: 'Brake inspection',
+        meta: `${v.make} ${v.model} ${v.year}`,
+        detail: 'Pads, rotors, and braking feel should be reviewed proactively.',
+      },
+    ]
+    return suggestions[i] || suggestions[0]
+  })
+  const vehicleServiceHistory = bookings
+    .map((booking) => ({
+      id: booking.id,
+      icon: 'RS',
+      title: booking.service,
+      meta: `${booking.providerName} • ${booking.vehicleLabel}`,
+      detail: `${booking.datetimeLabel} • ${booking.priceLabel}`,
+      statusLabel: booking.statusLabel,
+      statusClass: booking.statusClass,
+    }))
+    .slice(0, 8)
   const flashScoreCards = myVehicles.map((v) => {
     const score = Number(v.flash_score || 80)
     return { make: v.make, model: v.model, year: v.year, score, items: [['Engine', Math.min(99, score + 6), 'green'], ['Brakes', Math.min(98, score + 3), score >= 80 ? 'green' : 'amber'], ['Tires', Math.max(55, score - 4), score >= 75 ? 'blue' : 'amber'], ['Battery', Math.min(97, score + 2), 'blue'], ['Oil', Math.max(40, score - 8), score >= 85 ? 'green' : 'amber']] }
@@ -875,20 +914,72 @@ export default function ClientApp() {
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Maintenance</div></div></div>
             <div className={styles.pad}>
-              {myVehicles.length > 0 && (
-                <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:10,padding:14,marginBottom:12,display:'flex',gap:10,alignItems:'center'}}>
-                  <span style={{color:'var(--red)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
-                  <div style={{flex:1}}><div style={{fontWeight:700}}>Recommended maintenance — {myVehicles[0].make} {myVehicles[0].model}</div><div style={{fontSize:11,color:'var(--ink2)'}}>FlashMat suggests a preventive check this week.</div></div>
-                  <button className="btn btn-green" onClick={() => openBooking()}>Book</button>
+              <div className={styles.g2} style={{alignItems:'start'}}>
+                <div className="panel">
+                  <div className="panel-hd">
+                    <div>
+                      <div className="panel-title">Intelligent maintenance suggestions</div>
+                      <div className={styles.muted}>FlashMat builds recommendations from your garage, mileage, and recent activity.</div>
+                    </div>
+                  </div>
+                  <div className="panel-body">
+                    {myVehicles.length > 0 && (
+                      <div style={{background:'var(--red-bg)',border:'1px solid rgba(239,68,68,.25)',borderRadius:14,padding:16,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
+                        <span style={{color:'var(--red)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
+                        <div style={{flex:1}}>
+                          <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>Priority suggestion — {myVehicles[0].make} {myVehicles[0].model}</div>
+                          <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.55}}>Preventive maintenance is recommended this week based on your current vehicle profile.</div>
+                        </div>
+                        <button className="btn btn-green" onClick={() => openBooking()}>Book now</button>
+                      </div>
+                    )}
+                    {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle to unlock maintenance intelligence',meta:'FlashMat will personalize reminders per vehicle.',detail:'Mileage, model, and service activity help generate better recommendations.'}]).map(item => (
+                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:14,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
+                        <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={item.icon} size={20} /></span>
+                        <div style={{flex:1}}>
+                          <div style={{fontWeight:700,fontSize:14,color:'var(--ink)',marginBottom:4}}>{item.title}</div>
+                          <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{item.meta}</div>
+                          <div style={{fontSize:11,color:'var(--ink3)',lineHeight:1.6}}>{item.detail}</div>
+                        </div>
+                        <button className="btn" style={{fontSize:11}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add vehicle'}</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )}
-              {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle',meta:'To unlock maintenance reminders'}]).map(item => (
-                <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:10,padding:12,display:'flex',gap:10,marginBottom:8,alignItems:'center'}}>
-                  <span style={{color:'var(--blue)',display:'inline-flex'}}><AppIcon code={item.icon} size={20} /></span>
-                  <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{item.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{item.meta}</div></div>
-                  <button className="btn" style={{fontSize:10}} onClick={() => myVehicles.length ? openBooking() : openAddVehicleModal()}>{myVehicles.length ? 'Book' : 'Add'}</button>
+                <div className="panel">
+                  <div className="panel-hd">
+                    <div>
+                      <div className="panel-title">Service history</div>
+                      <div className={styles.muted}>Track completed and upcoming work across the vehicles in your client profile.</div>
+                    </div>
+                  </div>
+                  <div className="panel-body">
+                    {vehicleServiceHistory.length > 0 ? (
+                      <div style={{display:'grid',gap:10}}>
+                        {vehicleServiceHistory.map((entry) => (
+                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:14,display:'flex',gap:12,alignItems:'flex-start'}}>
+                            <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={entry.icon} size={18} /></span>
+                            <div style={{flex:1}}>
+                              <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',marginBottom:4}}>
+                                <div style={{fontWeight:700,fontSize:14,color:'var(--ink)'}}>{entry.title}</div>
+                                <span className={`badge ${entry.statusClass}`}>{entry.statusLabel}</span>
+                              </div>
+                              <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
+                              <div style={{fontSize:11,color:'var(--ink3)'}}>{entry.detail}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.historyEmpty}>
+                        <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="RS" size={24} /></div>
+                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
+                        <div style={{fontSize:13,lineHeight:1.7}}>Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         )}
