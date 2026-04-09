@@ -87,6 +87,14 @@ export default function ProviderProfile() {
   const [reviewSaving, setReviewSaving] = useState(false)
   const canBook = user && profile?.role === 'client'
 
+  function requestBookingAccess() {
+    if (user) return setBookingOpen(true)
+    const exactName = searchParams.get('n')
+    const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
+    window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
+    navigate('/?login=1')
+  }
+
   useEffect(() => {
     let cancelled = false
     async function loadProvider() {
@@ -187,14 +195,6 @@ export default function ProviderProfile() {
     if (!provider?.id) return
     const { data } = await supabase.from('providers').select('*').eq('id', provider.id).single()
     if (data) setProvider(normalizeDbProvider(data, slug))
-  }
-
-  function requestBookingAccess() {
-    if (canBook) return setBookingOpen(true)
-    const exactName = searchParams.get('n')
-    const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
-    window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
-    navigate('/?login=1')
   }
 
   async function handleBookingConfirm(payload) {
@@ -362,7 +362,7 @@ export default function ProviderProfile() {
         </div>
       </div>
 
-      {bookingOpen && canBook ? <BookingModal providers={[provider]} vehicles={userVehicles} initialProvider={provider} onClose={() => setBookingOpen(false)} onConfirm={handleBookingConfirm} /> : null}
+      {bookingOpen && user ? <BookingModal providers={[provider]} vehicles={userVehicles} initialProvider={provider} onClose={() => setBookingOpen(false)} onConfirm={handleBookingConfirm} /> : null}
       <SiteFooter portal="public" />
     </div>
   )
