@@ -136,3 +136,16 @@ export async function createNotification({ userId, title, body, icon = 'AL', typ
   })
 }
 
+export async function fetchClientNotifications(userId) {
+  if (!userId) return []
+
+  const { data } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  return data || []
+}
+

@@ -2,7 +2,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
-import { supabase } from '../lib/supabase'
 import FlashAI from '../components/FlashAI'
 import ProviderMap from '../components/ProviderMap'
 import BookingModal from '../components/BookingModal'
@@ -18,13 +17,19 @@ import NotificationCenterModal from '../components/NotificationCenterModal'
 import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
-import { createBooking, fetchClientBookings } from '../lib/bookings'
-import { mergeProviderProfile } from '../lib/providerProfiles'
-import { normalizeMarketplaceListing } from '../lib/marketplace'
+import { createBooking, fetchClientBookings, fetchClientNotifications } from '../lib/bookings'
+import { fetchProviders } from '../lib/providerProfiles'
+import { fetchSellerVehicleListings, normalizeMarketplaceListing } from '../lib/marketplace'
+import {
+  fetchClientVehicles,
+  releaseVehicleFromOwner,
+  deleteVehicle,
+  saveVehicleRecord,
+  removeVehicleExtras,
+  removeVehicleRecord,
+  mergeVehicleExtras,
+} from '../lib/vehicles'
 import styles from './AppShell.module.css'
-
-const VEHICLE_EXTRAS_STORAGE_KEY = 'flashmat-vehicle-extras'
-const VEHICLE_RECORDS_STORAGE_KEY = 'flashmat-vehicle-records'
 
 const NAV = [
   { id: 'dashboard',     icon: 'TB', label: 'Dashboard' },
@@ -132,69 +137,6 @@ function formatActivityTime(value) {
   }
 }
 
-function getVehicleExtrasStorageKey(userId) {
-  return `${VEHICLE_EXTRAS_STORAGE_KEY}:${userId || 'anonymous'}`
-}
-
-function getVehicleRecordsStorageKey(userId) {
-  return `${VEHICLE_RECORDS_STORAGE_KEY}:${userId || 'anonymous'}`
-}
-
-function readVehicleExtrasMap(userId) {
-  try {
-    return JSON.parse(window.localStorage.getItem(getVehicleExtrasStorageKey(userId)) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-function readVehicleRecordsMap(userId) {
-  try {
-    return JSON.parse(window.localStorage.getItem(getVehicleRecordsStorageKey(userId)) || '{}')
-  } catch {
-    return {}
-  }
-}
-
-function saveVehicleRecord(userId, vehicle) {
-  if (!userId || !vehicle?.id) return
-  const current = readVehicleRecordsMap(userId)
-  current[vehicle.id] = vehicle
-  window.localStorage.setItem(getVehicleRecordsStorageKey(userId), JSON.stringify(current))
-}
-
-function removeVehicleExtras(userId, vehicleId) {
-  if (!vehicleId) return
-
-  const current = readVehicleExtrasMap(userId)
-  if (!current[vehicleId]) return
-
-  delete current[vehicleId]
-  window.localStorage.setItem(getVehicleExtrasStorageKey(userId), JSON.stringify(current))
-}
-
-function removeVehicleRecord(userId, vehicleId) {
-  if (!vehicleId) return
-
-  const current = readVehicleRecordsMap(userId)
-  if (!current[vehicleId]) return
-
-  delete current[vehicleId]
-  window.localStorage.setItem(getVehicleRecordsStorageKey(userId), JSON.stringify(current))
-}
-
-function mergeVehicleExtras(vehicle, userId) {
-  const extrasMap = readVehicleExtrasMap(userId)
-  const extras = extrasMap[vehicle?.id] || {}
-  return {
-    ...vehicle,
-    vin: vehicle?.vin || vehicle?.serial_number || extras.vin || extras.serial_number || '',
-    serial_number: vehicle?.serial_number || vehicle?.vin || extras.serial_number || extras.vin || '',
-    mileage: vehicle?.mileage ?? extras.mileage ?? '',
-    image_url: vehicle?.image_url || vehicle?.photo_url || extras.image_url || extras.photo_url || '',
-    photo_url: vehicle?.photo_url || vehicle?.image_url || extras.photo_url || extras.image_url || '',
-  }
-}
 
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
@@ -209,52 +151,14 @@ export default function ClientApp() {
     }
 
     setMyVehicles([])
-    supabase
-      .from('vehicles')
-      .select('*')
-      .eq('owner_id', user.id)
-      .then(({ data }) => {
-        const ownedVehicles = (data || []).filter((vehicle) => String(vehicle.owner_id || '') === String(user.id))
-        const localVehicles = Object.values(readVehicleRecordsMap(user.id))
-          .filter((vehicle) => String(vehicle?.owner_id || '') === String(user.id))
-          .map((vehicle) => mergeVehicleExtras(vehicle, user.id))
-
-        const mergedVehicles = new Map()
-
-        ownedVehicles
-          .map((vehicle) => mergeVehicleExtras(vehicle, user.id))
-          .forEach((vehicle) => {
-            mergedVehicles.set(String(vehicle.id), vehicle)
-          })
-
-        localVehicles.forEach((vehicle) => {
-          if (!mergedVehicles.has(String(vehicle.id))) {
-            mergedVehicles.set(String(vehicle.id), vehicle)
-          }
-        })
-
-        setMyVehicles(
-          Array.from(mergedVehicles.values())
-            .sort((left, right) => new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime()),
-        )
-      })
+    fetchClientVehicles(user.id).then(setMyVehicles)
   }, [user?.id])
 
   useEffect(() => {
     if (!user?.id || myVehicles.length === 0) return
 
     async function attachVehicleListings() {
-      const { data } = await supabase
-        .from('marketplace')
-        .select('*')
-        .eq('seller_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-
-      const vehicleListings = (data || [])
-        .map(normalizeMarketplaceListing)
-        .filter((listing) => listing.listing_type === 'vehicle' && listing.vehicle_id)
-
+      const vehicleListings = await fetchSellerVehicleListings(user.id)
       setMyVehicles((current) => current.map((vehicle) => {
         const matchedListing = vehicleListings.find((listing) => String(listing.vehicle_id) === String(vehicle.id))
         return matchedListing ? { ...vehicle, sale_listing: matchedListing } : { ...vehicle, sale_listing: null }
@@ -313,15 +217,14 @@ export default function ClientApp() {
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     .slice(0, 6)
 
-  useEffect(() => { fetchProviders() }, [])
+  useEffect(() => { loadProviders() }, [])
   useEffect(() => { if (!user?.id) return; fetchMyBookings() }, [user?.id])
 
   useEffect(() => {
     async function fetchNotifications() {
       if (!user?.id) return
       try {
-        const { data } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20)
-        setNotifications(data || [])
+        setNotifications(await fetchClientNotifications(user.id))
       } catch { setNotifications([]) }
     }
     fetchNotifications()
@@ -355,10 +258,9 @@ export default function ClientApp() {
     }
   }, [location.pathname, navigate, pendingSearch, rawPaneSegment, routeCat])
 
-  async function fetchProviders() {
+  async function loadProviders() {
     setProvLoading(true)
-    const { data } = await supabase.from('providers').select('*').order('rating', { ascending: false }).limit(100)
-    setProviders((data || []).map((p) => mergeProviderProfile(p)).filter((p) => p.publicReady))
+    setProviders(await fetchProviders())
     setProvLoading(false)
   }
 
@@ -480,25 +382,9 @@ export default function ClientApp() {
       return
     }
 
-    let error = null
-
-    if (hasTrackedVin) {
-      const response = await supabase
-        .from('vehicles')
-        .update({ owner_id: null })
-        .eq('id', vehicle.id)
-        .eq('owner_id', user.id)
-
-      error = response.error
-    } else {
-      const response = await supabase
-        .from('vehicles')
-        .delete()
-        .eq('id', vehicle.id)
-        .eq('owner_id', user.id)
-
-      error = response.error
-    }
+    const { error } = hasTrackedVin
+      ? await releaseVehicleFromOwner(vehicle.id, user.id)
+      : await deleteVehicle(vehicle.id, user.id)
 
     if (error) {
       toast(

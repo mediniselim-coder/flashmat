@@ -1,4 +1,6 @@
-﻿const MARKETPLACE_META_PREFIX = '<!--FLASHMAT_MARKETPLACE_META:'
+﻿import { supabase } from './supabase'
+
+const MARKETPLACE_META_PREFIX = '<!--FLASHMAT_MARKETPLACE_META:'
 const MARKETPLACE_META_SUFFIX = '-->'
 
 function encodeMarketplaceMeta(meta) {
@@ -50,6 +52,21 @@ export function extractMarketplaceDescriptionMeta(description) {
     description: visibleDescription,
     meta: decodeMarketplaceMeta(rawDescription.slice(start + MARKETPLACE_META_PREFIX.length, end)),
   }
+}
+
+export async function fetchSellerVehicleListings(sellerId) {
+  if (!sellerId) return []
+
+  const { data } = await supabase
+    .from('marketplace')
+    .select('*')
+    .eq('seller_id', sellerId)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+
+  return (data || [])
+    .map(normalizeMarketplaceListing)
+    .filter((listing) => listing.listing_type === 'vehicle' && listing.vehicle_id)
 }
 
 export function normalizeMarketplaceListing(listing) {

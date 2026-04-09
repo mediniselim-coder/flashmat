@@ -1,4 +1,6 @@
-﻿const STORAGE_KEY = 'flashmat-provider-overrides'
+﻿import { supabase } from './supabase'
+
+const STORAGE_KEY = 'flashmat-provider-overrides'
 const STORAGE_KEY_PREFIX = 'flashmat-provider-overrides'
 const AUTH_CACHE_KEY = 'flashmat-auth-cache'
 const DESCRIPTION_META_PREFIX = '<!--FLASHMAT_PROVIDER_META:'
@@ -393,6 +395,16 @@ export function normalizeProviderRecord(provider) {
       : [],
     serviceTypes,
   }
+}
+
+export async function fetchProviders() {
+  const { data } = await supabase
+    .from('providers')
+    .select('*')
+    .order('rating', { ascending: false })
+    .limit(100)
+
+  return (data || []).map(mergeProviderProfile).filter((p) => p.publicReady)
 }
 
 export function mergeProviderProfile(provider) {
