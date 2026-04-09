@@ -39,8 +39,8 @@ const NAV = [
 
 const NAV_SECTIONS = {
   core: ['dashboard', 'vehicles', 'search'],
-  tools: ['bookings', 'maintenance', 'marketplace'],
-  notifications: ['flashscore', 'notifications'],
+  tools: ['bookings', 'maintenance', 'flashscore', 'marketplace'],
+  notifications: ['notifications'],
 }
 
 const SEARCH_CATS = [
@@ -528,13 +528,6 @@ export default function ClientApp() {
   const selectedMaintenanceVehicleLabel = selectedMaintenanceVehicle
     ? `${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}${selectedMaintenanceVehicle.year ? ` ${selectedMaintenanceVehicle.year}` : ''}`
     : ''
-  const selectedMaintenanceVehicleMeta = selectedMaintenanceVehicle
-    ? [
-        selectedMaintenanceVehicle.plate || null,
-        selectedMaintenanceVehicle.mileage ? `${Number(selectedMaintenanceVehicle.mileage).toLocaleString()} km` : null,
-        selectedMaintenanceVehicle.flash_score ? `${selectedMaintenanceVehicle.flash_score}% FlashScore` : null,
-      ].filter(Boolean).join(' • ')
-    : ''
   const maintenanceItems = selectedMaintenanceVehicle
     ? [
         {
@@ -1008,24 +1001,6 @@ export default function ClientApp() {
                           )
                         })}
                       </div>
-                      {selectedMaintenanceVehicle ? (
-                        <div style={{ marginTop: 14, padding: 14, borderRadius: 16, border: '1px solid rgba(37,99,235,.14)', background: 'linear-gradient(135deg, rgba(28,76,167,.06), rgba(59,130,246,.03))', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                            <span style={{ width: 74, height: 54, borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(37,99,235,.14)', background: 'rgba(37,99,235,.06)', flexShrink: 0 }}>
-                              <img
-                                src={selectedMaintenanceVehicle.image_url || selectedMaintenanceVehicle.photo_url || '/vehicle-fallback.svg'}
-                                alt={selectedMaintenanceVehicleLabel}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                              />
-                            </span>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontFamily: 'var(--display)', fontSize: 17, fontWeight: 800, color: 'var(--ink)' }}>{selectedMaintenanceVehicleLabel}</div>
-                              <div style={{ fontSize: 12, color: 'var(--ink2)', marginTop: 4 }}>{selectedMaintenanceVehicleMeta || 'Complete this vehicle profile to unlock more precise maintenance guidance.'}</div>
-                            </div>
-                          </div>
-                          <button className="btn" onClick={() => goToVehicle(selectedMaintenanceVehicle.id)}>Open vehicle profile</button>
-                        </div>
-                      ) : null}
                     </>
                   ) : (
                     <div className={styles.historyEmpty}>
@@ -1337,4 +1312,3 @@ export default function ClientApp() {
     </div>
   )
 }
-
