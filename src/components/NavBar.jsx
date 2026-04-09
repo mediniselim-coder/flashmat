@@ -361,7 +361,6 @@ export default function NavBar({ activePage }) {
                       displayName.slice(0, 1).toUpperCase()
                     )}
                   </span>
-                  {!isMobile && <span style={styles.accountText}>{displayName}</span>}
                 </button>
 
                 {profileOpen && (
@@ -926,22 +925,22 @@ const styles = {
   accountButton: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 10,
+    gap: 0,
     border: '1px solid rgba(142,196,234,0.14)',
     borderRadius: 999,
     background: 'rgba(255,255,255,0.05)',
     color: '#ecf7ff',
-    padding: '7px 10px 7px 7px',
+    padding: '7px',
   },
   accountButtonActive: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 10,
+    gap: 0,
     border: '1px solid rgba(90,184,240,0.24)',
     borderRadius: 999,
     background: 'rgba(90,184,240,0.12)',
     color: '#ecf7ff',
-    padding: '7px 10px 7px 7px',
+    padding: '7px',
   },
   accountAvatar: {
     width: 30, height: 30, borderRadius: '50%',
@@ -955,7 +954,6 @@ const styles = {
     objectFit: 'cover',
     display: 'block',
   },
-  accountText: { maxWidth: 108, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11.5, fontWeight: 700 },
   scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
   drawer: {
     position: 'fixed',
