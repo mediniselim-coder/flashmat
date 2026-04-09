@@ -16,6 +16,38 @@ const QUICK_CASES = [
   'One of my tires keeps losing air',
 ]
 
+function repairText(value) {
+  if (typeof value !== 'string') return value
+
+  let next = value
+
+  for (let index = 0; index < 2; index += 1) {
+    if (!/[ÃÂâï]/.test(next)) break
+    try {
+      next = decodeURIComponent(escape(next))
+    } catch {
+      break
+    }
+  }
+
+  return next
+    .replace(/ï¿½/g, 'é')
+    .replace(/â€¦/g, '...')
+    .replace(/Â/g, '')
+}
+
+function repairPayload(value) {
+  if (Array.isArray(value)) {
+    return value.map(repairPayload)
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, current]) => [key, repairPayload(current)]))
+  }
+
+  return repairText(value)
+}
+
 const CASE_LIBRARY = [
   {
     id: 'oil-change',
@@ -994,6 +1026,48 @@ function detectCaseStable(text) {
 
   const urgentOverrides = [
     {
+      anyTerms: ['accident', 'collision', 'choc', 'accroche'],
+      minAnyTerms: 1,
+      extraAnyTerms: [
+        'voyant',
+        'voyants',
+        'tout les voyants',
+        'tous les voyants',
+        'phare',
+        'phares',
+        'feu',
+        'frein',
+        'freine pas',
+        'ne freine pas',
+        'freins',
+      ],
+      minExtraMatches: 1,
+      response: {
+        ...conservativeFallback,
+        probableIssue: 'Degats critiques apres accident touchant plusieurs systemes du vehicule',
+        confidence: 'Elevee',
+        urgency: 'Urgent - ne pas conduire',
+        estimate: 'Remorquage et diagnostic securite / electrique / freinage recommandes',
+        duration: 'Evaluation immediate puis devis selon les dommages',
+        priceNote: 'Apres un accident avec voyants allumes, eclairage en panne et freinage anormal, il faut verifier la securite generale avant toute reprise de route.',
+        durationNote: 'Le premier objectif est de confirmer si le vehicule peut etre deplace en securite ou doit etre remorque.',
+        searchCat: 'tow',
+        summary: 'Avec un accident, plusieurs voyants allumes, un phare qui ne fonctionne plus et un freinage qui ne repond pas normalement, FlashMat considere cela comme un cas critique. Il ne faut pas continuer a rouler sans controle prioritaire.',
+        guidanceTitle: 'Quoi faire tout de suite',
+        guidanceItems: [
+          'Ne conduisez pas le vehicule tant que le freinage et les circuits de securite ne sont pas verifies.',
+          'Si vous etes encore sur la route, arretez vous dans un endroit securitaire et demandez un remorquage.',
+          'Expliquez: accident, plusieurs voyants allumes, phare ne marche plus, freinage anormal.',
+          'Demandez un controle prioritaire du freinage, de l alimentation electrique et des dommages apres impact.',
+        ],
+        matches: [
+          { name: 'Remorquage Elite 24/7', rating: '4.6', distance: 'Mobile', eta: '15-25 min', price: 'Remorquage prioritaire', tags: ['Urgent', 'Remorquage', 'Disponible'] },
+          { name: 'Garage Mecanique MK', rating: '4.9', distance: '1.8 km', eta: 'Aujourd hui 13h10', price: 'Diagnostic securite complet', tags: ['Freinage', 'Electrique', 'Prioritaire'] },
+          { name: 'Atelier Carrosserie MTL', rating: '4.8', distance: '2.6 km', eta: 'Aujourd hui 15h40', price: 'Controle apres impact', tags: ['Carrosserie', 'Structure', 'Inspection'] },
+        ],
+      },
+    },
+    {
       anyTerms: [
         'roule toute seule',
         'freine toute seule',
@@ -1180,16 +1254,25 @@ function normalizeAiDiagnosisResponse(response, fallbackDiagnosis) {
 }
 
 async function fetchAnthropicDiagnosis(input, fallbackDiagnosis) {
-  const response = await fetch('/api/vehicle-doctor', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      input,
-      fallbackDiagnosis,
-    }),
-  })
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), 8000)
+
+  let response
+  try {
+    response = await fetch('/api/vehicle-doctor', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        input,
+        fallbackDiagnosis,
+      }),
+      signal: controller.signal,
+    })
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
 
   if (!response.ok) {
     throw new Error('The diagnostic service did not respond correctly')
@@ -1348,7 +1431,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
     latestAnalysisRef.current = analysisId
 
     analyzeTimeoutRef.current = window.setTimeout(async () => {
-      const localDiagnosis = detectCaseStable(value)
+      const localDiagnosis = repairPayload(detectCaseStable(value))
       let finalDiagnosis = localDiagnosis
       let finalStatus = 'Diagnosis ready. Review the result and suggested garages.'
 
@@ -1362,11 +1445,9 @@ export default function VehicleDoctor({ compact = false, userName }) {
           if (latestAnalysisRef.current !== analysisId) return
 
           if (aiDiagnosis) {
-            finalDiagnosis = aiDiagnosis
-            finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
-          } else {
-            finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
+            finalDiagnosis = repairPayload(aiDiagnosis)
           }
+          finalStatus = 'Diagnostic prêt. Vérifiez la synthèse et les actions conseillées.'
         } catch {
           if (latestAnalysisRef.current !== analysisId) return
           finalStatus = 'Diagnosis ready. Review the summary and recommended actions.'
@@ -1430,7 +1511,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                   className={`${styles.modeBtn} ${inputMode === mode.id ? styles.modeBtnActive : ''}`}
                   onClick={() => setInputMode(mode.id)}
                 >
-                  {mode.label}
+                  {repairText(mode.label)}
                 </button>
               ))}
             </div>
@@ -1481,7 +1562,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
                     analyze(item)
                   }}
                 >
-                  {item}
+                  {repairText(item)}
                 </button>
               ))}
             </div>
