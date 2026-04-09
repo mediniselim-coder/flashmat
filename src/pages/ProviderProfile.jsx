@@ -343,7 +343,7 @@ export default function ProviderProfile() {
           </div>
 
           <aside style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
-            <InfoCard style={{ position: 'sticky', top: 82, padding: 0 }}>
+            <InfoCard style={{ padding: 0 }}>
               <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)' }}>
                 <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
                   <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
@@ -351,7 +351,18 @@ export default function ProviderProfile() {
                 </MapContainer>
               </div>
               <div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 8 }}>Provider location</div>
-              <div style={{ fontSize: 13, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 14 }}>{provider.address}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '42px minmax(0, 1fr)', gap: 12, alignItems: 'start', padding: '12px 14px', borderRadius: 16, border: '1px solid var(--border)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)', marginBottom: 14 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(47,125,225,.1)', color: 'var(--blue)' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M12 21s6-5.6 6-11a6 6 0 1 0-12 0c0 5.4 6 11 6 11Z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="12" cy="10" r="2.3" fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 5 }}>Address</div>
+                  <div style={{ fontSize: 13, color: 'var(--ink2)', lineHeight: 1.7 }}>{provider.address}</div>
+                </div>
+              </div>
               <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(provider.address)}`} target="_blank" rel="noreferrer" className="btn btn-green" style={{ width: '100%', justifyContent: 'center' }}>Get direction</a>
             </InfoCard>
 
