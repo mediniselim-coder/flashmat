@@ -374,7 +374,6 @@ const styles = {
     background: 'linear-gradient(180deg, #edf4ff 0%, #f7fbff 100%)',
   },
   main: {
-    marginTop: 'var(--nav-h, 64px)',
     height: 'calc(100vh - var(--nav-h, 64px))',
     overflow: 'hidden',
   },
