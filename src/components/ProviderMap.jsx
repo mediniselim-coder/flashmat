@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -201,6 +201,10 @@ function createMarkerIcon(provider) {
   })
 }
 
+function getProviderKey(provider) {
+  return String(provider?.id || provider?.name || '')
+}
+
 function MapViewportUpdater({ coordsList }) {
   const map = useMap()
 
@@ -281,8 +285,10 @@ function ProviderPopupCard({ provider }) {
   )
 }
 
-function ClusteredProviderMarkers({ providers, onSelect }) {
+function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onBook }) {
   const map = useMap()
+  const clusterGroupRef = useRef(null)
+  const markersRef = useRef(new Map())
 
   useEffect(() => {
     const clusterGroup = L.markerClusterGroup({
@@ -318,6 +324,9 @@ function ClusteredProviderMarkers({ providers, onSelect }) {
       },
     })
 
+    clusterGroupRef.current = clusterGroup
+    markersRef.current = new Map()
+
     providers.forEach((provider) => {
       const marker = L.marker(provider.mapCoords, { icon: createMarkerIcon(provider) })
       const popupMarkup = renderToStaticMarkup(<ProviderPopupCard provider={provider} />)
@@ -328,15 +337,18 @@ function ClusteredProviderMarkers({ providers, onSelect }) {
         maxWidth: 292,
       })
 
+      marker.on('click', () => onSelect?.(provider))
+
       marker.on('popupopen', (event) => {
         const popupElement = event.popup?.getElement()
         const button = popupElement?.querySelector('.flashmat-popup-cta')
         if (!button) return
 
-        const handleClick = () => onSelect?.(provider)
+        const handleClick = () => onBook?.(provider)
         button.addEventListener('click', handleClick, { once: true })
       })
 
+      markersRef.current.set(getProviderKey(provider), marker)
       clusterGroup.addLayer(marker)
     })
 
@@ -345,13 +357,29 @@ function ClusteredProviderMarkers({ providers, onSelect }) {
     return () => {
       map.removeLayer(clusterGroup)
       clusterGroup.clearLayers()
+      clusterGroupRef.current = null
+      markersRef.current = new Map()
     }
-  }, [map, onSelect, providers])
+  }, [map, onBook, onSelect, providers])
+
+  useEffect(() => {
+    if (!selectedProviderId) return
+
+    const marker = markersRef.current.get(String(selectedProviderId))
+    const clusterGroup = clusterGroupRef.current
+    if (!marker || !clusterGroup) return
+
+    clusterGroup.zoomToShowLayer(marker, () => {
+      const latLng = marker.getLatLng()
+      map.flyTo(latLng, Math.max(map.getZoom(), 14), { duration: 0.35 })
+      marker.openPopup()
+    })
+  }, [map, selectedProviderId])
 
   return null
 }
 
-export default function ProviderMap({ providers, onSelect, scrollWheelZoom = true, height = 380 }) {
+export default function ProviderMap({ providers, selectedProviderId, onSelect, onBook, scrollWheelZoom = true, height = 380 }) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
 
   useEffect(() => {
@@ -465,7 +493,12 @@ export default function ProviderMap({ providers, onSelect, scrollWheelZoom = tru
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
         <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
         <MapViewportUpdater coordsList={coordsList} />
-        <ClusteredProviderMarkers providers={providersWithCoords} onSelect={onSelect} />
+        <ClusteredProviderMarkers
+          providers={providersWithCoords}
+          selectedProviderId={selectedProviderId}
+          onSelect={onSelect}
+          onBook={onBook}
+        />
       </MapContainer>
     </div>
   )

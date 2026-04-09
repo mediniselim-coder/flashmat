@@ -52,6 +52,10 @@ function getProviderDistance(index, provider) {
   return `${base.toFixed(1)} km`
 }
 
+function getProviderKey(provider, fallback = '') {
+  return String(provider?.id || provider?.name || fallback)
+}
+
 export default function ServiceProviders() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -62,6 +66,7 @@ export default function ServiceProviders() {
   const [searchCat, setSearchCat] = useState(params.get('cat') || 'all')
   const [sortBy, setSortBy] = useState('recommended')
   const [minRating, setMinRating] = useState(0)
+  const [selectedProviderId, setSelectedProviderId] = useState(null)
 
   useEffect(() => {
     setSearchCat(params.get('cat') || 'all')
@@ -110,6 +115,18 @@ export default function ServiceProviders() {
       return (right.rating || 0) - (left.rating || 0)
     })
   }, [providers, searchCat, searchQ, sortBy, minRating])
+
+  useEffect(() => {
+    if (!filtered.length) {
+      setSelectedProviderId(null)
+      return
+    }
+
+    const hasSelectedProvider = filtered.some((provider, index) => getProviderKey(provider, index) === selectedProviderId)
+    if (!hasSelectedProvider) {
+      setSelectedProviderId(getProviderKey(filtered[0], 0))
+    }
+  }, [filtered, selectedProviderId])
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
@@ -226,8 +243,8 @@ export default function ServiceProviders() {
                     {filtered.map((provider, index) => (
                       <div
                         key={provider.id || index}
-                        className={styles.providerCardModern}
-                        onClick={() => openProviderProfile(provider)}
+                        className={`${styles.providerCardModern} ${selectedProviderId === getProviderKey(provider, index) ? styles.providerCardModernActive : ''}`}
+                        onClick={() => setSelectedProviderId(getProviderKey(provider, index))}
                       >
                         {index === 0 && sortBy === 'recommended' ? (
                           <div className={styles.providerRecommendedBadge}>Recommended</div>
@@ -316,7 +333,9 @@ export default function ServiceProviders() {
               {!provLoading && filtered.length > 0 ? (
                 <ProviderMap
                   providers={filtered}
-                  onSelect={(provider) => openProviderProfile(provider, true)}
+                  selectedProviderId={selectedProviderId}
+                  onSelect={(provider) => setSelectedProviderId(getProviderKey(provider))}
+                  onBook={(provider) => openProviderProfile(provider, true)}
                   scrollWheelZoom
                   height="100%"
                 />
