@@ -381,6 +381,7 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
 
 export default function ProviderMap({ providers, selectedProviderId, onSelect, onBook, scrollWheelZoom = true, height = 380 }) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
+  const [mapMode, setMapMode] = useState('map')
 
   useEffect(() => {
     let cancelled = false
@@ -419,6 +420,15 @@ export default function ProviderMap({ providers, selectedProviderId, onSelect, o
   )
 
   const mapCenter = coordsList[0] || DEFAULT_CENTER
+  const tileConfig = mapMode === 'satellite'
+    ? {
+        attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      }
+    : {
+        attribution: '&copy; OpenStreetMap contributors',
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      }
 
   return (
     <div
@@ -464,6 +474,37 @@ export default function ProviderMap({ providers, selectedProviderId, onSelect, o
         .flashmat-provider-map .leaflet-control-zoom a:last-child {
           border-bottom: none;
         }
+        .flashmat-provider-map .flashmat-map-mode-toggle {
+          position: absolute;
+          top: 14px;
+          right: 14px;
+          z-index: 3;
+          display: inline-flex;
+          gap: 6px;
+          padding: 6px;
+          border-radius: 16px;
+          background: rgba(255,255,255,.92);
+          border: 1px solid rgba(20,50,82,.10);
+          box-shadow: 0 16px 32px rgba(15,30,61,.12);
+          backdrop-filter: blur(10px);
+        }
+        .flashmat-provider-map .flashmat-map-mode-toggle button {
+          border: none;
+          border-radius: 11px;
+          padding: 9px 12px;
+          background: transparent;
+          color: #5f738a;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: .02em;
+          cursor: pointer;
+          transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+        }
+        .flashmat-provider-map .flashmat-map-mode-toggle button.active {
+          background: linear-gradient(135deg, #143252 0%, #2f72df 100%);
+          color: #fff;
+          box-shadow: 0 10px 18px rgba(20,50,82,.18);
+        }
         .flashmat-provider-map .leaflet-popup-content-wrapper {
           border-radius: 22px;
           padding: 0;
@@ -490,8 +531,12 @@ export default function ProviderMap({ providers, selectedProviderId, onSelect, o
           border: none;
         }
       `}</style>
+      <div className="flashmat-map-mode-toggle" aria-label="Map display mode">
+        <button type="button" className={mapMode === 'map' ? 'active' : ''} onClick={() => setMapMode('map')}>Map</button>
+        <button type="button" className={mapMode === 'satellite' ? 'active' : ''} onClick={() => setMapMode('satellite')}>Satellite</button>
+      </div>
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
-        <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+        <TileLayer attribution={tileConfig.attribution} url={tileConfig.url} />
         <MapViewportUpdater coordsList={coordsList} />
         <ClusteredProviderMarkers
           providers={providersWithCoords}
