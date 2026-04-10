@@ -4,8 +4,6 @@ import NavBar from '../components/NavBar'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import {
-  createOrGetThread,
-  fetchAvailableMessageContacts,
   fetchConversationThreads,
   fetchThreadMessages,
   markThreadMessagesRead,
@@ -42,9 +40,7 @@ export default function Messages() {
   const { toast } = useToast()
   const [threads, setThreads] = useState([])
   const [messages, setMessages] = useState([])
-  const [contacts, setContacts] = useState([])
   const [selectedThreadId, setSelectedThreadId] = useState(searchParams.get('thread') || '')
-  const [selectedContactId, setSelectedContactId] = useState('')
   const [composer, setComposer] = useState('')
   const [filterUnread, setFilterUnread] = useState(false)
   const [loadingThreads, setLoadingThreads] = useState(false)
@@ -65,16 +61,12 @@ export default function Messages() {
     if (!user?.id) return undefined
     let active = true
 
-    async function loadThreadsAndContacts() {
+    async function loadThreads() {
       try {
         setLoadingThreads(true)
-        const [nextThreads, nextContacts] = await Promise.all([
-          fetchConversationThreads(user.id, role),
-          fetchAvailableMessageContacts(user.id, role),
-        ])
+        const nextThreads = await fetchConversationThreads(user.id, role)
         if (!active) return
         setThreads(nextThreads)
-        setContacts(nextContacts)
         setSelectedThreadId((current) => {
           const queryThreadId = searchParams.get('thread')
           if (queryThreadId && nextThreads.some((thread) => String(thread.id) === String(queryThreadId))) {
@@ -93,9 +85,9 @@ export default function Messages() {
       }
     }
 
-    loadThreadsAndContacts()
+    loadThreads()
     const unsubscribe = subscribeToInbox(user.id, {
-      onThreadsChange: loadThreadsAndContacts,
+      onThreadsChange: loadThreads,
       onMessagesChange: async () => {
         const threadId = searchParams.get('thread') || selectedThreadId
         if (!threadId) return
@@ -106,7 +98,7 @@ export default function Messages() {
           // Keep current conversation visible.
         }
       },
-      onNotificationsChange: loadThreadsAndContacts,
+      onNotificationsChange: loadThreads,
     })
 
     return () => {
@@ -148,28 +140,6 @@ export default function Messages() {
     if (!selectedThreadId) return
     setSearchParams({ thread: selectedThreadId }, { replace: true })
   }, [selectedThreadId, setSearchParams])
-
-  async function handleStartConversation() {
-    if (!selectedContactId || !user?.id) return
-
-    try {
-      const target = contacts.find((contact) => String(contact.id) === String(selectedContactId))
-      if (!target) return
-
-      const thread = await createOrGetThread({
-        clientId: role === 'client' ? user.id : target.id,
-        providerId: role === 'provider' ? user.id : target.id,
-        creatorId: user.id,
-      })
-
-      setSelectedThreadId(String(thread.id))
-      setSelectedContactId('')
-      const nextThreads = await fetchConversationThreads(user.id, role)
-      setThreads(nextThreads)
-    } catch (error) {
-      toast(error.message || 'Unable to start a conversation right now.', 'error')
-    }
-  }
 
   async function handleSend() {
     if (!selectedThread || !user?.id || !String(composer || '').trim()) return
@@ -225,28 +195,16 @@ export default function Messages() {
               </div>
             </div>
 
-            <div style={styles.startCard}>
-              <div style={styles.startTitle}>Start a new conversation</div>
-              <select
-                value={selectedContactId}
-                onChange={(event) => setSelectedContactId(event.target.value)}
-                style={styles.select}
-              >
-                <option value="">Choose a contact</option>
-                {contacts.map((contact) => (
-                  <option key={contact.id} value={contact.id}>
-                    {contact.name}
-                  </option>
-                ))}
-              </select>
-              <button type="button" style={styles.primaryButton} onClick={handleStartConversation}>
-                Start chat
-              </button>
-            </div>
-
             <div style={styles.threadList}>
               {loadingThreads ? <div style={styles.emptyText}>Loading conversations...</div> : null}
-              {!loadingThreads && visibleThreads.length === 0 ? <div style={styles.emptyText}>No conversations yet.</div> : null}
+              {!loadingThreads && visibleThreads.length === 0 ? (
+                <div style={styles.emptyStateCard}>
+                  <div style={styles.emptyStateTitle}>No conversations yet</div>
+                  <div style={styles.emptyStateText}>
+                    Start a conversation from a provider profile by using the message action there.
+                  </div>
+                </div>
+              ) : null}
               {visibleThreads.map((thread) => (
                 <button
                   key={thread.id}
@@ -438,31 +396,6 @@ const styles = {
     fontWeight: 700,
     cursor: 'pointer',
   },
-  startCard: {
-    margin: '16px 18px 0',
-    padding: 16,
-    borderRadius: 20,
-    border: '1px solid rgba(120,171,218,0.18)',
-    background: 'linear-gradient(180deg, #fbfdff 0%, #f4f9ff 100%)',
-    display: 'grid',
-    gap: 10,
-    boxShadow: '0 10px 24px rgba(19,52,83,0.05)',
-  },
-  startTitle: {
-    fontSize: 14,
-    fontWeight: 800,
-    color: '#15314f',
-  },
-  select: {
-    width: '100%',
-    borderRadius: 14,
-    border: '1px solid rgba(120,171,218,0.16)',
-    background: '#fff',
-    padding: '11px 12px',
-    fontSize: 13,
-    color: '#17314c',
-    fontFamily: 'var(--font)',
-  },
   primaryButton: {
     border: 'none',
     borderRadius: 14,
@@ -486,7 +419,7 @@ const styles = {
   threadList: {
     minHeight: 0,
     overflow: 'auto',
-    padding: '14px 14px 18px',
+    padding: '18px 14px 18px',
     display: 'grid',
     gap: 10,
     alignContent: 'start',
@@ -495,6 +428,24 @@ const styles = {
     fontSize: 13,
     color: '#8aa0b8',
     padding: '12px 6px',
+  },
+  emptyStateCard: {
+    borderRadius: 20,
+    border: '1px solid rgba(120,171,218,0.18)',
+    background: 'linear-gradient(180deg, #fbfdff 0%, #f4f9ff 100%)',
+    padding: '18px 16px',
+    boxShadow: '0 8px 20px rgba(19,52,83,0.04)',
+  },
+  emptyStateTitle: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: '#15314f',
+    marginBottom: 6,
+  },
+  emptyStateText: {
+    fontSize: 13,
+    lineHeight: 1.5,
+    color: '#6f88a4',
   },
   threadRow: {
     display: 'grid',
