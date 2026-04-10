@@ -1,24 +1,25 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom"
-import { useEffect } from "react"
+import { useEffect, lazy, Suspense } from "react"
 import { AuthProvider, useAuth } from "./hooks/useAuth"
 import { ToastProvider } from "./hooks/useToast"
 import { supabase } from "./lib/supabase"
-import Landing from "./pages/Landing"
-import Auth from "./pages/Auth"
-import ClientApp from "./pages/ClientApp"
-import ProviderApp from "./pages/ProviderApp"
-import ProviderProfile from "./pages/ProviderProfile"
-import Services from "./pages/Services"
-import ServiceProviders from "./pages/ServiceProviders"
-import AutoDoctor from "./pages/AutoDoctor"
-import FlashFixUrgence from "./pages/FlashFixUrgence"
-import PublicMarketplace from "./pages/PublicMarketplace"
-import VehicleDetails from "./pages/VehicleDetails"
-import PublicVehicleListing from "./pages/PublicVehicleListing"
-import Community from "./pages/Community"
-import Pricing from "./pages/Pricing"
-import Contact from "./pages/Contact"
-import Messages from "./pages/Messages"
+
+const Landing = lazy(() => import("./pages/Landing"))
+const Auth = lazy(() => import("./pages/Auth"))
+const ClientApp = lazy(() => import("./pages/ClientApp"))
+const ProviderApp = lazy(() => import("./pages/ProviderApp"))
+const ProviderProfile = lazy(() => import("./pages/ProviderProfile"))
+const Services = lazy(() => import("./pages/Services"))
+const ServiceProviders = lazy(() => import("./pages/ServiceProviders"))
+const AutoDoctor = lazy(() => import("./pages/AutoDoctor"))
+const FlashFixUrgence = lazy(() => import("./pages/FlashFixUrgence"))
+const PublicMarketplace = lazy(() => import("./pages/PublicMarketplace"))
+const VehicleDetails = lazy(() => import("./pages/VehicleDetails"))
+const PublicVehicleListing = lazy(() => import("./pages/PublicVehicleListing"))
+const Community = lazy(() => import("./pages/Community"))
+const Pricing = lazy(() => import("./pages/Pricing"))
+const Contact = lazy(() => import("./pages/Contact"))
+const Messages = lazy(() => import("./pages/Messages"))
 
 function AuthCallback() {
   const navigate = useNavigate()
@@ -61,59 +62,61 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/callback" element={<AuthCallback />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/providers" element={<ServiceProviders />} />
-          <Route path="/services/providers" element={<ServiceProviders />} />
-          <Route path="/doctor" element={<AutoDoctor />} />
-          <Route path="/urgence" element={<FlashFixUrgence />} />
-          <Route path="/marketplace" element={<PublicMarketplace />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route
-            path="/messages"
-            element={
-              <ProtectedRoute>
-                <Messages />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/marketplace/vehicles/:listingId" element={<PublicVehicleListing />} />
-          <Route path="/provider/:slug" element={<ProviderProfile />} />
-          <Route path="/app/search" element={<Navigate to="/" replace />} />
-          <Route path="/app/client" element={<Navigate to="/app/client/dashboard" replace />} />
-          <Route path="/app/provider" element={<Navigate to="/app/provider/dashboard" replace />} />
-          <Route
-            path="/app/client/vehicles/:vehicleId"
-            element={
-              <ProtectedRoute requiredRole="client">
-                <VehicleDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/app/client/*"
-            element={
-              <ProtectedRoute requiredRole="client">
-                <ClientApp />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/app/marketplace" element={<Navigate to="/app/client/marketplace" replace />} />
-          <Route
-            path="/app/provider/*"
-            element={
-              <ProtectedRoute requiredRole="provider">
-                <ProviderApp />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/providers" element={<ServiceProviders />} />
+            <Route path="/services/providers" element={<ServiceProviders />} />
+            <Route path="/doctor" element={<AutoDoctor />} />
+            <Route path="/urgence" element={<FlashFixUrgence />} />
+            <Route path="/marketplace" element={<PublicMarketplace />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/marketplace/vehicles/:listingId" element={<PublicVehicleListing />} />
+            <Route path="/provider/:slug" element={<ProviderProfile />} />
+            <Route path="/app/search" element={<Navigate to="/" replace />} />
+            <Route path="/app/client" element={<Navigate to="/app/client/dashboard" replace />} />
+            <Route path="/app/provider" element={<Navigate to="/app/provider/dashboard" replace />} />
+            <Route
+              path="/app/client/vehicles/:vehicleId"
+              element={
+                <ProtectedRoute requiredRole="client">
+                  <VehicleDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/client/*"
+              element={
+                <ProtectedRoute requiredRole="client">
+                  <ClientApp />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/app/marketplace" element={<Navigate to="/app/client/marketplace" replace />} />
+            <Route
+              path="/app/provider/*"
+              element={
+                <ProtectedRoute requiredRole="provider">
+                  <ProviderApp />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </ToastProvider>
     </AuthProvider>
   )
