@@ -2,11 +2,25 @@
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { normalizeMarketplaceListing, serializeMarketplaceDescription } from '../lib/marketplace'
+import AppIcon from './AppIcon'
 
 const SHOP_CATEGORIES = ['Cleaning Products', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
 const PARTS_CATEGORIES = ['Engine Parts', 'Tires & Wheels', 'Bodywork', 'Brakes & Suspension']
 const CONDITIONS = ['New', 'Very good', 'Good', 'Acceptable']
-const ICONS = ['ME','PN','VH','PR','PC','RW','VT','CR','BT','MP','TL','EL','AD','SH']
+const ICON_OPTIONS = [
+  { code: 'WL', label: 'Cleaning products' },
+  { code: 'MP', label: 'Marketplace item' },
+  { code: 'EN', label: 'Tools' },
+  { code: 'ME', label: 'Mechanic' },
+  { code: 'VH', label: 'Vehicle' },
+  { code: 'RW', label: 'Roadside' },
+  { code: 'PK', label: 'Parking' },
+  { code: 'VG', label: 'Fluids' },
+  { code: 'AL', label: 'Safety' },
+  { code: 'FS', label: 'FlashFix' },
+  { code: 'AT', label: 'Seller' },
+  { code: 'CT', label: 'Team' },
+]
 
 export default function NewListingModal({ onClose, onCreated, listingType = 'shop' }) {
   const { user, profile } = useAuth()
@@ -14,7 +28,7 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
   const categories = listingType === 'parts' ? PARTS_CATEGORIES : SHOP_CATEGORIES
   const [form, setForm] = useState({
     title: '', description: '', price: '', category: categories[0],
-    condition: 'Good', icon: listingType === 'parts' ? 'PC' : 'SH', phone: '',
+    condition: 'Good', icon: listingType === 'parts' ? 'EN' : 'WL', phone: '',
   })
   const [photos, setPhotos]     = useState([])   // { file, preview }[]
   const [loading, setLoading]   = useState(false)
@@ -134,9 +148,9 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
               {photos.length < 4 && (
                 <button type="button" onClick={() => fileRef.current.click()}
                   style={{ width:80, height:80, borderRadius:10, border:'2px dashed var(--border)', background:'var(--bg3)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:4, color:'var(--ink3)', transition:'all .15s', flexShrink:0 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor='var(--green)'; e.currentTarget.style.color='var(--green)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='var(--blue)'; e.currentTarget.style.color='var(--blue)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--ink3)' }}>
-                  <span style={{ fontSize:22 }}>PH</span>
+                  <span style={{ fontSize:26, fontWeight:700, lineHeight:1 }}>+</span>
                   <span style={{ fontSize:10, fontFamily:'var(--mono)' }}>Add</span>
                 </button>
               )}
@@ -152,10 +166,10 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
             <div className="form-group">
               <label className="form-label">Icon fallback (if no photo)</label>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-                {ICONS.map(ico => (
-                  <button key={ico} type="button" onClick={() => set('icon', ico)}
-                    style={{ width:38, height:38, fontSize:19, border:`2px solid ${form.icon===ico?'var(--green)':'var(--border)'}`, borderRadius:8, background: form.icon===ico?'var(--green-bg)':'var(--bg3)', cursor:'pointer', transition:'all .15s' }}>
-                    {ico}
+                {ICON_OPTIONS.map(({ code, label }) => (
+                  <button key={code} type="button" onClick={() => set('icon', code)} title={label} aria-label={label}
+                    style={{ width:38, height:38, border:`2px solid ${form.icon===code?'var(--blue)':'var(--border)'}`, borderRadius:8, background: form.icon===code?'var(--blue-bg)':'var(--bg3)', cursor:'pointer', transition:'all .15s', display:'grid', placeItems:'center' }}>
+                    <AppIcon code={code} size={18} />
                   </button>
                 ))}
               </div>
