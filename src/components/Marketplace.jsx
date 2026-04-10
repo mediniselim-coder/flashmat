@@ -73,9 +73,10 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
     if (forcedSection) setSection(forcedSection)
   }, [forcedSection])
   useEffect(() => {
-    const nextSection = forcedSection || 'shop'
-    setShowModal(Boolean(openComposer && user && profile && nextSection !== 'vehicle'))
-  }, [forcedSection, openComposer, profile, user])
+    if (!openComposer) {
+      setShowModal(false)
+    }
+  }, [openComposer])
 
   async function fetchListings() {
     setLoading(true)
