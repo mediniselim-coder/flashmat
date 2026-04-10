@@ -426,8 +426,8 @@ export default function ProviderMap({ providers, selectedProviderId, onSelect, o
         url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       }
     : {
-        attribution: '&copy; OpenStreetMap contributors',
-        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
       }
 
   return (
