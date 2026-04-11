@@ -31,6 +31,20 @@ function formatMessageTime(value) {
   }
 }
 
+function formatMobileThreadTime(value) {
+  if (!value) return ''
+  try {
+    const date = new Date(value)
+    const now = new Date()
+    const sameDay = date.toDateString() === now.toDateString()
+    return sameDay
+      ? date.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit' }).toLowerCase()
+      : date.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' })
+  } catch {
+    return ''
+  }
+}
+
 function ConversationAvatar({ thread }) {
   if (thread?.counterpartAvatarUrl) {
     return <img src={thread.counterpartAvatarUrl} alt={thread.counterpartName} style={styles.threadAvatarImage} />
@@ -118,6 +132,7 @@ export default function Messages() {
   const [composer, setComposer] = useState('')
   const [attachments, setAttachments] = useState([])
   const [activeFilter, setActiveFilter] = useState('all')
+  const [mobileSearch, setMobileSearch] = useState('')
   const [loadingThreads, setLoadingThreads] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
@@ -150,6 +165,26 @@ export default function Messages() {
 
     return baseThreads
   }, [activeFilter, archivedThreadIds, threads])
+  const mobileVisibleThreads = useMemo(() => {
+    const query = String(mobileSearch || '').trim().toLowerCase()
+    if (!query) return visibleThreads
+    return visibleThreads.filter((thread) => {
+      const haystack = [
+        thread.counterpartName,
+        getThreadListSubtitle(thread),
+        thread.last_message_preview,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [mobileSearch, visibleThreads])
+  const mobileStoryThreads = useMemo(() => (
+    threads
+      .filter((thread) => !archivedThreadIds.includes(String(thread.id)))
+      .slice(0, 8)
+  ), [archivedThreadIds, threads])
 
   useEffect(() => {
     if (!user?.id) {
@@ -456,6 +491,41 @@ export default function Messages() {
     navigate('/app/provider/bookings')
   }
 
+  const threadActionsMenu = (thread, mobile = false) => (
+    <div style={styles.threadActionsWrap} ref={menuThreadId === String(thread.id) ? actionsMenuRef : null}>
+      <button
+        type="button"
+        style={mobile ? styles.mobileThreadMenuButton : styles.threadMenuButton}
+        onClick={(event) => {
+          event.stopPropagation()
+          setMenuThreadId((current) => current === String(thread.id) ? '' : String(thread.id))
+        }}
+        aria-label={`Conversation actions for ${thread.counterpartName}`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="12" cy="5" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="12" cy="19" r="2" />
+        </svg>
+      </button>
+      {menuThreadId === String(thread.id) ? (
+        <div style={mobile ? { ...styles.threadMenu, right: 6, top: 42 } : styles.threadMenu}>
+          <button type="button" style={styles.threadMenuItem} onClick={() => toggleArchiveThread(thread)}>
+            {archivedThreadIds.includes(String(thread.id)) ? 'Move to inbox' : 'Archive conversation'}
+          </button>
+          <button
+            type="button"
+            style={{ ...styles.threadMenuItem, ...styles.threadMenuItemDanger }}
+            onClick={() => handleDeleteThread(thread)}
+            disabled={deletingThreadId === String(thread.id)}
+          >
+            Delete conversation
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
+
   return (
     <div style={styles.page}>
       <style>{`
@@ -468,163 +538,198 @@ export default function Messages() {
       <main style={styles.main}>
         <section style={{ ...styles.shell, ...(isMobile ? styles.shellMobile : null) }}>
           {(!isMobile || !selectedThread) ? (
-          <aside style={{ ...styles.sidebar, ...(isMobile ? styles.sidebarMobile : null) }}>
-            <div style={styles.sidebarHeader}>
-              <div>
-                <div style={styles.eyebrow}>FlashMat inbox</div>
-                <h1 style={styles.heading}>Messages</h1>
-              </div>
-              <div style={styles.filterRow}>
-                <button
-                  type="button"
-                  style={activeFilter === 'all' ? styles.filterButton : styles.filterButtonGhost}
-                  onClick={() => setActiveFilter('all')}
-                >
-                  All
-                </button>
-                <button
-                  type="button"
-                  style={activeFilter === 'unread' ? styles.filterButton : styles.filterButtonGhost}
-                  onClick={() => setActiveFilter('unread')}
-                >
-                  Unread
-                </button>
-                <button
-                  type="button"
-                  style={activeFilter === 'archived' ? styles.filterButton : styles.filterButtonGhost}
-                  onClick={() => setActiveFilter('archived')}
-                >
-                  Archived
-                </button>
-              </div>
-            </div>
-
-            <div style={styles.threadList}>
-              {loadingThreads && visibleThreads.length === 0 ? (
-                <>
-                  <div style={styles.threadSkeleton} />
-                  <div style={styles.threadSkeleton} />
-                  <div style={styles.threadSkeleton} />
-                </>
-              ) : null}
-              {!loadingThreads && visibleThreads.length === 0 ? (
-                <div style={styles.emptyStateCard}>
-                  <div style={styles.emptyStateTitle}>No conversations yet</div>
-                  <div style={styles.emptyStateText}>
-                    Start a conversation from a provider profile by using the message action there.
-                  </div>
-                </div>
-              ) : null}
-              {visibleThreads.map((thread) => (
-                <div
-                  key={thread.id}
-                  style={{
-                    ...styles.threadRow,
-                    background: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.10)' : '#fff',
-                    borderColor: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.22)' : 'rgba(120,171,218,0.12)',
-                  }}
-                >
-                  <button
-                    type="button"
-                    style={styles.threadSelectButton}
-                    onClick={() => {
-                      setMenuThreadId('')
-                      setSelectedThreadId(String(thread.id))
-                    }}
-                  >
-                    <div style={styles.threadAvatarWrap}>
-                      <ConversationAvatar thread={thread} />
+            isMobile ? (
+              <aside style={styles.mobileInboxShell}>
+                <div style={styles.mobileInboxHeader}>
+                  <div style={styles.mobileInboxTitleRow}>
+                    <div>
+                      <div style={styles.mobileInboxTitle}>messages</div>
+                      <div style={styles.mobileInboxSubtitle}>See who messaged you on FlashMat.</div>
                     </div>
-                    <div style={styles.threadBody}>
-                      <div style={styles.threadTopLine}>
-                        <strong style={styles.threadName}>{thread.counterpartName}</strong>
-                        <span style={styles.threadDate}>{formatMessageTime(thread.last_message_at)}</span>
-                      </div>
-                      <div style={styles.threadSubtitle}>{getThreadListSubtitle(thread)}</div>
-                      <div style={styles.threadPreviewLine}>
-                        <span style={styles.threadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
-                        {thread.unreadCount > 0 ? <span style={styles.unreadBadge}>{thread.unreadCount}</span> : null}
-                      </div>
-                    </div>
-                  </button>
-                  <div style={styles.threadActionsWrap} ref={menuThreadId === String(thread.id) ? actionsMenuRef : null}>
-                    <button
-                      type="button"
-                      style={styles.threadMenuButton}
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        setMenuThreadId((current) => current === String(thread.id) ? '' : String(thread.id))
-                      }}
-                      aria-label={`Conversation actions for ${thread.counterpartName}`}
-                      title="Conversation actions"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <circle cx="12" cy="5" r="2" />
-                        <circle cx="12" cy="12" r="2" />
-                        <circle cx="12" cy="19" r="2" />
-                      </svg>
+                    <button type="button" style={styles.mobileComposeButton} onClick={() => navigate('/community')}>
+                      +
                     </button>
-                    {menuThreadId === String(thread.id) ? (
-                      <div style={styles.threadMenu}>
-                        <button
-                          type="button"
-                          style={styles.threadMenuItem}
-                          onClick={() => toggleArchiveThread(thread)}
-                        >
-                          {archivedThreadIds.includes(String(thread.id)) ? 'Move to inbox' : 'Archive conversation'}
-                        </button>
-                        <button
-                          type="button"
-                          style={{ ...styles.threadMenuItem, ...styles.threadMenuItemDanger }}
-                          onClick={() => handleDeleteThread(thread)}
-                          disabled={deletingThreadId === String(thread.id)}
-                        >
-                          Delete conversation
-                        </button>
-                      </div>
-                    ) : null}
+                  </div>
+
+                  <div style={styles.mobileSearchBar}>
+                    <span style={styles.mobileSearchIcon}>⌕</span>
+                    <input
+                      value={mobileSearch}
+                      onChange={(event) => setMobileSearch(event.target.value)}
+                      placeholder="Search messages"
+                      style={styles.mobileSearchInput}
+                    />
+                  </div>
+
+                  <div style={styles.mobileFilterRow}>
+                    <button type="button" style={activeFilter === 'all' ? styles.mobileFilterActive : styles.mobileFilterGhost} onClick={() => setActiveFilter('all')}>All</button>
+                    <button type="button" style={activeFilter === 'unread' ? styles.mobileFilterActive : styles.mobileFilterGhost} onClick={() => setActiveFilter('unread')}>Unread</button>
+                    <button type="button" style={activeFilter === 'archived' ? styles.mobileFilterActive : styles.mobileFilterGhost} onClick={() => setActiveFilter('archived')}>Archived</button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </aside>
+
+                {mobileStoryThreads.length > 0 ? (
+                  <div style={styles.mobileStoriesRail}>
+                    {mobileStoryThreads.map((thread) => (
+                      <button key={`story-${thread.id}`} type="button" style={styles.mobileStoryButton} onClick={() => setSelectedThreadId(String(thread.id))}>
+                        <div style={styles.mobileStoryAvatarRing}>
+                          <div style={styles.mobileStoryAvatar}>
+                            <ConversationAvatar thread={thread} />
+                          </div>
+                        </div>
+                        <span style={styles.mobileStoryName}>{thread.counterpartName}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+
+                <div style={styles.mobileThreadList}>
+                  {loadingThreads && mobileVisibleThreads.length === 0 ? (
+                    <>
+                      <div style={styles.mobileThreadSkeleton} />
+                      <div style={styles.mobileThreadSkeleton} />
+                      <div style={styles.mobileThreadSkeleton} />
+                    </>
+                  ) : null}
+                  {!loadingThreads && mobileVisibleThreads.length === 0 ? (
+                    <div style={styles.mobileEmptyState}>
+                      <div style={styles.mobileEmptyTitle}>No conversations yet</div>
+                      <div style={styles.mobileEmptyText}>Your messages with providers will show up here.</div>
+                    </div>
+                  ) : null}
+                  {mobileVisibleThreads.map((thread) => (
+                    <div key={`mobile-${thread.id}`} style={styles.mobileThreadRow}>
+                      <button
+                        type="button"
+                        style={styles.mobileThreadSelectButton}
+                        onClick={() => {
+                          setMenuThreadId('')
+                          setSelectedThreadId(String(thread.id))
+                        }}
+                      >
+                        <div style={styles.mobileThreadAvatarWrap}>
+                          <ConversationAvatar thread={thread} />
+                          {thread.unreadCount > 0 ? <span style={styles.mobileUnreadDot} /> : null}
+                        </div>
+                        <div style={styles.mobileThreadMain}>
+                          <div style={styles.mobileThreadTopLine}>
+                            <strong style={styles.mobileThreadName}>{thread.counterpartName}</strong>
+                            <span style={styles.mobileThreadTime}>{formatMobileThreadTime(thread.last_message_at)}</span>
+                          </div>
+                          <div style={styles.mobileThreadPreviewRow}>
+                            <span style={styles.mobileThreadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
+                            {thread.unreadCount > 0 ? <span style={styles.mobileUnreadCount}>{thread.unreadCount}</span> : null}
+                          </div>
+                        </div>
+                      </button>
+                      {threadActionsMenu(thread, true)}
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            ) : (
+              <aside style={styles.sidebar}>
+                <div style={styles.sidebarHeader}>
+                  <div>
+                    <div style={styles.eyebrow}>FlashMat inbox</div>
+                    <h1 style={styles.heading}>Messages</h1>
+                  </div>
+                  <div style={styles.filterRow}>
+                    <button type="button" style={activeFilter === 'all' ? styles.filterButton : styles.filterButtonGhost} onClick={() => setActiveFilter('all')}>All</button>
+                    <button type="button" style={activeFilter === 'unread' ? styles.filterButton : styles.filterButtonGhost} onClick={() => setActiveFilter('unread')}>Unread</button>
+                    <button type="button" style={activeFilter === 'archived' ? styles.filterButton : styles.filterButtonGhost} onClick={() => setActiveFilter('archived')}>Archived</button>
+                  </div>
+                </div>
+
+                <div style={styles.threadList}>
+                  {loadingThreads && visibleThreads.length === 0 ? (
+                    <>
+                      <div style={styles.threadSkeleton} />
+                      <div style={styles.threadSkeleton} />
+                      <div style={styles.threadSkeleton} />
+                    </>
+                  ) : null}
+                  {!loadingThreads && visibleThreads.length === 0 ? (
+                    <div style={styles.emptyStateCard}>
+                      <div style={styles.emptyStateTitle}>No conversations yet</div>
+                      <div style={styles.emptyStateText}>Start a conversation from a provider profile by using the message action there.</div>
+                    </div>
+                  ) : null}
+                  {visibleThreads.map((thread) => (
+                    <div
+                      key={thread.id}
+                      style={{
+                        ...styles.threadRow,
+                        background: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.10)' : '#fff',
+                        borderColor: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.22)' : 'rgba(120,171,218,0.12)',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        style={styles.threadSelectButton}
+                        onClick={() => {
+                          setMenuThreadId('')
+                          setSelectedThreadId(String(thread.id))
+                        }}
+                      >
+                        <div style={styles.threadAvatarWrap}>
+                          <ConversationAvatar thread={thread} />
+                        </div>
+                        <div style={styles.threadBody}>
+                          <div style={styles.threadTopLine}>
+                            <strong style={styles.threadName}>{thread.counterpartName}</strong>
+                            <span style={styles.threadDate}>{formatMessageTime(thread.last_message_at)}</span>
+                          </div>
+                          <div style={styles.threadSubtitle}>{getThreadListSubtitle(thread)}</div>
+                          <div style={styles.threadPreviewLine}>
+                            <span style={styles.threadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
+                            {thread.unreadCount > 0 ? <span style={styles.unreadBadge}>{thread.unreadCount}</span> : null}
+                          </div>
+                        </div>
+                      </button>
+                      {threadActionsMenu(thread)}
+                    </div>
+                  ))}
+                </div>
+              </aside>
+            )
           ) : null}
 
           {(!isMobile || selectedThread) ? (
           <section style={{ ...styles.chatPane, ...(isMobile ? styles.chatPaneMobile : null) }}>
             {selectedThread ? (
               <>
-                <div style={{ ...styles.chatHeader, ...(isMobile ? styles.chatHeaderMobile : null) }}>
+                <div style={{ ...styles.chatHeader, ...(isMobile ? styles.mobileChatHeader : null) }}>
                   <div style={styles.chatHeaderMain}>
-                    <div style={styles.chatHeaderAvatar}>
-                      <ConversationAvatar thread={selectedThread} />
-                    </div>
-                    <div>
-                      <div style={styles.chatName}>{selectedThread.counterpartName}</div>
-                      <div style={styles.chatMeta}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'space-between' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
                     {isMobile ? (
                       <button
                         type="button"
-                        style={styles.secondaryButton}
+                        style={styles.mobileBackButton}
                         onClick={() => {
                           setSelectedThreadId('')
                           setMessages([])
                           setSearchParams({}, { replace: true })
                         }}
                       >
-                        Back to inbox
+                        ‹
                       </button>
                     ) : null}
-                    <button type="button" style={styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
+                    <div style={{ ...styles.chatHeaderAvatar, ...(isMobile ? styles.mobileChatHeaderAvatar : null) }}>
+                      <ConversationAvatar thread={selectedThread} />
+                    </div>
+                    <div>
+                      <div style={{ ...styles.chatName, ...(isMobile ? styles.mobileChatName : null) }}>{selectedThread.counterpartName}</div>
+                      <div style={{ ...styles.chatMeta, ...(isMobile ? styles.mobileChatMeta : null) }}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <button type="button" style={isMobile ? styles.mobileProfileButton : styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
                       View profile
                     </button>
                   </div>
                 </div>
 
-                <div style={{ ...styles.chatFeed, ...(isMobile ? styles.chatFeedMobile : null) }}>
+                <div style={{ ...styles.chatFeed, ...(isMobile ? styles.mobileChatFeed : null) }}>
                   {loadingMessages && messages.length === 0 ? (
                     <div style={styles.chatLoadingState}>
                       <div style={styles.messageSkeletonMine} />
@@ -632,7 +737,7 @@ export default function Messages() {
                       <div style={styles.messageSkeletonTheirsShort} />
                     </div>
                   ) : null}
-                  {!loadingMessages && messages.length === 0 ? <div style={styles.emptyText}>Say hello to start the conversation.</div> : null}
+                  {!loadingMessages && messages.length === 0 ? <div style={isMobile ? styles.mobileEmptyChatText : styles.emptyText}>Say hello to start the conversation.</div> : null}
                   {messages.map((message) => {
                     const mine = String(message.sender_id) === String(user?.id)
                     const parsedMessage = message.attachments ? message : parseMessageBody(message.body)
@@ -640,7 +745,7 @@ export default function Messages() {
                     const visibleAttachments = parsedMessage.attachments || []
                     return (
                       <div key={message.id} style={{ ...styles.messageWrap, alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                        <div style={{ ...styles.messageBubble, ...(mine ? styles.messageMine : styles.messageTheirs) }}>
+                        <div style={{ ...styles.messageBubble, ...(mine ? styles.messageMine : styles.messageTheirs), ...(isMobile ? (mine ? styles.mobileMessageMine : styles.mobileMessageTheirs) : null) }}>
                           {visibleText ? <div>{visibleText}</div> : null}
                           {visibleAttachments.length > 0 ? (
                             <div style={styles.attachmentStack}>
@@ -671,16 +776,26 @@ export default function Messages() {
                   })}
                 </div>
 
-                <div style={{ ...styles.composer, ...(isMobile ? styles.composerMobile : null) }}>
-                  <div style={{ ...styles.composerField, ...(isMobile ? styles.composerFieldMobile : null) }}>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,application/pdf"
-                      multiple
-                      style={styles.hiddenInput}
-                      onChange={handleAddAttachments}
-                    />
+                <div style={{ ...styles.composer, ...(isMobile ? styles.mobileMessengerComposer : null) }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,application/pdf"
+                    multiple
+                    style={styles.hiddenInput}
+                    onChange={handleAddAttachments}
+                  />
+                  {isMobile ? (
+                    <button
+                      type="button"
+                      style={styles.mobileComposerIcon}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={preparingAttachments || sending}
+                    >
+                      +
+                    </button>
+                  ) : null}
+                  <div style={{ ...styles.composerField, ...(isMobile ? styles.mobileComposerInputWrap : null) }}>
                     {attachments.length > 0 ? (
                       <div style={styles.pendingAttachments}>
                         {attachments.map((attachment) => (
@@ -703,23 +818,23 @@ export default function Messages() {
                     <textarea
                       value={composer}
                       onChange={(event) => setComposer(event.target.value)}
-                      style={{ ...styles.textarea, ...(isMobile ? styles.textareaMobile : null) }}
-                      placeholder="Write a message..."
+                      style={{ ...styles.textarea, ...(isMobile ? styles.mobileMessengerTextarea : null) }}
+                      placeholder={isMobile ? 'Aa' : 'Write a message...'}
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: 10, width: isMobile ? '100%' : 'auto' }}>
+                  {!isMobile ? (
                     <button
                       type="button"
-                      style={{ ...styles.attachButton, ...(isMobile ? styles.composerActionMobile : null) }}
+                      style={styles.attachButton}
                       onClick={() => fileInputRef.current?.click()}
                       disabled={preparingAttachments || sending}
                     >
                       {preparingAttachments ? 'Adding...' : 'Add files'}
                     </button>
-                    <button type="button" style={{ ...styles.primaryButton, ...(isMobile ? styles.composerActionMobile : null) }} onClick={handleSend} disabled={sending || preparingAttachments}>
-                      {sending ? 'Sending...' : 'Send'}
-                    </button>
-                  </div>
+                  ) : null}
+                  <button type="button" style={isMobile ? styles.mobileSendButton : styles.primaryButton} onClick={handleSend} disabled={sending || preparingAttachments}>
+                    {sending ? (isMobile ? '...' : 'Sending...') : 'Send'}
+                  </button>
                 </div>
               </>
             ) : (
@@ -775,6 +890,279 @@ const styles = {
   },
   shellMobile: {
     display: 'block',
+  },
+  mobileInboxShell: {
+    minHeight: '100%',
+    background: '#050608',
+    color: '#fff',
+    display: 'grid',
+    gridTemplateRows: 'auto auto 1fr',
+  },
+  mobileInboxHeader: {
+    padding: '18px 16px 12px',
+    background: 'linear-gradient(180deg, rgba(7,8,10,0.98) 0%, rgba(7,8,10,0.92) 100%)',
+  },
+  mobileInboxTitleRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  mobileInboxTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 32,
+    lineHeight: 1,
+    color: '#fff',
+    letterSpacing: '-0.04em',
+    textTransform: 'lowercase',
+  },
+  mobileInboxSubtitle: {
+    marginTop: 6,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.54)',
+  },
+  mobileComposeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#fff',
+    fontSize: 24,
+    lineHeight: 1,
+    cursor: 'pointer',
+  },
+  mobileSearchBar: {
+    marginTop: 18,
+    display: 'grid',
+    gridTemplateColumns: '18px minmax(0, 1fr)',
+    gap: 10,
+    alignItems: 'center',
+    borderRadius: 18,
+    background: '#1e2024',
+    border: '1px solid rgba(255,255,255,0.06)',
+    padding: '13px 14px',
+  },
+  mobileSearchIcon: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.52)',
+  },
+  mobileSearchInput: {
+    width: '100%',
+    border: 'none',
+    outline: 'none',
+    background: 'transparent',
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'var(--font)',
+  },
+  mobileFilterRow: {
+    display: 'flex',
+    gap: 8,
+    marginTop: 14,
+  },
+  mobileFilterActive: {
+    border: 'none',
+    borderRadius: 999,
+    background: '#0a84ff',
+    color: '#fff',
+    padding: '10px 14px',
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+  mobileFilterGhost: {
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: 999,
+    background: '#121418',
+    color: 'rgba(255,255,255,0.74)',
+    padding: '10px 14px',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  mobileStoriesRail: {
+    display: 'grid',
+    gridAutoFlow: 'column',
+    gridAutoColumns: '76px',
+    gap: 12,
+    overflowX: 'auto',
+    padding: '8px 16px 14px',
+    background: '#050608',
+  },
+  mobileStoryButton: {
+    border: 'none',
+    background: 'transparent',
+    padding: 0,
+    color: '#fff',
+    display: 'grid',
+    justifyItems: 'center',
+    gap: 8,
+    cursor: 'pointer',
+  },
+  mobileStoryAvatarRing: {
+    width: 70,
+    height: 70,
+    borderRadius: 999,
+    padding: 3,
+    background: 'linear-gradient(135deg, #0a84ff 0%, #2de06d 100%)',
+  },
+  mobileStoryAvatar: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    overflow: 'hidden',
+    background: '#101318',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileStoryName: {
+    width: '100%',
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.82)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  mobileThreadList: {
+    minHeight: 0,
+    overflow: 'auto',
+    padding: '6px 10px calc(18px + env(safe-area-inset-bottom, 0px))',
+    display: 'grid',
+    gap: 4,
+    alignContent: 'start',
+    background: '#050608',
+  },
+  mobileThreadRow: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gap: 8,
+    alignItems: 'center',
+    padding: '10px 6px',
+    borderRadius: 20,
+  },
+  mobileThreadSelectButton: {
+    display: 'grid',
+    gridTemplateColumns: '64px minmax(0, 1fr)',
+    gap: 12,
+    border: 'none',
+    background: 'transparent',
+    padding: 0,
+    textAlign: 'left',
+    color: '#fff',
+    cursor: 'pointer',
+  },
+  mobileThreadAvatarWrap: {
+    position: 'relative',
+    width: 64,
+    height: 64,
+    borderRadius: 999,
+    overflow: 'hidden',
+    background: 'linear-gradient(135deg, rgba(23,53,92,0.98) 0%, rgba(59,159,216,0.92) 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mobileUnreadDot: {
+    position: 'absolute',
+    right: 4,
+    bottom: 4,
+    width: 12,
+    height: 12,
+    borderRadius: 999,
+    background: '#2de06d',
+    boxShadow: '0 0 0 2px #050608',
+  },
+  mobileThreadMain: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 6,
+    alignContent: 'center',
+  },
+  mobileThreadTopLine: {
+    display: 'flex',
+    alignItems: 'baseline',
+    gap: 8,
+    justifyContent: 'space-between',
+  },
+  mobileThreadName: {
+    fontSize: 18,
+    color: '#fff',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  mobileThreadTime: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.48)',
+    flexShrink: 0,
+  },
+  mobileThreadPreviewRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  },
+  mobileThreadPreview: {
+    minWidth: 0,
+    flex: 1,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.64)',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  mobileUnreadCount: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 999,
+    background: '#0a84ff',
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 5px',
+  },
+  mobileThreadMenuButton: {
+    width: 34,
+    height: 34,
+    border: 'none',
+    background: 'transparent',
+    color: 'rgba(255,255,255,0.58)',
+    borderRadius: 999,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  },
+  mobileThreadSkeleton: {
+    height: 78,
+    borderRadius: 18,
+    background: 'linear-gradient(90deg, rgba(27,31,37,0.95) 0%, rgba(37,41,48,0.98) 50%, rgba(27,31,37,0.95) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'flashmat-inbox-shimmer 1.2s linear infinite',
+  },
+  mobileEmptyState: {
+    borderRadius: 22,
+    background: '#121418',
+    border: '1px solid rgba(255,255,255,0.06)',
+    padding: '22px 18px',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  mobileEmptyTitle: {
+    fontSize: 17,
+    fontWeight: 800,
+    color: '#fff',
+    marginBottom: 8,
+  },
+  mobileEmptyText: {
+    fontSize: 14,
+    lineHeight: 1.6,
+    color: 'rgba(255,255,255,0.58)',
   },
   sidebar: {
     display: 'grid',
@@ -1072,6 +1460,7 @@ const styles = {
     gridTemplateRows: 'auto 1fr auto',
     height: '100%',
     borderRight: 'none',
+    background: '#050608',
   },
   chatHeader: {
     display: 'flex',
@@ -1086,6 +1475,11 @@ const styles = {
     padding: '16px 16px 14px',
     alignItems: 'flex-start',
     flexDirection: 'column',
+  },
+  mobileChatHeader: {
+    padding: '12px 12px 10px',
+    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    background: 'linear-gradient(180deg, #0a0c10 0%, #06080c 100%)',
   },
   confirmOverlay: {
     position: 'fixed',
@@ -1172,6 +1566,10 @@ const styles = {
   chatFeedMobile: {
     padding: '16px 14px 14px',
   },
+  mobileChatFeed: {
+    padding: '14px 12px',
+    background: '#050608',
+  },
   chatLoadingState: {
     display: 'grid',
     gap: 12,
@@ -1223,6 +1621,21 @@ const styles = {
     border: '1px solid rgba(120,171,218,0.14)',
     borderBottomLeftRadius: 8,
   },
+  mobileMessageMine: {
+    maxWidth: '82%',
+    background: 'linear-gradient(135deg, #1877f2 0%, #0a84ff 100%)',
+    color: '#fff',
+    borderBottomRightRadius: 10,
+    fontSize: 16,
+  },
+  mobileMessageTheirs: {
+    maxWidth: '82%',
+    background: '#2a2c31',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.04)',
+    borderBottomLeftRadius: 10,
+    fontSize: 16,
+  },
   messageMeta: {
     marginTop: 6,
     fontSize: 10,
@@ -1241,6 +1654,14 @@ const styles = {
     gridTemplateColumns: '1fr',
     gap: 10,
     padding: '12px 12px calc(12px + env(safe-area-inset-bottom, 0px))',
+  },
+  mobileMessengerComposer: {
+    gridTemplateColumns: 'auto minmax(0, 1fr) auto',
+    gap: 10,
+    padding: '10px 12px calc(10px + env(safe-area-inset-bottom, 0px))',
+    alignItems: 'end',
+    background: '#050608',
+    borderTop: '1px solid rgba(255,255,255,0.08)',
   },
   composerField: {
     display: 'grid',
@@ -1307,6 +1728,42 @@ const styles = {
     minHeight: 88,
     fontSize: 16,
     padding: '14px 14px',
+  },
+  mobileMessengerTextarea: {
+    minHeight: 52,
+    maxHeight: '22vh',
+    borderRadius: 24,
+    border: 'none',
+    background: '#2a2c31',
+    color: '#fff',
+    padding: '14px 16px',
+    fontSize: 16,
+  },
+  mobileComposerInputWrap: {
+    gap: 8,
+  },
+  mobileComposerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    border: 'none',
+    background: '#1877f2',
+    color: '#fff',
+    fontSize: 24,
+    lineHeight: 1,
+    cursor: 'pointer',
+  },
+  mobileSendButton: {
+    minWidth: 56,
+    height: 42,
+    borderRadius: 999,
+    border: 'none',
+    background: '#1877f2',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 800,
+    padding: '0 14px',
+    cursor: 'pointer',
   },
   attachButton: {
     border: '1px solid rgba(120,171,218,0.16)',
@@ -1398,5 +1855,50 @@ const styles = {
   emptyPaneText: {
     fontSize: 13,
     color: '#7790aa',
+  },
+  mobileBackButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 999,
+    border: 'none',
+    background: 'rgba(255,255,255,0.08)',
+    color: '#fff',
+    fontSize: 28,
+    lineHeight: 1,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 2,
+  },
+  mobileChatHeaderAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 999,
+  },
+  mobileChatName: {
+    fontSize: 19,
+    color: '#fff',
+    marginBottom: 2,
+  },
+  mobileChatMeta: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.58)',
+  },
+  mobileProfileButton: {
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#fff',
+    borderRadius: 999,
+    padding: '9px 12px',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+  },
+  mobileEmptyChatText: {
+    padding: '18px 8px',
+    textAlign: 'center',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 14,
   },
 }
