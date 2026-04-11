@@ -228,9 +228,15 @@ function MapViewportUpdater({ coordsList }) {
 
 function VisibleProvidersTracker({ providers, onVisibleProvidersChange }) {
   const map = useMap()
+  const onVisibleProvidersChangeRef = useRef(onVisibleProvidersChange)
+  const lastVisibleKeysRef = useRef('')
 
   useEffect(() => {
-    if (!onVisibleProvidersChange) return undefined
+    onVisibleProvidersChangeRef.current = onVisibleProvidersChange
+  }, [onVisibleProvidersChange])
+
+  useEffect(() => {
+    if (!onVisibleProvidersChangeRef.current) return undefined
 
     function updateVisibleProviders() {
       const bounds = map.getBounds()
@@ -238,7 +244,10 @@ function VisibleProvidersTracker({ providers, onVisibleProvidersChange }) {
         if (!Array.isArray(provider?.mapCoords) || provider.mapCoords.length !== 2) return false
         return bounds.contains(provider.mapCoords)
       })
-      onVisibleProvidersChange(visibleProviders)
+      const nextVisibleKeys = visibleProviders.map((provider) => getProviderKey(provider)).join('|')
+      if (nextVisibleKeys === lastVisibleKeysRef.current) return
+      lastVisibleKeysRef.current = nextVisibleKeys
+      onVisibleProvidersChangeRef.current?.(visibleProviders)
     }
 
     updateVisibleProviders()
@@ -426,6 +435,7 @@ export default function ProviderMap({
 }) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
   const [mapMode, setMapMode] = useState('map')
+  const coordsCacheRef = useRef(new Map())
 
   useEffect(() => {
     let cancelled = false
@@ -433,15 +443,28 @@ export default function ProviderMap({
     async function resolveProviderCoords() {
       const nextProviders = await Promise.all(
         (providers || []).map(async (provider) => {
+          const providerKey = getProviderKey(provider)
+
           if (hasValidCoords(provider?.coords)) {
-            return { ...provider, mapCoords: provider.coords.map(Number) }
+            const resolvedCoords = provider.coords.map(Number)
+            coordsCacheRef.current.set(providerKey, resolvedCoords)
+            return { ...provider, mapCoords: resolvedCoords }
+          }
+
+          const cachedCoords = coordsCacheRef.current.get(providerKey)
+          if (hasValidCoords(cachedCoords)) {
+            return { ...provider, mapCoords: cachedCoords }
           }
 
           try {
             const geocoded = await geocodeAddress(provider?.address)
-            return { ...provider, mapCoords: hasValidCoords(geocoded) ? geocoded : buildApproximateCoords(provider) }
+            const resolvedCoords = hasValidCoords(geocoded) ? geocoded : buildApproximateCoords(provider)
+            coordsCacheRef.current.set(providerKey, resolvedCoords)
+            return { ...provider, mapCoords: resolvedCoords }
           } catch {
-            return { ...provider, mapCoords: buildApproximateCoords(provider) }
+            const fallbackCoords = buildApproximateCoords(provider)
+            coordsCacheRef.current.set(providerKey, fallbackCoords)
+            return { ...provider, mapCoords: fallbackCoords }
           }
         }),
       )

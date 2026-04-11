@@ -343,7 +343,13 @@ export default function ServiceProviders() {
                   selectedProviderId={selectedProviderId}
                   onSelect={(provider) => setSelectedProviderId(getProviderKey(provider))}
                   onVisibleProvidersChange={(visibleProviders) => {
-                    setVisibleProviderKeys(visibleProviders.map((provider) => getProviderKey(provider)))
+                    const nextKeys = visibleProviders.map((provider) => getProviderKey(provider))
+                    setVisibleProviderKeys((current) => {
+                      if (Array.isArray(current) && current.length === nextKeys.length && current.every((value, index) => value === nextKeys[index])) {
+                        return current
+                      }
+                      return nextKeys
+                    })
                   }}
                   onBook={(provider) => openProviderProfile(provider, true)}
                   scrollWheelZoom

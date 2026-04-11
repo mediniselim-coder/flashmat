@@ -697,7 +697,13 @@ export default function ClientApp() {
                   providers={filtered}
                   onSelect={(p) => openBooking(p)}
                   onVisibleProvidersChange={(visibleProviders) => {
-                    setVisibleProviderKeys(visibleProviders.map((provider) => String(provider?.id || provider?.name || '')))
+                    const nextKeys = visibleProviders.map((provider) => String(provider?.id || provider?.name || ''))
+                    setVisibleProviderKeys((current) => {
+                      if (Array.isArray(current) && current.length === nextKeys.length && current.every((value, index) => value === nextKeys[index])) {
+                        return current
+                      }
+                      return nextKeys
+                    })
                   }}
                 />
               )}
