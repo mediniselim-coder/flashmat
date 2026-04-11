@@ -333,7 +333,7 @@ function ProviderPopupCard({ provider }) {
             cursor: 'pointer',
           }}
         >
-          Book with FlashMat
+          Book
         </button>
       </div>
     </div>

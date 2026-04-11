@@ -1,10 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AppIcon from '../components/AppIcon'
+import BookingModal from '../components/BookingModal'
 import NavBar from '../components/NavBar'
 import ProviderMap from '../components/ProviderMap'
+import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../hooks/useToast'
+import { createBooking } from '../lib/bookings'
 import { supabase } from '../lib/supabase'
 import { mergeProviderProfile } from '../lib/providerProfiles'
+import { fetchClientVehicles } from '../lib/vehicles'
 import styles from './AppShell.module.css'
 
 const SEARCH_CATS = [
@@ -59,6 +64,8 @@ function getProviderKey(provider, fallback = '') {
 export default function ServiceProviders() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, profile } = useAuth()
+  const { toast } = useToast()
   const params = useMemo(() => new URLSearchParams(location.search), [location.search])
   const [providers, setProviders] = useState([])
   const [provLoading, setProvLoading] = useState(false)
@@ -68,6 +75,9 @@ export default function ServiceProviders() {
   const [minRating, setMinRating] = useState(0)
   const [selectedProviderId, setSelectedProviderId] = useState(null)
   const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
+  const [bookingOpen, setBookingOpen] = useState(false)
+  const [selectedBookingProvider, setSelectedBookingProvider] = useState(null)
+  const [userVehicles, setUserVehicles] = useState([])
 
   useEffect(() => {
     setSearchCat(params.get('cat') || 'all')
@@ -89,10 +99,64 @@ export default function ServiceProviders() {
     fetchProviders()
   }, [])
 
-  function openProviderProfile(provider, shouldBook = false) {
+  useEffect(() => {
+    async function loadVehicles() {
+      if (!user?.id || profile?.role !== 'client') {
+        setUserVehicles([])
+        return
+      }
+
+      try {
+        const vehicles = await fetchClientVehicles(user.id)
+        setUserVehicles(vehicles || [])
+      } catch {
+        setUserVehicles([])
+      }
+    }
+
+    loadVehicles()
+  }, [profile?.role, user?.id])
+
+  function openProviderProfile(provider) {
     const providerName = encodeURIComponent(provider.name)
-    const bookingQuery = shouldBook ? '&book=1' : ''
-    navigate(`/provider/${slugify(provider.name)}?n=${providerName}${bookingQuery}`)
+    navigate(`/provider/${slugify(provider.name)}?n=${providerName}`)
+  }
+
+  function openBooking(provider) {
+    if (!provider) return
+
+    if (!user) {
+      window.sessionStorage.setItem('flashmat-post-login-redirect', location.pathname + location.search)
+      navigate('/?login=1')
+      return
+    }
+
+    if (profile?.role !== 'client') {
+      toast('Only client accounts can book providers.', 'error')
+      return
+    }
+
+    setSelectedBookingProvider(provider)
+    setBookingOpen(true)
+  }
+
+  async function handleBookingConfirm(payload) {
+    if (!user?.id) throw new Error('Client login required')
+    await createBooking({
+      clientId: user.id,
+      providerId: payload.provider.id,
+      vehicleId: payload.vehicle?.id,
+      service: payload.service,
+      serviceIcon: payload.serviceIcon,
+      date: payload.date,
+      timeSlot: payload.timeSlot,
+      notes: payload.notes,
+      price: payload.price,
+    })
+    setBookingOpen(false)
+    setSelectedBookingProvider(null)
+    toast('Booking confirmed', 'success')
+    navigate('/app/client/bookings')
   }
 
   const filtered = useMemo(() => {
@@ -296,7 +360,7 @@ export default function ServiceProviders() {
                               className="btn"
                               onClick={(event) => {
                                 event.stopPropagation()
-                                openProviderProfile(provider, false)
+                                openProviderProfile(provider)
                               }}
                             >
                               Visit profile
@@ -305,7 +369,7 @@ export default function ServiceProviders() {
                               className="btn btn-green"
                               onClick={(event) => {
                                 event.stopPropagation()
-                                openProviderProfile(provider, true)
+                                openBooking(provider)
                               }}
                             >
                               Book
@@ -342,7 +406,7 @@ export default function ServiceProviders() {
                   providers={filtered}
                   selectedProviderId={selectedProviderId}
                   onSelect={(provider) => setSelectedProviderId(getProviderKey(provider))}
-                  onVisitProfile={(provider) => openProviderProfile(provider, false)}
+                  onVisitProfile={(provider) => openProviderProfile(provider)}
                   onVisibleProvidersChange={(visibleProviders) => {
                     const nextKeys = visibleProviders.map((provider) => getProviderKey(provider))
                     setVisibleProviderKeys((current) => {
@@ -352,7 +416,7 @@ export default function ServiceProviders() {
                       return nextKeys
                     })
                   }}
-                  onBook={(provider) => openProviderProfile(provider, true)}
+                  onBook={(provider) => openBooking(provider)}
                   scrollWheelZoom
                   height="100%"
                 />
@@ -365,6 +429,19 @@ export default function ServiceProviders() {
           </div>
         </div>
       </div>
+
+      {bookingOpen ? (
+        <BookingModal
+          providers={providers}
+          vehicles={userVehicles}
+          initialProvider={selectedBookingProvider}
+          onClose={() => {
+            setBookingOpen(false)
+            setSelectedBookingProvider(null)
+          }}
+          onConfirm={handleBookingConfirm}
+        />
+      ) : null}
     </div>
   )
 }
