@@ -1,7 +1,72 @@
 import { supabase } from './supabase'
 
+const ATTACHMENT_START = '[flashmat-attachments]'
+const ATTACHMENT_END = '[/flashmat-attachments]'
+
 function uniq(values) {
   return Array.from(new Set(values.filter(Boolean)))
+}
+
+function formatAttachmentSummary(count) {
+  return count === 1 ? 'Sent 1 attachment' : `Sent ${count} attachments`
+}
+
+function normalizeAttachments(attachments = []) {
+  return attachments
+    .filter((attachment) => attachment?.url && attachment?.name)
+    .map((attachment) => ({
+      name: String(attachment.name).slice(0, 120),
+      type: String(attachment.type || 'application/octet-stream').slice(0, 120),
+      size: Number(attachment.size) || 0,
+      url: attachment.url,
+    }))
+}
+
+export function parseMessageBody(rawBody) {
+  const body = String(rawBody || '')
+  const markerStart = body.indexOf(ATTACHMENT_START)
+  const markerEnd = body.indexOf(ATTACHMENT_END)
+
+  if (markerStart === -1 || markerEnd === -1 || markerEnd < markerStart) {
+    const plainText = body.trim()
+    return {
+      text: plainText,
+      attachments: [],
+      previewText: plainText,
+    }
+  }
+
+  const visibleText = body.slice(0, markerStart).trim()
+  const payloadRaw = body.slice(markerStart + ATTACHMENT_START.length, markerEnd).trim()
+
+  try {
+    const parsed = JSON.parse(payloadRaw)
+    const attachments = normalizeAttachments(parsed?.attachments || [])
+    const fallbackText = attachments.length ? formatAttachmentSummary(attachments.length) : ''
+    return {
+      text: visibleText,
+      attachments,
+      previewText: visibleText || fallbackText,
+    }
+  } catch {
+    const plainText = body.trim()
+    return {
+      text: plainText,
+      attachments: [],
+      previewText: plainText,
+    }
+  }
+}
+
+function buildMessageBody({ body, attachments = [] }) {
+  const text = String(body || '').trim()
+  const normalizedAttachments = normalizeAttachments(attachments)
+
+  if (!normalizedAttachments.length) return text
+
+  const summaryText = text || formatAttachmentSummary(normalizedAttachments.length)
+  const attachmentPayload = JSON.stringify({ attachments: normalizedAttachments })
+  return `${summaryText}\n\n${ATTACHMENT_START}${attachmentPayload}${ATTACHMENT_END}`
 }
 
 function isMissingInboxRelation(error) {
@@ -189,7 +254,16 @@ export async function fetchThreadMessages(threadId) {
     if (isMissingInboxRelation(error)) return []
     throw error
   }
-  return data || []
+  return (data || []).map((message) => {
+    const parsed = parseMessageBody(message.body)
+    return {
+      ...message,
+      body: parsed.text,
+      attachments: parsed.attachments,
+      preview_body: parsed.previewText,
+      raw_body: message.body,
+    }
+  })
 }
 
 export async function markThreadMessagesRead(threadId, recipientId) {
@@ -205,8 +279,10 @@ export async function markThreadMessagesRead(threadId, recipientId) {
   if (error && !isMissingInboxRelation(error)) throw error
 }
 
-export async function sendThreadMessage({ threadId, senderId, recipientId, body }) {
-  if (!threadId || !senderId || !recipientId || !String(body || '').trim()) {
+export async function sendThreadMessage({ threadId, senderId, recipientId, body, attachments = [] }) {
+  const payloadBody = buildMessageBody({ body, attachments })
+
+  if (!threadId || !senderId || !recipientId || !payloadBody) {
     throw new Error('Missing data to send this message.')
   }
 
@@ -216,7 +292,7 @@ export async function sendThreadMessage({ threadId, senderId, recipientId, body 
       thread_id: threadId,
       sender_id: senderId,
       recipient_id: recipientId,
-      body: String(body).trim(),
+      body: payloadBody,
       is_read: false,
     })
     .select('*')
@@ -281,10 +357,12 @@ export async function fetchConversationThreads(userId, role) {
   return safeThreads.map((thread) => {
     const counterpartId = role === 'provider' ? thread.client_id : thread.provider_id
     const counterpart = role === 'provider' ? clientMap.get(counterpartId) : providerMap.get(counterpartId)
+    const lastPreview = parseMessageBody(thread.last_message_preview || '').previewText
 
     return {
       ...thread,
       unreadCount: unreadByThread[thread.id] || 0,
+      last_message_preview: lastPreview,
       counterpartId,
       counterpartRole: role === 'provider' ? 'client' : 'provider',
       counterpartName: role === 'provider'

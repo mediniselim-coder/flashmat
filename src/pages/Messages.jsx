@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import { useAuth } from '../hooks/useAuth'
@@ -7,6 +7,7 @@ import {
   fetchConversationThreads,
   fetchThreadMessages,
   markThreadMessagesRead,
+  parseMessageBody,
   sendThreadMessage,
   subscribeToInbox,
 } from '../lib/inbox'
@@ -33,6 +34,30 @@ function ConversationAvatar({ thread }) {
   return <span style={styles.threadAvatarFallback}>{String(thread?.counterpartName || 'F').slice(0, 1).toUpperCase()}</span>
 }
 
+function formatAttachmentSize(size) {
+  const value = Number(size) || 0
+  if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
+  if (value >= 1024) return `${Math.round(value / 1024)} KB`
+  return `${value} B`
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error(`Unable to read ${file.name}.`))
+    reader.readAsDataURL(file)
+  })
+}
+
+function isImageAttachment(attachment) {
+  return String(attachment?.type || '').startsWith('image/')
+}
+
+function isPdfAttachment(attachment) {
+  return String(attachment?.type || '') === 'application/pdf'
+}
+
 export default function Messages() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -42,10 +67,13 @@ export default function Messages() {
   const [messages, setMessages] = useState([])
   const [selectedThreadId, setSelectedThreadId] = useState(searchParams.get('thread') || '')
   const [composer, setComposer] = useState('')
+  const [attachments, setAttachments] = useState([])
   const [filterUnread, setFilterUnread] = useState(false)
   const [loadingThreads, setLoadingThreads] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
+  const [preparingAttachments, setPreparingAttachments] = useState(false)
+  const fileInputRef = useRef(null)
 
   const role = profile?.role || 'client'
   const selectedThread = useMemo(
@@ -141,8 +169,51 @@ export default function Messages() {
     setSearchParams({ thread: selectedThreadId }, { replace: true })
   }, [selectedThreadId, setSearchParams])
 
+  async function handleAddAttachments(event) {
+    const files = Array.from(event.target.files || [])
+    event.target.value = ''
+    if (!files.length) return
+
+    if (attachments.length + files.length > 4) {
+      toast('You can attach up to 4 files per message.', 'error')
+      return
+    }
+
+    const invalidFile = files.find((file) => !(file.type.startsWith('image/') || file.type === 'application/pdf'))
+    if (invalidFile) {
+      toast('Only photos and PDF files are supported right now.', 'error')
+      return
+    }
+
+    const oversizeFile = files.find((file) => file.size > 2 * 1024 * 1024)
+    if (oversizeFile) {
+      toast(`${oversizeFile.name} is too large. Keep files under 2 MB each.`, 'error')
+      return
+    }
+
+    try {
+      setPreparingAttachments(true)
+      const nextAttachments = await Promise.all(files.map(async (file) => ({
+        id: `${file.name}-${file.size}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        url: await readFileAsDataUrl(file),
+      })))
+      setAttachments((current) => [...current, ...nextAttachments])
+    } catch (error) {
+      toast(error.message || 'Unable to prepare your files.', 'error')
+    } finally {
+      setPreparingAttachments(false)
+    }
+  }
+
+  function removeAttachment(attachmentId) {
+    setAttachments((current) => current.filter((attachment) => attachment.id !== attachmentId))
+  }
+
   async function handleSend() {
-    if (!selectedThread || !user?.id || !String(composer || '').trim()) return
+    if (!selectedThread || !user?.id || (!String(composer || '').trim() && attachments.length === 0)) return
 
     try {
       setSending(true)
@@ -151,8 +222,10 @@ export default function Messages() {
         senderId: user.id,
         recipientId: selectedThread.counterpartId,
         body: composer,
+        attachments,
       })
       setComposer('')
+      setAttachments([])
       const [nextThreads, nextMessages] = await Promise.all([
         fetchConversationThreads(user.id, role),
         fetchThreadMessages(selectedThread.id),
@@ -258,10 +331,35 @@ export default function Messages() {
                   {!loadingMessages && messages.length === 0 ? <div style={styles.emptyText}>Say hello to start the conversation.</div> : null}
                   {messages.map((message) => {
                     const mine = String(message.sender_id) === String(user?.id)
+                    const parsedMessage = message.attachments ? message : parseMessageBody(message.body)
+                    const visibleText = parsedMessage.body ?? parsedMessage.text
+                    const visibleAttachments = parsedMessage.attachments || []
                     return (
                       <div key={message.id} style={{ ...styles.messageWrap, alignItems: mine ? 'flex-end' : 'flex-start' }}>
                         <div style={{ ...styles.messageBubble, ...(mine ? styles.messageMine : styles.messageTheirs) }}>
-                          <div>{message.body}</div>
+                          {visibleText ? <div>{visibleText}</div> : null}
+                          {visibleAttachments.length > 0 ? (
+                            <div style={styles.attachmentStack}>
+                              {visibleAttachments.map((attachment) => (
+                                <div key={`${message.id}-${attachment.name}`} style={styles.attachmentCard}>
+                                  {isImageAttachment(attachment) ? (
+                                    <a href={attachment.url} target="_blank" rel="noreferrer" style={styles.attachmentPreviewLink}>
+                                      <img src={attachment.url} alt={attachment.name} style={styles.attachmentImage} />
+                                    </a>
+                                  ) : (
+                                    <div style={styles.attachmentDocIcon}>{isPdfAttachment(attachment) ? 'PDF' : 'FILE'}</div>
+                                  )}
+                                  <div style={styles.attachmentBody}>
+                                    <div style={styles.attachmentName}>{attachment.name}</div>
+                                    <div style={styles.attachmentMetaLine}>{formatAttachmentSize(attachment.size)}</div>
+                                  </div>
+                                  <a href={attachment.url} target="_blank" rel="noreferrer" style={styles.attachmentAction}>
+                                    Open
+                                  </a>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
                           <div style={styles.messageMeta}>{formatMessageTime(message.created_at)}</div>
                         </div>
                       </div>
@@ -270,13 +368,50 @@ export default function Messages() {
                 </div>
 
                 <div style={styles.composer}>
-                  <textarea
-                    value={composer}
-                    onChange={(event) => setComposer(event.target.value)}
-                    style={styles.textarea}
-                    placeholder="Write a message..."
-                  />
-                  <button type="button" style={styles.primaryButton} onClick={handleSend} disabled={sending}>
+                  <div style={styles.composerField}>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*,application/pdf"
+                      multiple
+                      style={styles.hiddenInput}
+                      onChange={handleAddAttachments}
+                    />
+                    {attachments.length > 0 ? (
+                      <div style={styles.pendingAttachments}>
+                        {attachments.map((attachment) => (
+                          <div key={attachment.id} style={styles.pendingAttachmentCard}>
+                            <div style={styles.pendingAttachmentMain}>
+                              <div style={styles.pendingAttachmentName}>{attachment.name}</div>
+                              <div style={styles.pendingAttachmentMeta}>{formatAttachmentSize(attachment.size)}</div>
+                            </div>
+                            <button
+                              type="button"
+                              style={styles.pendingAttachmentRemove}
+                              onClick={() => removeAttachment(attachment.id)}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <textarea
+                      value={composer}
+                      onChange={(event) => setComposer(event.target.value)}
+                      style={styles.textarea}
+                      placeholder="Write a message..."
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    style={styles.attachButton}
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={preparingAttachments || sending}
+                  >
+                    {preparingAttachments ? 'Adding...' : 'Add files'}
+                  </button>
+                  <button type="button" style={styles.primaryButton} onClick={handleSend} disabled={sending || preparingAttachments}>
                     {sending ? 'Sending...' : 'Send'}
                   </button>
                 </div>
@@ -623,10 +758,55 @@ const styles = {
     padding: '14px 18px 18px',
     borderTop: '1px solid rgba(120,171,218,0.18)',
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gridTemplateColumns: 'minmax(0, 1fr) auto auto',
     gap: 12,
     alignItems: 'end',
     background: 'rgba(255,255,255,0.94)',
+  },
+  composerField: {
+    display: 'grid',
+    gap: 10,
+  },
+  hiddenInput: {
+    display: 'none',
+  },
+  pendingAttachments: {
+    display: 'grid',
+    gap: 8,
+  },
+  pendingAttachmentCard: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 16,
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: '#f7fbff',
+    padding: '10px 12px',
+  },
+  pendingAttachmentMain: {
+    minWidth: 0,
+  },
+  pendingAttachmentName: {
+    fontSize: 12.5,
+    fontWeight: 800,
+    color: '#17314d',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  pendingAttachmentMeta: {
+    marginTop: 4,
+    fontSize: 11,
+    color: '#83a0bc',
+  },
+  pendingAttachmentRemove: {
+    border: 'none',
+    background: 'transparent',
+    color: '#c53a3a',
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: 'pointer',
   },
   textarea: {
     width: '100%',
@@ -640,6 +820,77 @@ const styles = {
     fontFamily: 'var(--font)',
     fontSize: 14,
     color: '#17314c',
+  },
+  attachButton: {
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 14,
+    background: '#fff',
+    color: '#1b3c5f',
+    padding: '11px 14px',
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
+  attachmentStack: {
+    display: 'grid',
+    gap: 10,
+    marginTop: 10,
+  },
+  attachmentCard: {
+    display: 'grid',
+    gridTemplateColumns: '72px minmax(0, 1fr) auto',
+    gap: 10,
+    alignItems: 'center',
+    borderRadius: 16,
+    background: 'rgba(255,255,255,0.16)',
+    padding: 10,
+  },
+  attachmentPreviewLink: {
+    display: 'block',
+    lineHeight: 0,
+  },
+  attachmentImage: {
+    width: 72,
+    height: 72,
+    objectFit: 'cover',
+    borderRadius: 12,
+    display: 'block',
+  },
+  attachmentDocIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.14)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 14,
+    fontWeight: 900,
+    letterSpacing: '.08em',
+  },
+  attachmentBody: {
+    minWidth: 0,
+  },
+  attachmentName: {
+    fontSize: 12.5,
+    fontWeight: 800,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  attachmentMetaLine: {
+    marginTop: 4,
+    fontSize: 11,
+    opacity: 0.76,
+  },
+  attachmentAction: {
+    color: 'inherit',
+    fontSize: 12,
+    fontWeight: 800,
+    textDecoration: 'none',
+    borderRadius: 999,
+    padding: '8px 10px',
+    background: 'rgba(255,255,255,0.18)',
   },
   contextPane: {
     padding: 20,
