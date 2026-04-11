@@ -16,8 +16,9 @@ import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import WalletModal from '../components/WalletModal'
 import NotificationCenterModal from '../components/NotificationCenterModal'
 import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
+import VehicleDoctor from '../components/VehicleDoctor'
 import { useInboxSummary } from '../hooks/useInbox'
-import { FLASHFIX_UPDATED_EVENT, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
+import { FLASHFIX_UPDATED_EVENT, createFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings, fetchClientNotifications } from '../lib/bookings'
 import { fetchProviders } from '../lib/providerProfiles'
 import { fetchSellerVehicleListings, normalizeMarketplaceListing } from '../lib/marketplace'
@@ -69,6 +70,8 @@ const CLIENT_PANE_PATHS = {
   search: '/app/client/search',
   vehicles: '/app/client/vehicles',
   maintenance: '/app/client/maintenance',
+  doctor: '/app/client/doctor',
+  flashfix: '/app/client/flashfix',
   marketplace: '/app/client/marketplace',
   flashscore: '/app/client/flashscore',
   notifications: '/app/client/alerts',
@@ -88,9 +91,145 @@ function getClientPathSegment(pathname) {
   return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
 }
 
-const CLIENT_SHORTCUT_PATHS = {
-  doctor: '/doctor',
-  flashfix: '/urgence',
+const FLASHFIX_QUICK_CASES = [
+  'Besoin d un mecanicien a domicile',
+  'Lavage auto a domicile',
+  'Batterie morte a domicile',
+  'Pneu creve sur le bord de la route',
+  'Voiture qui ne demarre plus',
+  'Surchauffe moteur',
+  'Besoin de remorquage rapide',
+]
+
+const FLASHFIX_CASES = [
+  {
+    id: 'mobile-mechanic',
+    label: 'Besoin d un mecanicien a domicile',
+    keywords: ['mecanicien', 'mecanique', 'diagnostic', 'inspection', 'reparation'],
+    summary: 'Demande de mecanicien mobile pour verifier un probleme general ou effectuer une petite reparation sur place.',
+    options: [
+      { id: 'mechanic-home-diagnostic', title: 'Diagnostic mecanique a domicile', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'mechanic-home-repair', title: 'Petite reparation sur place', eta: '25-40 min', price: '90$+', providerType: 'Mecano mobile', category: 'mechanic' },
+    ],
+  },
+  {
+    id: 'mobile-wash',
+    label: 'Lavage auto a domicile',
+    keywords: ['lavage', 'wash', 'nettoyage', 'detailing'],
+    summary: 'Service mobile de lavage ou detailing leger directement a domicile ou au travail.',
+    options: [
+      { id: 'wash-exterior', title: 'Lavage exterieur mobile', eta: '20-30 min', price: '35-55$', providerType: 'Lavage mobile', category: 'wash' },
+      { id: 'wash-full', title: 'Lavage interieur + exterieur', eta: '35-60 min', price: '65-110$', providerType: 'Detailing mobile', category: 'wash' },
+    ],
+  },
+  {
+    id: 'battery-home',
+    label: 'Batterie morte a domicile',
+    keywords: ['batterie', 'booster', 'boost', 'ne demarre pas', 'demarre plus'],
+    summary: 'Intervention mobile pour booster, tester la batterie ou verifier l alimentation principale.',
+    options: [
+      { id: 'battery-boost', title: 'Boost batterie mobile', eta: '15-25 min', price: '40-60$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'battery-diagnostic', title: 'Diagnostic batterie + boost', eta: '20-30 min', price: '55-75$', providerType: 'Mecano mobile', category: 'mechanic' },
+    ],
+  },
+  {
+    id: 'flat-tire',
+    label: 'Pneu creve sur le bord de la route',
+    keywords: ['pneu', 'creve', 'air', 'pression'],
+    summary: 'Aide rapide pour remise en route, changement de roue ou remorquage securitaire si necessaire.',
+    options: [
+      { id: 'tire-roadside', title: 'Aide pneu mobile', eta: '20-30 min', price: '50-80$', providerType: 'Service routier', category: 'tire' },
+      { id: 'tire-tow', title: 'Remorquage vers garage partenaire', eta: '25-35 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'no-start',
+    label: 'Voiture qui ne demarre plus',
+    keywords: ['ne demarre pas', 'demarre plus', 'starter', 'clic'],
+    summary: 'Verification sur place pour distinguer batterie, alimentation, demarreur ou besoin de remorquage.',
+    options: [
+      { id: 'nostart-diagnostic', title: 'Diagnostic demarrage sur place', eta: '20-30 min', price: '60-95$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'nostart-tow', title: 'Remorquage intelligent', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'overheat',
+    label: 'Surchauffe moteur',
+    keywords: ['chauffe', 'temperature', 'surchauffe', 'radiateur'],
+    summary: 'Intervention de securite si le moteur chauffe, avec verification du circuit de refroidissement ou remorquage.',
+    options: [
+      { id: 'overheat-check', title: 'Inspection refroidissement sur place', eta: '20-30 min', price: '70-110$', providerType: 'Mecano mobile', category: 'mechanic' },
+      { id: 'overheat-tow', title: 'Remorquage securitaire', eta: '25-40 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+  {
+    id: 'urgent-tow',
+    label: 'Besoin de remorquage rapide',
+    keywords: ['remorquage', 'remorquer', 'tow'],
+    summary: 'Prise en charge directe pour transporter le vehicule vers un garage partenaire ou un lieu securitaire.',
+    options: [
+      { id: 'urgent-tow-dispatch', title: 'Remorquage prioritaire', eta: '20-35 min', price: '79$+', providerType: 'Remorquage', category: 'tow' },
+    ],
+  },
+]
+
+function normalizeFlashFixValue(value) {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function resolveFlashFixCase(description, quickCase) {
+  if (quickCase) return FLASHFIX_CASES.find((item) => item.label === quickCase) || null
+  const normalized = normalizeFlashFixValue(description)
+  if (!normalized.trim()) return null
+  const scored = FLASHFIX_CASES
+    .map((item) => ({
+      item,
+      score: item.keywords.reduce((total, keyword) => total + (normalized.includes(keyword) ? 1 : 0), 0),
+    }))
+    .sort((left, right) => right.score - left.score)
+  return scored[0]?.score > 0 ? scored[0].item : null
+}
+
+function parseDistanceKm(value) {
+  const normalized = String(value || '').replace(',', '.')
+  const match = normalized.match(/(\d+(?:\.\d+)?)/)
+  return match ? Number(match[1]) : 99
+}
+
+function providerSupportsCategory(provider, category) {
+  const terms = [
+    normalizeFlashFixValue(provider.type),
+    normalizeFlashFixValue(provider.type_label),
+    ...(Array.isArray(provider.services) ? provider.services.map((service) => normalizeFlashFixValue(service)) : []),
+  ]
+
+  const categoryTerms = {
+    mechanic: ['mecanique', 'mechanic', 'diagnostic', 'freins', 'vidange', 'suspension', 'climatisation'],
+    wash: ['lave-auto', 'lavage', 'wash', 'detailing', 'nettoyage'],
+    tow: ['remorquage', 'tow', 'depannage', 'assistance routiere'],
+    tire: ['pneu', 'pneus', 'tire', 'alignement', 'balancement'],
+  }
+
+  const wantedTerms = categoryTerms[category] || [category]
+  return terms.some((term) => wantedTerms.some((wanted) => term.includes(wanted)))
+}
+
+function buildFlashFixProviderProfile(provider, option, slugify) {
+  const distanceKm = parseDistanceKm(provider.distance)
+  return {
+    title: provider.type_label || option.providerType || 'Provider FlashFix',
+    vehicle: option.providerType === 'Remorquage' ? 'Camion de service FlashFix' : 'Unite mobile FlashFix',
+    rating: provider.rating || '4.8',
+    phone: provider.phone || '(514) 555-0100',
+    arrivalWindow: option.eta || (distanceKm <= 1 ? '10-15 min' : distanceKm <= 2.5 ? '15-25 min' : '25-40 min'),
+    distance: provider.distance || `${distanceKm} km`,
+    address: provider.address || 'Montreal',
+    providerId: provider.id || null,
+    providerSlug: provider.slug || slugify(provider.name || 'provider'),
+  }
 }
 
 function readPendingServiceSearch() {
@@ -218,6 +357,13 @@ export default function ClientApp() {
   const [selectedMaintenanceVehicleId, setSelectedMaintenanceVehicleId] = useState('')
   const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
   const [selectedSearchProviderId, setSelectedSearchProviderId] = useState(null)
+  const [flashFixQuickCase, setFlashFixQuickCase] = useState('')
+  const [flashFixDescription, setFlashFixDescription] = useState('')
+  const [flashFixLocation, setFlashFixLocation] = useState('Montreal')
+  const [flashFixLocationDetails, setFlashFixLocationDetails] = useState('')
+  const [selectedFlashFixOptionId, setSelectedFlashFixOptionId] = useState('')
+  const [flashFixGeoLabel, setFlashFixGeoLabel] = useState('Recherche de votre position...')
+  const [flashFixGeoStatus, setFlashFixGeoStatus] = useState('loading')
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
@@ -225,6 +371,19 @@ export default function ClientApp() {
   const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
   const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
   const activeFlashFixRequests = flashFixRequests.filter((r) => r.channel === 'flashfix' && r.status !== 'completed')
+  const resolvedFlashFixCase = useMemo(
+    () => resolveFlashFixCase(flashFixDescription, flashFixQuickCase),
+    [flashFixDescription, flashFixQuickCase],
+  )
+  const selectedFlashFixOption = resolvedFlashFixCase?.options.find((option) => option.id === selectedFlashFixOptionId) || null
+  const matchedFlashFixProvider = useMemo(() => {
+    if (!selectedFlashFixOption) return null
+    const openProviders = providers.filter((provider) => provider.is_open === true || provider.is_open === 'true')
+    const categoryMatches = openProviders.filter((provider) => providerSupportsCategory(provider, selectedFlashFixOption.category))
+    const pool = categoryMatches.length > 0 ? categoryMatches : (openProviders.length > 0 ? openProviders : providers)
+    if (pool.length === 0) return null
+    return [...pool].sort((left, right) => parseDistanceKm(left.distance) - parseDistanceKm(right.distance))[0]
+  }, [providers, selectedFlashFixOption])
   const latestFlashFixEvents = flashFixRequests
     .filter((r) => r.channel === 'flashfix')
     .flatMap((r) => (r.events || []).map((e) => ({ ...e, requestId: r.id, issueLabel: r.issueLabel, status: r.status, providerName: r.providerName })))
@@ -233,6 +392,27 @@ export default function ClientApp() {
 
   useEffect(() => { loadProviders() }, [])
   useEffect(() => { if (!user?.id) return; fetchMyBookings() }, [user?.id])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setFlashFixGeoStatus('unavailable')
+      setFlashFixGeoLabel('Localisation automatique non disponible')
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setFlashFixLocation(`Position GPS (${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)})`)
+        setFlashFixGeoStatus('ready')
+        setFlashFixGeoLabel('Position GPS detectee automatiquement en arriere-plan')
+      },
+      () => {
+        setFlashFixGeoStatus('denied')
+        setFlashFixGeoLabel('Autorisez la localisation pour une position exacte, puis ajoutez un complement si besoin')
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 },
+    )
+  }, [])
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -317,7 +497,7 @@ export default function ClientApp() {
   }, [displayedProviders, selectedSearchProviderId])
 
   function go(id, options = {}) {
-    const nextPath = CLIENT_SHORTCUT_PATHS[id] || CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
+    const nextPath = CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
     setSidebar(false)
     navigate(nextPath, options)
   }
@@ -376,6 +556,41 @@ export default function ClientApp() {
   function openNotificationCenter() {
     setProfileMenuOpen(false)
     setNotificationCenterOpen(true)
+  }
+
+  function chooseFlashFixQuickCase(label) {
+    setFlashFixQuickCase(label)
+    setFlashFixDescription(label)
+    const matchedCase = FLASHFIX_CASES.find((item) => item.label === label)
+    setSelectedFlashFixOptionId(matchedCase?.options[0]?.id || '')
+  }
+
+  function launchFlashFixFromPane() {
+    if (!resolvedFlashFixCase || !selectedFlashFixOption) {
+      toast('Choose a FlashFix case and a service option first.', 'error')
+      return
+    }
+
+    const providerProfile = matchedFlashFixProvider
+      ? buildFlashFixProviderProfile(matchedFlashFixProvider, selectedFlashFixOption, slugify)
+      : null
+
+    createFlashFixRequest({
+      channel: 'flashfix',
+      issueLabel: resolvedFlashFixCase.label,
+      description: flashFixDescription || resolvedFlashFixCase.label,
+      location: [flashFixLocation, flashFixLocationDetails].filter(Boolean).join(' · ') || 'Position a confirmer',
+      selectedOption: selectedFlashFixOption,
+      providerName: matchedFlashFixProvider?.name || null,
+      providerProfile,
+      providerId: matchedFlashFixProvider?.id || null,
+      providerSlug: matchedFlashFixProvider?.slug || slugify(matchedFlashFixProvider?.name || 'provider'),
+      customerName: profile?.full_name || user?.email?.split('@')[0] || 'Client FlashMat',
+    })
+
+    setFlashFixRequests(readFlashFixRequests())
+    toast('FlashFix request sent. You can track it from bookings and alerts.', 'success')
+    go('bookings')
   }
 
   function handleVehicleAdded(nextVehicle) {
@@ -1056,6 +1271,168 @@ export default function ClientApp() {
                             : 'Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.'}
                         </div>
                       </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pane === 'doctor' && (
+          <div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>Docteur Automobile</div>
+                <div className={styles.pageSub}>Describe a symptom, get a diagnosis, then jump straight into the right provider search.</div>
+              </div>
+            </div>
+            <div className={styles.pad}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:12, marginBottom:18 }}>
+                {[
+                  ['Questions simples', 'Ask about maintenance timing, warning lights, or what to check before a trip.'],
+                  ['Problemes concrets', 'Describe a noise, vibration, overheating issue, or a no-start situation.'],
+                  ['Action rapide', 'FlashMat suggests the likely issue, estimated cost, and the best next step.'],
+                ].map(([title, text]) => (
+                  <div key={title} className="panel" style={{ marginBottom: 0 }}>
+                    <div className="panel-body">
+                      <div style={{ fontFamily:'var(--display)', fontWeight:800, fontSize:18, color:'var(--ink)', marginBottom:6 }}>{title}</div>
+                      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--ink2)' }}>{text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <VehicleDoctor compact userName={name} />
+            </div>
+          </div>
+        )}
+
+        {pane === 'flashfix' && (
+          <div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>FlashFix</div>
+                <div className={styles.pageSub}>Create an urgent request without leaving the client dashboard, then follow it from bookings and alerts.</div>
+              </div>
+              <button className="btn btn-green" onClick={launchFlashFixFromPane}>Send request</button>
+            </div>
+            <div className={styles.pad}>
+              <div className={styles.g2} style={{ alignItems:'start' }}>
+                <div className="panel">
+                  <div className="panel-hd">
+                    <div>
+                      <div style={{ fontSize:11, letterSpacing:'.14em', textTransform:'uppercase', color:'var(--ink3)', marginBottom:6 }}>Step 1</div>
+                      <div className="panel-title" style={{ fontSize:21 }}>What is happening?</div>
+                      <div className={styles.muted}>Pick a quick case or describe the issue, then confirm the location details.</div>
+                    </div>
+                  </div>
+                  <div className="panel-body">
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:14 }}>
+                      {FLASHFIX_QUICK_CASES.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          className="btn"
+                          style={{
+                            background: flashFixQuickCase === item ? 'var(--blue-bg)' : 'var(--bg2)',
+                            borderColor: flashFixQuickCase === item ? 'rgba(37,99,235,.28)' : 'var(--border)',
+                            color: 'var(--ink)',
+                          }}
+                          onClick={() => chooseFlashFixQuickCase(item)}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ display:'grid', gap:10 }}>
+                      <textarea
+                        value={flashFixDescription}
+                        onChange={(event) => setFlashFixDescription(event.target.value)}
+                        placeholder="Ex: the car does not start and I am in my building parking lot in Montreal"
+                        style={{ width:'100%', minHeight:130, borderRadius:18, border:'1px solid var(--border)', padding:16, fontSize:14, lineHeight:1.6, resize:'vertical', fontFamily:'inherit', boxSizing:'border-box', color:'var(--ink)', background:'var(--bg2)' }}
+                      />
+                      <input
+                        className="form-input"
+                        value={flashFixLocation}
+                        onChange={(event) => setFlashFixLocation(event.target.value)}
+                        placeholder="Location"
+                      />
+                      <input
+                        className="form-input"
+                        value={flashFixLocationDetails}
+                        onChange={(event) => setFlashFixLocationDetails(event.target.value)}
+                        placeholder="Extra details: parking level, door code, apartment, landmark..."
+                      />
+                    </div>
+                    <div style={{ marginTop:10, fontSize:12, color: flashFixGeoStatus === 'ready' ? 'var(--green)' : 'var(--ink2)', lineHeight:1.6 }}>
+                      {flashFixGeoLabel}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="panel">
+                  <div className="panel-hd">
+                    <div>
+                      <div style={{ fontSize:11, letterSpacing:'.14em', textTransform:'uppercase', color:'var(--ink3)', marginBottom:6 }}>Step 2</div>
+                      <div className="panel-title" style={{ fontSize:21 }}>Suggested FlashFix service</div>
+                      <div className={styles.muted}>FlashMat chooses the most relevant intervention and the nearest available provider type.</div>
+                    </div>
+                  </div>
+                  <div className="panel-body">
+                    {!resolvedFlashFixCase ? (
+                      <div className={styles.historyEmpty}>
+                        <div style={{ color:'var(--blue)', marginBottom:10, display:'flex', justifyContent:'center' }}><AppIcon code="FX" size={26} /></div>
+                        <div style={{ fontFamily:'var(--display)', fontWeight:800, fontSize:18, color:'var(--ink)', marginBottom:8 }}>Ready to dispatch</div>
+                        <div style={{ fontSize:12, lineHeight:1.7 }}>Choose a quick case or describe the issue and FlashMat will suggest the right urgent service here.</div>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ marginBottom:14 }}>
+                          <div style={{ fontFamily:'var(--display)', fontWeight:800, fontSize:20, color:'var(--ink)', marginBottom:6 }}>{resolvedFlashFixCase.label}</div>
+                          <div style={{ fontSize:12, color:'var(--ink2)', lineHeight:1.7 }}>{resolvedFlashFixCase.summary}</div>
+                        </div>
+                        <div style={{ display:'grid', gap:10 }}>
+                          {resolvedFlashFixCase.options.map((option) => (
+                            <button
+                              key={option.id}
+                              type="button"
+                              onClick={() => setSelectedFlashFixOptionId(option.id)}
+                              style={{
+                                textAlign:'left',
+                                borderRadius:16,
+                                border: selectedFlashFixOptionId === option.id ? '2px solid rgba(37,99,235,.32)' : '1px solid var(--border)',
+                                background: selectedFlashFixOptionId === option.id ? 'var(--blue-bg)' : 'var(--bg2)',
+                                padding:14,
+                                cursor:'pointer',
+                              }}
+                            >
+                              <div style={{ display:'flex', justifyContent:'space-between', gap:10, alignItems:'flex-start', marginBottom:6 }}>
+                                <div style={{ fontWeight:800, color:'var(--ink)', fontSize:14 }}>{option.title}</div>
+                                <span className="badge badge-blue">{option.price}</span>
+                              </div>
+                              <div style={{ fontSize:12, color:'var(--ink2)' }}>{option.providerType} · ETA {option.eta}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ display:'grid', gridTemplateColumns:'repeat(2, minmax(0, 1fr))', gap:10, marginTop:14 }}>
+                          <div style={{ background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:14, padding:12 }}>
+                            <div style={{ fontSize:11, color:'var(--ink3)', marginBottom:4 }}>Matched provider</div>
+                            <div style={{ fontWeight:800, color:'var(--ink)' }}>{matchedFlashFixProvider?.name || 'Dispatching through FlashMat'}</div>
+                          </div>
+                          <div style={{ background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:14, padding:12 }}>
+                            <div style={{ fontSize:11, color:'var(--ink3)', marginBottom:4 }}>Estimated arrival</div>
+                            <div style={{ fontWeight:800, color:'var(--ink)' }}>{selectedFlashFixOption?.eta || 'To confirm'}</div>
+                          </div>
+                        </div>
+                        {activeFlashFixRequests.length > 0 ? (
+                          <div style={{ marginTop:14, background:'linear-gradient(135deg, rgba(37,99,235,.10), rgba(37,99,235,.03))', border:'1px solid rgba(37,99,235,.16)', borderRadius:16, padding:14 }}>
+                            <div style={{ fontSize:11, letterSpacing:'.14em', textTransform:'uppercase', color:'var(--ink3)', marginBottom:6 }}>Live request</div>
+                            <div style={{ fontFamily:'var(--display)', fontSize:18, fontWeight:800, color:'var(--ink)', marginBottom:4 }}>{activeFlashFixRequests[0].issueLabel}</div>
+                            <div style={{ fontSize:12, color:'var(--ink2)' }}>Current status: {getFlashFixStatusMeta(activeFlashFixRequests[0].status).label}</div>
+                          </div>
+                        ) : null}
+                      </>
                     )}
                   </div>
                 </div>
