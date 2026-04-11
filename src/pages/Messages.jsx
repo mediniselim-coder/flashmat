@@ -502,24 +502,6 @@ export default function Messages() {
                     Back
                   </button>
                 </div>
-                <div style={styles.chatHeaderActions}>
-                  <button
-                    type="button"
-                    style={styles.iconDangerButton}
-                    onClick={() => handleDeleteThread(selectedThread)}
-                    disabled={deletingThreadId === String(selectedThread.id)}
-                    aria-label="Delete conversation"
-                    title="Delete conversation"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                      <path d="M4 7h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      <path d="M9.5 11v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      <path d="M14.5 11v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      <path d="M6 7l1 11a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M9 7V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
 
                 <div style={styles.chatFeed}>
                   {loadingMessages ? <div style={styles.emptyText}>Loading messages...</div> : null}
@@ -775,18 +757,6 @@ const styles = {
     fontWeight: 800,
     cursor: 'pointer',
   },
-  iconDangerButton: {
-    width: 40,
-    height: 40,
-    border: '1px solid rgba(211,70,70,0.14)',
-    background: '#fff5f5',
-    color: '#b83a3a',
-    borderRadius: 14,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-  },
   threadList: {
     minHeight: 0,
     overflow: 'auto',
@@ -991,13 +961,6 @@ const styles = {
     padding: '22px 24px 18px',
     borderBottom: '1px solid rgba(120,171,218,0.18)',
     background: 'rgba(255,255,255,0.72)',
-  },
-  chatHeaderActions: {
-    padding: '0 24px 14px',
-    borderBottom: '1px solid rgba(120,171,218,0.18)',
-    background: 'rgba(255,255,255,0.72)',
-    display: 'flex',
-    justifyContent: 'flex-end',
   },
   confirmOverlay: {
     position: 'fixed',
