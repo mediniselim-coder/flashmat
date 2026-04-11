@@ -1145,7 +1145,7 @@ const styles = {
     display: 'flex',
     justifyContent: 'center',
     padding: '0 14px',
-    zIndex: 121,
+    zIndex: 6001,
     pointerEvents: 'none',
   },
   panelCard: {
