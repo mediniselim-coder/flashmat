@@ -329,7 +329,7 @@ export default function NavBar({ activePage }) {
           </div>
 
           {showCenterIcons ? (
-          <div style={{ ...styles.centerGroup, gap: isCompact ? 10 : 18 }}>
+          <div style={{ ...styles.centerGroup, gap: isCompact ? 16 : 28 }}>
             {PRIMARY_ITEMS.filter((item) => item.id !== 'doctor').map((item, index) => {
               if (isMobile && index > 2) return null
               const Icon = item.icon
@@ -931,27 +931,29 @@ const styles = {
   logoButton: { display: 'inline-flex', alignItems: 'center', background: 'transparent', border: 'none', padding: 0 },
   appIcon: {
     position: 'relative',
-    width: 40,
-    height: 40,
-    borderRadius: 11,
+    width: 72,
+    height: 52,
+    borderRadius: 16,
     border: '1px solid transparent',
     background: 'transparent',
-    color: 'rgba(234, 244, 255, 0.8)',
+    color: 'rgba(234, 244, 255, 0.86)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    transition: 'all .18s ease',
   },
   appIconActive: {
     position: 'relative',
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    border: '1px solid rgba(90, 184, 240, 0.24)',
-    background: 'rgba(90, 184, 240, 0.09)',
+    width: 72,
+    height: 52,
+    borderRadius: 16,
+    border: '1px solid rgba(90, 184, 240, 0.18)',
+    background: 'rgba(255,255,255,0.04)',
     color: '#ffffff',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
+    boxShadow: 'inset 0 -3px 0 #2d8cff',
   },
   hoverLabel: {
     position: 'absolute',
