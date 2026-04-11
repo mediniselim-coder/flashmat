@@ -152,11 +152,21 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const explicitSignOutRef    = useRef(false)
 
+  function buildOptimisticProfile(authUser) {
+    const userId = authUser?.id || ''
+    const safeCurrentProfile = matchesIdentity(profile, userId) ? profile : null
+    const safeCachedProfile = matchesIdentity(cachedAuth.profile, userId) ? cachedAuth.profile : null
+    return buildProfileRecord(safeCurrentProfile ?? safeCachedProfile ?? {}, authUser)
+  }
+
   useEffect(() => {
     // Get current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user)
+        const optimisticProfile = buildOptimisticProfile(session.user)
+        setProfile(optimisticProfile)
+        writeAuthCache(session.user, optimisticProfile)
         fetchProfile(session.user.id, session.user)
         return
       }
@@ -175,8 +185,9 @@ export function AuthProvider({ children }) {
 
       setUser(session?.user ?? null)
       if (session?.user) {
-        setProfile(null)
-        writeAuthCache(session.user, null)
+        const optimisticProfile = buildOptimisticProfile(session.user)
+        setProfile(optimisticProfile)
+        writeAuthCache(session.user, optimisticProfile)
         fetchProfile(session.user.id, session.user)
       }
       else {
