@@ -1290,31 +1290,29 @@ export default function ClientApp() {
                     ))}
                   </div>
                 </div>
-                <div className="panel">
-                  <div className="panel-hd">
-                    <div>
-                      <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 3</div>
-                      <div className="panel-title" style={{ fontSize: 21 }}>Service history</div>
-                      <div className={styles.muted}>
+                  <div className={styles.historyCard}>
+                    <div className={styles.historyHeader}>
+                      <div className={styles.historyEyebrow}>FlashMat activity</div>
+                      <div className={styles.historyTitle}>Service history</div>
+                      <div className={styles.historySub}>
                         {selectedMaintenanceVehicle
-                          ? `Everything already booked or completed for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
+                          ? `Completed and upcoming work for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
                           : 'Track completed and upcoming work across the vehicles in your client profile.'}
                       </div>
                     </div>
-                  </div>
-                  <div className="panel-body">
+
                     {vehicleServiceHistory.length > 0 ? (
-                      <div style={{display:'grid',gap:10}}>
+                      <div className={styles.historyList}>
                         {vehicleServiceHistory.map((entry) => (
-                          <div key={entry.id} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',gap:12,alignItems:'flex-start'}}>
-                            <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={entry.icon} size={18} /></span>
-                            <div style={{flex:1}}>
-                              <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',marginBottom:4}}>
-                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:15,color:'var(--ink)'}}>{entry.title}</div>
+                          <div key={entry.id} className={styles.historyItem}>
+                            <div className={styles.historyIcon}><AppIcon code={entry.icon} size={18} /></div>
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ display:'flex', justifyContent:'space-between', gap:10, alignItems:'center', marginBottom:4, flexWrap:'wrap' }}>
+                                <div className={styles.historyItemTitle}>{entry.title}</div>
                                 <span className={`badge ${entry.statusClass}`}>{entry.statusLabel}</span>
                               </div>
-                              <div style={{fontSize:12,color:'var(--ink2)',marginBottom:4}}>{entry.meta}</div>
-                              <div style={{fontSize:11,color:'var(--ink3)'}}>{entry.detail}</div>
+                              <div className={styles.historyItemMeta}>{entry.meta}</div>
+                              <div className={styles.historyItemTime}>{entry.detail}</div>
                             </div>
                           </div>
                         ))}
@@ -1322,8 +1320,8 @@ export default function ClientApp() {
                     ) : (
                       <div className={styles.historyEmpty}>
                         <div style={{color:'var(--blue)',marginBottom:10,display:'flex',justifyContent:'center'}}><AppIcon code="RS" size={24} /></div>
-                        <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
-                        <div style={{fontSize:12,lineHeight:1.7}}>
+                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:18,color:'var(--ink)',marginBottom:8}}>No service history yet</div>
+                        <div style={{fontSize:13,lineHeight:1.7}}>
                           {selectedMaintenanceVehicle
                             ? `Your booked services for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model} will appear here once you schedule maintenance or roadside work through FlashMat.`
                             : 'Your booked services will appear here once you schedule maintenance or roadside work through FlashMat.'}
@@ -1334,8 +1332,7 @@ export default function ClientApp() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {pane === 'doctor' && (
             <div>
