@@ -297,35 +297,56 @@ function ProviderPopupCard({ provider }) {
       <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 4 }}>{provider.address}</div>
       <div style={{ fontSize: 12, lineHeight: 1.65, color: '#5b6f86', marginBottom: 14 }}>{provider.phone || 'Phone available on profile'}</div>
 
-      <button
-        type="button"
-        className="flashmat-popup-cta"
-        data-provider-id={provider.id || provider.name}
-        style={{
-          width: '100%',
-          border: 'none',
-          borderRadius: 12,
-          padding: '11px 14px',
-          background: 'linear-gradient(135deg, #143252 0%, #2b5fd7 100%)',
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 800,
-          boxShadow: '0 12px 24px rgba(20,50,82,.18)',
-          cursor: 'pointer',
-        }}
-      >
-        Book with FlashMat
-      </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.2fr)', gap: 10 }}>
+        <button
+          type="button"
+          className="flashmat-popup-visit"
+          data-provider-id={provider.id || provider.name}
+          style={{
+            width: '100%',
+            border: '1px solid rgba(20,50,82,.12)',
+            borderRadius: 12,
+            padding: '11px 14px',
+            background: '#f7fbff',
+            color: '#143252',
+            fontSize: 12,
+            fontWeight: 800,
+            cursor: 'pointer',
+          }}
+        >
+          Visit profile
+        </button>
+        <button
+          type="button"
+          className="flashmat-popup-cta"
+          data-provider-id={provider.id || provider.name}
+          style={{
+            width: '100%',
+            border: 'none',
+            borderRadius: 12,
+            padding: '11px 14px',
+            background: 'linear-gradient(135deg, #143252 0%, #2b5fd7 100%)',
+            color: '#fff',
+            fontSize: 12,
+            fontWeight: 800,
+            boxShadow: '0 12px 24px rgba(20,50,82,.18)',
+            cursor: 'pointer',
+          }}
+        >
+          Book with FlashMat
+        </button>
+      </div>
     </div>
   )
 }
 
-function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onBook }) {
+function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onBook, onVisitProfile }) {
   const map = useMap()
   const clusterGroupRef = useRef(null)
   const markersRef = useRef(new Map())
   const onSelectRef = useRef(onSelect)
   const onBookRef = useRef(onBook)
+  const onVisitProfileRef = useRef(onVisitProfile)
 
   useEffect(() => {
     onSelectRef.current = onSelect
@@ -334,6 +355,10 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
   useEffect(() => {
     onBookRef.current = onBook
   }, [onBook])
+
+  useEffect(() => {
+    onVisitProfileRef.current = onVisitProfile
+  }, [onVisitProfile])
 
   useEffect(() => {
     const clusterGroup = L.markerClusterGroup({
@@ -387,10 +412,17 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
       marker.on('popupopen', (event) => {
         const popupElement = event.popup?.getElement()
         const button = popupElement?.querySelector('.flashmat-popup-cta')
-        if (!button) return
+        const visitButton = popupElement?.querySelector('.flashmat-popup-visit')
 
-        const handleClick = () => onBookRef.current?.(provider)
-        button.addEventListener('click', handleClick, { once: true })
+        if (button) {
+          const handleClick = () => onBookRef.current?.(provider)
+          button.addEventListener('click', handleClick, { once: true })
+        }
+
+        if (visitButton) {
+          const handleVisit = () => onVisitProfileRef.current?.(provider)
+          visitButton.addEventListener('click', handleVisit, { once: true })
+        }
       })
 
       markersRef.current.set(getProviderKey(provider), marker)
@@ -429,6 +461,7 @@ export default function ProviderMap({
   selectedProviderId,
   onSelect,
   onBook,
+  onVisitProfile,
   onVisibleProvidersChange,
   scrollWheelZoom = true,
   height = 380,
@@ -614,6 +647,7 @@ export default function ProviderMap({
           selectedProviderId={selectedProviderId}
           onSelect={onSelect}
           onBook={onBook}
+          onVisitProfile={onVisitProfile}
         />
       </MapContainer>
     </div>

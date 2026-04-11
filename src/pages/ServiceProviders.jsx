@@ -299,7 +299,7 @@ export default function ServiceProviders() {
                                 openProviderProfile(provider, false)
                               }}
                             >
-                              View
+                              Visit profile
                             </button>
                             <button
                               className="btn btn-green"
@@ -342,6 +342,7 @@ export default function ServiceProviders() {
                   providers={filtered}
                   selectedProviderId={selectedProviderId}
                   onSelect={(provider) => setSelectedProviderId(getProviderKey(provider))}
+                  onVisitProfile={(provider) => openProviderProfile(provider, false)}
                   onVisibleProvidersChange={(visibleProviders) => {
                     const nextKeys = visibleProviders.map((provider) => getProviderKey(provider))
                     setVisibleProviderKeys((current) => {

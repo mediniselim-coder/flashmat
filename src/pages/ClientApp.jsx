@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useMemo } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import FlashAI from '../components/FlashAI'
@@ -137,6 +138,10 @@ function formatActivityTime(value) {
   }
 }
 
+function getProviderKey(provider, fallback = '') {
+  return String(provider?.id || provider?.name || fallback)
+}
+
 
 export default function ClientApp() {
   const { profile, user, signOut } = useAuth()
@@ -205,6 +210,7 @@ export default function ClientApp() {
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const [selectedMaintenanceVehicleId, setSelectedMaintenanceVehicleId] = useState('')
   const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
+  const [selectedSearchProviderId, setSelectedSearchProviderId] = useState(null)
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
@@ -269,16 +275,39 @@ export default function ClientApp() {
     try { const b = await fetchClientBookings(user.id); setBookings(b) } catch { setBookings([]) }
   }
 
-  const filtered = providers.filter(p => {
-    const matchCat = searchCat === 'all' || p.serviceCategories?.includes(searchCat)
-    const q = searchQ.toLowerCase()
-    const matchQ = !q || p.name?.toLowerCase().includes(q) || p.type_label?.toLowerCase().includes(q) || p.address?.toLowerCase().includes(q) || p.services?.some((s) => s.toLowerCase().includes(q))
-    return matchCat && matchQ
-  })
+  const filtered = useMemo(() => {
+    return providers.filter((provider) => {
+      const matchCat = searchCat === 'all' || provider.serviceCategories?.includes(searchCat)
+      const query = searchQ.toLowerCase()
+      const matchQ = !query
+        || provider.name?.toLowerCase().includes(query)
+        || provider.type_label?.toLowerCase().includes(query)
+        || provider.address?.toLowerCase().includes(query)
+        || provider.services?.some((service) => service.toLowerCase().includes(query))
+      return matchCat && matchQ
+    })
+  }, [providers, searchCat, searchQ])
 
-  const displayedProviders = Array.isArray(visibleProviderKeys)
-    ? filtered.filter((provider) => visibleProviderKeys.includes(String(provider?.id || provider?.name || '')))
-    : filtered
+  const displayedProviders = useMemo(() => {
+    if (!Array.isArray(visibleProviderKeys)) return filtered
+    const visibleSet = new Set(visibleProviderKeys)
+    return filtered.filter((provider, index) => visibleSet.has(getProviderKey(provider, index)))
+  }, [filtered, visibleProviderKeys])
+
+  useEffect(() => {
+    if (!displayedProviders.length) {
+      setSelectedSearchProviderId(null)
+      return
+    }
+
+    const hasSelectedProvider = displayedProviders.some((provider, index) => (
+      getProviderKey(provider, index) === selectedSearchProviderId
+    ))
+
+    if (!hasSelectedProvider) {
+      setSelectedSearchProviderId(getProviderKey(displayedProviders[0], 0))
+    }
+  }, [displayedProviders, selectedSearchProviderId])
 
   function go(id, options = {}) {
     const nextPath = CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
@@ -695,9 +724,12 @@ export default function ClientApp() {
               {!provLoading && filtered.length > 0 && (
                 <ProviderMap
                   providers={filtered}
-                  onSelect={(p) => openBooking(p)}
+                  selectedProviderId={selectedSearchProviderId}
+                  onSelect={(provider) => setSelectedSearchProviderId(getProviderKey(provider))}
+                  onBook={(provider) => openBooking(provider)}
+                  onVisitProfile={(provider) => navigate(`/provider/${slugify(provider.name)}`)}
                   onVisibleProvidersChange={(visibleProviders) => {
-                    const nextKeys = visibleProviders.map((provider) => String(provider?.id || provider?.name || ''))
+                    const nextKeys = visibleProviders.map((provider) => getProviderKey(provider))
                     setVisibleProviderKeys((current) => {
                       if (Array.isArray(current) && current.length === nextKeys.length && current.every((value, index) => value === nextKeys[index])) {
                         return current
@@ -712,7 +744,21 @@ export default function ClientApp() {
                 ) : (
                   <div style={{display:'flex',flexDirection:'column',gap:10}}>
                     {displayedProviders.map((p,i) => (
-                      <div key={p.id||i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14,display:'flex',gap:12,alignItems:'flex-start',cursor:'pointer',boxShadow:'var(--shadow)'}} onClick={() => navigate(`/provider/${slugify(p.name)}`)}>
+                      <div
+                        key={p.id||i}
+                        style={{
+                          background:'var(--bg2)',
+                          border:selectedSearchProviderId === getProviderKey(p, i) ? '1px solid rgba(47,125,225,.42)' : '1px solid var(--border)',
+                          borderRadius:10,
+                          padding:14,
+                          display:'flex',
+                          gap:12,
+                          alignItems:'flex-start',
+                          cursor:'pointer',
+                          boxShadow:selectedSearchProviderId === getProviderKey(p, i) ? '0 18px 32px rgba(47,125,225,.12)' : 'var(--shadow)',
+                        }}
+                        onClick={() => setSelectedSearchProviderId(getProviderKey(p, i))}
+                      >
                         <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}><AppIcon code={p.icon || 'ME'} size={22} /></div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:2}}>{p.name}</div>
@@ -722,6 +768,7 @@ export default function ClientApp() {
                       <div style={{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end',flexShrink:0}}>
                         <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--ink3)'}}>{p.distance}</span>
                         <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open ? 'Open' : 'Closed'}</span>
+                        <button className="btn" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();navigate(`/provider/${slugify(p.name)}`)}}>Visit profile</button>
                         <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Book</button>
                         </div>
                       </div>
