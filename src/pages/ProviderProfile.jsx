@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import BookingModal from '../components/BookingModal'
@@ -69,6 +69,18 @@ function SectionHeading({ title, subtitle, action }) {
       {action || null}
     </div>
   )
+}
+
+function ProviderMapViewportSync({ center, zoom = 15 }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!Array.isArray(center) || center.length !== 2) return
+    if (!Number.isFinite(center[0]) || !Number.isFinite(center[1])) return
+    map.setView(center, zoom, { animate: false })
+  }, [center, map, zoom])
+
+  return null
 }
 
 export default function ProviderProfile() {
@@ -505,6 +517,7 @@ export default function ProviderProfile() {
             <InfoCard style={{ padding: 0 }}>
               <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)', position: 'relative', zIndex: 0 }}>
                 <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%', zIndex: 0 }} scrollWheelZoom>
+                  <ProviderMapViewportSync center={providerCoords} zoom={15} />
                   <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                   <Marker position={providerCoords}><Popup>{provider.name}<br />{provider.address}</Popup></Marker>
                 </MapContainer>
