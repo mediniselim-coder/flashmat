@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 import { useAuth } from '../hooks/useAuth'
-import { normalizeMarketplaceListing } from '../lib/marketplace'
+import { getMarketplaceListingPath, normalizeMarketplaceListing } from '../lib/marketplace'
 import { fetchProviders } from '../lib/providerProfiles'
 import { supabase } from '../lib/supabase'
 
@@ -49,7 +49,7 @@ function getFeedMeta(listing) {
       title: listing.title,
       body: listing.description || 'Nouvelle piece ou offre publiee dans le reseau FlashMat.',
       cta: 'Voir l annonce',
-      route: '/marketplace',
+      route: getMarketplaceListingPath(listing),
     }
   }
 
@@ -58,7 +58,7 @@ function getFeedMeta(listing) {
     title: listing.title,
     body: listing.description || 'Nouvel item ou accessoire partage dans FlashMat Marketplace.',
     cta: 'Voir l annonce',
-    route: '/marketplace',
+    route: getMarketplaceListingPath(listing),
   }
 }
 

@@ -91,3 +91,11 @@ export function normalizeMarketplaceListing(listing) {
   }
 }
 
+export function getMarketplaceListingPath(listing) {
+  if (!listing?.id) return '/marketplace'
+  if ((listing.listing_type || 'shop') === 'vehicle') {
+    return listing.vehicle_public_path || `/marketplace/vehicles/${listing.id}`
+  }
+  return `/marketplace/listings/${listing.id}`
+}
+

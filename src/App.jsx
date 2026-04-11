@@ -16,6 +16,7 @@ const FlashFixUrgence = lazy(() => import("./pages/FlashFixUrgence"))
 const PublicMarketplace = lazy(() => import("./pages/PublicMarketplace"))
 const VehicleDetails = lazy(() => import("./pages/VehicleDetails"))
 const PublicVehicleListing = lazy(() => import("./pages/PublicVehicleListing"))
+const PublicMarketplaceListing = lazy(() => import("./pages/PublicMarketplaceListing"))
 const Community = lazy(() => import("./pages/Community"))
 const Pricing = lazy(() => import("./pages/Pricing"))
 const Contact = lazy(() => import("./pages/Contact"))
@@ -132,6 +133,7 @@ export default function App() {
             <Route path="/doctor" element={<AutoDoctor />} />
             <Route path="/urgence" element={<FlashFixUrgence />} />
             <Route path="/marketplace" element={<PublicMarketplace />} />
+            <Route path="/marketplace/listings/:listingId" element={<PublicMarketplaceListing />} />
             <Route path="/community" element={<Community />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import NewListingModal from './NewListingModal'
-import { normalizeMarketplaceListing } from '../lib/marketplace'
+import { getMarketplaceListingPath, normalizeMarketplaceListing } from '../lib/marketplace'
 import ServiceIcon from './ServiceIcon'
 
 const SECTIONS = [
@@ -284,17 +284,9 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                      {listing.listing_type === 'vehicle' ? (
-                        <button className="btn btn-green" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(listing.vehicle_public_path || `/marketplace/vehicles/${listing.id}`)}>
-                          View vehicle
-                        </button>
-                      ) : listing.phone ? (
-                        <a href={`tel:${listing.phone}`} className="btn btn-green" style={{ flex: 1, justifyContent: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                          Call seller
-                        </a>
-                      ) : (
-                        <div className="btn" style={{ flex: 1, justifyContent: 'center', color: 'var(--ink3)', cursor: 'default' }}>Seller contact</div>
-                      )}
+                      <button className="btn btn-green" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(getMarketplaceListingPath(listing))}>
+                        {listing.listing_type === 'vehicle' ? 'View vehicle' : 'View item'}
+                      </button>
 
                       {listing.seller_id === user?.id ? (
                         <button className="btn" style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,.22)' }} onClick={() => { if (window.confirm('Remove this listing?')) deleteListing(listing.id) }}>
