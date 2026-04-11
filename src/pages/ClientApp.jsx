@@ -750,26 +750,28 @@ export default function ClientApp() {
                           background:'var(--bg2)',
                           border:selectedSearchProviderId === getProviderKey(p, i) ? '1px solid rgba(47,125,225,.42)' : '1px solid var(--border)',
                           borderRadius:10,
-                          padding:14,
+                          padding:'10px 12px',
                           display:'flex',
-                          gap:12,
-                          alignItems:'flex-start',
+                          gap:10,
+                          alignItems:'center',
                           cursor:'pointer',
-                          boxShadow:selectedSearchProviderId === getProviderKey(p, i) ? '0 18px 32px rgba(47,125,225,.12)' : 'var(--shadow)',
+                          boxShadow:selectedSearchProviderId === getProviderKey(p, i) ? '0 14px 24px rgba(47,125,225,.10)' : 'var(--shadow)',
                         }}
                         onClick={() => setSelectedSearchProviderId(getProviderKey(p, i))}
                       >
-                        <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}><AppIcon code={p.icon || 'ME'} size={22} /></div>
+                        <div style={{width:40,height:40,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}><AppIcon code={p.icon || 'ME'} size={18} /></div>
                       <div style={{flex:1,minWidth:0}}>
-                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:2}}>{p.name}</div>
-                        <div style={{fontSize:11,color:'var(--ink2)',marginBottom:6}}>{p.type_label} · {p.address} · {p.rating} stars ({p.reviews} reviews) · {p.phone}</div>
-                        <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(p.services||[]).slice(0,3).map(s => <span key={s} className="badge badge-gray">{s}</span>)}</div>
+                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:13,marginBottom:1,lineHeight:1.15}}>{p.name}</div>
+                        <div style={{fontSize:10.5,color:'var(--ink2)',marginBottom:5,lineHeight:1.45}}>{p.type_label} · {p.address} · {p.rating} stars ({p.reviews} reviews) · {p.phone}</div>
+                        <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{(p.services||[]).slice(0,3).map(s => <span key={s} className="badge badge-gray" style={{fontSize:9,padding:'3px 7px'}}>{s}</span>)}</div>
                       </div>
-                      <div style={{display:'flex',flexDirection:'column',gap:6,alignItems:'flex-end',flexShrink:0}}>
-                        <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--ink3)'}}>{p.distance}</span>
-                        <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open ? 'Open' : 'Closed'}</span>
-                        <button className="btn" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();navigate(`/provider/${slugify(p.name)}`)}}>Visit profile</button>
-                        <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Book</button>
+                      <div style={{display:'flex',flexDirection:'column',gap:5,alignItems:'flex-end',flexShrink:0}}>
+                        <span style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)'}}>{p.distance}</span>
+                        <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`} style={{fontSize:9,padding:'3px 7px'}}>{p.is_open ? 'Open' : 'Closed'}</span>
+                        <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                          <button className="btn" style={{fontSize:10,padding:'4px 10px',minWidth:84}} onClick={e=>{e.stopPropagation();navigate(`/provider/${slugify(p.name)}`)}}>Visit profile</button>
+                          <button className="btn btn-green" style={{fontSize:10,padding:'4px 10px',minWidth:56}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Book</button>
+                        </div>
                         </div>
                       </div>
                     ))}
