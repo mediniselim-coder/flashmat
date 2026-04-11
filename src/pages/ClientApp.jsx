@@ -204,6 +204,7 @@ export default function ClientApp() {
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const [selectedMaintenanceVehicleId, setSelectedMaintenanceVehicleId] = useState('')
+  const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
   const rawPaneSegment = getClientPathSegment(location.pathname)
   const pane = getPaneFromClientPath(location.pathname)
 
@@ -274,6 +275,10 @@ export default function ClientApp() {
     const matchQ = !q || p.name?.toLowerCase().includes(q) || p.type_label?.toLowerCase().includes(q) || p.address?.toLowerCase().includes(q) || p.services?.some((s) => s.toLowerCase().includes(q))
     return matchCat && matchQ
   })
+
+  const displayedProviders = Array.isArray(visibleProviderKeys)
+    ? filtered.filter((provider) => visibleProviderKeys.includes(String(provider?.id || provider?.name || '')))
+    : filtered
 
   function go(id, options = {}) {
     const nextPath = CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
@@ -676,7 +681,7 @@ export default function ClientApp() {
             <div className={styles.pageHdr}>
               <div>
                 <div className={styles.pageTitle}>Find a Service</div>
-                <div className={styles.pageSub}>{provLoading ? 'Loading...' : `${filtered.length} provider${filtered.length!==1?'s':''} found`}</div>
+                <div className={styles.pageSub}>{provLoading ? 'Loading...' : `${displayedProviders.length} provider${displayedProviders.length!==1?'s':''} found in this map view`}</div>
               </div>
             </div>
             <div className={styles.pad}>
@@ -684,17 +689,25 @@ export default function ClientApp() {
                 <input className="form-input" placeholder="Search for a service or neighborhood..." value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{flex:1,fontSize:14}} />
                 {searchQ && <button className="btn" onClick={() => setSearchQ('')}>✕</button>}
               </div>
-              <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
-                {SEARCH_CATS.map(([c,l]) => (<button key={c} className={`btn ${searchCat===c?'btn-green':''}`} onClick={() => setSearchCat(c)}>{l}</button>))}
-              </div>
-              {!provLoading && filtered.length > 0 && <ProviderMap providers={filtered} onSelect={(p) => openBooking(p)} />}
-              {provLoading ? (
-                <div style={{textAlign:'center',padding:60}}><div className="spinner" style={{width:32,height:32,margin:'0 auto 12px'}}/><div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--ink3)'}}>Loading providers...</div></div>
-              ) : (
-                <div style={{display:'flex',flexDirection:'column',gap:10}}>
-                  {filtered.map((p,i) => (
-                    <div key={p.id||i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14,display:'flex',gap:12,alignItems:'flex-start',cursor:'pointer',boxShadow:'var(--shadow)'}} onClick={() => navigate(`/provider/${slugify(p.name)}`)}>
-                      <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}><AppIcon code={p.icon || 'ME'} size={22} /></div>
+                <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:16}}>
+                  {SEARCH_CATS.map(([c,l]) => (<button key={c} className={`btn ${searchCat===c?'btn-green':''}`} onClick={() => setSearchCat(c)}>{l}</button>))}
+                </div>
+              {!provLoading && filtered.length > 0 && (
+                <ProviderMap
+                  providers={filtered}
+                  onSelect={(p) => openBooking(p)}
+                  onVisibleProvidersChange={(visibleProviders) => {
+                    setVisibleProviderKeys(visibleProviders.map((provider) => String(provider?.id || provider?.name || '')))
+                  }}
+                />
+              )}
+                {provLoading ? (
+                  <div style={{textAlign:'center',padding:60}}><div className="spinner" style={{width:32,height:32,margin:'0 auto 12px'}}/><div style={{fontFamily:'var(--mono)',fontSize:11,color:'var(--ink3)'}}>Loading providers...</div></div>
+                ) : (
+                  <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                    {displayedProviders.map((p,i) => (
+                      <div key={p.id||i} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:10,padding:14,display:'flex',gap:12,alignItems:'flex-start',cursor:'pointer',boxShadow:'var(--shadow)'}} onClick={() => navigate(`/provider/${slugify(p.name)}`)}>
+                        <div style={{width:48,height:48,borderRadius:10,background:'var(--bg3)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}><AppIcon code={p.icon || 'ME'} size={22} /></div>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:14,marginBottom:2}}>{p.name}</div>
                         <div style={{fontSize:11,color:'var(--ink2)',marginBottom:6}}>{p.type_label} · {p.address} · {p.rating} stars ({p.reviews} reviews) · {p.phone}</div>
@@ -704,17 +717,18 @@ export default function ClientApp() {
                         <span style={{fontFamily:'var(--mono)',fontSize:10,color:'var(--ink3)'}}>{p.distance}</span>
                         <span className={`badge ${p.is_open?'badge-green':'badge-amber'}`}>{p.is_open ? 'Open' : 'Closed'}</span>
                         <button className="btn btn-green" style={{fontSize:10,padding:'5px 12px'}} onClick={e=>{e.stopPropagation();openBooking(p)}}>Book</button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {filtered.length===0 && (
-                    <div style={{textAlign:'center',color:'var(--ink3)',padding:60}}>
-                      <div style={{fontSize:40,marginBottom:12}}>🔍</div>
-                      <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:6}}>No results</div>
-                      <button className="btn" style={{marginTop:12}} onClick={() => {setSearchQ('');setSearchCat('all')}}>Reset</button>
-                    </div>
-                  )}
-                </div>
+                    ))}
+                    {displayedProviders.length===0 && (
+                      <div style={{textAlign:'center',color:'var(--ink3)',padding:60}}>
+                        <div style={{fontSize:40,marginBottom:12}}>🔍</div>
+                        <div style={{fontFamily:'var(--display)',fontWeight:700,fontSize:16,marginBottom:6}}>No providers in this map view</div>
+                        <div style={{fontSize:12,lineHeight:1.7}}>Zoom out, move the map, or reset your filters to see more providers.</div>
+                        <button className="btn" style={{marginTop:12}} onClick={() => {setSearchQ('');setSearchCat('all')}}>Reset</button>
+                      </div>
+                    )}
+                  </div>
               )}
             </div>
           </div>
