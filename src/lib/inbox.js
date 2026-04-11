@@ -246,7 +246,7 @@ export async function fetchThreadMessages(threadId) {
 
   const { data, error } = await supabase
     .from('messages')
-    .select('*')
+    .select('id, thread_id, sender_id, recipient_id, body, is_read, created_at')
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true })
 
@@ -353,12 +353,23 @@ export async function deleteConversationThread(threadId, userId) {
 export async function fetchConversationThreads(userId, role) {
   if (!userId) return []
 
-  const { data: threads, error } = await supabase
-    .from('message_threads')
-    .select('*')
-    .or(`client_id.eq.${userId},provider_id.eq.${userId}`)
-    .order('last_message_at', { ascending: false })
+  const [
+    { data: threads, error },
+    { data: unreadRows, error: unreadError },
+  ] = await Promise.all([
+    supabase
+      .from('message_threads')
+      .select('id, client_id, provider_id, booking_id, created_by, last_message_at, last_message_preview')
+      .or(`client_id.eq.${userId},provider_id.eq.${userId}`)
+      .order('last_message_at', { ascending: false }),
+    supabase
+      .from('messages')
+      .select('thread_id')
+      .eq('recipient_id', userId)
+      .eq('is_read', false),
+  ])
 
+  if (unreadError && !isMissingInboxRelation(unreadError)) throw unreadError
   if (error) {
     if (isMissingInboxRelation(error)) return []
     throw error
@@ -366,15 +377,6 @@ export async function fetchConversationThreads(userId, role) {
 
   const safeThreads = threads || []
   const unreadByThread = {}
-
-  const { data: unreadRows, error: unreadError } = await supabase
-    .from('messages')
-    .select('thread_id')
-    .eq('recipient_id', userId)
-    .eq('is_read', false)
-
-  if (unreadError && !isMissingInboxRelation(unreadError)) throw unreadError
-
   ;(unreadRows || []).forEach((row) => {
     unreadByThread[row.thread_id] = (unreadByThread[row.thread_id] || 0) + 1
   })

@@ -100,8 +100,11 @@ export default function Messages() {
   const [confirmState, setConfirmState] = useState({ open: false, thread: null })
   const fileInputRef = useRef(null)
   const actionsMenuRef = useRef(null)
+  const selectedThreadIdRef = useRef(selectedThreadId)
+  const archivedThreadIdsRef = useRef(archivedThreadIds)
 
   const role = profile?.role || 'client'
+  const searchThreadParam = searchParams.get('thread') || ''
   const selectedThread = useMemo(
     () => threads.find((thread) => String(thread.id) === String(selectedThreadId)) || null,
     [selectedThreadId, threads],
@@ -139,6 +142,14 @@ export default function Messages() {
   }, [archivedThreadIds, user?.id])
 
   useEffect(() => {
+    selectedThreadIdRef.current = selectedThreadId
+  }, [selectedThreadId])
+
+  useEffect(() => {
+    archivedThreadIdsRef.current = archivedThreadIds
+  }, [archivedThreadIds])
+
+  useEffect(() => {
     function handleWindowClick(event) {
       if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target)) {
         setMenuThreadId('')
@@ -160,8 +171,8 @@ export default function Messages() {
         if (!active) return
         setThreads(nextThreads)
         setSelectedThreadId((current) => {
-          const queryThreadId = searchParams.get('thread')
-          const archivedSet = new Set(archivedThreadIds.map(String))
+          const queryThreadId = searchThreadParam
+          const archivedSet = new Set(archivedThreadIdsRef.current.map(String))
           const defaultThread = nextThreads.find((thread) => !archivedSet.has(String(thread.id))) || nextThreads[0]
           if (queryThreadId && nextThreads.some((thread) => String(thread.id) === String(queryThreadId))) {
             return String(queryThreadId)
@@ -183,7 +194,7 @@ export default function Messages() {
     const unsubscribe = subscribeToInbox(user.id, {
       onThreadsChange: loadThreads,
       onMessagesChange: async () => {
-        const threadId = searchParams.get('thread') || selectedThreadId
+        const threadId = selectedThreadIdRef.current
         if (!threadId) return
         try {
           const nextMessages = await fetchThreadMessages(threadId)
@@ -199,7 +210,12 @@ export default function Messages() {
       active = false
       unsubscribe()
     }
-  }, [archivedThreadIds, role, searchParams, selectedThreadId, toast, user?.id])
+  }, [role, searchThreadParam, toast, user?.id])
+
+  useEffect(() => {
+    if (!searchThreadParam || !threads.some((thread) => String(thread.id) === String(searchThreadParam))) return
+    setSelectedThreadId((current) => (String(current) === String(searchThreadParam) ? current : String(searchThreadParam)))
+  }, [searchThreadParam, threads])
 
   useEffect(() => {
     if (!selectedThreadId || !user?.id) {
@@ -215,7 +231,10 @@ export default function Messages() {
         const nextMessages = await fetchThreadMessages(selectedThreadId)
         if (!active) return
         setMessages(nextMessages)
-        await markThreadMessagesRead(selectedThreadId, user.id)
+        setThreads((current) => current.map((thread) => (
+          String(thread.id) === String(selectedThreadId) ? { ...thread, unreadCount: 0 } : thread
+        )))
+        void markThreadMessagesRead(selectedThreadId, user.id)
       } catch (error) {
         if (!active) return
         toast(error.message || 'Unable to load the conversation.', 'error')
@@ -231,9 +250,9 @@ export default function Messages() {
   }, [selectedThreadId, toast, user?.id])
 
   useEffect(() => {
-    if (!selectedThreadId) return
+    if (!selectedThreadId || searchThreadParam === String(selectedThreadId)) return
     setSearchParams({ thread: selectedThreadId }, { replace: true })
-  }, [selectedThreadId, setSearchParams])
+  }, [searchThreadParam, selectedThreadId, setSearchParams])
 
   async function handleAddAttachments(event) {
     const files = Array.from(event.target.files || [])
