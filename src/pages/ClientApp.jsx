@@ -784,13 +784,36 @@ export default function ClientApp() {
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
       {profileMenuOpen && <div className={styles.overlay} onClick={() => setProfileMenuOpen(false)} />}
 
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-        <div className={styles.sbHeader}>
-          <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer' }}>
-            <img src="/logo-dark.png" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+          <div className={styles.sbHeader} style={{ gap: 10 }}>
+            <button
+              type="button"
+              onClick={goHome}
+              aria-label="Back to home"
+              title="Back to home"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 12,
+                border: '1px solid rgba(255,255,255,.08)',
+                background: 'rgba(255,255,255,.04)',
+                color: '#f7fbff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 18,
+                fontWeight: 700,
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              ←
+            </button>
+            <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer', flex: 1 }}>
+              <img src="/logo-dark.png" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
+            </div>
+            <span className={`${styles.sbMode} ${styles.modeClient}`}>CLIENT</span>
           </div>
-          <span className={`${styles.sbMode} ${styles.modeClient}`}>CLIENT</span>
-        </div>
         <nav className={styles.sbNav}>
           <div className={styles.sbSection}>
             <div className={styles.sbLbl}>Core</div>
@@ -851,11 +874,35 @@ export default function ClientApp() {
       </aside>
 
       <div className={styles.main}>
-        <div className={styles.mobileTopbar}>
-          <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
-          <img src="/logo-dark.png" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
-          <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => openBooking()}>+ Book</button>
-        </div>
+          <div className={styles.mobileTopbar}>
+            <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <button
+                type="button"
+                onClick={goHome}
+                aria-label="Back to home"
+                title="Back to home"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,.08)',
+                  background: 'rgba(255,255,255,.04)',
+                  color: '#f7fbff',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                ←
+              </button>
+              <img src="/logo-dark.png" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
+            </div>
+            <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => openBooking()}>+ Book</button>
+          </div>
 
         {pane === 'dashboard' && (
           <div>
