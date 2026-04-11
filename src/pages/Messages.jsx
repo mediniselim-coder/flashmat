@@ -111,6 +111,7 @@ export default function Messages() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, profile } = useAuth()
   const { toast } = useToast()
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
   const [threads, setThreads] = useState([])
   const [messages, setMessages] = useState([])
   const [selectedThreadId, setSelectedThreadId] = useState(searchParams.get('thread') || '')
@@ -131,6 +132,7 @@ export default function Messages() {
   const archivedThreadIdsRef = useRef(archivedThreadIds)
 
   const role = profile?.role || 'client'
+  const isMobile = viewportWidth < 900
   const searchThreadParam = searchParams.get('thread') || ''
   const selectedThread = useMemo(
     () => threads.find((thread) => String(thread.id) === String(selectedThreadId)) || null,
@@ -167,6 +169,15 @@ export default function Messages() {
     if (!user?.id) return
     window.localStorage.setItem(getArchivedStorageKey(user.id), JSON.stringify(archivedThreadIds))
   }, [archivedThreadIds, user?.id])
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     if (!user?.id) {
@@ -455,8 +466,9 @@ export default function Messages() {
       `}</style>
       <NavBar activePage="messages" />
       <main style={styles.main}>
-        <section style={styles.shell}>
-          <aside style={styles.sidebar}>
+        <section style={{ ...styles.shell, ...(isMobile ? styles.shellMobile : null) }}>
+          {(!isMobile || !selectedThread) ? (
+          <aside style={{ ...styles.sidebar, ...(isMobile ? styles.sidebarMobile : null) }}>
             <div style={styles.sidebarHeader}>
               <div>
                 <div style={styles.eyebrow}>FlashMat inbox</div>
@@ -576,11 +588,13 @@ export default function Messages() {
               ))}
             </div>
           </aside>
+          ) : null}
 
-          <section style={styles.chatPane}>
+          {(!isMobile || selectedThread) ? (
+          <section style={{ ...styles.chatPane, ...(isMobile ? styles.chatPaneMobile : null) }}>
             {selectedThread ? (
               <>
-                <div style={styles.chatHeader}>
+                <div style={{ ...styles.chatHeader, ...(isMobile ? styles.chatHeaderMobile : null) }}>
                   <div style={styles.chatHeaderMain}>
                     <div style={styles.chatHeaderAvatar}>
                       <ConversationAvatar thread={selectedThread} />
@@ -590,12 +604,27 @@ export default function Messages() {
                       <div style={styles.chatMeta}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
                     </div>
                   </div>
-                  <button type="button" style={styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
-                    View profile
-                  </button>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'space-between' : 'flex-end', width: isMobile ? '100%' : 'auto' }}>
+                    {isMobile ? (
+                      <button
+                        type="button"
+                        style={styles.secondaryButton}
+                        onClick={() => {
+                          setSelectedThreadId('')
+                          setMessages([])
+                          setSearchParams({}, { replace: true })
+                        }}
+                      >
+                        Back to inbox
+                      </button>
+                    ) : null}
+                    <button type="button" style={styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
+                      View profile
+                    </button>
+                  </div>
                 </div>
 
-                <div style={styles.chatFeed}>
+                <div style={{ ...styles.chatFeed, ...(isMobile ? styles.chatFeedMobile : null) }}>
                   {loadingMessages && messages.length === 0 ? (
                     <div style={styles.chatLoadingState}>
                       <div style={styles.messageSkeletonMine} />
@@ -642,8 +671,8 @@ export default function Messages() {
                   })}
                 </div>
 
-                <div style={styles.composer}>
-                  <div style={styles.composerField}>
+                <div style={{ ...styles.composer, ...(isMobile ? styles.composerMobile : null) }}>
+                  <div style={{ ...styles.composerField, ...(isMobile ? styles.composerFieldMobile : null) }}>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -674,21 +703,23 @@ export default function Messages() {
                     <textarea
                       value={composer}
                       onChange={(event) => setComposer(event.target.value)}
-                      style={styles.textarea}
+                      style={{ ...styles.textarea, ...(isMobile ? styles.textareaMobile : null) }}
                       placeholder="Write a message..."
                     />
                   </div>
-                  <button
-                    type="button"
-                    style={styles.attachButton}
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={preparingAttachments || sending}
-                  >
-                    {preparingAttachments ? 'Adding...' : 'Add files'}
-                  </button>
-                  <button type="button" style={styles.primaryButton} onClick={handleSend} disabled={sending || preparingAttachments}>
-                    {sending ? 'Sending...' : 'Send'}
-                  </button>
+                  <div style={{ display: 'flex', gap: 10, width: isMobile ? '100%' : 'auto' }}>
+                    <button
+                      type="button"
+                      style={{ ...styles.attachButton, ...(isMobile ? styles.composerActionMobile : null) }}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={preparingAttachments || sending}
+                    >
+                      {preparingAttachments ? 'Adding...' : 'Add files'}
+                    </button>
+                    <button type="button" style={{ ...styles.primaryButton, ...(isMobile ? styles.composerActionMobile : null) }} onClick={handleSend} disabled={sending || preparingAttachments}>
+                      {sending ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -698,6 +729,7 @@ export default function Messages() {
               </div>
             )}
           </section>
+          ) : null}
 
         </section>
       </main>
@@ -741,6 +773,9 @@ const styles = {
     background: 'linear-gradient(180deg, #f5f9ff 0%, #eef5ff 100%)',
     overflow: 'hidden',
   },
+  shellMobile: {
+    display: 'block',
+  },
   sidebar: {
     display: 'grid',
     gridTemplateRows: 'auto auto 1fr',
@@ -748,6 +783,11 @@ const styles = {
     background: 'linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%)',
     minHeight: 0,
     boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.72)',
+  },
+  sidebarMobile: {
+    width: '100%',
+    minHeight: '100%',
+    borderRight: 'none',
   },
   sidebarHeader: {
     padding: '24px 22px 18px',
@@ -1028,6 +1068,11 @@ const styles = {
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcff 100%)',
     boxShadow: 'inset -1px 0 0 rgba(255,255,255,0.72)',
   },
+  chatPaneMobile: {
+    gridTemplateRows: 'auto 1fr auto',
+    height: '100%',
+    borderRight: 'none',
+  },
   chatHeader: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -1036,6 +1081,11 @@ const styles = {
     padding: '22px 24px 18px',
     borderBottom: '1px solid rgba(120,171,218,0.18)',
     background: 'rgba(255,255,255,0.72)',
+  },
+  chatHeaderMobile: {
+    padding: '16px 16px 14px',
+    alignItems: 'flex-start',
+    flexDirection: 'column',
   },
   confirmOverlay: {
     position: 'fixed',
@@ -1119,6 +1169,9 @@ const styles = {
     background:
       'linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(248,252,255,0.96) 100%)',
   },
+  chatFeedMobile: {
+    padding: '16px 14px 14px',
+  },
   chatLoadingState: {
     display: 'grid',
     gap: 12,
@@ -1184,9 +1237,17 @@ const styles = {
     alignItems: 'end',
     background: 'rgba(255,255,255,0.94)',
   },
+  composerMobile: {
+    gridTemplateColumns: '1fr',
+    gap: 10,
+    padding: '12px 12px calc(12px + env(safe-area-inset-bottom, 0px))',
+  },
   composerField: {
     display: 'grid',
     gap: 10,
+  },
+  composerFieldMobile: {
+    gap: 8,
   },
   hiddenInput: {
     display: 'none',
@@ -1242,6 +1303,11 @@ const styles = {
     fontSize: 14,
     color: '#17314c',
   },
+  textareaMobile: {
+    minHeight: 88,
+    fontSize: 16,
+    padding: '14px 14px',
+  },
   attachButton: {
     border: '1px solid rgba(120,171,218,0.16)',
     borderRadius: 14,
@@ -1251,6 +1317,10 @@ const styles = {
     fontSize: 13,
     fontWeight: 800,
     cursor: 'pointer',
+  },
+  composerActionMobile: {
+    flex: 1,
+    justifyContent: 'center',
   },
   attachmentStack: {
     display: 'grid',
