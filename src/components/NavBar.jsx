@@ -209,6 +209,11 @@ export default function NavBar({ activePage }) {
     setNotificationCenterOpen(true)
   }
 
+  function openCart() {
+    closeFloatingUi()
+    navigate(user && profile ? '/app/marketplace' : '/marketplace')
+  }
+
   function toggleProfileMenu() {
     setMenuOpen(false)
     setPanelOpen(null)
@@ -325,7 +330,7 @@ export default function NavBar({ activePage }) {
 
           {showCenterIcons ? (
           <div style={{ ...styles.centerGroup, gap: isCompact ? 10 : 18 }}>
-            {PRIMARY_ITEMS.map((item, index) => {
+            {PRIMARY_ITEMS.filter((item) => item.id !== 'doctor').map((item, index) => {
               if (isMobile && index > 2) return null
               const Icon = item.icon
               return (
@@ -355,6 +360,13 @@ export default function NavBar({ activePage }) {
             >
               {isNarrow ? 'Urgence' : 'FlashFix Urgence'}
             </button>
+
+            <HeaderUtilityButton
+              label="Cart"
+              icon={<CartIcon />}
+              onClick={openCart}
+              compact={isPhone}
+            />
 
             {user && profile ? (
               <>
@@ -835,6 +847,7 @@ function ServicesIcon() { return <Svg><path d="M4 8h16" /><path d="M7 8V5" /><pa
 function ProvidersIcon() { return <Svg><path d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M16 12a2.5 2.5 0 1 0 0-5" /><path d="M3.5 19a4.5 4.5 0 0 1 9 0" /><path d="M14 19a4 4 0 0 1 6 0" /></Svg> }
 function DoctorIcon() { return <Svg><path d="M12 4v16" /><path d="M5 11h14" /><circle cx="12" cy="12" r="8" /></Svg> }
 function MarketplaceIcon() { return <Svg><path d="M4 10h16" /><path d="M6 10V7l2-3h8l2 3v3" /><path d="M6 10v8h12v-8" /><path d="M10 14h4" /></Svg> }
+function CartIcon() { return <Svg><circle cx="9" cy="19" r="1.5" /><circle cx="17" cy="19" r="1.5" /><path d="M4 5h2l2.2 9.2a1 1 0 0 0 1 .8h7.7a1 1 0 0 0 1-.8L20 8H7.2" /></Svg> }
 function UserIcon() { return <Svg><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" /><path d="M5 20a7 7 0 0 1 14 0" /></Svg> }
 function BellIcon() { return <Svg><path d="M6 9a6 6 0 1 1 12 0v4l1.5 2.5H4.5L6 13V9Z" /><path d="M10 19a2 2 0 0 0 4 0" /></Svg> }
 function MessageIcon() { return <Svg><path d="M5 6h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H9l-4 3v-3H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /><path d="M8 11h8" /><path d="M8 14h5" /></Svg> }
