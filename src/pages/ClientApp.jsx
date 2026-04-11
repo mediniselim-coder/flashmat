@@ -38,6 +38,8 @@ const NAV = [
   { id: 'search',        icon: 'SV', label: 'Find a Service' },
   { id: 'bookings',      icon: 'RS', label: 'Bookings', badge: true },
   { id: 'maintenance',   icon: 'EN', label: 'Maintenance' },
+  { id: 'doctor',        icon: 'DR', label: 'Docteur Automobile' },
+  { id: 'flashfix',      icon: 'FX', label: 'FlashFix' },
   { id: 'marketplace',   icon: 'MP', label: 'Marketplace' },
   { id: 'flashscore',    icon: 'FS', label: 'FlashScore' },
   { id: 'notifications', icon: 'AL', label: 'Alerts', badge: true },
@@ -45,7 +47,7 @@ const NAV = [
 
 const NAV_SECTIONS = {
   core: ['dashboard', 'vehicles', 'search'],
-  tools: ['bookings', 'maintenance', 'flashscore', 'marketplace'],
+  tools: ['bookings', 'maintenance', 'doctor', 'flashfix', 'flashscore', 'marketplace'],
   notifications: ['notifications'],
 }
 
@@ -84,6 +86,11 @@ function getPaneFromClientPath(pathname) {
 
 function getClientPathSegment(pathname) {
   return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
+}
+
+const CLIENT_SHORTCUT_PATHS = {
+  doctor: '/doctor',
+  flashfix: '/urgence',
 }
 
 function readPendingServiceSearch() {
@@ -310,7 +317,7 @@ export default function ClientApp() {
   }, [displayedProviders, selectedSearchProviderId])
 
   function go(id, options = {}) {
-    const nextPath = CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
+    const nextPath = CLIENT_SHORTCUT_PATHS[id] || CLIENT_PANE_PATHS[id] || CLIENT_PANE_PATHS.dashboard
     setSidebar(false)
     navigate(nextPath, options)
   }

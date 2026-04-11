@@ -30,10 +30,13 @@ export default function AppIcon({ code, size = 18 }) {
     case 'EN':
     case 'ME':
       return <Svg size={size}><path d="M10 6l2-2 4 4-2 2 5 5-2 2-5-5-2 2-4-4 2-2z" {...common} /></Svg>
+    case 'DR':
+      return <Svg size={size}><path d="M12 4v16" {...common} /><path d="M5 11h14" {...common} /><circle cx="12" cy="12" r="8" {...common} /></Svg>
     case 'MP':
       return <Svg size={size}><path d="M7 9V7a5 5 0 0110 0v2" {...common} /><path d="M5 9h14l-1 10H6L5 9z" {...common} /></Svg>
     case 'FS':
     case 'FF':
+    case 'FX':
       return <Svg size={size}><path d="M13 3L6 13h5l-1 8 8-11h-5V3z" fill="currentColor" /></Svg>
     case 'AL':
     case 'NC':
