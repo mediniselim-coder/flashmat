@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
@@ -41,6 +42,10 @@ const LEGAL_LINKS = [
 export default function SiteFooter({ portal = 'public' }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 640
+  })
   const isLoggedIn = Boolean(user)
   const accountRoute = profile?.role === 'provider' ? '/app/provider/dashboard' : '/app/client/dashboard'
 
@@ -57,6 +62,16 @@ export default function SiteFooter({ portal = 'public' }) {
     window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
   }
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    function syncViewport() {
+      setIsMobile(window.innerWidth <= 640)
+    }
+    syncViewport()
+    window.addEventListener('resize', syncViewport)
+    return () => window.removeEventListener('resize', syncViewport)
+  }, [])
+
   function handleLinkClick(link) {
     if (link.action === 'login') {
       openLogin()
@@ -66,6 +81,68 @@ export default function SiteFooter({ portal = 'public' }) {
     if (link.to) {
       navigate(link.to)
     }
+  }
+
+  if (isMobile) {
+    const quickLinks = [
+      { label: 'Services', to: '/services' },
+      { label: 'Providers', to: '/providers' },
+      { label: 'Marketplace', to: '/marketplace' },
+      isLoggedIn
+        ? { label: 'Mon espace', to: accountRoute }
+        : { label: 'Connexion', action: 'login' },
+    ]
+
+    return (
+      <footer style={styles.footer}>
+        <div style={styles.mobileShell}>
+          <img src="/logo-dark.png" alt="FlashMat" style={styles.mobileLogo} />
+          <div style={styles.mobileText}>
+            Services, providers et marketplace auto dans une experience FlashMat plus simple.
+          </div>
+
+          <div style={styles.mobileActionRow}>
+            <button type="button" style={styles.mobilePrimaryButton} onClick={() => navigate('/urgence')}>
+              FlashFix Urgence
+            </button>
+            <button
+              type="button"
+              style={styles.mobileSecondaryButton}
+              onClick={() => {
+                if (isLoggedIn) {
+                  navigate(accountRoute)
+                  return
+                }
+                openLogin()
+              }}
+            >
+              {isLoggedIn ? 'Mon espace' : 'Connexion'}
+            </button>
+          </div>
+
+          <div style={styles.mobileLinkGrid}>
+            {quickLinks.map((link) => (
+              <button
+                key={link.label}
+                type="button"
+                style={styles.mobileLinkButton}
+                onClick={() => handleLinkClick(link)}
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+
+          <div style={styles.mobileBottom}>
+            <span>© 2026 FlashMat.ca</span>
+            <span>514-476-1708</span>
+            <button type="button" style={styles.mobileLegalButton} onClick={() => navigate('/contact')}>
+              Contact
+            </button>
+          </div>
+        </div>
+      </footer>
+    )
   }
 
   return (
@@ -204,6 +281,77 @@ const styles = {
     maxWidth: 1440,
     margin: '0 auto',
     padding: '56px 28px 24px',
+  },
+  mobileShell: {
+    maxWidth: 640,
+    margin: '0 auto',
+    padding: '28px 16px 20px',
+    display: 'grid',
+    gap: 16,
+  },
+  mobileLogo: {
+    height: 34,
+    objectFit: 'contain',
+  },
+  mobileText: {
+    color: 'rgba(217,231,243,0.72)',
+    fontSize: 14,
+    lineHeight: 1.7,
+  },
+  mobileActionRow: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+  },
+  mobilePrimaryButton: {
+    border: 'none',
+    borderRadius: 999,
+    padding: '12px 14px',
+    background: 'linear-gradient(135deg, #ff5f50 0%, #ef4444 100%)',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  mobileSecondaryButton: {
+    border: '1px solid rgba(255,255,255,0.18)',
+    borderRadius: 999,
+    padding: '12px 14px',
+    background: 'rgba(255,255,255,0.06)',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  mobileLinkGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 10,
+  },
+  mobileLinkButton: {
+    border: '1px solid rgba(120,180,220,0.14)',
+    background: 'rgba(255,255,255,0.04)',
+    color: '#d9e7f3',
+    borderRadius: 14,
+    padding: '12px 14px',
+    fontSize: 13,
+    fontWeight: 700,
+    textAlign: 'left',
+  },
+  mobileBottom: {
+    borderTop: '1px solid rgba(120,180,220,0.12)',
+    paddingTop: 14,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 6,
+    color: 'rgba(217,231,243,0.56)',
+    fontSize: 12,
+  },
+  mobileLegalButton: {
+    border: 'none',
+    background: 'transparent',
+    color: 'rgba(217,231,243,0.72)',
+    fontSize: 12,
+    padding: 0,
+    textAlign: 'left',
   },
   topRow: {
     display: 'grid',
