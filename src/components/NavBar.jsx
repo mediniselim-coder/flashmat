@@ -449,7 +449,68 @@ export default function NavBar({ activePage }) {
       {(menuOpen || activePanel) && <div style={styles.scrim} onClick={closeFloatingUi} />}
 
       {menuOpen && (
-        <div style={{ ...styles.drawer, width: isMobile ? '100vw' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isCompact ? '40px 18px 18px' : '48px 22px 20px' }}>
+        <div style={{ ...styles.drawer, width: isMobile ? 'min(292px, 84vw)' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isMobile ? '14px 10px 12px' : isCompact ? '40px 18px 18px' : '48px 22px 20px' }}>
+          {isMobile ? (
+            <>
+              <div style={styles.mobileDrawerHeader}>
+                <div style={styles.mobileDrawerBrand}>
+                  <img src="/logo-dark.png" alt="FlashMat" style={styles.mobileDrawerLogo} />
+                  <span style={styles.mobileDrawerMode}>{isProvider ? 'PROVIDER' : 'CLIENT'}</span>
+                </div>
+                <button type="button" style={styles.mobileDrawerClose} onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">×</button>
+              </div>
+              <div style={styles.mobileDrawerSection}>
+                <div style={styles.mobileDrawerLabel}>Navigation</div>
+                <div style={styles.mobileDrawerNav}>
+                  {MENU_SECTIONS.map((item) => (
+                    <button key={item.label} type="button" onClick={() => navigateTo(item.to)} style={styles.mobileDrawerNavItem}>
+                      <span>{item.label}</span>
+                      <span style={styles.mobileDrawerNavArrow}>→</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={styles.mobileDrawerSection}>
+                <div style={styles.mobileDrawerLabel}>Acces rapide</div>
+                <div style={styles.mobileDrawerNav}>
+                  <button type="button" onClick={() => navigateTo('/doctor')} style={styles.mobileDrawerNavItem}>
+                    <span>Docteur Automobile</span>
+                    <span style={styles.mobileDrawerNavArrow}>→</span>
+                  </button>
+                  <button type="button" onClick={() => navigateTo('/urgence')} style={styles.mobileDrawerNavItem}>
+                    <span>FlashFix Urgence</span>
+                    <span style={styles.mobileDrawerNavArrow}>→</span>
+                  </button>
+                </div>
+              </div>
+              <div style={styles.mobileDrawerFooter}>
+                <div style={styles.mobileDrawerAccountCard}>
+                  <div style={styles.mobileDrawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
+                  <div style={styles.mobileDrawerAccountTitle}>{user ? displayName : 'Connectez-vous'}</div>
+                  <div style={styles.mobileDrawerAccountText}>
+                    {user ? `${getRoleLabel(profile?.role)} · montreal` : 'Client, fournisseur ou partenaire'}
+                  </div>
+                  {user ? (
+                    <div style={styles.mobileDrawerAccountActions}>
+                      <button type="button" onClick={() => navigateTo(isProvider ? '/app/provider' : '/app/client')} style={styles.mobileDrawerPrimaryCta}>
+                        Mon espace
+                      </button>
+                      <button type="button" onClick={handleSignOut} style={styles.mobileDrawerSecondaryCta}>
+                        Se deconnecter
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={styles.mobileDrawerAccountActions}>
+                      <button type="button" onClick={() => { setMenuOpen(false); setLoginOpen(true) }} style={styles.mobileDrawerPrimaryCta}>
+                        Connexion
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
           <div style={styles.drawerHeader}>
             <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">×</button>
@@ -497,6 +558,8 @@ export default function NavBar({ activePage }) {
               )}
             </div>
           </div>
+            </>
+          )}
         </div>
       )}
 
@@ -993,6 +1056,147 @@ const styles = {
     flexDirection: 'column',
     overflow: 'hidden',
     justifyContent: 'space-between',
+  },
+  mobileDrawerHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+    padding: '4px 4px 14px',
+    borderBottom: '1px solid rgba(120,180,220,.12)',
+    marginBottom: 14,
+  },
+  mobileDrawerBrand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: 0,
+  },
+  mobileDrawerLogo: {
+    height: 24,
+    objectFit: 'contain',
+    maxWidth: 120,
+  },
+  mobileDrawerMode: {
+    fontFamily: 'var(--mono)',
+    fontSize: 8,
+    letterSpacing: '.1em',
+    textTransform: 'uppercase',
+    padding: '4px 8px',
+    borderRadius: 999,
+    color: '#97f0bc',
+    background: 'rgba(34,197,94,.12)',
+    border: '1px solid rgba(34,197,94,.18)',
+  },
+  mobileDrawerClose: {
+    border: '1px solid rgba(120,180,220,.14)',
+    background: 'rgba(255,255,255,.04)',
+    color: '#dbe7f6',
+    fontWeight: 700,
+    fontSize: 20,
+    width: 34,
+    height: 34,
+    padding: 0,
+    borderRadius: 10,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    lineHeight: 1,
+    flexShrink: 0,
+  },
+  mobileDrawerSection: {
+    marginBottom: 16,
+  },
+  mobileDrawerLabel: {
+    fontFamily: 'var(--mono)',
+    fontSize: 8,
+    letterSpacing: '.1em',
+    textTransform: 'uppercase',
+    color: 'rgba(182,206,228,.62)',
+    padding: '0 8px',
+    marginBottom: 8,
+  },
+  mobileDrawerNav: {
+    display: 'grid',
+    gap: 4,
+  },
+  mobileDrawerNavItem: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 10,
+    border: '1px solid transparent',
+    background: 'transparent',
+    color: '#e4f0f9',
+    fontSize: 14,
+    fontWeight: 700,
+    textAlign: 'left',
+  },
+  mobileDrawerNavArrow: {
+    color: '#8fd9ff',
+    fontSize: 14,
+    fontWeight: 700,
+  },
+  mobileDrawerFooter: {
+    marginTop: 'auto',
+    paddingTop: 8,
+    borderTop: '1px solid rgba(120,180,220,.12)',
+  },
+  mobileDrawerAccountCard: {
+    padding: 10,
+    borderRadius: 14,
+    background: 'rgba(255,255,255,.05)',
+    border: '1px solid rgba(120,180,220,.12)',
+    color: '#f4fbff',
+  },
+  mobileDrawerAccountEyebrow: {
+    fontSize: 9,
+    letterSpacing: '.12em',
+    textTransform: 'uppercase',
+    color: 'rgba(182,206,228,.68)',
+    fontWeight: 800,
+    marginBottom: 6,
+  },
+  mobileDrawerAccountTitle: {
+    fontSize: 13,
+    fontWeight: 800,
+    color: '#fff',
+    marginBottom: 4,
+  },
+  mobileDrawerAccountText: {
+    fontSize: 10,
+    color: 'rgba(182,206,228,.72)',
+    fontFamily: 'var(--mono)',
+  },
+  mobileDrawerAccountActions: {
+    display: 'grid',
+    gap: 8,
+    marginTop: 10,
+  },
+  mobileDrawerPrimaryCta: {
+    width: '100%',
+    border: 'none',
+    borderRadius: 10,
+    padding: '10px 12px',
+    background: 'linear-gradient(135deg, rgba(59,159,216,.18), rgba(26,58,143,.24))',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 800,
+    textAlign: 'left',
+  },
+  mobileDrawerSecondaryCta: {
+    width: '100%',
+    border: '1px solid rgba(120,180,220,.14)',
+    borderRadius: 10,
+    padding: '10px 12px',
+    background: 'transparent',
+    color: '#dbe7f6',
+    fontSize: 13,
+    fontWeight: 700,
+    textAlign: 'left',
   },
   drawerHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 30 },
   drawerClose: {
