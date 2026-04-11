@@ -1323,35 +1323,24 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const wrapperClass = compact ? `${styles.section} ${styles.sectionCompact}` : styles.section
   const shellClass = compact ? `${styles.shell} ${styles.shellCompact}` : styles.shell
   const greetingName = userName || profile?.full_name || 'there'
+  const hasConversation = Boolean(draft.trim() || displayDiagnosis || isAnalyzing)
 
   return (
     <section className={wrapperClass}>
       <div className={shellClass}>
         <div className={styles.chatShell}>
-          <div className={styles.chatHeader}>
-            <div>
-              <div className={styles.eyebrow}>FlashMat Auto Doctor</div>
-              <h2 className={compact ? styles.compactTitle : styles.title}>A simpler car help chat</h2>
-              <p className={compact ? styles.compactSub : styles.subtitle}>
-                Ask like you would ask ChatGPT, but focused on FlashMat: symptoms, maintenance timing, repair estimates, and the right garage category in Montreal.
-              </p>
-            </div>
-            <div className={styles.chatBadge}>Hello {greetingName}</div>
-          </div>
-
-          <div
-            ref={resultRef}
-            className={`${styles.chatTimeline} ${hasFreshResult ? styles.resultHighlight : ''}`}
-            tabIndex={-1}
-          >
-            <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
-              <div className={styles.chatAvatar}>F</div>
-              <div className={styles.chatBubble}>
-                <div className={styles.chatMeta}>FlashMat assistant</div>
-                <p className={styles.chatText}>
-                  Tell me what the vehicle is doing and I will answer with the likely issue, what matters most, and where FlashMat would send you next.
+          {!hasConversation ? (
+            <div className={styles.chatLanding}>
+              <div className={styles.chatLandingTop}>
+                <div className={styles.chatBadge}>Hello {greetingName}</div>
+              </div>
+              <div className={styles.chatLandingBody}>
+                <div className={styles.eyebrow}>FlashMat Auto Doctor</div>
+                <h2 className={styles.chatLandingTitle}>How can FlashMat help with your vehicle?</h2>
+                <p className={styles.chatLandingText}>
+                  Ask about a symptom, maintenance timing, warning light, repair estimate, or which FlashMat service you should book next.
                 </p>
-                <div className={styles.modeRow} style={{ marginBottom: 0, marginTop: 14 }}>
+                <div className={styles.modeRow} style={{ justifyContent: 'center', marginTop: 20 }}>
                   {INPUT_MODES.map((mode) => (
                     <button
                       key={mode.id}
@@ -1363,115 +1352,148 @@ export default function VehicleDoctor({ compact = false, userName }) {
                     </button>
                   ))}
                 </div>
+                <div className={styles.chipRow} style={{ justifyContent: 'center', marginTop: 22 }}>
+                  {QUICK_CASES.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className={styles.chip}
+                      onClick={() => {
+                        setDraft(item)
+                        analyze(item)
+                      }}
+                    >
+                      {repairText(item)}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </article>
-
-            {draft.trim() ? (
-              <article className={`${styles.chatMessage} ${styles.chatUser}`}>
+            </div>
+          ) : (
+            <div
+              ref={resultRef}
+              className={`${styles.chatTimeline} ${hasFreshResult ? styles.resultHighlight : ''}`}
+              tabIndex={-1}
+            >
+              <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
+                <div className={styles.chatAvatar}>F</div>
                 <div className={styles.chatBubble}>
-                  <div className={styles.chatMeta}>You</div>
-                  <p className={styles.chatText}>{draft.trim()}</p>
+                  <div className={styles.chatMeta}>FlashMat assistant</div>
+                  <p className={styles.chatText}>
+                    Tell me what the vehicle is doing and I will answer with the likely issue, what matters most, and where FlashMat would send you next.
+                  </p>
                 </div>
               </article>
-            ) : null}
 
-            <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
-              <div className={styles.chatAvatar}>F</div>
-              <div className={styles.chatBubble}>
-                <div className={styles.chatMeta}>{resultEyebrowLabel}</div>
-                <div className={styles.statusRow}>
-                  <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
-                    {isAnalyzing ? 'Thinking...' : displayDiagnosis ? 'Answer ready' : 'Ready'}
-                  </span>
-                  <span className={styles.statusText}>{statusMessage}</span>
-                </div>
+              {draft.trim() ? (
+                <article className={`${styles.chatMessage} ${styles.chatUser}`}>
+                  <div className={styles.chatBubble}>
+                    <div className={styles.chatMeta}>You</div>
+                    <p className={styles.chatText}>{draft.trim()}</p>
+                  </div>
+                </article>
+              ) : null}
 
-                {displayDiagnosis ? (
-                  <>
-                    <h3 className={styles.chatAnswerTitle}>{displayDiagnosis.probableIssue}</h3>
-                    <p className={styles.chatText}>{displayDiagnosis.summary}</p>
+              <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
+                <div className={styles.chatAvatar}>F</div>
+                <div className={styles.chatBubble}>
+                  <div className={styles.chatMeta}>{resultEyebrowLabel}</div>
+                  <div className={styles.statusRow}>
+                    <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
+                      {isAnalyzing ? 'Thinking...' : displayDiagnosis ? 'Answer ready' : 'Ready'}
+                    </span>
+                    <span className={styles.statusText}>{statusMessage}</span>
+                  </div>
 
-                    <div className={styles.chatFacts}>
-                      <div className={styles.chatFact}>
-                        <span className={styles.chatFactLabel}>Confidence</span>
-                        <strong>{displayDiagnosis.confidence}</strong>
-                      </div>
-                      <div className={styles.chatFact}>
-                        <span className={styles.chatFactLabel}>Urgency</span>
-                        <strong>{displayDiagnosis.urgency}</strong>
-                      </div>
-                      <div className={styles.chatFact}>
-                        <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'When' : 'Estimate'}</span>
-                        <strong>{displayDiagnosis.estimate}</strong>
-                      </div>
-                      <div className={styles.chatFact}>
-                        <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'Timeline' : 'Repair time'}</span>
-                        <strong>{displayDiagnosis.duration}</strong>
-                      </div>
-                    </div>
+                  {displayDiagnosis ? (
+                    <>
+                      <h3 className={styles.chatAnswerTitle}>{displayDiagnosis.probableIssue}</h3>
+                      <p className={styles.chatText}>{displayDiagnosis.summary}</p>
 
-                    {displayDiagnosis.guidanceItems?.length ? (
-                      <div className={styles.chatChecklist}>
-                        <div className={styles.guidanceTitle}>{displayDiagnosis.guidanceTitle || 'What to do next'}</div>
-                        <div className={styles.guidanceList}>
-                          {displayDiagnosis.guidanceItems.slice(0, 4).map((item) => (
-                            <div key={item} className={styles.guidanceItem}>{item}</div>
+                      <div className={styles.chatFacts}>
+                        <div className={styles.chatFact}>
+                          <span className={styles.chatFactLabel}>Confidence</span>
+                          <strong>{displayDiagnosis.confidence}</strong>
+                        </div>
+                        <div className={styles.chatFact}>
+                          <span className={styles.chatFactLabel}>Urgency</span>
+                          <strong>{displayDiagnosis.urgency}</strong>
+                        </div>
+                        <div className={styles.chatFact}>
+                          <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'When' : 'Estimate'}</span>
+                          <strong>{displayDiagnosis.estimate}</strong>
+                        </div>
+                        <div className={styles.chatFact}>
+                          <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'Timeline' : 'Repair time'}</span>
+                          <strong>{displayDiagnosis.duration}</strong>
+                        </div>
+                      </div>
+
+                      {displayDiagnosis.guidanceItems?.length ? (
+                        <div className={styles.chatChecklist}>
+                          <div className={styles.guidanceTitle}>{displayDiagnosis.guidanceTitle || 'What to do next'}</div>
+                          <div className={styles.guidanceList}>
+                            {displayDiagnosis.guidanceItems.slice(0, 4).map((item) => (
+                              <div key={item} className={styles.guidanceItem}>{item}</div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      <div className={styles.chatGarageCard}>
+                        <div className={styles.matchHeader}>
+                          <h4 className={styles.matchTitle}>Best FlashMat matches</h4>
+                          <span className={styles.matchHint}>Montreal • nearby • relevant</span>
+                        </div>
+                        <div className={styles.matchList}>
+                          {displayDiagnosis.matches.slice(0, 3).map((match) => (
+                            <div key={match.name} className={styles.matchCard}>
+                              <div className={styles.matchTop}>
+                                <div>
+                                  <div className={styles.matchName}>{match.name}</div>
+                                  <div className={styles.matchMeta}>★ {match.rating} · {match.distance} · {match.eta}</div>
+                                </div>
+                                <div className={styles.matchPrice}>{match.price}</div>
+                              </div>
+                              <div className={styles.matchTags}>
+                                {match.tags.map((tag) => (
+                                  <span key={tag} className={styles.miniTag}>{tag}</span>
+                                ))}
+                              </div>
+                            </div>
                           ))}
                         </div>
                       </div>
-                    ) : null}
+                    </>
+                  ) : (
+                    <p className={styles.chatText}>
+                      Ask a simple question like “when should I do my oil change?”, or describe a real symptom like brake noise, overheating, a weak battery, or a warning light.
+                    </p>
+                  )}
+                </div>
+              </article>
+            </div>
+          )}
 
-                    <div className={styles.chatGarageCard}>
-                      <div className={styles.matchHeader}>
-                        <h4 className={styles.matchTitle}>Best FlashMat matches</h4>
-                        <span className={styles.matchHint}>Montreal • nearby • relevant</span>
-                      </div>
-                      <div className={styles.matchList}>
-                        {displayDiagnosis.matches.slice(0, 3).map((match) => (
-                          <div key={match.name} className={styles.matchCard}>
-                            <div className={styles.matchTop}>
-                              <div>
-                                <div className={styles.matchName}>{match.name}</div>
-                                <div className={styles.matchMeta}>★ {match.rating} · {match.distance} · {match.eta}</div>
-                              </div>
-                              <div className={styles.matchPrice}>{match.price}</div>
-                            </div>
-                            <div className={styles.matchTags}>
-                              {match.tags.map((tag) => (
-                                <span key={tag} className={styles.miniTag}>{tag}</span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <p className={styles.chatText}>
-                    Ask a simple question like “when should I do my oil change?”, or describe a real symptom like brake noise, overheating, a weak battery, or a warning light.
-                  </p>
-                )}
-              </div>
-            </article>
-          </div>
+          {hasConversation ? (
+            <div className={styles.chipRow}>
+              {QUICK_CASES.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={styles.chip}
+                  onClick={() => {
+                    setDraft(item)
+                    analyze(item)
+                  }}
+                >
+                  {repairText(item)}
+                </button>
+              ))}
+            </div>
+          ) : null}
 
-          <div className={styles.chipRow}>
-            {QUICK_CASES.map((item) => (
-              <button
-                key={item}
-                type="button"
-                className={styles.chip}
-                onClick={() => {
-                  setDraft(item)
-                  analyze(item)
-                }}
-              >
-                {repairText(item)}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.composer}>
+          <div className={`${styles.composer} ${!hasConversation ? styles.composerCentered : ''}`}>
             <div className={styles.inputCard}>
               <textarea
                 className={styles.textarea}
