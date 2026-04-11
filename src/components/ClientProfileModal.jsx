@@ -48,6 +48,7 @@ export default function ClientProfileModal({ onClose }) {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [confirmDelete, setConfirmDelete] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     setForm({
@@ -197,6 +198,18 @@ export default function ClientProfileModal({ onClose }) {
     }
   }
 
+  function openDeleteConfirm() {
+    setError('')
+    setShowDeleteConfirm(true)
+  }
+
+  function closeDeleteConfirm() {
+    if (deleting) return
+    setConfirmDelete('')
+    setShowDeleteConfirm(false)
+    setError('')
+  }
+
   return (
     <div className="modal-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 620, maxHeight: '92vh', overflowY: 'auto' }}>
@@ -280,44 +293,67 @@ export default function ClientProfileModal({ onClose }) {
 
           {error && <div style={{ color: 'var(--red)', fontSize: 12, marginBottom: 12 }}>{error}</div>}
 
-          <div style={{ marginTop: 18, background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.18)', borderRadius: 16, padding: '14px 16px', marginBottom: 14 }}>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 16, color: 'var(--ink)', marginBottom: 6 }}>
+          {showDeleteConfirm && (
+            <div style={{ marginTop: 18, background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.24)', borderRadius: 16, padding: '16px 16px 14px', marginBottom: 14 }}>
+              <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 16, color: 'var(--red)', marginBottom: 6 }}>
+                Warning: permanently delete account
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 10 }}>
+                This action permanently removes your FlashMat account, profile details, and access to the app. If you are sure, type <strong>DELETE</strong> below to continue.
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--red)', fontWeight: 700, marginBottom: 10 }}>
+                This cannot be undone.
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 10, alignItems: 'center' }}>
+                <input
+                  className="form-input"
+                  value={confirmDelete}
+                  onChange={(event) => setConfirmDelete(event.target.value)}
+                  placeholder="Type DELETE"
+                  disabled={deleting}
+                />
+                <button type="button" className="btn" onClick={closeDeleteConfirm} disabled={deleting}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  style={{
+                    color: '#fff',
+                    background: 'var(--red)',
+                    borderColor: 'rgba(239, 68, 68, 0.4)',
+                    minWidth: 136,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {deleting ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Delete account'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="modal-actions" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
+            <button
+              type="button"
+              className="btn"
+              onClick={openDeleteConfirm}
+              disabled={loading || deleting}
+              style={{
+                color: 'var(--red)',
+                borderColor: 'rgba(239, 68, 68, 0.28)',
+                background: 'rgba(239, 68, 68, 0.04)',
+              }}
+            >
               Delete account
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7, marginBottom: 10 }}>
-              This permanently removes your FlashMat account and signs you out. Type <strong>DELETE</strong> to confirm.
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'center' }}>
-              <input
-                className="form-input"
-                value={confirmDelete}
-                onChange={(event) => setConfirmDelete(event.target.value)}
-                placeholder="Type DELETE"
-                disabled={deleting}
-              />
-              <button
-                type="button"
-                className="btn"
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                style={{
-                  color: '#fff',
-                  background: 'var(--red)',
-                  borderColor: 'rgba(239, 68, 68, 0.4)',
-                  minWidth: 136,
-                  justifyContent: 'center',
-                }}
-              >
-                {deleting ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Delete account'}
+            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" className="btn" onClick={onClose}>Cancel</button>
+              <button type="submit" className="btn btn-green btn-lg" disabled={loading || deleting}>
+                {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Save profile'}
               </button>
             </div>
-          </div>
-
-          <div className="modal-actions">
-            <button type="button" className="btn" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-green btn-lg" disabled={loading || deleting}>
-              {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Save profile'}
-            </button>
           </div>
         </form>
       </div>
