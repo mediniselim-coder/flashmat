@@ -1475,48 +1475,42 @@ export default function ClientApp() {
                       <span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span>
                     </div>
                     <div className="panel-body">
-                      <div style={{display:'grid',gridTemplateColumns:'110px minmax(0, 1fr)',gap:16,alignItems:'center',marginBottom:18}}>
-                        <div style={{width:110,height:84,borderRadius:18,overflow:'hidden',border:'1px solid rgba(37,99,235,.14)',background:'rgba(37,99,235,.06)'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'88px minmax(0, 1fr) auto',gap:14,alignItems:'center',marginBottom:14}}>
+                        <div style={{width:88,height:64,borderRadius:16,overflow:'hidden',border:'1px solid rgba(37,99,235,.10)',background:'rgba(37,99,235,.04)'}}>
                           <img src={v.image} alt={`${v.make} ${v.model}`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
                         </div>
-                        <div style={{display:'grid',gap:10}}>
-                          <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-                            <div style={{width:86,height:86,borderRadius:'50%',border:'6px solid var(--green)',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--green-bg)',boxShadow:'0 12px 24px rgba(34,197,94,.10)'}}>
-                              <span style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--green)'}}>{v.score || '—'}</span>
-                            </div>
-                            <div>
-                              <div style={{fontSize:11,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Vehicle health</div>
-                              <div style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--ink)',lineHeight:1.05}}>{v.make} {v.model}</div>
-                              <div style={{fontSize:12,color:'var(--ink2)',marginTop:4}}>
-                                {[v.year, v.plate, v.mileage ? `${Number(v.mileage).toLocaleString()} km` : null].filter(Boolean).join(' • ') || 'Add more vehicle details for richer scoring.'}
-                              </div>
-                            </div>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Vehicle health</div>
+                          <div style={{fontFamily:'var(--display)',fontSize:16,fontWeight:800,color:'var(--ink)',lineHeight:1.05}}>{v.make} {v.model}</div>
+                          <div style={{fontSize:11,color:'var(--ink2)',marginTop:4}}>
+                            {[v.year, v.plate, v.mileage ? `${Number(v.mileage).toLocaleString()} km` : null].filter(Boolean).join(' • ') || 'Add more vehicle details for richer scoring.'}
                           </div>
-                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))',gap:8}}>
-                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:'10px 12px'}}>
-                              <div style={{fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Strongest</div>
-                              <div style={{fontWeight:800,color:'var(--ink)'}}>{v.items[0]?.[0] || '—'}</div>
-                              <div style={{fontSize:12,color:'var(--green)'}}>{v.items[0]?.[1] ? `${v.items[0][1]}%` : '—'}</div>
-                            </div>
-                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:'10px 12px'}}>
-                              <div style={{fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Watch first</div>
-                              <div style={{fontWeight:800,color:'var(--ink)'}}>{v.items[v.items.length - 1]?.[0] || '—'}</div>
-                              <div style={{fontSize:12,color:'var(--amber)'}}>{v.items[v.items.length - 1]?.[1] ? `${v.items[v.items.length - 1][1]}%` : '—'}</div>
-                            </div>
+                        </div>
+                        <div style={{display:'grid',justifyItems:'end',gap:8}}>
+                          <div style={{width:64,height:64,borderRadius:'50%',border:'4px solid rgba(37,99,235,.95)',display:'flex',alignItems:'center',justifyContent:'center',background:'#fff',boxShadow:'0 10px 18px rgba(37,99,235,.08)'}}>
+                            <span style={{fontFamily:'var(--display)',fontSize:22,fontWeight:800,color:'var(--blue)'}}>{v.score || '—'}</span>
+                          </div>
+                          <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
+                            <span style={{padding:'6px 10px',borderRadius:999,background:'rgba(34,197,94,.08)',color:'var(--green)',fontSize:11,fontWeight:800}}>
+                              {v.items[0]?.[0] || '—'} {v.items[0]?.[1] ? `${v.items[0][1]}%` : ''}
+                            </span>
+                            <span style={{padding:'6px 10px',borderRadius:999,background:'rgba(245,158,11,.10)',color:'var(--amber)',fontSize:11,fontWeight:800}}>
+                              {v.items[v.items.length - 1]?.[0] || '—'} {v.items[v.items.length - 1]?.[1] ? `${v.items[v.items.length - 1][1]}%` : ''}
+                            </span>
                           </div>
                         </div>
                       </div>
-                      <div style={{display:'grid',gap:10}}>
+                      <div style={{display:'grid',gap:8}}>
                         {v.items.map(([l,val,c]) => (
-                          <div key={l} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:'12px 14px'}}>
-                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,marginBottom:8}}>
+                          <div key={l} style={{background:'rgba(255,255,255,.76)',border:'1px solid rgba(120,171,218,0.14)',borderRadius:14,padding:'10px 12px'}}>
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,marginBottom:6}}>
                               <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
-                                <span style={{width:10,height:10,borderRadius:'50%',background:`var(--${c})`,flexShrink:0,boxShadow:`0 0 0 4px color-mix(in srgb, var(--${c}) 16%, transparent)`}} />
-                                <span style={{fontWeight:800,color:'var(--ink)',fontSize:14}}>{l}</span>
+                                <span style={{width:8,height:8,borderRadius:'50%',background:`var(--${c})`,flexShrink:0}} />
+                                <span style={{fontWeight:700,color:'var(--ink)',fontSize:13}}>{l}</span>
                               </div>
-                              <span style={{fontFamily:'var(--display)',fontSize:18,fontWeight:800,color:`var(--${c})`}}>{val}%</span>
+                              <span style={{fontFamily:'var(--mono)',fontSize:12,fontWeight:800,color:`var(--${c})`}}>{val}%</span>
                             </div>
-                            <div className="prog-bar" style={{height:10,borderRadius:999,background:'rgba(15,30,61,.08)'}}>
+                            <div className="prog-bar" style={{height:8,borderRadius:999,background:'rgba(15,30,61,.06)'}}>
                               <div className="prog-fill" style={{width:`${val}%`,background:`var(--${c})`,borderRadius:999}}/>
                             </div>
                           </div>
