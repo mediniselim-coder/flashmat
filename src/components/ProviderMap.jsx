@@ -315,6 +315,16 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
   const map = useMap()
   const clusterGroupRef = useRef(null)
   const markersRef = useRef(new Map())
+  const onSelectRef = useRef(onSelect)
+  const onBookRef = useRef(onBook)
+
+  useEffect(() => {
+    onSelectRef.current = onSelect
+  }, [onSelect])
+
+  useEffect(() => {
+    onBookRef.current = onBook
+  }, [onBook])
 
   useEffect(() => {
     const clusterGroup = L.markerClusterGroup({
@@ -363,14 +373,14 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
         maxWidth: 292,
       })
 
-      marker.on('click', () => onSelect?.(provider))
+      marker.on('click', () => onSelectRef.current?.(provider))
 
       marker.on('popupopen', (event) => {
         const popupElement = event.popup?.getElement()
         const button = popupElement?.querySelector('.flashmat-popup-cta')
         if (!button) return
 
-        const handleClick = () => onBook?.(provider)
+        const handleClick = () => onBookRef.current?.(provider)
         button.addEventListener('click', handleClick, { once: true })
       })
 
@@ -386,7 +396,7 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
       clusterGroupRef.current = null
       markersRef.current = new Map()
     }
-  }, [map, onBook, onSelect, providers])
+  }, [map, providers])
 
   useEffect(() => {
     if (!selectedProviderId) return
