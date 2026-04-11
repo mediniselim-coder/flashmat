@@ -1,116 +1,317 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
+import { useAuth } from '../hooks/useAuth'
+import { normalizeMarketplaceListing } from '../lib/marketplace'
+import { fetchProviders } from '../lib/providerProfiles'
+import { supabase } from '../lib/supabase'
 
-const COMMUNITY_PILLARS = [
-  {
-    title: 'Provider stories',
-    text: 'See how Montreal shops use FlashMat to earn recurring bookings, build trust, and publish a stronger public profile.',
-  },
-  {
-    title: 'Client guidance',
-    text: 'Learn how to book the right service, compare shops, prepare for appointments, and maintain your vehicle with more confidence.',
-  },
-  {
-    title: 'Local network',
-    text: 'Stay connected to events, featured providers, product highlights, and the people building the FlashMat auto community.',
-  },
+const LEFT_SHORTCUTS = [
+  { label: 'Services', to: '/services' },
+  { label: 'Providers', to: '/providers' },
+  { label: 'Marketplace', to: '/marketplace' },
+  { label: 'FlashFix Urgence', to: '/urgence' },
+  { label: 'Docteur Automobile', to: '/doctor' },
 ]
 
-const COMMUNITY_STREAM = [
-  {
-    label: 'Featured provider',
-    title: 'Montreal shops building better public profiles',
-    text: 'Best practices for staff presentation, reviews, services, and trust signals that help clients choose faster.',
-  },
-  {
-    label: 'Client education',
-    title: 'What to prepare before booking a service',
-    text: 'Mileage, VIN, symptoms, vehicle photos, and clear expectations all help the right provider respond more accurately.',
-  },
-  {
-    label: 'Marketplace culture',
-    title: 'How FlashMat connects services, parts, and vehicle sales',
-    text: 'The ecosystem works best when shops, drivers, and listings feel connected rather than scattered across disconnected pages.',
-  },
+const FEED_FILTERS = [
+  ['all', 'Tout'],
+  ['vehicle', 'Vehicules'],
+  ['parts', 'Pieces'],
+  ['shop', 'Shop'],
 ]
+
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000
+  if (!Number.isFinite(diff)) return 'recent'
+  if (diff < 3600) return `${Math.max(1, Math.floor(diff / 60))} min`
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h`
+  return `${Math.floor(diff / 86400)} j`
+}
+
+function getFeedMeta(listing) {
+  if (listing.listing_type === 'vehicle') {
+    const vehicle = listing.vehicle_snapshot || {}
+    const label = [vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(' ') || listing.title
+    return {
+      badge: 'Vehicule a vendre',
+      title: label,
+      body: listing.description || 'Nouveau vehicule visible dans la communaute FlashMat.',
+      cta: 'Voir le vehicule',
+      route: listing.vehicle_public_path || '/marketplace',
+    }
+  }
+
+  if (listing.listing_type === 'parts') {
+    return {
+      badge: 'Pieces et inventaire',
+      title: listing.title,
+      body: listing.description || 'Nouvelle piece ou offre publiee dans le reseau FlashMat.',
+      cta: 'Voir l annonce',
+      route: '/marketplace',
+    }
+  }
+
+  return {
+    badge: 'Shop update',
+    title: listing.title,
+    body: listing.description || 'Nouvel item ou accessoire partage dans FlashMat Marketplace.',
+    cta: 'Voir l annonce',
+    route: '/marketplace',
+  }
+}
+
+function getAvatarLabel(value) {
+  return String(value || 'F').slice(0, 1).toUpperCase()
+}
 
 export default function Community() {
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
+  const [filter, setFilter] = useState('all')
+  const [feedListings, setFeedListings] = useState([])
+  const [providers, setProviders] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadCommunity() {
+      setLoading(true)
+      try {
+        const [{ data: marketplaceData }, providerData] = await Promise.all([
+          supabase.from('marketplace').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(16),
+          fetchProviders(),
+        ])
+
+        if (cancelled) return
+        setFeedListings((marketplaceData || []).map(normalizeMarketplaceListing))
+        setProviders((providerData || []).slice(0, 6))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadCommunity()
+    return () => { cancelled = true }
+  }, [])
+
+  const filteredFeed = useMemo(() => {
+    return feedListings.filter((item) => filter === 'all' || item.listing_type === filter)
+  }, [feedListings, filter])
+
+  const topProviders = providers.slice(0, 4)
+  const highlightedListings = feedListings.slice(0, 3)
+  const viewerName = profile?.full_name || user?.email?.split('@')[0] || 'FlashMat'
 
   return (
     <div style={styles.page}>
       <NavBar activePage="community" />
 
-      <main style={styles.main}>
-        <section style={styles.hero}>
-          <div style={styles.heroCopy}>
-            <div style={styles.eyebrow}>FlashMat Community</div>
-            <h1 style={styles.title}>The community around auto care in Montreal.</h1>
-            <p style={styles.subtitle}>
-              Stories, guides, provider spotlights, and practical knowledge to make FlashMat feel more human, more useful, and more connected.
+      <style>{`
+        @media (max-width: 1180px) {
+          .community-shell {
+            grid-template-columns: 260px minmax(0, 1fr) !important;
+          }
+          .community-right {
+            display: none !important;
+          }
+        }
+
+        @media (max-width: 860px) {
+          .community-shell {
+            grid-template-columns: minmax(0, 1fr) !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+          .community-left {
+            display: none !important;
+          }
+          .community-main {
+            max-width: 100% !important;
+          }
+          .community-composer-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .community-shell {
+            padding-top: 16px !important;
+          }
+          .community-feed-card {
+            border-radius: 18px !important;
+          }
+          .community-feed-media {
+            height: 220px !important;
+          }
+          .community-hero-title {
+            font-size: 30px !important;
+          }
+          .community-actions {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+      <main className="community-shell" style={styles.shell}>
+        <aside className="community-left" style={styles.leftRail}>
+          <div style={styles.leftCard}>
+            <div style={styles.userRow}>
+              <div style={styles.userAvatar}>
+                {profile?.avatar_url ? <img src={profile.avatar_url} alt={viewerName} style={styles.userAvatarImage} /> : getAvatarLabel(viewerName)}
+              </div>
+              <div>
+                <div style={styles.userName}>{viewerName}</div>
+                <div style={styles.userRole}>{profile?.role === 'provider' ? 'provider' : 'client'} · montreal</div>
+              </div>
+            </div>
+            <div style={styles.shortcutStack}>
+              {LEFT_SHORTCUTS.map((item) => (
+                <button key={item.label} type="button" style={styles.shortcutButton} onClick={() => navigate(item.to)}>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={styles.leftCard}>
+            <div style={styles.railTitle}>A suivre</div>
+            <div style={styles.railText}>
+              Toute nouvelle annonce visible sur FlashMat peut remonter ici: vehicules en vente, pieces, nouveaux items shop et activite providers.
+            </div>
+          </div>
+        </aside>
+
+        <section className="community-main" style={styles.mainColumn}>
+          <div style={styles.heroCard}>
+            <div style={styles.heroEyebrow}>FlashMat Community Feed</div>
+            <h1 className="community-hero-title" style={styles.heroTitle}>Le fil central de la communaute auto FlashMat.</h1>
+            <p style={styles.heroText}>
+              Pensez Facebook, mais pour FlashMat: nouvelles annonces, vehicules a vendre, activite marketplace et signaux utiles de la communaute dans un vrai fil au centre.
             </p>
-            <div style={styles.heroActions}>
-              <button type="button" style={styles.primaryButton} onClick={() => navigate('/providers')}>
-                Explore providers
-              </button>
-              <button type="button" style={styles.secondaryButton} onClick={() => navigate('/services')}>
-                Browse services
-              </button>
+          </div>
+
+          <div style={styles.composerCard}>
+            <div className="community-composer-row" style={styles.composerRow}>
+              <div style={styles.composerPrompt}>
+                <div style={styles.composerAvatar}>
+                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={viewerName} style={styles.userAvatarImage} /> : getAvatarLabel(viewerName)}
+                </div>
+                <div style={styles.composerInput}>Quoi de neuf sur FlashMat aujourd hui ?</div>
+              </div>
+              <div className="community-actions" style={styles.composerActions}>
+                <button type="button" style={styles.composerAction} onClick={() => navigate('/marketplace')}>Nouvelle annonce</button>
+                <button type="button" style={styles.composerAction} onClick={() => navigate('/app/client/vehicles')}>Vehicule a vendre</button>
+                <button type="button" style={styles.composerAction} onClick={() => navigate('/providers')}>Trouver un provider</button>
+              </div>
             </div>
           </div>
 
-          <div style={styles.heroPanel}>
-            <div style={styles.heroPanelTop}>
-              <span style={styles.heroBadge}>Live on FlashMat</span>
-              <span style={styles.heroMiniStat}>Montreal · Auto Tech</span>
-            </div>
-            <div style={styles.heroStats}>
-              <article style={styles.statCard}>
-                <strong style={styles.statValue}>200+</strong>
-                <span style={styles.statLabel}>providers visible across the platform</span>
-              </article>
-              <article style={styles.statCard}>
-                <strong style={styles.statValue}>3</strong>
-                <span style={styles.statLabel}>core marketplace pillars: services, parts, vehicles</span>
-              </article>
-            </div>
-            <div style={styles.heroPanelFoot}>
-              Community helps FlashMat feel less transactional and more trustworthy across clients and providers.
-            </div>
-          </div>
-        </section>
-
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionEyebrow}>What lives here</div>
-            <h2 style={styles.sectionTitle}>A clearer community layer for the platform.</h2>
-          </div>
-          <div style={styles.pillarGrid}>
-            {COMMUNITY_PILLARS.map((item) => (
-              <article key={item.title} style={styles.pillarCard}>
-                <h3 style={styles.pillarTitle}>{item.title}</h3>
-                <p style={styles.pillarText}>{item.text}</p>
-              </article>
+          <div style={styles.filterRow}>
+            {FEED_FILTERS.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setFilter(value)}
+                style={filter === value ? styles.filterButtonActive : styles.filterButton}
+              >
+                {label}
+              </button>
             ))}
           </div>
+
+          {loading ? (
+            <div style={styles.loadingCard}>
+              <div className="spinner" style={{ width: 30, height: 30, margin: '0 auto 12px' }} />
+              <div style={styles.loadingText}>Chargement du fil communautaire...</div>
+            </div>
+          ) : filteredFeed.length === 0 ? (
+            <div style={styles.loadingCard}>
+              <div style={styles.loadingTitle}>Aucune publication pour ce filtre.</div>
+              <div style={styles.loadingText}>Le feed se remplit automatiquement avec les nouvelles annonces FlashMat.</div>
+            </div>
+          ) : (
+            <div style={styles.feedStack}>
+              {filteredFeed.map((listing) => {
+                const meta = getFeedMeta(listing)
+                return (
+                  <article key={listing.id} className="community-feed-card" style={styles.feedCard}>
+                    <div style={styles.feedHeader}>
+                      <div style={styles.feedIdentity}>
+                        <div style={styles.feedAvatar}>
+                          {listing.image_url ? <img src={listing.image_url} alt={listing.seller_name} style={styles.userAvatarImage} /> : getAvatarLabel(listing.seller_name)}
+                        </div>
+                        <div>
+                          <div style={styles.feedAuthor}>{listing.seller_name}</div>
+                          <div style={styles.feedMeta}>{meta.badge} · {listing.city} · {timeAgo(listing.created_at)}</div>
+                        </div>
+                      </div>
+                      <span style={styles.feedCategory}>{listing.category}</span>
+                    </div>
+
+                    <div style={styles.feedBody}>
+                      <h2 style={styles.feedTitle}>{meta.title}</h2>
+                      <p style={styles.feedText}>{meta.body}</p>
+                    </div>
+
+                    {(listing.image_url || listing.vehicle_snapshot?.imageUrl) ? (
+                      <div className="community-feed-media" style={styles.feedMediaWrap}>
+                        <img
+                          src={listing.image_url || listing.vehicle_snapshot?.imageUrl}
+                          alt={meta.title}
+                          style={styles.feedMedia}
+                        />
+                      </div>
+                    ) : null}
+
+                    <div style={styles.feedFooter}>
+                      <div style={styles.feedPrice}>
+                        {listing.price != null ? `$${Number(listing.price).toFixed(0)}` : 'Prix sur demande'}
+                      </div>
+                      <button type="button" style={styles.feedCta} onClick={() => navigate(meta.route)}>
+                        {meta.cta}
+                      </button>
+                    </div>
+                  </article>
+                )
+              })}
+            </div>
+          )}
         </section>
 
-        <section style={styles.streamSection}>
-          <div style={styles.sectionHeader}>
-            <div style={styles.sectionEyebrow}>Editorial stream</div>
-            <h2 style={styles.sectionTitle}>Designed to grow into stories, updates, and education.</h2>
+        <aside className="community-right" style={styles.rightRail}>
+          <div style={styles.rightCard}>
+            <div style={styles.railTitle}>Providers a surveiller</div>
+            <div style={styles.providerStack}>
+              {topProviders.map((provider) => (
+                <button key={provider.id} type="button" style={styles.providerRow} onClick={() => navigate(`/provider/${provider.slug || ''}${provider.name ? `?n=${encodeURIComponent(provider.name)}` : ''}`)}>
+                  <div style={styles.providerAvatar}>
+                    {provider.logoImageUrl ? <img src={provider.logoImageUrl} alt={provider.name} style={styles.userAvatarImage} /> : getAvatarLabel(provider.name)}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={styles.providerName}>{provider.name}</div>
+                    <div style={styles.providerMeta}>{provider.type_label || 'Provider'} · {Number(provider.rating || 0).toFixed(1)}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={styles.streamGrid}>
-            {COMMUNITY_STREAM.map((item) => (
-              <article key={item.title} style={styles.streamCard}>
-                <div style={styles.streamLabel}>{item.label}</div>
-                <h3 style={styles.streamTitle}>{item.title}</h3>
-                <p style={styles.streamText}>{item.text}</p>
-              </article>
-            ))}
+
+          <div style={styles.rightCard}>
+            <div style={styles.railTitle}>Tendance FlashMat</div>
+            <div style={styles.trendStack}>
+              {highlightedListings.map((listing) => (
+                <div key={listing.id} style={styles.trendItem}>
+                  <div style={styles.trendTitle}>{listing.title}</div>
+                  <div style={styles.trendMeta}>{listing.category} · {timeAgo(listing.created_at)}</div>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
+        </aside>
       </main>
 
       <SiteFooter portal="public" />
@@ -121,238 +322,421 @@ export default function Community() {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #edf4fb 0%, #f7fbff 42%, #ffffff 100%)',
+    background: 'linear-gradient(180deg, #edf4fb 0%, #f5f9ff 45%, #eef4fb 100%)',
     fontFamily: 'var(--font)',
     color: 'var(--ink)',
   },
-  main: {
-    maxWidth: 1440,
+  shell: {
+    maxWidth: 1500,
     margin: '0 auto',
-    padding: '28px 20px 0',
-  },
-  hero: {
+    padding: '24px 18px 0',
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.15fr) minmax(320px, 0.85fr)',
-    gap: 22,
-    alignItems: 'stretch',
-    marginBottom: 24,
+    gridTemplateColumns: '280px minmax(0, 1fr) 310px',
+    gap: 18,
+    alignItems: 'start',
   },
-  heroCopy: {
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,250,255,0.98) 100%)',
-    border: '1px solid rgba(120,171,218,0.22)',
+  leftRail: {
+    position: 'sticky',
+    top: 86,
+    display: 'grid',
+    gap: 14,
+  },
+  mainColumn: {
+    maxWidth: 720,
+    width: '100%',
+    margin: '0 auto',
+  },
+  rightRail: {
+    position: 'sticky',
+    top: 86,
+    display: 'grid',
+    gap: 14,
+  },
+  leftCard: {
+    background: 'rgba(255,255,255,.92)',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 22,
+    boxShadow: '0 16px 36px rgba(19,54,92,0.06)',
+    padding: 16,
+  },
+  rightCard: {
+    background: 'rgba(255,255,255,.92)',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 22,
+    boxShadow: '0 16px 36px rgba(19,54,92,0.06)',
+    padding: 18,
+  },
+  userRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+  },
+  userAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #2f7de1 100%)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'var(--display)',
+    fontWeight: 800,
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  userAvatarImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  userName: {
+    fontFamily: 'var(--display)',
+    fontSize: 18,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: '#102743',
+  },
+  userRole: {
+    fontSize: 11,
+    color: 'var(--ink3)',
+    fontFamily: 'var(--mono)',
+  },
+  shortcutStack: {
+    display: 'grid',
+    gap: 6,
+  },
+  shortcutButton: {
+    border: 'none',
+    background: 'transparent',
+    textAlign: 'left',
+    padding: '10px 12px',
+    borderRadius: 12,
+    color: '#17314a',
+    fontSize: 14,
+    fontWeight: 700,
+  },
+  railTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 20,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: '#11253e',
+    marginBottom: 10,
+  },
+  railText: {
+    margin: 0,
+    fontSize: 13,
+    lineHeight: 1.75,
+    color: 'var(--ink2)',
+  },
+  heroCard: {
+    background: 'linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(241,248,255,.98) 100%)',
+    border: '1px solid rgba(120,171,218,0.18)',
     borderRadius: 28,
-    padding: '34px 34px 30px',
-    boxShadow: '0 20px 50px rgba(19,54,92,0.08)',
+    padding: '28px 28px 24px',
+    boxShadow: '0 18px 40px rgba(19,54,92,0.06)',
+    marginBottom: 14,
   },
-  eyebrow: {
-    fontSize: 12,
+  heroEyebrow: {
+    fontSize: 11,
     letterSpacing: '.18em',
     textTransform: 'uppercase',
     color: 'var(--blue)',
     fontWeight: 800,
+    marginBottom: 10,
+  },
+  heroTitle: {
+    margin: '0 0 12px',
+    fontFamily: 'var(--display)',
+    fontSize: 46,
+    lineHeight: 0.96,
+    letterSpacing: '-0.06em',
+    color: '#102743',
+  },
+  heroText: {
+    margin: 0,
+    fontSize: 16,
+    lineHeight: 1.8,
+    color: 'var(--ink2)',
+    maxWidth: 620,
+  },
+  composerCard: {
+    background: 'rgba(255,255,255,.94)',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 22,
+    boxShadow: '0 16px 34px rgba(19,54,92,0.05)',
+    padding: 16,
     marginBottom: 14,
   },
-  title: {
-    margin: '0 0 16px',
-    fontFamily: 'var(--display)',
-    fontSize: 'clamp(2.5rem, 4vw, 4.2rem)',
-    lineHeight: 0.98,
-    letterSpacing: '-0.06em',
-    color: '#11253e',
-  },
-  subtitle: {
-    margin: '0 0 22px',
-    maxWidth: 720,
-    fontSize: 17,
-    lineHeight: 1.7,
-    color: 'var(--ink2)',
-  },
-  heroActions: {
+  composerRow: {
     display: 'flex',
+    alignItems: 'center',
     gap: 12,
-    flexWrap: 'wrap',
   },
-  primaryButton: {
-    border: 'none',
+  composerPrompt: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    minWidth: 0,
+  },
+  composerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #2f7de1 100%)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'var(--display)',
+    fontWeight: 800,
+    overflow: 'hidden',
+    flexShrink: 0,
+  },
+  composerInput: {
+    flex: 1,
+    minHeight: 42,
     borderRadius: 999,
-    padding: '13px 18px',
+    background: '#f1f6fd',
+    border: '1px solid rgba(120,171,218,0.16)',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '0 16px',
+    color: '#67809b',
+    fontSize: 14,
+    fontWeight: 600,
+  },
+  composerActions: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+    gap: 8,
+    minWidth: 'min(360px, 100%)',
+  },
+  composerAction: {
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: '#fff',
+    color: '#17314a',
+    borderRadius: 12,
+    padding: '10px 12px',
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  filterRow: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap',
+    marginBottom: 14,
+  },
+  filterButton: {
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: 'rgba(255,255,255,.9)',
+    color: '#42607d',
+    borderRadius: 999,
+    padding: '9px 14px',
+    fontSize: 12,
+    fontWeight: 700,
+  },
+  filterButtonActive: {
+    border: '1px solid transparent',
     background: 'linear-gradient(135deg, #0e2b4a 0%, #154779 100%)',
     color: '#fff',
-    fontWeight: 800,
-    fontSize: 14,
-    cursor: 'pointer',
-  },
-  secondaryButton: {
-    border: '1px solid rgba(16,71,121,0.16)',
     borderRadius: 999,
-    padding: '13px 18px',
-    background: 'rgba(255,255,255,0.92)',
-    color: '#154779',
+    padding: '9px 14px',
+    fontSize: 12,
     fontWeight: 800,
-    fontSize: 14,
-    cursor: 'pointer',
   },
-  heroPanel: {
-    borderRadius: 28,
-    padding: 22,
-    background: 'linear-gradient(145deg, rgba(8,28,49,0.96) 0%, rgba(18,71,121,0.92) 100%)',
-    color: '#eaf5ff',
-    boxShadow: '0 24px 54px rgba(10,28,45,0.18)',
-    border: '1px solid rgba(120,180,220,0.16)',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    minHeight: 280,
+  loadingCard: {
+    background: 'rgba(255,255,255,.92)',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 22,
+    boxShadow: '0 16px 34px rgba(19,54,92,0.05)',
+    padding: '48px 24px',
+    textAlign: 'center',
   },
-  heroPanelTop: {
+  loadingTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 24,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: '#102743',
+    marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 13,
+    color: 'var(--ink3)',
+  },
+  feedStack: {
+    display: 'grid',
+    gap: 14,
+  },
+  feedCard: {
+    background: 'rgba(255,255,255,.95)',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 22,
+    boxShadow: '0 16px 34px rgba(19,54,92,0.05)',
+    overflow: 'hidden',
+  },
+  feedHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
+    padding: '18px 18px 0',
     flexWrap: 'wrap',
-    marginBottom: 18,
   },
-  heroBadge: {
-    padding: '8px 12px',
-    borderRadius: 999,
-    background: 'rgba(255,255,255,0.1)',
-    fontSize: 11,
-    fontWeight: 800,
-    letterSpacing: '.12em',
-    textTransform: 'uppercase',
-  },
-  heroMiniStat: {
-    fontSize: 12,
-    color: 'rgba(234,245,255,0.72)',
-    fontWeight: 700,
-  },
-  heroStats: {
-    display: 'grid',
+  feedIdentity: {
+    display: 'flex',
+    alignItems: 'center',
     gap: 12,
   },
-  statCard: {
-    background: 'rgba(255,255,255,0.06)',
-    borderRadius: 22,
-    border: '1px solid rgba(255,255,255,0.08)',
-    padding: '16px 18px',
-    display: 'grid',
-    gap: 6,
-  },
-  statValue: {
+  feedAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #2f7de1 100%)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     fontFamily: 'var(--display)',
-    fontSize: 34,
-    lineHeight: 1,
-    letterSpacing: '-0.05em',
-  },
-  statLabel: {
-    fontSize: 13,
-    lineHeight: 1.6,
-    color: 'rgba(234,245,255,0.78)',
-  },
-  heroPanelFoot: {
-    marginTop: 18,
-    paddingTop: 16,
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-    fontSize: 13,
-    lineHeight: 1.7,
-    color: 'rgba(234,245,255,0.72)',
-  },
-  section: {
-    marginBottom: 24,
-    background: 'rgba(255,255,255,0.92)',
-    borderRadius: 28,
-    border: '1px solid rgba(120,171,218,0.16)',
-    boxShadow: '0 16px 40px rgba(19,54,92,0.06)',
-    padding: '28px 28px 30px',
-  },
-  streamSection: {
-    marginBottom: 12,
-    background: 'rgba(255,255,255,0.92)',
-    borderRadius: 28,
-    border: '1px solid rgba(120,171,218,0.16)',
-    boxShadow: '0 16px 40px rgba(19,54,92,0.06)',
-    padding: '28px 28px 30px',
-  },
-  sectionHeader: {
-    marginBottom: 20,
-  },
-  sectionEyebrow: {
-    fontSize: 11,
-    letterSpacing: '.16em',
-    textTransform: 'uppercase',
-    color: 'var(--blue)',
     fontWeight: 800,
-    marginBottom: 8,
+    overflow: 'hidden',
+    flexShrink: 0,
   },
-  sectionTitle: {
-    margin: 0,
+  feedAuthor: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: '#102743',
+  },
+  feedMeta: {
+    fontSize: 11,
+    color: 'var(--ink3)',
+    fontFamily: 'var(--mono)',
+  },
+  feedCategory: {
+    padding: '7px 10px',
+    borderRadius: 999,
+    background: 'rgba(59,159,216,0.08)',
+    color: '#1d6da1',
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '.1em',
+    textTransform: 'uppercase',
+  },
+  feedBody: {
+    padding: '16px 18px 14px',
+  },
+  feedTitle: {
+    margin: '0 0 8px',
     fontFamily: 'var(--display)',
     fontSize: 30,
     lineHeight: 1.02,
     letterSpacing: '-0.05em',
     color: '#102743',
   },
-  pillarGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: 16,
-  },
-  pillarCard: {
-    borderRadius: 22,
-    padding: '20px 20px 18px',
-    background: 'linear-gradient(180deg, #f6fbff 0%, #edf6ff 100%)',
-    border: '1px solid rgba(120,171,218,0.16)',
-  },
-  pillarTitle: {
-    margin: '0 0 10px',
-    fontFamily: 'var(--display)',
-    fontSize: 24,
-    lineHeight: 1.06,
-    letterSpacing: '-0.05em',
-    color: '#123052',
-  },
-  pillarText: {
+  feedText: {
     margin: 0,
     fontSize: 14,
     lineHeight: 1.75,
     color: 'var(--ink2)',
   },
-  streamGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: 16,
+  feedMediaWrap: {
+    height: 340,
+    background: '#dbe7f6',
+    overflow: 'hidden',
   },
-  streamCard: {
-    borderRadius: 24,
-    padding: '22px 22px 20px',
-    background: '#ffffff',
-    border: '1px solid rgba(120,171,218,0.16)',
-    boxShadow: '0 12px 28px rgba(19,54,92,0.06)',
+  feedMedia: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
   },
-  streamLabel: {
-    display: 'inline-flex',
-    padding: '7px 11px',
+  feedFooter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '16px 18px 18px',
+    flexWrap: 'wrap',
+  },
+  feedPrice: {
+    fontFamily: 'var(--display)',
+    fontSize: 30,
+    fontWeight: 800,
+    letterSpacing: '-0.05em',
+    color: 'var(--green)',
+  },
+  feedCta: {
+    border: 'none',
     borderRadius: 999,
-    marginBottom: 12,
-    background: 'rgba(59,159,216,0.08)',
-    color: '#1d6da1',
-    fontSize: 11,
-    letterSpacing: '.12em',
-    textTransform: 'uppercase',
+    padding: '12px 16px',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #154779 100%)',
+    color: '#fff',
+    fontSize: 13,
     fontWeight: 800,
   },
-  streamTitle: {
-    margin: '0 0 10px',
-    fontFamily: 'var(--display)',
-    fontSize: 25,
-    lineHeight: 1.08,
-    letterSpacing: '-0.05em',
-    color: '#132c48',
+  providerStack: {
+    display: 'grid',
+    gap: 10,
   },
-  streamText: {
-    margin: 0,
+  providerRow: {
+    display: 'grid',
+    gridTemplateColumns: '42px minmax(0, 1fr)',
+    gap: 10,
+    alignItems: 'center',
+    width: '100%',
+    border: '1px solid rgba(120,171,218,0.14)',
+    background: '#fff',
+    borderRadius: 16,
+    padding: 10,
+    textAlign: 'left',
+  },
+  providerAvatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #2f7de1 100%)',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 800,
+    overflow: 'hidden',
+  },
+  providerName: {
     fontSize: 14,
-    lineHeight: 1.75,
-    color: 'var(--ink2)',
+    fontWeight: 800,
+    color: '#102743',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  providerMeta: {
+    fontSize: 11,
+    color: 'var(--ink3)',
+    fontFamily: 'var(--mono)',
+  },
+  trendStack: {
+    display: 'grid',
+    gap: 10,
+  },
+  trendItem: {
+    padding: '10px 0',
+    borderBottom: '1px solid rgba(120,171,218,0.12)',
+  },
+  trendTitle: {
+    fontSize: 14,
+    fontWeight: 800,
+    color: '#102743',
+    marginBottom: 4,
+  },
+  trendMeta: {
+    fontSize: 11,
+    color: 'var(--ink3)',
+    fontFamily: 'var(--mono)',
   },
 }
