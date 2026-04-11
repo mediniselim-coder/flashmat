@@ -173,7 +173,7 @@ export async function fetchAvailableMessageContacts(userId, role) {
         id: client.id,
         role: 'client',
         name: client.full_name || client.email || 'FlashMat client',
-        subtitle: [client.city, client.email].filter(Boolean).join(' · '),
+        subtitle: [client.city, client.email].filter(Boolean).join(' Ã‚Â· '),
         avatarUrl: client.avatar_url || '',
       })
       return acc
@@ -384,9 +384,16 @@ export async function fetchConversationThreads(userId, role) {
   const providerIds = uniq(safeThreads.map((thread) => thread.provider_id))
   const clientIds = uniq(safeThreads.map((thread) => thread.client_id))
 
-  const [{ data: providers = [], error: providersError }, { data: clients = [], error: clientsError }] = await Promise.all([
+  const [
+    { data: providers = [], error: providersError },
+    { data: providerProfiles = [], error: providerProfilesError },
+    { data: clients = [], error: clientsError },
+  ] = await Promise.all([
     providerIds.length
       ? supabase.from('providers').select('id, shop_name, address, phone, rating, reviews, logo_url, avatar_url').in('id', providerIds)
+      : Promise.resolve({ data: [] }),
+    providerIds.length
+      ? supabase.from('profiles').select('id, full_name, email, city, avatar_url').in('id', providerIds)
       : Promise.resolve({ data: [] }),
     clientIds.length
       ? supabase.from('profiles').select('id, full_name, email, city, avatar_url').in('id', clientIds)
@@ -394,14 +401,18 @@ export async function fetchConversationThreads(userId, role) {
   ])
 
   if (providersError && !isMissingInboxRelation(providersError)) throw providersError
+  if (providerProfilesError && !isMissingInboxRelation(providerProfilesError)) throw providerProfilesError
   if (clientsError && !isMissingInboxRelation(clientsError)) throw clientsError
 
   const providerMap = new Map((providers || []).map((provider) => [provider.id, provider]))
+  const providerProfileMap = new Map((providerProfiles || []).map((provider) => [provider.id, provider]))
   const clientMap = new Map((clients || []).map((client) => [client.id, client]))
 
   return safeThreads.map((thread) => {
     const counterpartId = role === 'provider' ? thread.client_id : thread.provider_id
-    const counterpart = role === 'provider' ? clientMap.get(counterpartId) : providerMap.get(counterpartId)
+    const providerCounterpart = providerMap.get(counterpartId)
+    const providerProfile = providerProfileMap.get(counterpartId)
+    const clientCounterpart = clientMap.get(counterpartId)
     const lastPreview = parseMessageBody(thread.last_message_preview || '').previewText
 
     return {
@@ -411,16 +422,16 @@ export async function fetchConversationThreads(userId, role) {
       counterpartId,
       counterpartRole: role === 'provider' ? 'client' : 'provider',
       counterpartName: role === 'provider'
-        ? counterpart?.full_name || counterpart?.email || 'FlashMat client'
-        : counterpart?.shop_name || 'FlashMat provider',
+        ? clientCounterpart?.full_name || clientCounterpart?.email || 'FlashMat client'
+        : providerCounterpart?.shop_name || providerProfile?.full_name || providerProfile?.email || 'FlashMat provider',
       counterpartSubtitle: role === 'provider'
-        ? [counterpart?.city, counterpart?.email].filter(Boolean).join(' · ')
-        : counterpart?.address || counterpart?.phone || 'Provider on FlashMat',
+        ? [clientCounterpart?.city, clientCounterpart?.email].filter(Boolean).join(' Â· ')
+        : providerCounterpart?.address || providerCounterpart?.phone || providerProfile?.city || 'Provider on FlashMat',
       counterpartAvatarUrl: role === 'provider'
-        ? counterpart?.avatar_url || ''
-        : counterpart?.logo_url || counterpart?.avatar_url || '',
-      counterpartRating: counterpart?.rating || 0,
-      counterpartReviews: counterpart?.reviews || 0,
+        ? clientCounterpart?.avatar_url || ''
+        : providerCounterpart?.logo_url || providerCounterpart?.avatar_url || providerProfile?.avatar_url || '',
+      counterpartRating: providerCounterpart?.rating || 0,
+      counterpartReviews: providerCounterpart?.reviews || 0,
     }
   })
 }
@@ -490,3 +501,4 @@ export function subscribeToInbox(userId, { onNotificationsChange, onThreadsChang
     })
   }
 }
+
