@@ -13,6 +13,10 @@ import {
   subscribeToInbox,
 } from '../lib/inbox'
 
+function getArchivedStorageKey(userId) {
+  return `flashmat-archived-threads:${userId}`
+}
+
 function formatMessageTime(value) {
   if (!value) return ''
   try {
@@ -69,23 +73,65 @@ export default function Messages() {
   const [selectedThreadId, setSelectedThreadId] = useState(searchParams.get('thread') || '')
   const [composer, setComposer] = useState('')
   const [attachments, setAttachments] = useState([])
-  const [filterUnread, setFilterUnread] = useState(false)
+  const [activeFilter, setActiveFilter] = useState('all')
   const [loadingThreads, setLoadingThreads] = useState(false)
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [preparingAttachments, setPreparingAttachments] = useState(false)
   const [deletingThreadId, setDeletingThreadId] = useState('')
+  const [archivedThreadIds, setArchivedThreadIds] = useState([])
+  const [menuThreadId, setMenuThreadId] = useState('')
+  const [confirmState, setConfirmState] = useState({ open: false, thread: null })
   const fileInputRef = useRef(null)
+  const actionsMenuRef = useRef(null)
 
   const role = profile?.role || 'client'
   const selectedThread = useMemo(
     () => threads.find((thread) => String(thread.id) === String(selectedThreadId)) || null,
     [selectedThreadId, threads],
   )
-  const visibleThreads = useMemo(
-    () => (filterUnread ? threads.filter((thread) => thread.unreadCount > 0) : threads),
-    [filterUnread, threads],
-  )
+  const visibleThreads = useMemo(() => {
+    const archivedSet = new Set(archivedThreadIds.map(String))
+    const baseThreads = activeFilter === 'archived'
+      ? threads.filter((thread) => archivedSet.has(String(thread.id)))
+      : threads.filter((thread) => !archivedSet.has(String(thread.id)))
+
+    if (activeFilter === 'unread') {
+      return baseThreads.filter((thread) => thread.unreadCount > 0)
+    }
+
+    return baseThreads
+  }, [activeFilter, archivedThreadIds, threads])
+
+  useEffect(() => {
+    if (!user?.id) {
+      setArchivedThreadIds([])
+      return
+    }
+
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(getArchivedStorageKey(user.id)) || '[]')
+      setArchivedThreadIds(Array.isArray(stored) ? stored.map(String) : [])
+    } catch {
+      setArchivedThreadIds([])
+    }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    window.localStorage.setItem(getArchivedStorageKey(user.id), JSON.stringify(archivedThreadIds))
+  }, [archivedThreadIds, user?.id])
+
+  useEffect(() => {
+    function handleWindowClick(event) {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target)) {
+        setMenuThreadId('')
+      }
+    }
+
+    window.addEventListener('mousedown', handleWindowClick)
+    return () => window.removeEventListener('mousedown', handleWindowClick)
+  }, [])
 
   useEffect(() => {
     if (!user?.id) return undefined
@@ -99,13 +145,15 @@ export default function Messages() {
         setThreads(nextThreads)
         setSelectedThreadId((current) => {
           const queryThreadId = searchParams.get('thread')
+          const archivedSet = new Set(archivedThreadIds.map(String))
+          const defaultThread = nextThreads.find((thread) => !archivedSet.has(String(thread.id))) || nextThreads[0]
           if (queryThreadId && nextThreads.some((thread) => String(thread.id) === String(queryThreadId))) {
             return String(queryThreadId)
           }
           if (current && nextThreads.some((thread) => String(thread.id) === String(current))) {
             return String(current)
           }
-          return nextThreads[0]?.id ? String(nextThreads[0].id) : ''
+          return defaultThread?.id ? String(defaultThread.id) : ''
         })
       } catch (error) {
         if (!active) return
@@ -135,7 +183,7 @@ export default function Messages() {
       active = false
       unsubscribe()
     }
-  }, [role, searchParams, selectedThreadId, toast, user?.id])
+  }, [archivedThreadIds, role, searchParams, selectedThreadId, toast, user?.id])
 
   useEffect(() => {
     if (!selectedThreadId || !user?.id) {
@@ -243,12 +291,16 @@ export default function Messages() {
 
   async function handleDeleteThread(thread) {
     if (!thread?.id || !user?.id) return
-    const confirmed = window.confirm(`Delete the conversation with ${thread.counterpartName || 'this contact'}? This will remove all messages in this inbox thread.`)
-    if (!confirmed) return
+    setConfirmState({ open: true, thread })
+  }
 
+  async function confirmDeleteThread() {
+    const thread = confirmState.thread
+    if (!thread?.id || !user?.id) return
     try {
       setDeletingThreadId(String(thread.id))
       await deleteConversationThread(thread.id, user.id)
+      setArchivedThreadIds((current) => current.filter((id) => String(id) !== String(thread.id)))
       const nextThreads = await fetchConversationThreads(user.id, role)
       setThreads(nextThreads)
       setMessages([])
@@ -264,7 +316,26 @@ export default function Messages() {
       toast(error.message || 'Unable to delete this conversation.', 'error')
     } finally {
       setDeletingThreadId('')
+      setConfirmState({ open: false, thread: null })
+      setMenuThreadId('')
     }
+  }
+
+  function toggleArchiveThread(thread) {
+    if (!thread?.id) return
+    const threadId = String(thread.id)
+    const isArchived = archivedThreadIds.includes(threadId)
+    setArchivedThreadIds((current) => (
+      isArchived ? current.filter((id) => id !== threadId) : [...current, threadId]
+    ))
+    setMenuThreadId('')
+    if (!isArchived && String(selectedThreadId) === threadId) {
+      const nextVisibleThread = threads.find((entry) => String(entry.id) !== threadId && !archivedThreadIds.includes(String(entry.id)))
+      setSelectedThreadId(nextVisibleThread?.id ? String(nextVisibleThread.id) : '')
+      setMessages([])
+      setActiveFilter('all')
+    }
+    toast(isArchived ? 'Conversation moved back to inbox.' : 'Conversation archived.', 'success')
   }
 
   return (
@@ -281,17 +352,24 @@ export default function Messages() {
               <div style={styles.filterRow}>
                 <button
                   type="button"
-                  style={filterUnread ? styles.filterButtonGhost : styles.filterButton}
-                  onClick={() => setFilterUnread(false)}
+                  style={activeFilter === 'all' ? styles.filterButton : styles.filterButtonGhost}
+                  onClick={() => setActiveFilter('all')}
                 >
                   All
                 </button>
                 <button
                   type="button"
-                  style={filterUnread ? styles.filterButton : styles.filterButtonGhost}
-                  onClick={() => setFilterUnread(true)}
+                  style={activeFilter === 'unread' ? styles.filterButton : styles.filterButtonGhost}
+                  onClick={() => setActiveFilter('unread')}
                 >
                   Unread
+                </button>
+                <button
+                  type="button"
+                  style={activeFilter === 'archived' ? styles.filterButton : styles.filterButtonGhost}
+                  onClick={() => setActiveFilter('archived')}
+                >
+                  Archived
                 </button>
               </div>
             </div>
@@ -318,7 +396,10 @@ export default function Messages() {
                   <button
                     type="button"
                     style={styles.threadSelectButton}
-                    onClick={() => setSelectedThreadId(String(thread.id))}
+                    onClick={() => {
+                      setMenuThreadId('')
+                      setSelectedThreadId(String(thread.id))
+                    }}
                   >
                     <div style={styles.threadAvatarWrap}>
                       <ConversationAvatar thread={thread} />
@@ -335,16 +416,43 @@ export default function Messages() {
                       </div>
                     </div>
                   </button>
-                  <button
-                    type="button"
-                    style={styles.threadDeleteButton}
-                    onClick={() => handleDeleteThread(thread)}
-                    disabled={deletingThreadId === String(thread.id)}
-                    aria-label={`Delete conversation with ${thread.counterpartName}`}
-                    title="Delete conversation"
-                  >
-                    {deletingThreadId === String(thread.id) ? '...' : 'Delete'}
-                  </button>
+                  <div style={styles.threadActionsWrap} ref={menuThreadId === String(thread.id) ? actionsMenuRef : null}>
+                    <button
+                      type="button"
+                      style={styles.threadMenuButton}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setMenuThreadId((current) => current === String(thread.id) ? '' : String(thread.id))
+                      }}
+                      aria-label={`Conversation actions for ${thread.counterpartName}`}
+                      title="Conversation actions"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <circle cx="12" cy="5" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="12" cy="19" r="2" />
+                      </svg>
+                    </button>
+                    {menuThreadId === String(thread.id) ? (
+                      <div style={styles.threadMenu}>
+                        <button
+                          type="button"
+                          style={styles.threadMenuItem}
+                          onClick={() => toggleArchiveThread(thread)}
+                        >
+                          {archivedThreadIds.includes(String(thread.id)) ? 'Move to inbox' : 'Archive conversation'}
+                        </button>
+                        <button
+                          type="button"
+                          style={{ ...styles.threadMenuItem, ...styles.threadMenuItemDanger }}
+                          onClick={() => handleDeleteThread(thread)}
+                          disabled={deletingThreadId === String(thread.id)}
+                        >
+                          Delete conversation
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>
@@ -370,11 +478,19 @@ export default function Messages() {
                 <div style={styles.chatHeaderActions}>
                   <button
                     type="button"
-                    style={styles.dangerButton}
+                    style={styles.iconDangerButton}
                     onClick={() => handleDeleteThread(selectedThread)}
                     disabled={deletingThreadId === String(selectedThread.id)}
+                    aria-label="Delete conversation"
+                    title="Delete conversation"
                   >
-                    {deletingThreadId === String(selectedThread.id) ? 'Deleting...' : 'Delete conversation'}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M4 7h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      <path d="M9.5 11v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      <path d="M14.5 11v5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                      <path d="M6 7l1 11a2 2 0 0 0 2 1.8h6a2 2 0 0 0 2-1.8L18 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9 7V5.8A1.8 1.8 0 0 1 10.8 4h2.4A1.8 1.8 0 0 1 15 5.8V7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                 </div>
 
@@ -509,6 +625,25 @@ export default function Messages() {
           </aside>
         </section>
       </main>
+      {confirmState.open ? (
+        <div style={styles.confirmOverlay} onClick={() => setConfirmState({ open: false, thread: null })}>
+          <div style={styles.confirmDialog} onClick={(event) => event.stopPropagation()}>
+            <div style={styles.confirmEyebrow}>Delete conversation</div>
+            <div style={styles.confirmTitle}>Remove this thread from FlashMat inbox?</div>
+            <div style={styles.confirmText}>
+              This will permanently delete the conversation with {confirmState.thread?.counterpartName || 'this contact'} and all its messages.
+            </div>
+            <div style={styles.confirmActions}>
+              <button type="button" style={styles.secondaryButton} onClick={() => setConfirmState({ open: false, thread: null })}>
+                Cancel
+              </button>
+              <button type="button" style={styles.dangerButton} onClick={confirmDeleteThread} disabled={deletingThreadId === String(confirmState.thread?.id || '')}>
+                {deletingThreadId === String(confirmState.thread?.id || '') ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -611,6 +746,18 @@ const styles = {
     padding: '10px 14px',
     fontSize: 12,
     fontWeight: 800,
+    cursor: 'pointer',
+  },
+  iconDangerButton: {
+    width: 40,
+    height: 40,
+    border: '1px solid rgba(211,70,70,0.14)',
+    background: '#fff5f5',
+    color: '#b83a3a',
+    borderRadius: 14,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     cursor: 'pointer',
   },
   threadList: {
@@ -756,6 +903,51 @@ const styles = {
     fontWeight: 800,
     cursor: 'pointer',
   },
+  threadActionsWrap: {
+    position: 'relative',
+    alignSelf: 'flex-start',
+  },
+  threadMenuButton: {
+    width: 34,
+    height: 34,
+    border: '1px solid rgba(120,171,218,0.14)',
+    background: '#fff',
+    color: '#6d85a0',
+    borderRadius: 12,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+  },
+  threadMenu: {
+    position: 'absolute',
+    top: 40,
+    right: 0,
+    minWidth: 190,
+    borderRadius: 16,
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: '#fff',
+    boxShadow: '0 20px 40px rgba(19,52,83,0.12)',
+    padding: 8,
+    display: 'grid',
+    gap: 4,
+    zIndex: 8,
+  },
+  threadMenuItem: {
+    border: 'none',
+    background: 'transparent',
+    color: '#17314d',
+    borderRadius: 12,
+    padding: '10px 12px',
+    fontSize: 12.5,
+    fontWeight: 700,
+    textAlign: 'left',
+    cursor: 'pointer',
+  },
+  threadMenuItemDanger: {
+    color: '#b83a3a',
+    background: '#fff5f5',
+  },
   chatPane: {
     display: 'grid',
     gridTemplateRows: 'auto auto 1fr auto',
@@ -779,6 +971,50 @@ const styles = {
     background: 'rgba(255,255,255,0.72)',
     display: 'flex',
     justifyContent: 'flex-end',
+  },
+  confirmOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(11, 27, 46, 0.42)',
+    backdropFilter: 'blur(6px)',
+    display: 'grid',
+    placeItems: 'center',
+    padding: 20,
+    zIndex: 30,
+  },
+  confirmDialog: {
+    width: 'min(100%, 420px)',
+    borderRadius: 24,
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: '#fff',
+    boxShadow: '0 28px 60px rgba(15,30,61,0.20)',
+    padding: 24,
+  },
+  confirmEyebrow: {
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: '.14em',
+    textTransform: 'uppercase',
+    color: '#b83a3a',
+    marginBottom: 10,
+  },
+  confirmTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 26,
+    lineHeight: 1,
+    color: '#15314f',
+    marginBottom: 12,
+  },
+  confirmText: {
+    fontSize: 14,
+    lineHeight: 1.7,
+    color: '#5f7893',
+    marginBottom: 18,
+  },
+  confirmActions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
   chatHeaderMain: {
     display: 'flex',
