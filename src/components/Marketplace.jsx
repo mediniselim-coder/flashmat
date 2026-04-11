@@ -67,16 +67,31 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
   const [showModal, setShowModal] = useState(false)
   const [myOnly, setMyOnly] = useState(false)
   const [expanded, setExpanded] = useState(null)
+  const isProvider = profile?.role === 'provider'
+  const availableSections = useMemo(
+    () => SECTIONS.filter((item) => item.id !== 'parts' || isProvider),
+    [isProvider],
+  )
 
   useEffect(() => { fetchListings() }, [])
   useEffect(() => {
-    if (forcedSection) setSection(forcedSection)
-  }, [forcedSection])
+    if (!forcedSection) return
+    if (forcedSection === 'parts' && !isProvider) {
+      setSection('shop')
+      return
+    }
+    setSection(forcedSection)
+  }, [forcedSection, isProvider])
   useEffect(() => {
     if (!openComposer) {
       setShowModal(false)
     }
   }, [openComposer])
+  useEffect(() => {
+    if (section === 'parts' && !isProvider) {
+      setSection('shop')
+    }
+  }, [isProvider, section])
 
   async function fetchListings() {
     setLoading(true)
@@ -109,7 +124,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
     setShowModal(true)
   }
 
-  const currentSection = getSectionMeta(section)
+  const currentSection = availableSections.find((item) => item.id === section) || availableSections[0] || SECTIONS[0]
   const visibleListings = useMemo(() => listings
     .filter((listing) => matchesSection(listing, section))
     .filter((listing) => !myOnly || listing.seller_id === user?.id)
@@ -154,7 +169,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
       </div>
 
       <div style={{ padding: '14px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        {SECTIONS.map((item) => (
+        {availableSections.map((item) => (
           <button
             key={item.id}
             onClick={() => setSection(item.id)}
