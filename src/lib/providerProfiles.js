@@ -61,6 +61,99 @@ const CATEGORY_ICONS = {
 export const PROVIDER_SERVICE_CATEGORY_LABELS = CATEGORY_LABELS
 export const PROVIDER_SERVICE_CATEGORY_ICONS = CATEGORY_ICONS
 
+const GLOBAL_SAMPLE_PROVIDERS = [
+  {
+    id: 'sample-fr-paris-auto',
+    shop_name: 'Atelier Paris Rive Auto',
+    name: 'Atelier Paris Rive Auto',
+    email: 'parisrive@flashmat.sample',
+    providerEmail: 'parisrive@flashmat.sample',
+    address: '118 Rue de Charenton, Paris, France',
+    phone: '+33 1 84 60 22 10',
+    latitude: 48.8482,
+    longitude: 2.3826,
+    description: 'Atelier parisien axe sur la mecanique generale, le diagnostic electronique et les entretiens premium.',
+    services: ['Mecanique generale', 'Vidange', 'Freins', 'Diagnostic electronique'],
+    rating: 4.8,
+    reviews: 124,
+    is_open: true,
+    type: 'mechanic',
+    type_label: 'Mecanique',
+  },
+  {
+    id: 'sample-tn-tunis-detail',
+    shop_name: 'Tunis Lavage Signature',
+    name: 'Tunis Lavage Signature',
+    email: 'tunislavage@flashmat.sample',
+    providerEmail: 'tunislavage@flashmat.sample',
+    address: '14 Avenue Habib Bourguiba, Tunis, Tunisia',
+    phone: '+216 71 245 880',
+    latitude: 36.8008,
+    longitude: 10.1809,
+    description: 'Centre de lavage auto et detailing haut de gamme pour exterieur, interieur et finition ceramique.',
+    services: ['Lavage auto', 'Detailing', 'Traitement ceramique'],
+    rating: 4.9,
+    reviews: 91,
+    is_open: true,
+    type: 'wash',
+    type_label: 'Lave-auto',
+  },
+  {
+    id: 'sample-it-milan-garage',
+    shop_name: 'Milano Motori Garage',
+    name: 'Milano Motori Garage',
+    email: 'milanomotori@flashmat.sample',
+    providerEmail: 'milanomotori@flashmat.sample',
+    address: '22 Via Tortona, Milan, Italy',
+    phone: '+39 02 9475 1180',
+    latitude: 45.4527,
+    longitude: 9.1656,
+    description: 'Garage de Milan pour entretien courant, freins, suspension et performance urbaine.',
+    services: ['Mecanique generale', 'Freins', 'Suspension', 'Performance'],
+    rating: 4.7,
+    reviews: 76,
+    is_open: true,
+    type: 'mechanic',
+    type_label: 'Mecanique',
+  },
+  {
+    id: 'sample-cn-shanghai-ev',
+    shop_name: 'Shanghai EV Care Hub',
+    name: 'Shanghai EV Care Hub',
+    email: 'shanghaiev@flashmat.sample',
+    providerEmail: 'shanghaiev@flashmat.sample',
+    address: '88 Nanjing West Road, Shanghai, China',
+    phone: '+86 21 6088 2211',
+    latitude: 31.2308,
+    longitude: 121.4737,
+    description: 'Equipe specialisee en diagnostic electronique, climatisation et maintenance de vehicules modernes.',
+    services: ['Diagnostic electronique', 'Climatisation', 'Mecanique generale'],
+    rating: 4.8,
+    reviews: 110,
+    is_open: true,
+    type: 'mechanic',
+    type_label: 'Mecanique',
+  },
+  {
+    id: 'sample-us-texas-tow',
+    shop_name: 'Lone Star Road Assist',
+    name: 'Lone Star Road Assist',
+    email: 'lonestarassist@flashmat.sample',
+    providerEmail: 'lonestarassist@flashmat.sample',
+    address: '2400 Main Street, Dallas, Texas, USA',
+    phone: '+1 (214) 555-0188',
+    latitude: 32.7831,
+    longitude: -96.8003,
+    description: 'Service routier texan pour remorquage rapide, boost batterie, lockout et assistance pneu.',
+    services: ['Remorquage', 'Assistance routiere', 'Boost batterie', 'Deverrouillage'],
+    rating: 4.9,
+    reviews: 143,
+    is_open: true,
+    type: 'tow',
+    type_label: 'Remorquage',
+  },
+]
+
 function toNumberOrNull(value) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : null
@@ -404,7 +497,12 @@ export async function fetchProviders() {
     .order('rating', { ascending: false })
     .limit(100)
 
-  return (data || []).map(mergeProviderProfile).filter((p) => p.publicReady)
+  const combinedProviders = [...GLOBAL_SAMPLE_PROVIDERS, ...(data || [])]
+
+  return combinedProviders
+    .map(mergeProviderProfile)
+    .filter((provider, index, all) => provider.publicReady && all.findIndex((entry) => entry.id === provider.id) === index)
+    .sort((left, right) => Number(right.rating || 0) - Number(left.rating || 0))
 }
 
 export function mergeProviderProfile(provider) {
