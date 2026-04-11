@@ -450,7 +450,7 @@ export default function NavBar({ activePage }) {
 
       {menuOpen && (
         <div style={{ ...styles.drawer, width: isMobile ? 'min(292px, 84vw)' : isCompact ? '340px' : '360px', borderRadius: '0', top: 0, height: '100vh', padding: isMobile ? '14px 10px 12px' : isCompact ? '40px 18px 18px' : '48px 22px 20px' }}>
-          {isMobile ? (
+          {false ? (
             <>
               <div style={styles.mobileDrawerHeader}>
                 <div style={styles.mobileDrawerBrand}>
@@ -512,28 +512,28 @@ export default function NavBar({ activePage }) {
           ) : (
             <>
           <div style={styles.drawerHeader}>
-            <img src="/logo.jpg" alt="FlashMat" style={{ height: isCompact ? 50 : 58, objectFit: 'contain' }} />
+            <img src="/logo.jpg" alt="FlashMat" style={{ height: isMobile ? 42 : isCompact ? 50 : 58, objectFit: 'contain' }} />
             <button type="button" style={styles.drawerClose} onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">×</button>
           </div>
           <div style={styles.drawerIntro}>
             <div style={styles.drawerEyebrow}>Navigation FlashMat</div>
-            <div style={{ ...styles.drawerTitle, fontSize: isCompact ? 18 : 22, maxWidth: 250 }}>Simple. Fast. FlashMat.</div>
-            <div style={{ ...styles.drawerText, fontSize: isCompact ? 12.5 : 13, maxWidth: 270 }}>
+            <div style={{ ...styles.drawerTitle, fontSize: isMobile ? 16.5 : isCompact ? 18 : 22, maxWidth: isMobile ? 220 : 250 }}>Simple. Fast. FlashMat.</div>
+            <div style={{ ...styles.drawerText, fontSize: isMobile ? 12 : isCompact ? 12.5 : 13, maxWidth: isMobile ? 240 : 270 }}>
               The essentials, presented with less noise and a cleaner rhythm.
             </div>
           </div>
-          <div style={{ ...styles.drawerLinks, gap: isCompact ? 10 : 12 }}>
+          <div style={{ ...styles.drawerLinks, gap: isMobile ? 9 : isCompact ? 10 : 12 }}>
             {MENU_SECTIONS.map((item) => (
-              <DrawerLink key={item.label} label={item.label} to={item.to} onNavigate={navigateTo} compact={isCompact} />
+              <DrawerLink key={item.label} label={item.label} to={item.to} onNavigate={navigateTo} compact={isCompact || isMobile} />
             ))}
           </div>
           <div style={styles.drawerFooter}>
-            <div style={{ ...styles.drawerAccountCard, padding: isCompact ? 14 : 15 }}>
+            <div style={{ ...styles.drawerAccountCard, padding: isMobile ? 13 : isCompact ? 14 : 15 }}>
               <div style={styles.drawerAccountEyebrow}>{user ? 'Session active' : 'Compte FlashMat'}</div>
-              <div style={{ ...styles.drawerAccountTitle, fontSize: isCompact ? 15 : 16 }}>
+              <div style={{ ...styles.drawerAccountTitle, fontSize: isMobile ? 14.5 : isCompact ? 15 : 16 }}>
                 {user ? displayName : 'Connectez-vous'}
               </div>
-              <div style={{ ...styles.drawerAccountText, fontSize: isCompact ? 11.5 : 12 }}>
+              <div style={{ ...styles.drawerAccountText, fontSize: isMobile ? 11 : isCompact ? 11.5 : 12 }}>
                 {user ? `${getRoleLabel(profile?.role)} · montréal` : 'Client, fournisseur ou partenaire'}
               </div>
               {user ? (
