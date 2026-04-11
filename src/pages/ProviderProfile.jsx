@@ -306,25 +306,145 @@ export default function ProviderProfile() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <NavBar activePage="providers" />
-      <div style={{ maxWidth: 1360, margin: '18px auto 0', padding: '0 20px' }}>
-        <section style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(184, 203, 229, .65)', background: provider.coverPhoto ? `center / cover no-repeat url(${provider.coverPhoto})` : 'linear-gradient(135deg, #0d2336 0%, #173b5f 44%, #2f7de1 100%)', minHeight: 308, boxShadow: '0 24px 60px rgba(15, 30, 61, 0.14)' }}>
+      <style>{`
+        @media (max-width: 900px) {
+          .provider-profile-page {
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+          }
+          .provider-profile-hero {
+            min-height: 0 !important;
+            border-radius: 24px !important;
+          }
+          .provider-profile-hero-inner {
+            min-height: 0 !important;
+            padding: 24px 18px 20px !important;
+          }
+          .provider-profile-logo {
+            width: 78px !important;
+            height: 78px !important;
+            border-radius: 20px !important;
+          }
+          .provider-profile-heading {
+            font-size: 36px !important;
+            line-height: 0.98 !important;
+          }
+          .provider-profile-meta {
+            gap: 8px !important;
+          }
+          .provider-profile-stats {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .provider-profile-stats > div {
+            min-width: calc(50% - 8px) !important;
+            flex: 1 1 140px !important;
+          }
+          .provider-profile-actions {
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+          }
+          .provider-profile-actions-main,
+          .provider-profile-actions-secondary {
+            width: 100% !important;
+          }
+          .provider-profile-actions-main > * {
+            flex: 1 1 180px !important;
+            justify-content: center !important;
+          }
+          .providerLayout {
+            grid-template-columns: minmax(0, 1fr) !important;
+            padding-top: 22px !important;
+          }
+          .provider-profile-team-card {
+            grid-template-columns: 1fr !important;
+            text-align: center !important;
+            justify-items: center !important;
+          }
+          .provider-profile-team-card .provider-profile-team-meta {
+            justify-content: center !important;
+          }
+          .provider-profile-dual-cards,
+          .provider-profile-gallery {
+            grid-template-columns: 1fr !important;
+          }
+          .provider-profile-gallery-main {
+            min-height: 280px !important;
+          }
+          .provider-profile-reviews-header {
+            align-items: flex-start !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .provider-profile-page {
+            margin-top: 12px !important;
+          }
+          .provider-profile-hero {
+            border-radius: 22px !important;
+          }
+          .provider-profile-hero-inner {
+            padding: 22px 16px 18px !important;
+          }
+          .provider-profile-heading {
+            font-size: 30px !important;
+          }
+          .provider-profile-meta {
+            flex-direction: column !important;
+          }
+          .provider-profile-meta .provider-profile-meta-dot {
+            display: none !important;
+          }
+          .provider-profile-stats {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+          .provider-profile-stats > div:last-child {
+            grid-column: 1 / -1 !important;
+          }
+          .provider-profile-actions-main {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+          }
+          .provider-profile-expertise-actions {
+            width: 100% !important;
+            justify-content: space-between !important;
+          }
+          .provider-profile-expertise-actions .btn {
+            flex: 1 1 auto !important;
+            justify-content: center !important;
+          }
+          .provider-profile-expertise-card {
+            min-height: 166px !important;
+          }
+          .provider-profile-map {
+            height: 220px !important;
+          }
+          .provider-profile-reviews-header > div:last-child {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+        }
+      `}</style>
+      <div className="provider-profile-page" style={{ maxWidth: 1360, margin: '18px auto 0', padding: '0 20px' }}>
+        <section className="provider-profile-hero" style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(184, 203, 229, .65)', background: provider.coverPhoto ? `center / cover no-repeat url(${provider.coverPhoto})` : 'linear-gradient(135deg, #0d2336 0%, #173b5f 44%, #2f7de1 100%)', minHeight: 308, boxShadow: '0 24px 60px rgba(15, 30, 61, 0.14)' }}>
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(7,24,42,.14) 0%, rgba(7,24,42,.42) 45%, rgba(7,24,42,.8) 100%)' }} />
           <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 50% 18%, rgba(255,255,255,.16), transparent 34%)' }} />
-          <div style={{ position: 'relative', zIndex: 1, minHeight: 308, display: 'grid', alignItems: 'end', justifyItems: 'center', padding: '28px 34px 24px' }}>
+          <div className="provider-profile-hero-inner" style={{ position: 'relative', zIndex: 1, minHeight: 308, display: 'grid', alignItems: 'end', justifyItems: 'center', padding: '28px 34px 24px' }}>
             <div style={{ width: '100%', display: 'grid', justifyItems: 'center', textAlign: 'center', maxWidth: 960 }}>
-              <div style={{ width: 96, height: 96, borderRadius: 24, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 18px 34px rgba(0,0,0,.24)', overflow: 'hidden', margin: '0 auto 16px' }}>
+              <div className="provider-profile-logo" style={{ width: 96, height: 96, borderRadius: 24, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 18px 34px rgba(0,0,0,.24)', overflow: 'hidden', margin: '0 auto 16px' }}>
                 {provider.logoImageUrl ? <img src={provider.logoImageUrl} alt={provider.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, color: '#143252' }}>{provider.logo}</div>}
               </div>
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 11px', borderRadius: 999, background: 'rgba(255,255,255,.12)', border: '1px solid rgba(255,255,255,.14)', color: '#dbe7f6', fontSize: 11, fontWeight: 700, marginBottom: 12 }}>Provider profile</div>
-                <h1 style={{ fontFamily: 'var(--display)', fontSize: 52, lineHeight: 0.94, fontWeight: 800, color: '#fff', letterSpacing: '-0.06em', marginBottom: 12 }}>{provider.name}</h1>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+                <h1 className="provider-profile-heading" style={{ fontFamily: 'var(--display)', fontSize: 52, lineHeight: 0.94, fontWeight: 800, color: '#fff', letterSpacing: '-0.06em', marginBottom: 12 }}>{provider.name}</h1>
+                <div className="provider-profile-meta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
                   <span style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.address}</span>
-                  <span style={{ color: 'rgba(255,255,255,.42)' }}>{DOT}</span>
+                  <span className="provider-profile-meta-dot" style={{ color: 'rgba(255,255,255,.42)' }}>{DOT}</span>
                   <a href={`tel:${provider.phone}`} style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.phone}</a>
-                  {provider.website ? <><span style={{ color: 'rgba(255,255,255,.42)' }}>{DOT}</span><a href={provider.website.startsWith('http') ? provider.website : `https://${provider.website}`} target="_blank" rel="noreferrer" style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.website.replace(/^https?:\/\//, '')}</a></> : null}
+                  {provider.website ? <><span className="provider-profile-meta-dot" style={{ color: 'rgba(255,255,255,.42)' }}>{DOT}</span><a href={provider.website.startsWith('http') ? provider.website : `https://${provider.website}`} target="_blank" rel="noreferrer" style={{ color: '#dbe7f6', fontSize: 13, fontWeight: 600 }}>{provider.website.replace(/^https?:\/\//, '')}</a></> : null}
                 </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <div className="provider-profile-stats" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
                   {[
                     { label: 'Rating', value: Number(provider.rating || 0).toFixed(1) },
                     { label: 'Reviews', value: String(provider.reviews || 0) },
@@ -336,8 +456,8 @@ export default function ProviderProfile() {
           </div>
         </section>
 
-        <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', padding: '18px 10px 0' }}>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <section className="provider-profile-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', padding: '18px 10px 0' }}>
+          <div className="provider-profile-actions-main" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`tel:${provider.phone}`} className="btn btn-outline">Call</a>
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(provider.address)}`} target="_blank" rel="noreferrer" className="btn btn-outline">Get direction</a>
             <button className="btn btn-outline" onClick={() => requestMessagingAccess()} disabled={messageOpening} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -348,7 +468,7 @@ export default function ProviderProfile() {
             </button>
             <button className="btn btn-green" onClick={requestBookingAccess}>Take an appointment</button>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{(provider.highlights || provider.services || []).slice(0, 6).map((item) => <span key={item} className="badge badge-blue">{item}</span>)}</div>
+          <div className="provider-profile-actions-secondary" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{(provider.highlights || provider.services || []).slice(0, 6).map((item) => <span key={item} className="badge badge-blue">{item}</span>)}</div>
         </section>
 
         <div className="providerLayout" style={{ maxWidth: 'none', padding: '28px 4px 44px', gridTemplateColumns: 'minmax(0,1.46fr) minmax(320px,.72fr)' }}>
@@ -358,14 +478,14 @@ export default function ProviderProfile() {
                 <SectionHeading title="Team spotlight" subtitle="Meet the people clients see when they book through this provider." />
                 <div style={{ display: 'grid', gap: 14 }}>
                   {provider.staffMembers.slice(0, 2).map((member) => (
-                    <div key={member.id || `${member.name}-${member.role}`} style={{ display: 'grid', gridTemplateColumns: '98px minmax(0, 1fr)', gap: 18, alignItems: 'center', padding: 16, borderRadius: 18, border: '1px solid var(--border)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
+                    <div className="provider-profile-team-card" key={member.id || `${member.name}-${member.role}`} style={{ display: 'grid', gridTemplateColumns: '98px minmax(0, 1fr)', gap: 18, alignItems: 'center', padding: 16, borderRadius: 18, border: '1px solid var(--border)', background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)' }}>
                       <div style={{ width: 98, height: 98, borderRadius: 22, overflow: 'hidden', background: '#f1f6fd' }}>
                         {member.photo_url ? <img src={member.photo_url} alt={member.name || 'Staff member'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--display)', fontSize: 36, fontWeight: 800, color: 'var(--blue)' }}>{String(member.name || 'S').slice(0, 1).toUpperCase()}</div>}
                       </div>
                       <div>
                         <div style={{ fontFamily: 'var(--display)', fontSize: 28, lineHeight: 1.04, letterSpacing: '-0.04em', color: 'var(--ink)', marginBottom: 6 }}>{member.name || 'FlashMat staff'}</div>
                         <div style={{ fontSize: 14, color: 'var(--ink2)', marginBottom: 10 }}>{member.role || 'Team member'}</div>
-                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 13, color: 'var(--ink2)' }}>
+                        <div className="provider-profile-team-meta" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 13, color: 'var(--ink2)' }}>
                           <span>{provider.address}</span>
                           {member.phone || provider.phone ? <span>{member.phone || provider.phone}</span> : null}
                           {member.email ? <span>{member.email}</span> : null}
@@ -383,7 +503,7 @@ export default function ProviderProfile() {
               </InfoCard>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+            <div className="provider-profile-dual-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
               <InfoCard>
                 <div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 800, color: 'var(--ink)', marginBottom: 8 }}>Working hours</div>
                 <div style={{ fontSize: 13, color: 'var(--ink2)', marginBottom: 10 }}>Open hours published by the provider on FlashMat.</div>
@@ -402,7 +522,7 @@ export default function ProviderProfile() {
                 title={`Expertise of ${provider.name}`}
                 subtitle="Explore the specialties clients most often book with this provider."
                 action={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <div className="provider-profile-expertise-actions" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     {expertiseServices.length > 1 ? (
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         <button
@@ -470,6 +590,7 @@ export default function ProviderProfile() {
                     key={service}
                     type="button"
                     onClick={requestBookingAccess}
+                    className="provider-profile-expertise-card"
                     style={{
                       textAlign: 'left',
                       border: '1px solid var(--border)',
@@ -497,12 +618,12 @@ export default function ProviderProfile() {
               </div>
             </InfoCard>
 
-            {galleryImages.length > 0 ? <InfoCard><SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." /><div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
+            {galleryImages.length > 0 ? <InfoCard><SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." /><div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div className="provider-profile-gallery-main" style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
 
             {providerProducts.length > 0 ? <InfoCard><SectionHeading title="Provider products" subtitle="Items currently published by this provider through FlashMat Marketplace." /><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>{providerProducts.map((item) => <div key={item.id} style={{ display: 'grid', gap: 12 }}><div style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / .92', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{item.image_url ? <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ServiceIcon code={item.icon || 'PC'} size={86} /></div>}</div><div><div style={{ fontFamily: 'var(--display)', fontSize: 17, lineHeight: 1.2, color: 'var(--ink)', marginBottom: 6 }}>{item.title}</div><div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 8 }}>{item.category}</div><div style={{ fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--blue)', marginBottom: 10 }}>{formatPrice(item.price)}</div><button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>View item</button></div></div>)}</div></InfoCard> : null}
 
             <InfoCard>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
+              <div className="provider-profile-reviews-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 }}>
                 <div><div style={{ fontFamily: 'var(--display)', fontSize: 30, lineHeight: 1, letterSpacing: '-0.045em', color: 'var(--ink)', marginBottom: 8 }}>Reviews</div><div style={{ fontSize: 13, color: 'var(--ink2)' }}>{provider.reviews || 0} reviews on this provider profile.</div></div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 999, background: 'var(--bg3)', border: '1px solid var(--border)' }}><span style={{ fontFamily: 'var(--display)', fontSize: 22, fontWeight: 800, color: 'var(--ink)' }}>{Number(provider.rating || 0).toFixed(1)}</span><span style={{ color: '#f59e0b', fontSize: 16 }}>{renderStarsSafe(provider.rating)}</span></div>
               </div>
@@ -515,7 +636,7 @@ export default function ProviderProfile() {
 
           <aside style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
             <InfoCard style={{ padding: 0 }}>
-              <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)', position: 'relative', zIndex: 0 }}>
+              <div className="provider-profile-map" style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)', position: 'relative', zIndex: 0 }}>
                 <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%', zIndex: 0 }} scrollWheelZoom>
                   <ProviderMapViewportSync center={providerCoords} zoom={15} />
                   <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
