@@ -207,6 +207,14 @@ export default function NavBar({ activePage }) {
     setNotificationCenterOpen(true)
   }
 
+  function toggleProfileMenu() {
+    setMenuOpen(false)
+    setPanelOpen(null)
+    setMessagePopoverOpen(false)
+    setNotificationCenterOpen(false)
+    setProfileOpen((current) => !current)
+  }
+
   function navigateTo(path) {
     closeFloatingUi()
     navigate(path)
@@ -350,11 +358,7 @@ export default function NavBar({ activePage }) {
                 <button
                   type="button"
                   style={profileOpen ? styles.accountButtonActive : styles.accountButton}
-                  onClick={() => {
-                    setMenuOpen(false)
-                    setPanelOpen(null)
-                    setProfileOpen((current) => !current)
-                  }}
+                  onClick={toggleProfileMenu}
                 >
                   <span style={styles.accountAvatar}>
                     {profileAvatar ? (

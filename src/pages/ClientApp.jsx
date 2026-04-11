@@ -982,7 +982,7 @@ export default function ClientApp() {
           </div>
         )}
 
-        {pane === 'marketplace' && <Marketplace portal="client" openComposer={location.pathname === '/app/client/marketplace' || location.pathname === '/app/marketplace'} />}
+        {pane === 'marketplace' && <Marketplace portal="client" />}
 
         {pane === 'flashscore' && (
           <div>
