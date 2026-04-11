@@ -48,8 +48,8 @@ const NAV = [
 
 const NAV_SECTIONS = {
   core: ['dashboard', 'vehicles', 'search'],
-  tools: ['bookings', 'maintenance', 'doctor', 'flashscore', 'notifications'],
-  other: ['flashfix', 'marketplace'],
+  tools: ['bookings', 'maintenance', 'doctor', 'flashscore'],
+  other: ['notifications', 'flashfix', 'marketplace'],
 }
 
 const SEARCH_CATS = [
