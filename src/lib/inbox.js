@@ -88,6 +88,7 @@ export async function fetchNotificationsForUser(userId) {
     .from('notifications')
     .select('*')
     .eq('user_id', userId)
+    .neq('type', 'message')
     .order('created_at', { ascending: false })
     .limit(50)
 
@@ -117,6 +118,7 @@ export async function markAllNotificationsRead(userId) {
     .update({ is_read: true })
     .eq('user_id', userId)
     .eq('is_read', false)
+    .neq('type', 'message')
 
   if (error && !isMissingInboxRelation(error)) throw error
 }
@@ -134,7 +136,8 @@ export async function fetchUnreadInboxCounts(userId) {
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
-      .eq('is_read', false),
+      .eq('is_read', false)
+      .neq('type', 'message'),
   ])
 
   if (messageResult.error && !isMissingInboxRelation(messageResult.error)) throw messageResult.error
