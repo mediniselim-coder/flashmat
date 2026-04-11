@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useInboxSummary } from '../hooks/useInbox'
+import { useToast } from '../hooks/useToast'
 import LoginModal from './LoginModal'
 import ClientProfileModal from './ClientProfileModal'
 import ProviderProfileModal from './ProviderProfileModal'
@@ -124,6 +125,7 @@ export default function NavBar({ activePage }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, profile, signOut } = useAuth()
+  const { toast } = useToast()
   const [loginOpen, setLoginOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [clientProfileModalOpen, setClientProfileModalOpen] = useState(false)
@@ -233,9 +235,12 @@ export default function NavBar({ activePage }) {
   }
 
   async function handleSignOut() {
-    await signOut()
     setProfileOpen(false)
+    setMessagePopoverOpen(false)
+    setNotificationCenterOpen(false)
+    await signOut()
     navigate('/')
+    toast('You have been logged off.', 'success')
   }
 
   const profileItems = useMemo(() => {

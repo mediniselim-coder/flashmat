@@ -252,7 +252,13 @@ export default function ProviderApp() {
   }
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
-  async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
+  async function handleSignOut() {
+    setProfileMenuOpen(false)
+    setNotificationCenterOpen(false)
+    await signOut()
+    navigate('/')
+    toast('You have been logged off.', 'success')
+  }
   function openMessageCenter(threadId = '') {
     setProfileMenuOpen(false)
     setNotificationCenterOpen(false)

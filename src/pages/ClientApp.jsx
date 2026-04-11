@@ -316,7 +316,13 @@ export default function ClientApp() {
   }
   function goHome() { setSidebar(false); navigate('/') }
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
-  async function handleSignOut() { setProfileMenuOpen(false); await signOut(); navigate('/') }
+  async function handleSignOut() {
+    setProfileMenuOpen(false)
+    setNotificationCenterOpen(false)
+    await signOut()
+    navigate('/')
+    toast('You have been logged off.', 'success')
+  }
   function openClientProfileModal() { setProfileMenuOpen(false); setClientProfileModalOpen(true) }
   function openWalletModal() { setProfileMenuOpen(false); setWalletModalOpen(true) }
   function openHelpSupportModal() { setProfileMenuOpen(false); setHelpSupportModalOpen(true) }
