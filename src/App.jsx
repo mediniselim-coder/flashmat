@@ -21,6 +21,65 @@ const Pricing = lazy(() => import("./pages/Pricing"))
 const Contact = lazy(() => import("./pages/Contact"))
 const Messages = lazy(() => import("./pages/Messages"))
 
+function RouteLoadingScreen() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "grid",
+        placeItems: "center",
+        background: "linear-gradient(180deg, #edf4ff 0%, #f7fbff 100%)",
+        padding: 24,
+      }}
+    >
+      <div
+        style={{
+          width: "min(100%, 420px)",
+          borderRadius: 28,
+          border: "1px solid rgba(120,171,218,0.18)",
+          background: "rgba(255,255,255,0.88)",
+          boxShadow: "0 24px 50px rgba(15,30,61,0.10)",
+          padding: "28px 24px",
+          textAlign: "center",
+        }}
+      >
+        <img src="/logo-dark.png" alt="FlashMat" style={{ height: 34, objectFit: "contain", marginBottom: 16 }} />
+        <div
+          style={{
+            fontFamily: "var(--display)",
+            fontSize: 28,
+            lineHeight: 1,
+            color: "#15314f",
+            marginBottom: 10,
+          }}
+        >
+          Loading FlashMat
+        </div>
+        <div style={{ fontSize: 14, lineHeight: 1.7, color: "#6e86a0", marginBottom: 18 }}>
+          Preparing your page and recent activity.
+        </div>
+        <div
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "50%",
+            border: "3px solid rgba(37,99,235,0.14)",
+            borderTopColor: "#2563eb",
+            margin: "0 auto",
+            animation: "flashmat-spin .8s linear infinite",
+          }}
+        />
+        <style>{`
+          @keyframes flashmat-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  )
+}
+
 function AuthCallback() {
   const navigate = useNavigate()
 
@@ -42,7 +101,7 @@ function ProtectedRoute({ children, requiredRole }) {
   const { user, profile, loading } = useAuth()
   const location = useLocation()
 
-  if (loading) return null
+  if (loading) return <RouteLoadingScreen />
 
   if (!user) {
     if (typeof window !== "undefined") {
@@ -62,7 +121,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-        <Suspense fallback={null}>
+        <Suspense fallback={<RouteLoadingScreen />}>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />

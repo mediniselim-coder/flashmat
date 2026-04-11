@@ -79,6 +79,33 @@ function isPdfAttachment(attachment) {
   return String(attachment?.type || '') === 'application/pdf'
 }
 
+function getThreadsCacheKey(userId, role) {
+  return `flashmat-inbox-threads:${userId}:${role}`
+}
+
+function getMessagesCacheKey(threadId) {
+  return `flashmat-inbox-messages:${threadId}`
+}
+
+function readCachedJson(key, fallback) {
+  if (typeof window === 'undefined') return fallback
+  try {
+    const raw = window.sessionStorage.getItem(key)
+    if (!raw) return fallback
+    const parsed = JSON.parse(raw)
+    return parsed ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
+function writeCachedJson(key, value) {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.setItem(key, JSON.stringify(value))
+  } catch {}
+}
+
 export default function Messages() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -140,6 +167,33 @@ export default function Messages() {
     if (!user?.id) return
     window.localStorage.setItem(getArchivedStorageKey(user.id), JSON.stringify(archivedThreadIds))
   }, [archivedThreadIds, user?.id])
+
+  useEffect(() => {
+    if (!user?.id) {
+      setThreads([])
+      return
+    }
+
+    const cachedThreads = readCachedJson(getThreadsCacheKey(user.id, role), [])
+    if (Array.isArray(cachedThreads) && cachedThreads.length > 0) {
+      setThreads(cachedThreads)
+      setSelectedThreadId((current) => {
+        const queryThreadId = searchThreadParam
+        if (queryThreadId && cachedThreads.some((thread) => String(thread.id) === String(queryThreadId))) {
+          return String(queryThreadId)
+        }
+        if (current && cachedThreads.some((thread) => String(thread.id) === String(current))) {
+          return String(current)
+        }
+        return cachedThreads[0]?.id ? String(cachedThreads[0].id) : current
+      })
+    }
+  }, [role, searchThreadParam, user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    writeCachedJson(getThreadsCacheKey(user.id, role), threads)
+  }, [role, threads, user?.id])
 
   useEffect(() => {
     selectedThreadIdRef.current = selectedThreadId
@@ -224,6 +278,10 @@ export default function Messages() {
     }
 
     let active = true
+    const cachedMessages = readCachedJson(getMessagesCacheKey(selectedThreadId), [])
+    if (Array.isArray(cachedMessages) && cachedMessages.length > 0) {
+      setMessages(cachedMessages)
+    }
 
     async function loadThreadMessages() {
       try {
@@ -231,6 +289,7 @@ export default function Messages() {
         const nextMessages = await fetchThreadMessages(selectedThreadId)
         if (!active) return
         setMessages(nextMessages)
+        writeCachedJson(getMessagesCacheKey(selectedThreadId), nextMessages)
         setThreads((current) => current.map((thread) => (
           String(thread.id) === String(selectedThreadId) ? { ...thread, unreadCount: 0 } : thread
         )))
@@ -317,6 +376,8 @@ export default function Messages() {
       ])
       setThreads(nextThreads)
       setMessages(nextMessages)
+      writeCachedJson(getThreadsCacheKey(user.id, role), nextThreads)
+      writeCachedJson(getMessagesCacheKey(selectedThread.id), nextMessages)
     } catch (error) {
       toast(error.message || 'Unable to send the message.', 'error')
     } finally {
@@ -386,6 +447,12 @@ export default function Messages() {
 
   return (
     <div style={styles.page}>
+      <style>{`
+        @keyframes flashmat-inbox-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
       <NavBar activePage="messages" />
       <main style={styles.main}>
         <section style={styles.shell}>
@@ -421,7 +488,13 @@ export default function Messages() {
             </div>
 
             <div style={styles.threadList}>
-              {loadingThreads ? <div style={styles.emptyText}>Loading conversations...</div> : null}
+              {loadingThreads && visibleThreads.length === 0 ? (
+                <>
+                  <div style={styles.threadSkeleton} />
+                  <div style={styles.threadSkeleton} />
+                  <div style={styles.threadSkeleton} />
+                </>
+              ) : null}
               {!loadingThreads && visibleThreads.length === 0 ? (
                 <div style={styles.emptyStateCard}>
                   <div style={styles.emptyStateTitle}>No conversations yet</div>
@@ -523,7 +596,13 @@ export default function Messages() {
                 </div>
 
                 <div style={styles.chatFeed}>
-                  {loadingMessages ? <div style={styles.emptyText}>Loading messages...</div> : null}
+                  {loadingMessages && messages.length === 0 ? (
+                    <div style={styles.chatLoadingState}>
+                      <div style={styles.messageSkeletonMine} />
+                      <div style={styles.messageSkeletonTheirs} />
+                      <div style={styles.messageSkeletonTheirsShort} />
+                    </div>
+                  ) : null}
                   {!loadingMessages && messages.length === 0 ? <div style={styles.emptyText}>Say hello to start the conversation.</div> : null}
                   {messages.map((message) => {
                     const mine = String(message.sender_id) === String(user?.id)
@@ -933,6 +1012,14 @@ const styles = {
     color: '#b83a3a',
     background: '#fff5f5',
   },
+  threadSkeleton: {
+    height: 86,
+    borderRadius: 20,
+    border: '1px solid rgba(120,171,218,0.12)',
+    background: 'linear-gradient(90deg, rgba(244,248,253,0.96) 0%, rgba(231,240,250,0.96) 50%, rgba(244,248,253,0.96) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'flashmat-inbox-shimmer 1.2s linear infinite',
+  },
   chatPane: {
     display: 'grid',
     gridTemplateRows: 'auto auto 1fr auto',
@@ -1031,6 +1118,36 @@ const styles = {
     alignContent: 'start',
     background:
       'linear-gradient(180deg, rgba(255,255,255,0.86) 0%, rgba(248,252,255,0.96) 100%)',
+  },
+  chatLoadingState: {
+    display: 'grid',
+    gap: 12,
+    alignContent: 'start',
+  },
+  messageSkeletonMine: {
+    width: '44%',
+    height: 54,
+    marginLeft: 'auto',
+    borderRadius: 18,
+    background: 'linear-gradient(90deg, rgba(225,235,246,0.92) 0%, rgba(238,245,252,0.96) 50%, rgba(225,235,246,0.92) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'flashmat-inbox-shimmer 1.2s linear infinite',
+  },
+  messageSkeletonTheirs: {
+    width: '58%',
+    height: 72,
+    borderRadius: 18,
+    background: 'linear-gradient(90deg, rgba(225,235,246,0.92) 0%, rgba(238,245,252,0.96) 50%, rgba(225,235,246,0.92) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'flashmat-inbox-shimmer 1.2s linear infinite',
+  },
+  messageSkeletonTheirsShort: {
+    width: '34%',
+    height: 48,
+    borderRadius: 18,
+    background: 'linear-gradient(90deg, rgba(225,235,246,0.92) 0%, rgba(238,245,252,0.96) 50%, rgba(225,235,246,0.92) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'flashmat-inbox-shimmer 1.2s linear infinite',
   },
   messageWrap: {
     display: 'flex',
