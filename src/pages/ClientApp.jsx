@@ -1342,32 +1342,18 @@ export default function ClientApp() {
         )}
 
         {pane === 'doctor' && (
-          <div>
-            <div className={styles.pageHdr}>
-              <div>
-                <div className={styles.pageTitle}>Docteur Automobile</div>
-                <div className={styles.pageSub}>Describe a symptom, get a diagnosis, then jump straight into the right provider search.</div>
+            <div>
+              <div className={styles.pageHdr}>
+                <div>
+                  <div className={styles.pageTitle}>Docteur Automobile</div>
+                  <div className={styles.pageSub}>A simpler FlashMat-focused auto chat for symptoms, maintenance, and the right provider direction.</div>
+                </div>
+              </div>
+              <div className={styles.pad}>
+                <VehicleDoctor compact userName={name} />
               </div>
             </div>
-            <div className={styles.pad}>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:12, marginBottom:18 }}>
-                {[
-                  ['Questions simples', 'Ask about maintenance timing, warning lights, or what to check before a trip.'],
-                  ['Problemes concrets', 'Describe a noise, vibration, overheating issue, or a no-start situation.'],
-                  ['Action rapide', 'FlashMat suggests the likely issue, estimated cost, and the best next step.'],
-                ].map(([title, text]) => (
-                  <div key={title} className="panel" style={{ marginBottom: 0 }}>
-                    <div className="panel-body">
-                      <div style={{ fontFamily:'var(--display)', fontWeight:800, fontSize:18, color:'var(--ink)', marginBottom:6 }}>{title}</div>
-                      <div style={{ fontSize:13, lineHeight:1.7, color:'var(--ink2)' }}>{text}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <VehicleDoctor compact userName={name} />
-            </div>
-          </div>
-        )}
+          )}
 
         {pane === 'flashfix' && (
           <div>

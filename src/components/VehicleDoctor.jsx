@@ -1322,66 +1322,170 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
   const wrapperClass = compact ? `${styles.section} ${styles.sectionCompact}` : styles.section
   const shellClass = compact ? `${styles.shell} ${styles.shellCompact}` : styles.shell
+  const greetingName = userName || profile?.full_name || 'there'
 
   return (
     <section className={wrapperClass}>
       <div className={shellClass}>
-        {compact ? (
-          <div className={styles.compactHeader}>
+        <div className={styles.chatShell}>
+          <div className={styles.chatHeader}>
             <div>
-              <div className={styles.eyebrow}>FlashMat Diagnosis</div>
-              <h2 className={styles.compactTitle}>Your Auto Doctor</h2>
-              <p className={styles.compactSub}>
-                Describe the symptom, then FlashMat can estimate the likely issue,
-                the price range, repair time, and the most relevant nearby garages.
+              <div className={styles.eyebrow}>FlashMat Auto Doctor</div>
+              <h2 className={compact ? styles.compactTitle : styles.title}>A simpler car help chat</h2>
+              <p className={compact ? styles.compactSub : styles.subtitle}>
+                Ask like you would ask ChatGPT, but focused on FlashMat: symptoms, maintenance timing, repair estimates, and the right garage category in Montreal.
               </p>
             </div>
-            <div className={styles.confidence}>Hello {userName || 'client'}</div>
+            <div className={styles.chatBadge}>Hello {greetingName}</div>
           </div>
-        ) : null}
 
-        <div className={styles.grid}>
-          <div>
-            {!compact ? (
-              <>
-                <div className={styles.eyebrow}>Auto Doctor</div>
-                <h2 className={styles.title}>
-                  The doctor <span>for your car</span>
-                </h2>
-                <p className={styles.subtitle}>
-                  Describe the problem, soon add a photo or voice note, and let FlashMat
-                  estimate the issue, price, repair time, and connect you with the best available mechanic.
+          <div
+            ref={resultRef}
+            className={`${styles.chatTimeline} ${hasFreshResult ? styles.resultHighlight : ''}`}
+            tabIndex={-1}
+          >
+            <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
+              <div className={styles.chatAvatar}>F</div>
+              <div className={styles.chatBubble}>
+                <div className={styles.chatMeta}>FlashMat assistant</div>
+                <p className={styles.chatText}>
+                  Tell me what the vehicle is doing and I will answer with the likely issue, what matters most, and where FlashMat would send you next.
                 </p>
-              </>
+                <div className={styles.modeRow} style={{ marginBottom: 0, marginTop: 14 }}>
+                  {INPUT_MODES.map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      className={`${styles.modeBtn} ${inputMode === mode.id ? styles.modeBtnActive : ''}`}
+                      onClick={() => setInputMode(mode.id)}
+                    >
+                      {repairText(mode.label)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </article>
+
+            {draft.trim() ? (
+              <article className={`${styles.chatMessage} ${styles.chatUser}`}>
+                <div className={styles.chatBubble}>
+                  <div className={styles.chatMeta}>You</div>
+                  <p className={styles.chatText}>{draft.trim()}</p>
+                </div>
+              </article>
             ) : null}
 
-            <div className={styles.modeRow}>
-              {INPUT_MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  className={`${styles.modeBtn} ${inputMode === mode.id ? styles.modeBtnActive : ''}`}
-                  onClick={() => setInputMode(mode.id)}
-                >
-                  {repairText(mode.label)}
-                </button>
-              ))}
-            </div>
+            <article className={`${styles.chatMessage} ${styles.chatAssistant}`}>
+              <div className={styles.chatAvatar}>F</div>
+              <div className={styles.chatBubble}>
+                <div className={styles.chatMeta}>{resultEyebrowLabel}</div>
+                <div className={styles.statusRow}>
+                  <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
+                    {isAnalyzing ? 'Thinking...' : displayDiagnosis ? 'Answer ready' : 'Ready'}
+                  </span>
+                  <span className={styles.statusText}>{statusMessage}</span>
+                </div>
 
+                {displayDiagnosis ? (
+                  <>
+                    <h3 className={styles.chatAnswerTitle}>{displayDiagnosis.probableIssue}</h3>
+                    <p className={styles.chatText}>{displayDiagnosis.summary}</p>
+
+                    <div className={styles.chatFacts}>
+                      <div className={styles.chatFact}>
+                        <span className={styles.chatFactLabel}>Confidence</span>
+                        <strong>{displayDiagnosis.confidence}</strong>
+                      </div>
+                      <div className={styles.chatFact}>
+                        <span className={styles.chatFactLabel}>Urgency</span>
+                        <strong>{displayDiagnosis.urgency}</strong>
+                      </div>
+                      <div className={styles.chatFact}>
+                        <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'When' : 'Estimate'}</span>
+                        <strong>{displayDiagnosis.estimate}</strong>
+                      </div>
+                      <div className={styles.chatFact}>
+                        <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'Timeline' : 'Repair time'}</span>
+                        <strong>{displayDiagnosis.duration}</strong>
+                      </div>
+                    </div>
+
+                    {displayDiagnosis.guidanceItems?.length ? (
+                      <div className={styles.chatChecklist}>
+                        <div className={styles.guidanceTitle}>{displayDiagnosis.guidanceTitle || 'What to do next'}</div>
+                        <div className={styles.guidanceList}>
+                          {displayDiagnosis.guidanceItems.slice(0, 4).map((item) => (
+                            <div key={item} className={styles.guidanceItem}>{item}</div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className={styles.chatGarageCard}>
+                      <div className={styles.matchHeader}>
+                        <h4 className={styles.matchTitle}>Best FlashMat matches</h4>
+                        <span className={styles.matchHint}>Montreal • nearby • relevant</span>
+                      </div>
+                      <div className={styles.matchList}>
+                        {displayDiagnosis.matches.slice(0, 3).map((match) => (
+                          <div key={match.name} className={styles.matchCard}>
+                            <div className={styles.matchTop}>
+                              <div>
+                                <div className={styles.matchName}>{match.name}</div>
+                                <div className={styles.matchMeta}>★ {match.rating} · {match.distance} · {match.eta}</div>
+                              </div>
+                              <div className={styles.matchPrice}>{match.price}</div>
+                            </div>
+                            <div className={styles.matchTags}>
+                              {match.tags.map((tag) => (
+                                <span key={tag} className={styles.miniTag}>{tag}</span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.chatText}>
+                    Ask a simple question like “when should I do my oil change?”, or describe a real symptom like brake noise, overheating, a weak battery, or a warning light.
+                  </p>
+                )}
+              </div>
+            </article>
+          </div>
+
+          <div className={styles.chipRow}>
+            {QUICK_CASES.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={styles.chip}
+                onClick={() => {
+                  setDraft(item)
+                  analyze(item)
+                }}
+              >
+                {repairText(item)}
+              </button>
+            ))}
+          </div>
+
+          <div className={styles.composer}>
             <div className={styles.inputCard}>
               <textarea
                 className={styles.textarea}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Example: my car makes noise when I brake, the steering wheel vibrates, and a warning light appears on the dashboard."
+                placeholder="Describe the symptom or ask an auto question..."
               />
               <div className={styles.helper}>
                 <span>
-                  {inputMode === 'text' && 'Describe noises, vibrations, smells, or warning lights.'}
-                  {inputMode === 'photo' && 'Photo mode will support the diagnosis once the symptom is described.'}
-                  {inputMode === 'audio' && 'Audio mode is planned so a voice note can feed the diagnosis flow.'}
+                  {inputMode === 'text' && 'Focused on FlashMat services, providers, and vehicle diagnosis.'}
+                  {inputMode === 'photo' && 'Photo support is coming next. For now, describe what you see in writing.'}
+                  {inputMode === 'audio' && 'Voice support is coming next. For now, type the issue in your own words.'}
                 </span>
-                <strong>Montreal · AI estimate + matching</strong>
+                <strong>FlashMat • Montreal</strong>
               </div>
             </div>
 
@@ -1392,183 +1496,21 @@ export default function VehicleDoctor({ compact = false, userName }) {
                 onClick={() => analyze()}
                 disabled={isAnalyzing}
               >
-                {isAnalyzing ? 'Analyzing...' : 'Run diagnosis'}
+                {isAnalyzing ? 'Thinking...' : 'Send'}
               </button>
               <button
                 type="button"
                 className={styles.secondaryBtn}
                 onClick={() => openMatchingSearch(effectiveSearchCat)}
               >
-                View available garages
-              </button>
-            </div>
-
-            <div className={styles.chipRow}>
-              {QUICK_CASES.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={styles.chip}
-                  onClick={() => {
-                    setDraft(item)
-                    analyze(item)
-                  }}
-                >
-                  {repairText(item)}
-                </button>
-              ))}
-            </div>
-
-            <div className={styles.stats}>
-              <div className={styles.statCard}>
-                <div className={styles.statLabel}>Auto diagnosis</div>
-                <div className={styles.statValue}>1 min</div>
-                <div className={styles.statSub}>Clear result before you book</div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statLabel}>Real-time pricing</div>
-                <div className={styles.statValue}>{displayDiagnosis?.estimate || '—'}</div>
-                <div className={styles.statSub}>
-                  {diagnosis?.type === 'maintenance'
-                    ? 'A simple timing guide for scheduling maintenance'
-                    : diagnosis
-                      ? 'Range based on the most likely issue'
-                      : 'Run the diagnosis for an estimate'}
-                </div>
-              </div>
-              <div className={styles.statCard}>
-                <div className={styles.statLabel}>Fast booking</div>
-                <div className={styles.statValue}>{displayDiagnosis ? '3 garages' : '—'}</div>
-                <div className={styles.statSub}>
-                  {displayDiagnosis ? 'Nearby, available, already filtered' : 'Suggestions will appear after the diagnosis'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            ref={resultRef}
-            className={`${styles.result} ${hasFreshResult ? styles.resultHighlight : ''}`}
-            tabIndex={-1}
-          >
-            <div className={styles.resultTop}>
-              <div>
-                <div className={styles.resultEyebrow}>{resultEyebrowLabel}</div>
-                <h3 className={styles.resultTitle}>
-                  {displayDiagnosis ? displayDiagnosis.probableIssue : 'Ready to analyze your vehicle'}
-                </h3>
-              </div>
-              <div className={styles.confidence}>
-                {displayDiagnosis ? `Confidence ${displayDiagnosis.confidence}` : 'No diagnosis yet'}
-              </div>
-            </div>
-
-            <div className={styles.statusRow}>
-              <span className={`${styles.statusPill} ${isAnalyzing ? styles.statusPillBusy : styles.statusPillReady}`}>
-                {isAnalyzing ? 'Analyzing...' : 'Diagnosis ready'}
-              </span>
-              <span className={styles.statusText}>{statusMessage}</span>
-            </div>
-
-
-            <p className={styles.summary}>
-              {diagnosis
-                ? displayDiagnosis.summary
-                : 'Describe a noise, vibration, warning light, or unusual behavior, then click the button to get an estimate.'}
-            </p>
-
-            {diagnosis ? (
-              <div className={styles.badgeRow}>
-                <span className={`${styles.badge} ${diagnosis.urgency.toLowerCase().includes('urgent') || diagnosis.urgency.toLowerCase().includes('rapidement') ? styles.badgeWarn : styles.badgeSafe}`}>
-                  {displayDiagnosis?.urgency || diagnosis.urgency}
-                </span>
-                <span className={`${styles.badge} ${styles.badgeInfo}`}>Matching in Montreal</span>
-              </div>
-            ) : null}
-
-            <div className={styles.metricGrid}>
-              <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{displayDiagnosis?.type === 'maintenance' ? 'When to do it' : 'Estimated price'}</div>
-                <div className={styles.metricValue}>{displayDiagnosis?.estimate || '—'}</div>
-                <div className={styles.metricSub}>
-                  {displayDiagnosis?.priceNote || 'The estimate will appear after the analysis'}
-                </div>
-              </div>
-              <div className={styles.metricCard}>
-                <div className={styles.metricLabel}>{displayDiagnosis?.type === 'maintenance' ? 'Timeline guide' : 'Repair time'}</div>
-                <div className={styles.metricValue}>{displayDiagnosis?.duration || '—'}</div>
-                <div className={styles.metricSub}>
-                  {displayDiagnosis?.durationNote || 'The estimated duration will appear after the analysis'}
-                </div>
-              </div>
-            </div>
-
-            {diagnosis?.guidanceItems?.length ? (
-              <div className={styles.guidanceCard}>
-                <div className={styles.guidanceTitle}>{displayDiagnosis?.guidanceTitle || 'Key takeaways'}</div>
-                <div className={styles.guidanceList}>
-                  {displayDiagnosis.guidanceItems.map((item) => (
-                    <div key={item} className={styles.guidanceItem}>{item}</div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            <div className={styles.matchSection}>
-              <div className={styles.matchHeader}>
-                <h4 className={styles.matchTitle}>3 suggested garages today</h4>
-                <span className={styles.matchHint}>Nearby + compatible + available</span>
-              </div>
-
-              <div className={styles.matchList}>
-                {displayDiagnosis ? displayDiagnosis.matches.map((match) => (
-                  <div key={match.name} className={styles.matchCard}>
-                    <div className={styles.matchTop}>
-                      <div>
-                        <div className={styles.matchName}>{match.name}</div>
-                        <div className={styles.matchMeta}>
-                          ★ {match.rating} · {match.distance} · {match.eta}
-                        </div>
-                      </div>
-                      <div className={styles.matchPrice}>{match.price}</div>
-                    </div>
-                    <div className={styles.matchFoot}>
-                      <div className={styles.matchTags}>
-                        {match.tags.map((tag) => (
-                          <span key={tag} className={styles.miniTag}>{tag}</span>
-                        ))}
-                      </div>
-                      <button
-                        type="button"
-                        className={styles.reserveBtn}
-                        onClick={() => openMatchingSearch(effectiveSearchCat)}
-                      >
-                        Book now
-                      </button>
-                    </div>
-                  </div>
-                )) : (
-                  <div className={styles.emptyState}>
-                    Run a diagnosis to see the most relevant garages.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.ctaRow}>
-              <button
-                type="button"
-                className={styles.ctaPrimary}
-                onClick={() => openMatchingSearch(effectiveSearchCat)}
-              >
-                {ctaLabel}
+                Find matching garages
               </button>
               <button
                 type="button"
-                className={styles.ctaGhost}
+                className={styles.secondaryBtn}
                 onClick={() => navigate('/services')}
               >
-                Explore all services
+                Explore services
               </button>
             </div>
           </div>
