@@ -287,15 +287,28 @@ export default function NavBar({ activePage }) {
   const activePanel = PRIMARY_ITEMS.find((item) => item.id === panelOpen) || null
   const isCompact = viewportWidth < 1180
   const isMobile = viewportWidth < 860
+  const isNarrow = viewportWidth < 720
+  const isPhone = viewportWidth < 560
+  const showCenterIcons = viewportWidth >= 900
 
   return (
     <>
       <div ref={rootRef} style={styles.root}>
-        <nav style={{ ...styles.nav, padding: isCompact ? '0 12px' : '0 16px', gap: isCompact ? 12 : 18 }}>
-          <div style={styles.leftGroup}>
+        <nav style={{
+          ...styles.nav,
+          height: isNarrow ? 60 : 64,
+          gridTemplateColumns: showCenterIcons ? '1fr auto 1fr' : 'auto 1fr auto',
+          padding: isPhone ? '0 10px' : isCompact ? '0 12px' : '0 16px',
+          gap: isPhone ? 8 : isCompact ? 12 : 18,
+        }}>
+          <div style={{ ...styles.leftGroup, gap: isPhone ? 8 : 10 }}>
             <button
               type="button"
-              style={menuOpen ? styles.menuButtonActive : styles.menuButton}
+              style={{
+                ...(menuOpen ? styles.menuButtonActive : styles.menuButton),
+                width: isPhone ? 36 : 40,
+                height: isPhone ? 36 : 40,
+              }}
               onMouseEnter={() => setHoveredIcon('menu')}
               onMouseLeave={() => setHoveredIcon(null)}
               onClick={toggleMenu}
@@ -306,10 +319,11 @@ export default function NavBar({ activePage }) {
             </button>
 
             <button type="button" style={styles.logoButton} onClick={() => navigateTo('/')}>
-              <img src="/logo-dark.png" alt="FlashMat" style={{ height: isCompact ? 24 : 28, objectFit: 'contain' }} />
+              <img src="/logo-dark.png" alt="FlashMat" style={{ height: isPhone ? 20 : isCompact ? 24 : 28, objectFit: 'contain', maxWidth: isNarrow ? 104 : 'none' }} />
             </button>
           </div>
 
+          {showCenterIcons ? (
           <div style={{ ...styles.centerGroup, gap: isCompact ? 10 : 18 }}>
             {PRIMARY_ITEMS.map((item, index) => {
               if (isMobile && index > 2) return null
@@ -327,18 +341,19 @@ export default function NavBar({ activePage }) {
               )
             })}
           </div>
+          ) : <div />}
 
-          <div style={styles.rightGroup}>
+          <div style={{ ...styles.rightGroup, gap: isPhone ? 6 : 8 }}>
             <button
               type="button"
               onClick={() => navigateTo('/urgence')}
               style={
                 activePage === 'urgence'
-                  ? { ...styles.urgentButtonActive, padding: isCompact ? '8px 13px' : '9px 15px' }
-                  : { ...styles.urgentButton, padding: isCompact ? '8px 13px' : '9px 15px' }
+                  ? { ...styles.urgentButtonActive, padding: isPhone ? '8px 10px' : isCompact ? '8px 13px' : '9px 15px', fontSize: isPhone ? 11 : 12.5 }
+                  : { ...styles.urgentButton, padding: isPhone ? '8px 10px' : isCompact ? '8px 13px' : '9px 15px', fontSize: isPhone ? 11 : 12.5 }
               }
             >
-              {isMobile ? 'Urgence' : 'FlashFix Urgence'}
+              {isNarrow ? 'Urgence' : 'FlashFix Urgence'}
             </button>
 
             {user && profile ? (
@@ -348,12 +363,14 @@ export default function NavBar({ activePage }) {
                   icon={<MessageIcon />}
                   badge={unreadMessages}
                   onClick={toggleMessagesPopover}
+                  compact={isPhone}
                 />
                 <HeaderUtilityButton
                   label="Notifications"
                   icon={<BellIcon />}
                   badge={unreadNotifications}
                   onClick={openNotifications}
+                  compact={isPhone}
                 />
               </>
             ) : null}
@@ -362,10 +379,13 @@ export default function NavBar({ activePage }) {
               <div style={{ position: 'relative' }}>
                 <button
                   type="button"
-                  style={profileOpen ? styles.accountButtonActive : styles.accountButton}
+                  style={{
+                    ...(profileOpen ? styles.accountButtonActive : styles.accountButton),
+                    padding: isPhone ? '5px' : '7px',
+                  }}
                   onClick={toggleProfileMenu}
                 >
-                  <span style={styles.accountAvatar}>
+                  <span style={{ ...styles.accountAvatar, width: isPhone ? 28 : 30, height: isPhone ? 28 : 30 }}>
                     {profileAvatar ? (
                       <img src={profileAvatar} alt={displayName} style={styles.accountAvatarImage} />
                     ) : (
@@ -375,7 +395,7 @@ export default function NavBar({ activePage }) {
                 </button>
 
                 {profileOpen && !messagePopoverOpen && !notificationCenterOpen && (
-                  <div style={styles.profilePopup}>
+                  <div style={{ ...styles.profilePopup, width: isPhone ? 'min(280px, calc(100vw - 20px))' : 280, right: isPhone ? -4 : 0 }}>
                     <div style={styles.profileHeader}>
                       <div style={styles.profileHeaderRow}>
                         <div>
@@ -417,9 +437,9 @@ export default function NavBar({ activePage }) {
                 )}
               </div>
             ) : (
-              <button type="button" onClick={() => setLoginOpen(true)} style={styles.authButton}>
+              <button type="button" onClick={() => setLoginOpen(true)} style={{ ...styles.authButton, padding: isPhone ? '8px 10px' : '8px 12px', fontSize: isPhone ? 11 : 12 }}>
                 <UserIcon />
-                <span>{isMobile ? 'Connexion' : 'Login / Sign Up'}</span>
+                <span>{isNarrow ? 'Connexion' : 'Login / Sign Up'}</span>
               </button>
             )}
           </div>
@@ -730,9 +750,9 @@ function PopupItem({ icon, label, onClick, danger = false }) {
   )
 }
 
-function HeaderUtilityButton({ icon, label, badge = 0, onClick }) {
+function HeaderUtilityButton({ icon, label, badge = 0, onClick, compact = false }) {
   return (
-    <button type="button" style={styles.utilityButton} onClick={onClick} aria-label={label} title={label}>
+    <button type="button" style={{ ...styles.utilityButton, width: compact ? 36 : 40, height: compact ? 36 : 40 }} onClick={onClick} aria-label={label} title={label}>
       {icon}
       {badge > 0 ? <span style={styles.utilityBadge}>{badge > 9 ? '9+' : badge}</span> : null}
     </button>

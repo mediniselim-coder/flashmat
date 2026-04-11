@@ -446,11 +446,11 @@
   .svcGrid { grid-template-columns: repeat(3, 1fr); }
   .svcCard:nth-child(5n) { border-right: 1px solid var(--border); }
   .svcCard:nth-child(3n) { border-right: none; }
+  .hero { padding: 84px 40px 62px; }
+  .heroShell { grid-template-columns: 1fr; gap: 26px; }
+  .heroInsight { max-width: 720px; }
 }
 @media (max-width: 768px) {
-  .nav { padding: 0 18px; }
-  .navLinks, .navRight { display: none; }
-  .hamburger { display: block; }
   .hero { min-height: auto; padding: 66px 20px 52px; }
   .heroMedia {
     background:
@@ -459,7 +459,9 @@
   }
   .heroShell { grid-template-columns: 1fr; gap: 18px; }
   .heroCtas { margin-bottom: 20px; }
+  .heroBadge { max-width: 100%; flex-wrap: wrap; line-height: 1.5; }
   .heroInsight { padding: 18px; }
+  .heroInsightTop { flex-direction: column; align-items: flex-start; }
   .heroInsightGrid { grid-template-columns: 1fr; }
   .heroInsightCardWide { grid-column: auto; }
   .h1 { font-size: clamp(34px, 11vw, 56px); letter-spacing: -1.8px; }
@@ -478,8 +480,30 @@
   .sbi { border-right: none; border-bottom: 1px solid rgba(255,255,255,.06); padding: 16px; }
   .searchTabs { overflow-x: auto; }
   .sTab { font-size: 10px; padding: 10px 6px; }
+  .searchBox { flex-direction: column; border-radius: 0 0 18px 18px; }
+  .searchInput { width: 100%; padding: 16px 16px 14px; }
+  .searchBtn { width: 100%; min-height: 50px; padding: 0 18px; }
   .searchResultsList { grid-template-columns: 1fr; }
   .searchResultItem { border-right: none; }
+  .provCard { min-width: 76vw; max-width: 76vw; }
+  .chips { gap: 10px; }
+  .chip { padding: 9px 13px; }
+}
+@media (max-width: 560px) {
+  .hero { padding: 62px 16px 44px; }
+  .heroBadge { font-size: 9px; padding: 7px 10px; }
+  .heroCtas { flex-direction: column; align-items: stretch; }
+  .heroPrimaryCta,
+  .heroSecondaryCta { width: 100%; justify-content: center; text-align: center; }
+  .sectionInner { padding: 0 16px; }
+  .sectionTitle { font-size: 26px; margin-bottom: 32px; }
+  .svcGrid { grid-template-columns: 1fr; }
+  .svcCard:nth-child(3n) { border-right: 1px solid var(--border); }
+  .svcCard:nth-child(n) { border-bottom: 1px solid var(--border); border-right: none; }
+  .svcCard:last-child { border-bottom: none; }
+  .searchResultsHeader { flex-direction: column; align-items: flex-start; }
+  .provCard { min-width: 84vw; max-width: 84vw; }
+  .tickerItem { font-size: 12px; }
 }
 
 /* ANIMATIONS */

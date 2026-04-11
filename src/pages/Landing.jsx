@@ -49,6 +49,7 @@ const RATING_FILTERS = [
 export default function Landing() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
   const [tab, setTab]           = useState('service')
   const [query, setQuery]       = useState('')
   const [filterTerm, setFilterTerm] = useState('')
@@ -58,6 +59,17 @@ export default function Landing() {
   const [dbLoading, setDbLoading] = useState(false)
 
   const activeTab = TABS.find(t => t.key === tab)
+  const isMobileView = viewportWidth < 768
+  const isPhoneView = viewportWidth < 560
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => {
     setDbLoading(true)
@@ -324,20 +336,30 @@ export default function Landing() {
         <div className={styles.sectionInner}>
           <div className={styles.eyebrow}>Docteur Automobile</div>
           <h2 className={styles.sectionTitle}>Des conseils auto clairs,<br />avec <span>connexion client</span></h2>
-          <div style={{ background: '#fff', borderRadius: 28, border: '1px solid var(--border)', boxShadow: 'var(--shadow)', padding: '40px 44px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 32, alignItems: 'center' }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 28,
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow)',
+            padding: isPhoneView ? '24px 18px' : isMobileView ? '30px 24px' : '40px 44px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: isMobileView ? 20 : 32,
+            alignItems: 'center',
+          }}>
             <div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: 1.4, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 10 }}>
                 Reserve aux clients connectes
               </div>
-              <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 34, lineHeight: 1.05, color: 'var(--ink)' }}>
+              <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: isPhoneView ? 26 : isMobileView ? 30 : 34, lineHeight: 1.05, color: 'var(--ink)' }}>
                 Parlez au Docteur Automobile quand vous en avez vraiment besoin
               </div>
             </div>
             <div style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
               Posez vos questions d'entretien, de panne ou de reservation seulement une fois connecte. FlashMat peut alors lier le diagnostic a votre profil, vos vehicules et vos prochaines reservations.
-              <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button type="button" className="btn btn-green btn-lg" onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
-                <button type="button" className="btn btn-outline btn-lg" onClick={() => navigate('/services')}>Voir les services</button>
+              <div style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap', flexDirection: isPhoneView ? 'column' : 'row' }}>
+                <button type="button" className="btn btn-green btn-lg" style={isPhoneView ? { width: '100%', justifyContent: 'center' } : undefined} onClick={openDoctor}>Ouvrir le Docteur Automobile</button>
+                <button type="button" className="btn btn-outline btn-lg" style={isPhoneView ? { width: '100%', justifyContent: 'center' } : undefined} onClick={() => navigate('/services')}>Voir les services</button>
               </div>
             </div>
           </div>
@@ -380,8 +402,8 @@ export default function Landing() {
             )}
           </div>
           <div style={{ position: 'relative' }}>
-            <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'<'}</button>
-            <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>
+            {!isMobileView && <button onClick={() => scrollProviders(-1)} style={{ position: 'absolute', left: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'<'}</button>}
+            {!isMobileView && <button onClick={() => scrollProviders(1)} style={{ position: 'absolute', right: -16, top: '50%', transform: 'translateY(-50%)', zIndex: 2, background: '#fff', border: '1px solid var(--border)', borderRadius: '50%', width: 36, height: 36, fontSize: 16, cursor: 'pointer', boxShadow: 'var(--shadow)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{'>'}</button>}
             <div className={styles.provScroll} ref={scrollRef}>
               {dbLoading && (
                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink3)', fontFamily: 'var(--mono)', fontSize: 12 }}>Chargement...</div>
