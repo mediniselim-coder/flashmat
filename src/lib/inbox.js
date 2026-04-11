@@ -307,6 +307,49 @@ export async function sendThreadMessage({ threadId, senderId, recipientId, body,
   return data
 }
 
+export async function deleteConversationThread(threadId, userId) {
+  if (!threadId || !userId) {
+    throw new Error('Missing conversation details to delete this thread.')
+  }
+
+  const { data: thread, error: threadError } = await supabase
+    .from('message_threads')
+    .select('id, client_id, provider_id')
+    .eq('id', threadId)
+    .maybeSingle()
+
+  if (threadError && threadError.code !== 'PGRST116') {
+    if (isMissingInboxRelation(threadError)) {
+      throw new Error('Messaging is not enabled in Supabase yet. Run the latest FlashMat SQL migration first.')
+    }
+    throw threadError
+  }
+
+  if (!thread) return
+  if (String(thread.client_id) !== String(userId) && String(thread.provider_id) !== String(userId)) {
+    throw new Error('You do not have access to delete this conversation.')
+  }
+
+  const { error: messagesError } = await supabase
+    .from('messages')
+    .delete()
+    .eq('thread_id', threadId)
+
+  if (messagesError && !isMissingInboxRelation(messagesError)) throw messagesError
+
+  const { error: threadDeleteError } = await supabase
+    .from('message_threads')
+    .delete()
+    .eq('id', threadId)
+
+  if (threadDeleteError) {
+    if (isMissingInboxRelation(threadDeleteError)) {
+      throw new Error('Messaging is not enabled in Supabase yet. Run the latest FlashMat SQL migration first.')
+    }
+    throw threadDeleteError
+  }
+}
+
 export async function fetchConversationThreads(userId, role) {
   if (!userId) return []
 

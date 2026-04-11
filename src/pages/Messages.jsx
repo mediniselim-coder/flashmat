@@ -4,6 +4,7 @@ import NavBar from '../components/NavBar'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import {
+  deleteConversationThread,
   fetchConversationThreads,
   fetchThreadMessages,
   markThreadMessagesRead,
@@ -73,6 +74,7 @@ export default function Messages() {
   const [loadingMessages, setLoadingMessages] = useState(false)
   const [sending, setSending] = useState(false)
   const [preparingAttachments, setPreparingAttachments] = useState(false)
+  const [deletingThreadId, setDeletingThreadId] = useState('')
   const fileInputRef = useRef(null)
 
   const role = profile?.role || 'client'
@@ -239,6 +241,32 @@ export default function Messages() {
     }
   }
 
+  async function handleDeleteThread(thread) {
+    if (!thread?.id || !user?.id) return
+    const confirmed = window.confirm(`Delete the conversation with ${thread.counterpartName || 'this contact'}? This will remove all messages in this inbox thread.`)
+    if (!confirmed) return
+
+    try {
+      setDeletingThreadId(String(thread.id))
+      await deleteConversationThread(thread.id, user.id)
+      const nextThreads = await fetchConversationThreads(user.id, role)
+      setThreads(nextThreads)
+      setMessages([])
+      setSelectedThreadId((current) => {
+        if (String(current) !== String(thread.id)) return current
+        return nextThreads[0]?.id ? String(nextThreads[0].id) : ''
+      })
+      if (String(searchParams.get('thread') || '') === String(thread.id)) {
+        setSearchParams(nextThreads[0]?.id ? { thread: String(nextThreads[0].id) } : {}, { replace: true })
+      }
+      toast('Conversation deleted.', 'success')
+    } catch (error) {
+      toast(error.message || 'Unable to delete this conversation.', 'error')
+    } finally {
+      setDeletingThreadId('')
+    }
+  }
+
   return (
     <div style={styles.page}>
       <NavBar activePage="messages" />
@@ -279,31 +307,45 @@ export default function Messages() {
                 </div>
               ) : null}
               {visibleThreads.map((thread) => (
-                <button
+                <div
                   key={thread.id}
-                  type="button"
                   style={{
                     ...styles.threadRow,
                     background: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.10)' : '#fff',
                     borderColor: String(thread.id) === String(selectedThreadId) ? 'rgba(59,159,216,0.22)' : 'rgba(120,171,218,0.12)',
                   }}
-                  onClick={() => setSelectedThreadId(String(thread.id))}
                 >
-                  <div style={styles.threadAvatarWrap}>
-                    <ConversationAvatar thread={thread} />
-                  </div>
-                  <div style={styles.threadBody}>
-                    <div style={styles.threadTopLine}>
-                      <strong style={styles.threadName}>{thread.counterpartName}</strong>
-                      <span style={styles.threadDate}>{formatMessageTime(thread.last_message_at)}</span>
+                  <button
+                    type="button"
+                    style={styles.threadSelectButton}
+                    onClick={() => setSelectedThreadId(String(thread.id))}
+                  >
+                    <div style={styles.threadAvatarWrap}>
+                      <ConversationAvatar thread={thread} />
                     </div>
-                    <div style={styles.threadSubtitle}>{thread.counterpartSubtitle || 'FlashMat conversation'}</div>
-                    <div style={styles.threadPreviewLine}>
-                      <span style={styles.threadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
-                      {thread.unreadCount > 0 ? <span style={styles.unreadBadge}>{thread.unreadCount}</span> : null}
+                    <div style={styles.threadBody}>
+                      <div style={styles.threadTopLine}>
+                        <strong style={styles.threadName}>{thread.counterpartName}</strong>
+                        <span style={styles.threadDate}>{formatMessageTime(thread.last_message_at)}</span>
+                      </div>
+                      <div style={styles.threadSubtitle}>{thread.counterpartSubtitle || 'FlashMat conversation'}</div>
+                      <div style={styles.threadPreviewLine}>
+                        <span style={styles.threadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
+                        {thread.unreadCount > 0 ? <span style={styles.unreadBadge}>{thread.unreadCount}</span> : null}
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  <button
+                    type="button"
+                    style={styles.threadDeleteButton}
+                    onClick={() => handleDeleteThread(thread)}
+                    disabled={deletingThreadId === String(thread.id)}
+                    aria-label={`Delete conversation with ${thread.counterpartName}`}
+                    title="Delete conversation"
+                  >
+                    {deletingThreadId === String(thread.id) ? '...' : 'Delete'}
+                  </button>
+                </div>
               ))}
             </div>
           </aside>
@@ -323,6 +365,16 @@ export default function Messages() {
                   </div>
                   <button type="button" style={styles.secondaryButton} onClick={() => navigate(-1)}>
                     Back
+                  </button>
+                </div>
+                <div style={styles.chatHeaderActions}>
+                  <button
+                    type="button"
+                    style={styles.dangerButton}
+                    onClick={() => handleDeleteThread(selectedThread)}
+                    disabled={deletingThreadId === String(selectedThread.id)}
+                  >
+                    {deletingThreadId === String(selectedThread.id) ? 'Deleting...' : 'Delete conversation'}
                   </button>
                 </div>
 
@@ -551,6 +603,16 @@ const styles = {
     fontWeight: 700,
     cursor: 'pointer',
   },
+  dangerButton: {
+    border: '1px solid rgba(211,70,70,0.14)',
+    background: '#fff5f5',
+    color: '#b83a3a',
+    borderRadius: 14,
+    padding: '10px 14px',
+    fontSize: 12,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
   threadList: {
     minHeight: 0,
     overflow: 'auto',
@@ -584,14 +646,24 @@ const styles = {
   },
   threadRow: {
     display: 'grid',
-    gridTemplateColumns: '58px minmax(0, 1fr)',
-    gap: 12,
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gap: 10,
     padding: '12px 14px',
     borderRadius: 20,
     border: '1px solid rgba(120,171,218,0.18)',
-    cursor: 'pointer',
     textAlign: 'left',
     boxShadow: '0 8px 20px rgba(19,52,83,0.04)',
+  },
+  threadSelectButton: {
+    display: 'grid',
+    gridTemplateColumns: '58px minmax(0, 1fr)',
+    gap: 12,
+    border: 'none',
+    background: 'transparent',
+    padding: 0,
+    cursor: 'pointer',
+    textAlign: 'left',
+    minWidth: 0,
   },
   threadAvatarWrap: {
     width: 58,
@@ -673,9 +745,20 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
   },
+  threadDeleteButton: {
+    alignSelf: 'flex-start',
+    border: '1px solid rgba(211,70,70,0.14)',
+    background: '#fff5f5',
+    color: '#b83a3a',
+    borderRadius: 999,
+    padding: '8px 10px',
+    fontSize: 11,
+    fontWeight: 800,
+    cursor: 'pointer',
+  },
   chatPane: {
     display: 'grid',
-    gridTemplateRows: 'auto 1fr auto',
+    gridTemplateRows: 'auto auto 1fr auto',
     minHeight: 0,
     borderRight: '1px solid rgba(120,171,218,0.22)',
     background: 'linear-gradient(180deg, #ffffff 0%, #f9fcff 100%)',
@@ -689,6 +772,13 @@ const styles = {
     padding: '22px 24px 18px',
     borderBottom: '1px solid rgba(120,171,218,0.18)',
     background: 'rgba(255,255,255,0.72)',
+  },
+  chatHeaderActions: {
+    padding: '0 24px 14px',
+    borderBottom: '1px solid rgba(120,171,218,0.18)',
+    background: 'rgba(255,255,255,0.72)',
+    display: 'flex',
+    justifyContent: 'flex-end',
   },
   chatHeaderMain: {
     display: 'flex',
