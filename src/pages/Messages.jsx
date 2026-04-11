@@ -44,6 +44,17 @@ function getThreadListSubtitle(thread) {
   return thread?.counterpartSubtitle || 'FlashMat conversation'
 }
 
+function slugifyProviderName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+}
+
 function formatAttachmentSize(size) {
   const value = Number(size) || 0
   if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
@@ -343,6 +354,17 @@ export default function Messages() {
     toast(isArchived ? 'Conversation moved back to inbox.' : 'Conversation archived.', 'success')
   }
 
+  function openCounterpartProfile(thread) {
+    if (!thread) return
+    if (thread.counterpartRole === 'provider') {
+      const providerName = encodeURIComponent(thread.counterpartName || '')
+      navigate(`/provider/${slugifyProviderName(thread.counterpartName)}?n=${providerName}`)
+      return
+    }
+
+    navigate('/app/provider/bookings')
+  }
+
   return (
     <div style={styles.page}>
       <NavBar activePage="messages" />
@@ -602,6 +624,9 @@ export default function Messages() {
               <>
                 <div style={styles.contextCard}>
                   <div style={styles.contextEyebrow}>Conversation details</div>
+                  <div style={styles.contextAvatarWrap}>
+                    <ConversationAvatar thread={selectedThread} />
+                  </div>
                   <div style={styles.contextTitle}>{selectedThread.counterpartName}</div>
                   <div style={styles.contextText}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
                 </div>
@@ -610,12 +635,9 @@ export default function Messages() {
                   <button
                     type="button"
                     style={styles.contextButton}
-                    onClick={() => {
-                      if (role === 'client') navigate('/providers')
-                      else navigate('/app/provider/bookings')
-                    }}
+                    onClick={() => openCounterpartProfile(selectedThread)}
                   >
-                    {role === 'client' ? 'Open providers' : 'Open bookings'}
+                    {selectedThread.counterpartRole === 'provider' ? 'View profile' : 'Open bookings'}
                   </button>
                   <button
                     type="button"
@@ -1237,6 +1259,18 @@ const styles = {
     background: '#fff',
     padding: 18,
     boxShadow: '0 14px 34px rgba(13,30,50,0.05)',
+  },
+  contextAvatarWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    overflow: 'hidden',
+    marginBottom: 14,
+    background: 'linear-gradient(135deg, rgba(23,53,92,0.98) 0%, rgba(59,159,216,0.92) 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 14px 28px rgba(13,30,50,0.08)',
   },
   contextEyebrow: {
     fontSize: 10,

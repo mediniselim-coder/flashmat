@@ -182,7 +182,7 @@ export async function fetchAvailableMessageContacts(userId, role) {
 
   const { data: providers, error } = await supabase
     .from('providers')
-    .select('id, shop_name, address, phone, rating, reviews')
+    .select('id, shop_name, address, phone, rating, reviews, logo_url, avatar_url')
     .order('shop_name', { ascending: true })
     .limit(100)
 
@@ -196,7 +196,7 @@ export async function fetchAvailableMessageContacts(userId, role) {
     role: 'provider',
     name: provider.shop_name || 'FlashMat provider',
     subtitle: provider.address || provider.phone || 'Provider on FlashMat',
-    avatarUrl: '',
+    avatarUrl: provider.logo_url || provider.avatar_url || '',
     rating: provider.rating || 0,
     reviews: provider.reviews || 0,
   }))
@@ -384,7 +384,7 @@ export async function fetchConversationThreads(userId, role) {
 
   const [{ data: providers = [], error: providersError }, { data: clients = [], error: clientsError }] = await Promise.all([
     providerIds.length
-      ? supabase.from('providers').select('id, shop_name, address, phone, rating, reviews').in('id', providerIds)
+      ? supabase.from('providers').select('id, shop_name, address, phone, rating, reviews, logo_url, avatar_url').in('id', providerIds)
       : Promise.resolve({ data: [] }),
     clientIds.length
       ? supabase.from('profiles').select('id, full_name, email, city, avatar_url').in('id', clientIds)
@@ -414,7 +414,9 @@ export async function fetchConversationThreads(userId, role) {
       counterpartSubtitle: role === 'provider'
         ? [counterpart?.city, counterpart?.email].filter(Boolean).join(' · ')
         : counterpart?.address || counterpart?.phone || 'Provider on FlashMat',
-      counterpartAvatarUrl: role === 'provider' ? counterpart?.avatar_url || '' : '',
+      counterpartAvatarUrl: role === 'provider'
+        ? counterpart?.avatar_url || ''
+        : counterpart?.logo_url || counterpart?.avatar_url || '',
       counterpartRating: counterpart?.rating || 0,
       counterpartReviews: counterpart?.reviews || 0,
     }
