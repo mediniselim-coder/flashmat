@@ -1257,7 +1257,7 @@ function buildAssistantReply(diagnosis) {
   return paragraphs
 }
 
-export default function VehicleDoctor({ compact = false, userName }) {
+export default function VehicleDoctor({ compact = false, fullBleed = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const resultRef = useRef(null)
@@ -1351,8 +1351,16 @@ export default function VehicleDoctor({ compact = false, userName }) {
     }, 450)
   }
 
-  const wrapperClass = compact ? `${styles.section} ${styles.sectionCompact}` : styles.section
-  const shellClass = compact ? `${styles.shell} ${styles.shellCompact}` : styles.shell
+  const wrapperClass = [
+    styles.section,
+    compact ? styles.sectionCompact : '',
+    fullBleed ? styles.sectionFull : '',
+  ].filter(Boolean).join(' ')
+  const shellClass = [
+    styles.shell,
+    compact ? styles.shellCompact : '',
+    fullBleed ? styles.shellFull : '',
+  ].filter(Boolean).join(' ')
   const greetingName = userName || profile?.full_name || 'there'
   const hasConversation = Boolean(draft.trim() || displayDiagnosis || isAnalyzing)
 

@@ -12,6 +12,13 @@
   background: transparent;
 }
 
+.sectionFull {
+  padding: 0;
+  background:
+    radial-gradient(circle at top left, rgba(22, 199, 132, 0.08), transparent 28%),
+    linear-gradient(180deg, #f7fbff 0%, #eef4ff 100%);
+}
+
 .shell {
   position: relative;
   max-width: 1220px;
@@ -28,6 +35,16 @@
   max-width: none;
   border-radius: 22px;
   padding: 20px;
+}
+
+.shellFull {
+  max-width: none;
+  min-height: calc(100vh - 128px);
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
+  padding: 40px 48px 32px;
+  box-shadow: none;
 }
 
 .grid {
@@ -562,6 +579,10 @@
   min-height: 72vh;
 }
 
+.shellFull .chatShell {
+  min-height: calc(100vh - 200px);
+}
+
 .chatHeader {
   display: flex;
   justify-content: space-between;
@@ -592,7 +613,7 @@
 }
 
 .chatLandingBody {
-  width: min(840px, 100%);
+  width: min(980px, 100%);
   margin: 0 auto;
   text-align: center;
   padding: 34px 0 10px;
@@ -705,6 +726,10 @@
   margin: 0 auto;
 }
 
+.shellFull .composerCentered {
+  width: min(980px, 100%);
+}
+
 .composerCentered .inputCard {
   border-radius: 28px;
   box-shadow: 0 20px 36px rgba(15, 30, 61, 0.08);
@@ -730,6 +755,14 @@
   .shellCompact {
     padding: 20px;
     border-radius: 22px;
+  }
+
+  .shellFull {
+    min-height: auto;
+    border-radius: 22px;
+    border-left: 1px solid rgba(37, 99, 235, 0.12);
+    border-right: 1px solid rgba(37, 99, 235, 0.12);
+    padding: 24px 20px;
   }
 
   .title {

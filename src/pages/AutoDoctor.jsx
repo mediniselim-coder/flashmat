@@ -18,9 +18,14 @@ export default function AutoDoctor() {
     <div style={{ minHeight: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)' }}>
       <NavBar activePage="doctor" />
 
-      <div id="doctor-tool" style={{ maxWidth: 1240, margin: '0 auto', padding: '32px 32px 56px' }}>
+      <div
+        id="doctor-tool"
+        style={canUseDoctor
+          ? { width: '100%', padding: 0 }
+          : { maxWidth: 1240, margin: '0 auto', padding: '32px 32px 56px' }}
+      >
         {canUseDoctor ? (
-          <VehicleDoctor />
+          <VehicleDoctor fullBleed />
         ) : (
           <div style={{ background: '#fff', borderRadius: 24, padding: 30, boxShadow: '0 2px 12px rgba(0,0,0,0.06)', border: '1px solid #e5e7eb' }}>
             <div style={{ fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase', color: '#22c55e', marginBottom: 10, fontWeight: 700 }}>Acces protege</div>
