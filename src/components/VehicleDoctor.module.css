@@ -687,58 +687,12 @@
   color: #365274;
 }
 
+.chatText + .chatText {
+  margin-top: 12px;
+}
+
 .chatUser .chatText {
   color: rgba(255, 255, 255, 0.92);
-}
-
-.chatAnswerTitle {
-  font-family: var(--display);
-  font-size: 28px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: #0f1e3d;
-  margin: 14px 0 10px;
-}
-
-.chatFacts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
-}
-
-.chatFact {
-  border-radius: 16px;
-  background: #f7faff;
-  border: 1px solid #dce7f7;
-  padding: 12px 14px;
-  display: grid;
-  gap: 5px;
-}
-
-.chatFactLabel {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #6b7b95;
-}
-
-.chatFact strong {
-  color: #0f1e3d;
-  font-size: 14px;
-}
-
-.chatChecklist {
-  margin-top: 16px;
-}
-
-.chatGarageCard {
-  margin-top: 18px;
-  border-radius: 18px;
-  border: 1px solid #dce7f7;
-  background: #f8fbff;
-  padding: 14px;
 }
 
 .composer {
@@ -795,10 +749,6 @@
   .matchHeader,
   .chatHeader {
     flex-direction: column;
-  }
-
-  .chatFacts {
-    grid-template-columns: 1fr;
   }
 
   .chatLandingTop {

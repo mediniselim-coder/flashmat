@@ -1227,6 +1227,36 @@ function translateDiagnosisDisplay(rawDiagnosis) {
   }
 }
 
+function formatList(items) {
+  return items.filter(Boolean).map((item) => item.replace(/\.+$/, '').trim())
+}
+
+function buildAssistantReply(diagnosis) {
+  if (!diagnosis) return []
+
+  const estimateLabel = diagnosis.type === 'maintenance' ? 'Best timing' : 'Typical estimate'
+  const durationLabel = diagnosis.type === 'maintenance' ? 'Timeline' : 'Repair time'
+  const guidance = formatList((diagnosis.guidanceItems || []).slice(0, 3))
+  const topMatch = diagnosis.matches?.[0]
+
+  const paragraphs = [
+    `Here is the simple read: this sounds most like ${diagnosis.probableIssue.toLowerCase()}. ${diagnosis.summary}`,
+    `My confidence is ${diagnosis.confidence.toLowerCase()}, and the urgency is ${diagnosis.urgency.toLowerCase()}. ${estimateLabel}: ${diagnosis.estimate}. ${durationLabel}: ${diagnosis.duration}.`,
+  ]
+
+  if (guidance.length) {
+    paragraphs.push(`What I would do next: ${guidance.join(' ')}`)
+  }
+
+  if (topMatch) {
+    paragraphs.push(`If you want, the next FlashMat move would be to look at ${topMatch.name}, which is ${topMatch.distance} away and currently shows ${topMatch.eta.toLowerCase()}.`)
+  } else {
+    paragraphs.push('If you want, I can also point you to the right FlashMat provider category next.')
+  }
+
+  return paragraphs
+}
+
 export default function VehicleDoctor({ compact = false, userName }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
@@ -1243,6 +1273,7 @@ export default function VehicleDoctor({ compact = false, userName }) {
   const ctaLabel = user && profile?.role === 'client' ? 'Book in 10 sec' : 'Sign in to book'
   const effectiveSearchCat = diagnosis?.searchCat || 'mechanic'
   const displayDiagnosis = useMemo(() => translateDiagnosisDisplay(diagnosis), [diagnosis])
+  const assistantReply = useMemo(() => buildAssistantReply(displayDiagnosis), [displayDiagnosis])
   const resultEyebrowLabel = diagnosis?.type === 'maintenance'
     ? 'FlashMat maintenance guidance'
     : 'FlashMat automatic diagnosis'
@@ -1407,63 +1438,11 @@ export default function VehicleDoctor({ compact = false, userName }) {
 
                   {displayDiagnosis ? (
                     <>
-                      <h3 className={styles.chatAnswerTitle}>{displayDiagnosis.probableIssue}</h3>
-                      <p className={styles.chatText}>{displayDiagnosis.summary}</p>
-
-                      <div className={styles.chatFacts}>
-                        <div className={styles.chatFact}>
-                          <span className={styles.chatFactLabel}>Confidence</span>
-                          <strong>{displayDiagnosis.confidence}</strong>
-                        </div>
-                        <div className={styles.chatFact}>
-                          <span className={styles.chatFactLabel}>Urgency</span>
-                          <strong>{displayDiagnosis.urgency}</strong>
-                        </div>
-                        <div className={styles.chatFact}>
-                          <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'When' : 'Estimate'}</span>
-                          <strong>{displayDiagnosis.estimate}</strong>
-                        </div>
-                        <div className={styles.chatFact}>
-                          <span className={styles.chatFactLabel}>{displayDiagnosis.type === 'maintenance' ? 'Timeline' : 'Repair time'}</span>
-                          <strong>{displayDiagnosis.duration}</strong>
-                        </div>
-                      </div>
-
-                      {displayDiagnosis.guidanceItems?.length ? (
-                        <div className={styles.chatChecklist}>
-                          <div className={styles.guidanceTitle}>{displayDiagnosis.guidanceTitle || 'What to do next'}</div>
-                          <div className={styles.guidanceList}>
-                            {displayDiagnosis.guidanceItems.slice(0, 4).map((item) => (
-                              <div key={item} className={styles.guidanceItem}>{item}</div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-
-                      <div className={styles.chatGarageCard}>
-                        <div className={styles.matchHeader}>
-                          <h4 className={styles.matchTitle}>Best FlashMat matches</h4>
-                          <span className={styles.matchHint}>Montreal • nearby • relevant</span>
-                        </div>
-                        <div className={styles.matchList}>
-                          {displayDiagnosis.matches.slice(0, 3).map((match) => (
-                            <div key={match.name} className={styles.matchCard}>
-                              <div className={styles.matchTop}>
-                                <div>
-                                  <div className={styles.matchName}>{match.name}</div>
-                                  <div className={styles.matchMeta}>★ {match.rating} · {match.distance} · {match.eta}</div>
-                                </div>
-                                <div className={styles.matchPrice}>{match.price}</div>
-                              </div>
-                              <div className={styles.matchTags}>
-                                {match.tags.map((tag) => (
-                                  <span key={tag} className={styles.miniTag}>{tag}</span>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                      {assistantReply.map((paragraph) => (
+                        <p key={paragraph} className={styles.chatText}>
+                          {paragraph}
+                        </p>
+                      ))}
                     </>
                   ) : (
                     <p className={styles.chatText}>
