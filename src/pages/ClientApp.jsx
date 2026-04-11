@@ -47,8 +47,8 @@ const NAV = [
 
 const NAV_SECTIONS = {
   core: ['dashboard', 'vehicles', 'search'],
-  tools: ['bookings', 'maintenance', 'doctor', 'flashfix', 'flashscore', 'marketplace'],
-  notifications: ['notifications'],
+  tools: ['bookings', 'maintenance', 'doctor', 'flashscore', 'notifications'],
+  other: ['flashfix', 'marketplace'],
 }
 
 const SEARCH_CATS = [
@@ -579,8 +579,8 @@ export default function ClientApp() {
             ))}
           </div>
           <div className={styles.sbSection}>
-            <div className={styles.sbLbl}>Notifications</div>
-            {NAV.filter((n) => NAV_SECTIONS.notifications.includes(n.id)).map(n => (
+            <div className={styles.sbLbl}>Other</div>
+            {NAV.filter((n) => NAV_SECTIONS.other.includes(n.id)).map(n => (
               <button key={n.id} className={`${styles.navItem} ${pane===n.id?styles.navActive:''}`} onClick={() => go(n.id)}>
                 <span className={styles.ni}><AppIcon code={n.icon} /></span>{n.label}
               </button>
