@@ -88,6 +88,7 @@ export default function ProviderProfile() {
   const [reviewSaving, setReviewSaving] = useState(false)
   const [messageOpening, setMessageOpening] = useState(false)
   const autoMessageStartedRef = useRef(false)
+  const expertiseCarouselRef = useRef(null)
   const canBook = user && profile?.role === 'client'
   const canMessage = user && profile?.role === 'client'
 
@@ -279,6 +280,13 @@ export default function ProviderProfile() {
   const providerCoords = useMemo(() => (hasValidCoords(provider?.coords) ? provider.coords : [45.5017, -73.5673]), [provider?.coords])
   const galleryImages = provider?.galleryPhotos?.length > 0 ? provider.galleryPhotos : (provider?.gallery || [])
   const spotlightReview = reviews[0] || null
+  const expertiseServices = (provider?.services || []).filter(Boolean)
+
+  function scrollExpertise(direction) {
+    if (!expertiseCarouselRef.current) return
+    const scrollAmount = Math.max(280, Math.round(expertiseCarouselRef.current.clientWidth * 0.72))
+    expertiseCarouselRef.current.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' })
+  }
 
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div className="spinner" style={{ width: 36, height: 36 }} /></div>
   if (!provider) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', flexDirection: 'column', gap: 16 }}><div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 800 }}>Provider not found</div><button className="btn btn-green" onClick={() => navigate('/providers')}>Back to providers</button></div>
@@ -381,10 +389,99 @@ export default function ProviderProfile() {
               <SectionHeading
                 title={`Expertise of ${provider.name}`}
                 subtitle="Explore the specialties clients most often book with this provider."
-                action={<button className="btn btn-outline" onClick={requestBookingAccess}>Request service</button>}
+                action={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    {expertiseServices.length > 1 ? (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => scrollExpertise(-1)}
+                          aria-label="Previous expertise card"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 999,
+                            border: '1px solid var(--border)',
+                            background: '#fff',
+                            color: 'var(--ink)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 18,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          ←
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => scrollExpertise(1)}
+                          aria-label="Next expertise card"
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 999,
+                            border: '1px solid var(--border)',
+                            background: '#fff',
+                            color: 'var(--ink)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 18,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          →
+                        </button>
+                      </div>
+                    ) : null}
+                    <button className="btn btn-outline" onClick={requestBookingAccess}>Request service</button>
+                  </div>
+                }
               />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-                {(provider.services || []).slice(0, 3).map((service, index) => <button key={service} type="button" onClick={requestBookingAccess} style={{ textAlign: 'left', border: '1px solid var(--border)', background: index === 0 ? 'linear-gradient(135deg, rgba(14,40,66,.96) 0%, rgba(47,125,225,.74) 100%)' : 'var(--bg3)', color: index === 0 ? '#fff' : 'var(--ink)', borderRadius: 18, padding: 18, minHeight: 170, display: 'grid', alignContent: 'space-between', gap: 22 }}><div style={{ transform: 'scale(.9)', transformOrigin: 'top left' }}><ServiceIcon code={provider.icon || 'ME'} size={64} /></div><div><div style={{ fontFamily: 'var(--display)', fontSize: 25, lineHeight: 1.04, letterSpacing: '-0.04em', marginBottom: 10 }}>{service}</div><div style={{ fontSize: 13, lineHeight: 1.7, color: index === 0 ? 'rgba(255,255,255,.78)' : 'var(--ink2)' }}>Book this service directly from the provider profile.</div></div></button>)}
+              <div
+                ref={expertiseCarouselRef}
+                style={{
+                  display: 'grid',
+                  gridAutoFlow: 'column',
+                  gridAutoColumns: 'minmax(240px, 280px)',
+                  gap: 14,
+                  overflowX: 'auto',
+                  scrollSnapType: 'x mandatory',
+                  paddingBottom: 6,
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+              >
+                {expertiseServices.map((service, index) => (
+                  <button
+                    key={service}
+                    type="button"
+                    onClick={requestBookingAccess}
+                    style={{
+                      textAlign: 'left',
+                      border: '1px solid var(--border)',
+                      background: index === 0 ? 'linear-gradient(135deg, rgba(14,40,66,.96) 0%, rgba(47,125,225,.74) 100%)' : 'linear-gradient(180deg, #f8fbff 0%, #eef4fd 100%)',
+                      color: index === 0 ? '#fff' : 'var(--ink)',
+                      borderRadius: 22,
+                      padding: 18,
+                      minHeight: 188,
+                      display: 'grid',
+                      alignContent: 'space-between',
+                      gap: 24,
+                      scrollSnapAlign: 'start',
+                      boxShadow: index === 0 ? '0 20px 34px rgba(20,50,82,.18)' : 'none',
+                    }}
+                  >
+                    <div style={{ transform: 'scale(.9)', transformOrigin: 'top left' }}>
+                      <ServiceIcon code={provider.icon || 'ME'} size={64} />
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'var(--display)', fontSize: 25, lineHeight: 1.04, letterSpacing: '-0.04em', marginBottom: 10 }}>{service}</div>
+                      <div style={{ fontSize: 13, lineHeight: 1.7, color: index === 0 ? 'rgba(255,255,255,.78)' : 'var(--ink2)' }}>Book this service directly from the provider profile.</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </InfoCard>
 
@@ -406,8 +503,8 @@ export default function ProviderProfile() {
 
           <aside style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
             <InfoCard style={{ padding: 0 }}>
-              <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)' }}>
-                <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
+              <div style={{ height: 240, overflow: 'hidden', margin: '-24px -24px 18px', borderBottom: '1px solid var(--border)', position: 'relative', zIndex: 0 }}>
+                <MapContainer center={providerCoords} zoom={15} style={{ height: '100%', width: '100%', zIndex: 0 }} scrollWheelZoom>
                   <TileLayer attribution="&copy; OpenStreetMap &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                   <Marker position={providerCoords}><Popup>{provider.name}<br />{provider.address}</Popup></Marker>
                 </MapContainer>

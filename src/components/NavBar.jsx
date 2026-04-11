@@ -784,7 +784,7 @@ function CalendarIcon() { return <Svg><path d="M8 3v4" /><path d="M16 3v4" /><re
 function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Svg> }
 
 const styles = {
-  root: { position: 'sticky', top: 0, zIndex: 120 },
+  root: { position: 'sticky', top: 0, zIndex: 5000 },
   nav: {
     height: 64,
     display: 'grid',
