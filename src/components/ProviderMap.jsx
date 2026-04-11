@@ -413,15 +413,35 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
         const popupElement = event.popup?.getElement()
         const button = popupElement?.querySelector('.flashmat-popup-cta')
         const visitButton = popupElement?.querySelector('.flashmat-popup-visit')
+        const popupContent = popupElement?.querySelector('.leaflet-popup-content')
+
+        if (popupContent) {
+          L.DomEvent.disableClickPropagation(popupContent)
+          L.DomEvent.disableScrollPropagation(popupContent)
+        }
 
         if (button) {
-          const handleClick = () => onBookRef.current?.(provider)
-          button.addEventListener('click', handleClick, { once: true })
+          const handleClick = (domEvent) => {
+            domEvent.preventDefault()
+            domEvent.stopPropagation()
+            onBookRef.current?.(provider)
+          }
+          L.DomEvent.off(button)
+          L.DomEvent.on(button, 'click', handleClick)
+          L.DomEvent.on(button, 'mousedown', L.DomEvent.stopPropagation)
+          L.DomEvent.on(button, 'dblclick', L.DomEvent.stopPropagation)
         }
 
         if (visitButton) {
-          const handleVisit = () => onVisitProfileRef.current?.(provider)
-          visitButton.addEventListener('click', handleVisit, { once: true })
+          const handleVisit = (domEvent) => {
+            domEvent.preventDefault()
+            domEvent.stopPropagation()
+            onVisitProfileRef.current?.(provider)
+          }
+          L.DomEvent.off(visitButton)
+          L.DomEvent.on(visitButton, 'click', handleVisit)
+          L.DomEvent.on(visitButton, 'mousedown', L.DomEvent.stopPropagation)
+          L.DomEvent.on(visitButton, 'dblclick', L.DomEvent.stopPropagation)
         }
       })
 
