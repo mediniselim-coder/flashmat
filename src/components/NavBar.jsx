@@ -976,7 +976,7 @@ const styles = {
     objectFit: 'cover',
     display: 'block',
   },
-  scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 118 },
+  scrim: { position: 'fixed', inset: 0, background: 'rgba(5,19,31,.26)', zIndex: 6000 },
   drawer: {
     position: 'fixed',
     top: 0,
@@ -987,7 +987,7 @@ const styles = {
     borderRadius: '0',
     borderRight: '1px solid rgba(26,58,143,0.08)',
     boxShadow: '24px 0 70px rgba(4,18,32,0.22)',
-    zIndex: 121,
+    zIndex: 6001,
     padding: '34px 22px 20px',
     display: 'flex',
     flexDirection: 'column',
