@@ -369,7 +369,7 @@ export default function NavBar({ activePage }) {
                   </span>
                 </button>
 
-                {profileOpen && (
+                {profileOpen && !messagePopoverOpen && !notificationCenterOpen && (
                   <div style={styles.profilePopup}>
                     <div style={styles.profileHeader}>
                       <div style={styles.profileHeaderRow}>
@@ -400,7 +400,7 @@ export default function NavBar({ activePage }) {
                     </div>
                   </div>
                 )}
-                {messagePopoverOpen && (
+                {messagePopoverOpen && !profileOpen && !notificationCenterOpen && (
                   <MessageInboxPopover
                     open={messagePopoverOpen}
                     onClose={() => setMessagePopoverOpen(false)}
