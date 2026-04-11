@@ -187,14 +187,6 @@ export default function Community() {
         </aside>
 
         <section className="community-main" style={styles.mainColumn}>
-          <div style={styles.heroCard}>
-            <div style={styles.heroEyebrow}>FlashMat Community Feed</div>
-            <h1 className="community-hero-title" style={styles.heroTitle}>Le fil central de la communaute auto FlashMat.</h1>
-            <p style={styles.heroText}>
-              Pensez Facebook, mais pour FlashMat: nouvelles annonces, vehicules a vendre, activite marketplace et signaux utiles de la communaute dans un vrai fil au centre.
-            </p>
-          </div>
-
           <div style={styles.composerCard}>
             <div className="community-composer-row" style={styles.composerRow}>
               <div style={styles.composerPrompt}>
@@ -434,37 +426,6 @@ const styles = {
     fontSize: 13,
     lineHeight: 1.75,
     color: 'var(--ink2)',
-  },
-  heroCard: {
-    background: 'linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(241,248,255,.98) 100%)',
-    border: '1px solid rgba(120,171,218,0.18)',
-    borderRadius: 28,
-    padding: '28px 28px 24px',
-    boxShadow: '0 18px 40px rgba(19,54,92,0.06)',
-    marginBottom: 14,
-  },
-  heroEyebrow: {
-    fontSize: 11,
-    letterSpacing: '.18em',
-    textTransform: 'uppercase',
-    color: 'var(--blue)',
-    fontWeight: 800,
-    marginBottom: 10,
-  },
-  heroTitle: {
-    margin: '0 0 12px',
-    fontFamily: 'var(--display)',
-    fontSize: 46,
-    lineHeight: 0.96,
-    letterSpacing: '-0.06em',
-    color: '#102743',
-  },
-  heroText: {
-    margin: 0,
-    fontSize: 16,
-    lineHeight: 1.8,
-    color: 'var(--ink2)',
-    maxWidth: 620,
   },
   composerCard: {
     background: 'rgba(255,255,255,.94)',
