@@ -517,8 +517,8 @@ export default function Messages() {
                       <div style={styles.chatMeta}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
                     </div>
                   </div>
-                  <button type="button" style={styles.secondaryButton} onClick={() => navigate(-1)}>
-                    Back
+                  <button type="button" style={styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
+                    View profile
                   </button>
                 </div>
 
@@ -620,37 +620,6 @@ export default function Messages() {
             )}
           </section>
 
-          <aside style={styles.contextPane}>
-            {selectedThread ? (
-              <>
-                <div style={styles.contextCard}>
-                  <div style={styles.contextEyebrow}>Conversation details</div>
-                  <div style={styles.contextAvatarWrap}>
-                    <ConversationAvatar thread={selectedThread} />
-                  </div>
-                  <div style={styles.contextTitle}>{selectedThread.counterpartName}</div>
-                  <div style={styles.contextText}>{selectedThread.counterpartSubtitle || 'FlashMat conversation'}</div>
-                </div>
-                <div style={styles.contextCard}>
-                  <div style={styles.contextEyebrow}>Quick actions</div>
-                  <button
-                    type="button"
-                    style={styles.contextButton}
-                    onClick={() => openCounterpartProfile(selectedThread)}
-                  >
-                    {selectedThread.counterpartRole === 'provider' ? 'View profile' : 'Open bookings'}
-                  </button>
-                  <button
-                    type="button"
-                    style={styles.contextButtonGhost}
-                    onClick={() => navigator.clipboard.writeText(selectedThread.counterpartName || '')}
-                  >
-                    Copy contact name
-                  </button>
-                </div>
-              </>
-            ) : null}
-          </aside>
         </section>
       </main>
       {confirmState.open ? (
@@ -689,7 +658,7 @@ const styles = {
     width: '100%',
     height: '100%',
     display: 'grid',
-    gridTemplateColumns: '360px minmax(0, 1fr) 300px',
+    gridTemplateColumns: '360px minmax(0, 1fr)',
     background: 'linear-gradient(180deg, #f5f9ff 0%, #eef5ff 100%)',
     overflow: 'hidden',
   },
@@ -1226,77 +1195,6 @@ const styles = {
     borderRadius: 999,
     padding: '8px 10px',
     background: 'rgba(255,255,255,0.18)',
-  },
-  contextPane: {
-    padding: 20,
-    display: 'grid',
-    alignContent: 'start',
-    gap: 14,
-    background: 'linear-gradient(180deg, #f9fcff 0%, #f1f7ff 100%)',
-    boxShadow: 'inset 1px 0 0 rgba(120,171,218,0.18)',
-  },
-  contextCard: {
-    borderRadius: 22,
-    border: '1px solid rgba(120,171,218,0.18)',
-    background: '#fff',
-    padding: 18,
-    boxShadow: '0 14px 34px rgba(13,30,50,0.05)',
-  },
-  contextAvatarWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
-    overflow: 'hidden',
-    marginBottom: 14,
-    background: 'linear-gradient(135deg, rgba(23,53,92,0.98) 0%, rgba(59,159,216,0.92) 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 14px 28px rgba(13,30,50,0.08)',
-  },
-  contextEyebrow: {
-    fontSize: 10,
-    fontWeight: 800,
-    letterSpacing: '.14em',
-    textTransform: 'uppercase',
-    color: 'var(--blue)',
-    marginBottom: 8,
-  },
-  contextTitle: {
-    fontFamily: 'var(--display)',
-    fontSize: 22,
-    lineHeight: 1,
-    color: '#15314f',
-    marginBottom: 8,
-  },
-  contextText: {
-    fontSize: 13,
-    lineHeight: 1.6,
-    color: '#6f89a4',
-    marginBottom: 14,
-  },
-  contextButton: {
-    width: '100%',
-    border: 'none',
-    borderRadius: 14,
-    background: '#18365b',
-    color: '#fff',
-    padding: '11px 14px',
-    fontSize: 13,
-    fontWeight: 800,
-    cursor: 'pointer',
-    marginBottom: 10,
-  },
-  contextButtonGhost: {
-    width: '100%',
-    border: '1px solid rgba(120,171,218,0.14)',
-    borderRadius: 14,
-    background: '#fff',
-    color: '#18365b',
-    padding: '11px 14px',
-    fontSize: 13,
-    fontWeight: 700,
-    cursor: 'pointer',
   },
   emptyPane: {
     display: 'grid',
