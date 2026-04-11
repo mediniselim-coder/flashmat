@@ -784,35 +784,36 @@ export default function ClientApp() {
       {sidebarOpen && <div className={styles.overlay} onClick={() => setSidebar(false)} />}
       {profileMenuOpen && <div className={styles.overlay} onClick={() => setProfileMenuOpen(false)} />}
 
-        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
-          <div className={styles.sbHeader} style={{ gap: 10 }}>
+          <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+          <div className={styles.sbHeader} style={{ gap: 8, alignItems: 'center' }}>
             <button
               type="button"
               onClick={goHome}
               aria-label="Back to home"
               title="Back to home"
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 12,
+                width: 30,
+                height: 30,
+                borderRadius: 10,
                 border: '1px solid rgba(255,255,255,.08)',
                 background: 'rgba(255,255,255,.04)',
                 color: '#f7fbff',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 18,
-                fontWeight: 700,
                 cursor: 'pointer',
                 flexShrink: 0,
+                padding: 0,
               }}
             >
-              ←
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M14.5 6.5 9 12l5.5 5.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
-            <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer', flex: 1 }}>
-              <img src="/logo-dark.png" alt="FlashMat" style={{ height: 36, objectFit: 'contain' }} />
+            <div className={styles.sbLogo} onClick={goHome} style={{ cursor: 'pointer', flex: 1, minWidth: 0 }}>
+              <img src="/logo-dark.png" alt="FlashMat" style={{ height: 34, width: '100%', maxWidth: 120, objectFit: 'contain', objectPosition: 'left center' }} />
             </div>
-            <span className={`${styles.sbMode} ${styles.modeClient}`}>CLIENT</span>
+            <span className={`${styles.sbMode} ${styles.modeClient}`} style={{ flexShrink: 0, fontSize: 9, padding: '5px 8px' }}>CLIENT</span>
           </div>
         <nav className={styles.sbNav}>
           <div className={styles.sbSection}>
