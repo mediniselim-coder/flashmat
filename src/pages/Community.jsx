@@ -71,6 +71,7 @@ export default function Community() {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [feedListings, setFeedListings] = useState([])
   const [providers, setProviders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -99,8 +100,26 @@ export default function Community() {
   }, [])
 
   const filteredFeed = useMemo(() => {
-    return feedListings.filter((item) => filter === 'all' || item.listing_type === filter)
-  }, [feedListings, filter])
+    const query = String(search || '').trim().toLowerCase()
+    return feedListings.filter((item) => {
+      const matchesFilter = filter === 'all' || item.listing_type === filter
+      if (!matchesFilter) return false
+      if (!query) return true
+      const haystack = [
+        item.title,
+        item.description,
+        item.category,
+        item.city,
+        item.seller_name,
+        item.vehicle_snapshot?.make,
+        item.vehicle_snapshot?.model,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return haystack.includes(query)
+    })
+  }, [feedListings, filter, search])
 
   const topProviders = providers.slice(0, 4)
   const highlightedListings = feedListings.slice(0, 3)
@@ -188,32 +207,29 @@ export default function Community() {
 
         <section className="community-main" style={styles.mainColumn}>
           <div style={styles.composerCard}>
-            <div className="community-composer-row" style={styles.composerRow}>
-              <div style={styles.composerPrompt}>
-                <div style={styles.composerAvatar}>
-                  {profile?.avatar_url ? <img src={profile.avatar_url} alt={viewerName} style={styles.userAvatarImage} /> : getAvatarLabel(viewerName)}
-                </div>
-                <div style={styles.composerInput}>Quoi de neuf sur FlashMat aujourd hui ?</div>
+            <div style={styles.communityTopBar}>
+              <div style={styles.communitySearchBar}>
+                <span style={styles.communitySearchIcon}>⌕</span>
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Rechercher une annonce, un vehicule, une piece ou un provider..."
+                  style={styles.communitySearchInput}
+                />
               </div>
-              <div className="community-actions" style={styles.composerActions}>
-                <button type="button" style={styles.composerAction} onClick={() => navigate('/marketplace')}>Nouvelle annonce</button>
-                <button type="button" style={styles.composerAction} onClick={() => navigate('/app/client/vehicles')}>Vehicule a vendre</button>
-                <button type="button" style={styles.composerAction} onClick={() => navigate('/providers')}>Trouver un provider</button>
+              <div style={styles.communityTagRow}>
+                {FEED_FILTERS.map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFilter(value)}
+                    style={filter === value ? styles.filterButtonActive : styles.filterButton}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-
-          <div style={styles.filterRow}>
-            {FEED_FILTERS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setFilter(value)}
-                style={filter === value ? styles.filterButtonActive : styles.filterButton}
-              >
-                {label}
-              </button>
-            ))}
           </div>
 
           {loading ? (
@@ -435,65 +451,39 @@ const styles = {
     padding: 16,
     marginBottom: 14,
   },
-  composerRow: {
-    display: 'flex',
-    alignItems: 'center',
+  communityTopBar: {
+    display: 'grid',
     gap: 12,
   },
-  composerPrompt: {
-    display: 'flex',
+  communitySearchBar: {
+    display: 'grid',
+    gridTemplateColumns: '18px minmax(0, 1fr)',
+    gap: 10,
     alignItems: 'center',
-    gap: 12,
-    flex: 1,
-    minWidth: 0,
-  },
-  composerAvatar: {
-    width: 42,
-    height: 42,
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #0e2b4a 0%, #2f7de1 100%)',
-    color: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: 'var(--display)',
-    fontWeight: 800,
-    overflow: 'hidden',
-    flexShrink: 0,
-  },
-  composerInput: {
-    flex: 1,
-    minHeight: 42,
+    minHeight: 48,
     borderRadius: 999,
     background: '#f1f6fd',
     border: '1px solid rgba(120,171,218,0.16)',
-    display: 'flex',
-    alignItems: 'center',
     padding: '0 16px',
-    color: '#67809b',
+  },
+  communitySearchIcon: {
+    fontSize: 16,
+    color: '#7d93ab',
+  },
+  communitySearchInput: {
+    width: '100%',
+    border: 'none',
+    outline: 'none',
+    background: 'transparent',
+    color: '#17314a',
     fontSize: 14,
     fontWeight: 600,
+    fontFamily: 'var(--font)',
   },
-  composerActions: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-    gap: 8,
-    minWidth: 'min(360px, 100%)',
-  },
-  composerAction: {
-    border: '1px solid rgba(120,171,218,0.16)',
-    background: '#fff',
-    color: '#17314a',
-    borderRadius: 12,
-    padding: '10px 12px',
-    fontSize: 13,
-    fontWeight: 700,
-  },
-  filterRow: {
+  communityTagRow: {
     display: 'flex',
     gap: 8,
     flexWrap: 'wrap',
-    marginBottom: 14,
   },
   filterButton: {
     border: '1px solid rgba(120,171,218,0.16)',
