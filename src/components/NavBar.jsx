@@ -344,16 +344,16 @@ export default function NavBar({ activePage }) {
             {user && profile ? (
               <>
                 <HeaderUtilityButton
-                  label="Notifications"
-                  icon={<BellIcon />}
-                  badge={unreadNotifications}
-                  onClick={openNotifications}
-                />
-                <HeaderUtilityButton
                   label="Messages"
                   icon={<MessageIcon />}
                   badge={unreadMessages}
                   onClick={toggleMessagesPopover}
+                />
+                <HeaderUtilityButton
+                  label="Notifications"
+                  icon={<BellIcon />}
+                  badge={unreadNotifications}
+                  onClick={openNotifications}
                 />
               </>
             ) : null}
