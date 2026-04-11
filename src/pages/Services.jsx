@@ -47,22 +47,87 @@ export default function Services() {
       <NavBar activePage="services" />
 
       {/* HERO */}
-      <div style={{ background: 'linear-gradient(135deg, #0a1528 0%, #0f1e3d 60%, #1a3a8f 100%)', color: '#fff', padding: '64px 32px 48px', textAlign: 'center' }}>
-        <div style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--blue)', marginBottom: 12, fontWeight: 600 }}>Nos services</div>
-        <h1 style={{ fontSize: 42, fontWeight: 700, margin: '0 0 16px', lineHeight: 1.2, fontFamily: 'var(--display)' }}>
-          Tous les services auto<br />
-          <span style={{ color: 'var(--blue)' }}>a Montreal</span>
-        </h1>
-        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 16, maxWidth: 520, margin: '0 auto 32px' }}>
-          Trouvez le bon professionnel pour chaque besoin de votre vehicule - 200+ fournisseurs verifies a Montreal.
-        </p>
-        <div style={{ maxWidth: 480, margin: '0 auto' }}>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un service..."
-            style={{ width: '100%', padding: '14px 20px', borderRadius: 12, border: 'none', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font)' }}
-          />
+      <div style={{ background: 'radial-gradient(circle at top left, rgba(59,159,216,.18), transparent 28%), linear-gradient(135deg, #081325 0%, #102549 52%, #2243a2 100%)', color: '#fff', padding: '72px 32px 56px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,.14), transparent 68%)', top: -160, right: -90, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,159,216,.16), transparent 70%)', bottom: -120, left: -60, pointerEvents: 'none' }} />
+        <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(320px, .8fr)', gap: 28, alignItems: 'stretch' }}>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.10)', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: '#8fd0ff', marginBottom: 18, fontWeight: 700 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b9fd8', boxShadow: '0 0 0 6px rgba(59,159,216,.14)' }} />
+              Nos services
+            </div>
+            <h1 style={{ fontSize: 'clamp(40px, 6vw, 64px)', fontWeight: 800, margin: '0 0 18px', lineHeight: 1.02, fontFamily: 'var(--display)', letterSpacing: '-1.8px', maxWidth: 700 }}>
+              Tous les services auto
+              <br />
+              <span style={{ color: '#55b7ff' }}>au meme endroit</span>
+            </h1>
+            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 17, maxWidth: 640, margin: '0 0 26px', lineHeight: 1.75 }}>
+              Comparez mecanique, pneus, detailing, remorquage, carrosserie et FlashFix depuis un seul hub. FlashMat vous aide a trouver le bon service plus vite, avec des fournisseurs verifies a Montreal.
+            </p>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const firstService = filtered[0]
+                  if (!firstService) return
+                  if (firstService.id === 'flashfix') { openFlashFix(); return }
+                  goToFilteredSearch(firstService.id)
+                }}
+                style={{ padding: '13px 18px', borderRadius: 12, border: 'none', background: '#fff', color: '#133453', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font)' }}
+              >
+                Explorer les services
+              </button>
+              <button
+                type="button"
+                onClick={openFlashFix}
+                style={{ padding: '13px 18px', borderRadius: 12, border: '1px solid rgba(255,255,255,.16)', background: 'rgba(255,255,255,.08)', color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer', fontFamily: 'var(--font)' }}
+              >
+                Ouvrir FlashFix Urgence
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              {['Mecanique', 'Pneus', 'Lavage', 'Carrosserie', 'Remorquage'].map((item) => (
+                <span key={item} style={{ padding: '8px 12px', borderRadius: 999, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.08)', fontSize: 12, color: 'rgba(255,255,255,.86)' }}>
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: 14 }}>
+            <div style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.10)', borderRadius: 24, padding: 18, backdropFilter: 'blur(10px)', boxShadow: '0 22px 50px rgba(6, 13, 28, 0.26)' }}>
+              <div style={{ fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: '#9bd5ff', marginBottom: 10, fontWeight: 700 }}>Recherche rapide</div>
+              <div style={{ maxWidth: '100%' }}>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Rechercher un service..."
+                  style={{ width: '100%', padding: '14px 18px', borderRadius: 14, border: '1px solid rgba(255,255,255,.1)', background: '#fff', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font)' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
+                {[
+                  ['11', 'Types de services'],
+                  ['200+', 'Fournisseurs verifies'],
+                  ['4.7', 'Note moyenne'],
+                  ['24/7', 'Urgence FlashFix'],
+                ].map(([value, label]) => (
+                  <div key={label} style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 16, padding: '12px 14px' }}>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: '#fff', fontFamily: 'var(--display)', marginBottom: 2 }}>{value}</div>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,.66)', letterSpacing: 1.1, textTransform: 'uppercase' }}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04))', border: '1px solid rgba(255,255,255,.10)', borderRadius: 24, padding: 18, display: 'grid', gap: 10 }}>
+              <div style={{ fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: '#9bd5ff', fontWeight: 700 }}>En ce moment</div>
+              <div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, lineHeight: 1.05 }}>Le bon service avant le mauvais detour.</div>
+              <div style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,.72)' }}>
+                Besoin d un diagnostic, d un garage de confiance ou d une intervention urgente ? Commencez ici et passez au bon fournisseur en quelques clics.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
