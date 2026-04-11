@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 import L from 'leaflet'
@@ -11,6 +11,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { createBooking } from '../lib/bookings'
 import { geocodeAddress, hasValidCoords } from '../lib/googleMaps'
+import { createOrGetThread } from '../lib/inbox'
 import { normalizeMarketplaceListing } from '../lib/marketplace'
 import { mergeProviderProfile, normalizeProviderRecord } from '../lib/providerProfiles'
 import { fetchProviderReviews, upsertProviderReview } from '../lib/providerReviews'
@@ -72,7 +73,7 @@ function SectionHeading({ title, subtitle, action }) {
 
 export default function ProviderProfile() {
   const { slug } = useParams()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const { user, profile } = useAuth()
   const { toast } = useToast()
@@ -85,14 +86,55 @@ export default function ProviderProfile() {
   const [reviewRating, setReviewRating] = useState(5)
   const [reviewComment, setReviewComment] = useState('')
   const [reviewSaving, setReviewSaving] = useState(false)
+  const [messageOpening, setMessageOpening] = useState(false)
+  const autoMessageStartedRef = useRef(false)
   const canBook = user && profile?.role === 'client'
+  const canMessage = user && profile?.role === 'client'
+
+  function buildIntentQuery(flag) {
+    const params = new URLSearchParams()
+    const exactName = searchParams.get('n')
+    if (exactName) params.set('n', exactName)
+    params.set(flag, '1')
+    return `?${params.toString()}`
+  }
 
   function requestBookingAccess() {
     if (user) return setBookingOpen(true)
-    const exactName = searchParams.get('n')
-    const query = exactName ? `?n=${encodeURIComponent(exactName)}&book=1` : '?book=1'
-    window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${query}`)
+    window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${buildIntentQuery('book')}`)
     navigate('/?login=1')
+  }
+
+  async function requestMessagingAccess({ silent = false } = {}) {
+    if (!provider?.id) {
+      if (!silent) toast('This provider is not ready for messaging yet.', 'error')
+      return
+    }
+
+    if (!user) {
+      window.sessionStorage.setItem('flashmat-post-login-redirect', `/provider/${slug}${buildIntentQuery('message')}`)
+      navigate('/?login=1')
+      return
+    }
+
+    if (profile?.role !== 'client') {
+      if (!silent) toast('Only client accounts can message providers.', 'error')
+      return
+    }
+
+    try {
+      setMessageOpening(true)
+      const thread = await createOrGetThread({
+        clientId: user.id,
+        providerId: provider.id,
+        creatorId: user.id,
+      })
+      navigate(`/messages?thread=${thread.id}`)
+    } catch (error) {
+      if (!silent) toast(error?.message || 'Unable to open the conversation right now.', 'error')
+    } finally {
+      setMessageOpening(false)
+    }
   }
 
   useEffect(() => {
@@ -160,6 +202,20 @@ export default function ProviderProfile() {
   useEffect(() => {
     if (canBook && searchParams.get('book') === '1') setBookingOpen(true)
   }, [canBook, searchParams])
+
+  useEffect(() => {
+    if (searchParams.get('message') !== '1') {
+      autoMessageStartedRef.current = false
+      return
+    }
+    if (!canMessage || !provider?.id || autoMessageStartedRef.current) return
+
+    autoMessageStartedRef.current = true
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.delete('message')
+    setSearchParams(nextParams, { replace: true })
+    requestMessagingAccess({ silent: true })
+  }, [canMessage, provider?.id, searchParams, setSearchParams])
 
   useEffect(() => {
     async function loadVehicles() {
@@ -264,6 +320,12 @@ export default function ProviderProfile() {
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             <a href={`tel:${provider.phone}`} className="btn btn-outline">Call</a>
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(provider.address)}`} target="_blank" rel="noreferrer" className="btn btn-outline">Get direction</a>
+            <button className="btn btn-outline" onClick={() => requestMessagingAccess()} disabled={messageOpening} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 10h8M8 14h5m6 4-3.8-2.1a2 2 0 0 0-.97-.24H8a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v6a4 4 0 0 1-1 2.65Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>{messageOpening ? 'Opening...' : 'Message'}</span>
+            </button>
             <button className="btn btn-green" onClick={requestBookingAccess}>Take an appointment</button>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>{(provider.highlights || provider.services || []).slice(0, 6).map((item) => <span key={item} className="badge badge-blue">{item}</span>)}</div>
@@ -368,7 +430,7 @@ export default function ProviderProfile() {
 
             {spotlightReview ? <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 14, textAlign: 'center' }}>Review spotlight</div><div style={{ width: 78, height: 78, borderRadius: '50%', margin: '0 auto 12px', background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>{spotlightReview.avatar_url ? <img src={spotlightReview.avatar_url} alt={spotlightReview.user} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontFamily: 'var(--display)', fontSize: 28, fontWeight: 800, color: 'var(--blue)' }}>{spotlightReview.user.slice(0, 1).toUpperCase()}</span>}</div><div style={{ color: '#f59e0b', fontSize: 18, marginBottom: 8, textAlign: 'center' }}>{renderStarsSafe(spotlightReview.rating)}</div><div style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.7, textAlign: 'center' }}>{spotlightReview.comment}</div><div style={{ marginTop: 10, fontSize: 12, color: 'var(--ink3)', textAlign: 'center' }}>{spotlightReview.user} {DOT} {spotlightReview.date}</div></InfoCard> : null}
 
-            <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 10 }}>Contact</div><a href={`tel:${provider.phone}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 6 }}>{provider.phone}</a>{provider.email ? <a href={`mailto:${provider.email}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 8 }}>{provider.email}</a> : null}<div style={{ color: 'var(--ink2)', fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>{provider.address}</div><button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={requestBookingAccess}>Book through FlashMat</button></InfoCard>
+            <InfoCard><div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, color: 'var(--ink)', marginBottom: 10 }}>Contact</div><a href={`tel:${provider.phone}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 6 }}>{provider.phone}</a>{provider.email ? <a href={`mailto:${provider.email}`} style={{ color: 'var(--green)', fontSize: 14, display: 'block', marginBottom: 8 }}>{provider.email}</a> : null}<div style={{ color: 'var(--ink2)', fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>{provider.address}</div><div style={{ display: 'grid', gap: 10 }}><button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={() => requestMessagingAccess()} disabled={messageOpening}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10h8M8 14h5m6 4-3.8-2.1a2 2 0 0 0-.97-.24H8a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v6a4 4 0 0 1-1 2.65Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg><span>{messageOpening ? 'Opening...' : 'Message on FlashMat'}</span></button><button className="btn btn-outline" style={{ width: '100%', justifyContent: 'center' }} onClick={requestBookingAccess}>Book through FlashMat</button></div></InfoCard>
           </aside>
         </div>
       </div>
