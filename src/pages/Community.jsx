@@ -112,7 +112,7 @@ export default function Community() {
       <style>{`
         @media (max-width: 1180px) {
           .community-shell {
-            grid-template-columns: 260px minmax(0, 1fr) !important;
+            grid-template-columns: 250px minmax(0, 1fr) !important;
           }
           .community-right {
             display: none !important;
@@ -327,12 +327,14 @@ const styles = {
     color: 'var(--ink)',
   },
   shell: {
-    maxWidth: 1500,
-    margin: '0 auto',
-    padding: '24px 18px 0',
+    width: '100%',
+    maxWidth: 'none',
+    margin: 0,
+    padding: '24px 24px 0',
     display: 'grid',
-    gridTemplateColumns: '280px minmax(0, 1fr) 310px',
-    gap: 18,
+    gridTemplateColumns: 'minmax(230px, 290px) minmax(640px, 760px) minmax(250px, 320px)',
+    justifyContent: 'space-between',
+    gap: 24,
     alignItems: 'start',
   },
   leftRail: {
@@ -342,7 +344,7 @@ const styles = {
     gap: 14,
   },
   mainColumn: {
-    maxWidth: 720,
+    maxWidth: 760,
     width: '100%',
     margin: '0 auto',
   },
