@@ -222,6 +222,9 @@ export function AuthProvider({ children }) {
 
   async function signUp({ email, password, fullName, role }) {
     explicitSignOutRef.current = false
+    if (role === 'flashmat_admin') {
+      throw new Error('FlashMat Admin accounts are created from the backend only.')
+    }
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { full_name: fullName, role } }

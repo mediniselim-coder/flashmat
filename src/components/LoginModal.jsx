@@ -48,6 +48,7 @@ export default function LoginModal({ onClose }) {
     try {
       let authData = null
       if (mode === 'signup') {
+        if (role === 'flashmat_admin') throw new Error('FlashMat Admin accounts are created from the backend only')
         if (form.password !== form.confirmPassword) throw new Error('Passwords do not match')
         if (form.password.length < 6) throw new Error('Password must be at least 6 characters')
         authData = await signUp({ email: form.email, password: form.password, fullName: form.fullName, role })
@@ -122,11 +123,10 @@ export default function LoginModal({ onClose }) {
         </div>
 
         {mode === 'signup' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
             {[
               { r: 'client', title: 'I am a client', sub: 'I am looking for auto services' },
               { r: 'provider', title: 'I am a provider', sub: "I offer auto services" },
-              { r: 'flashmat_admin', title: 'I am FlashMat Admin', sub: 'I manage the platform' },
             ].map(({ r, title, sub }) => (
               <button
                 key={r}
@@ -136,16 +136,12 @@ export default function LoginModal({ onClose }) {
                   background: role === r
                     ? (r === 'client'
                       ? 'var(--green-bg, #f0fdf4)'
-                      : r === 'provider'
-                        ? 'var(--blue-bg, #eff6ff)'
-                        : 'rgba(255, 244, 228, 0.9)')
+                      : 'var(--blue-bg, #eff6ff)')
                     : 'var(--bg3, #f9f9f9)',
                   border: `1.5px solid ${role === r
                     ? (r === 'client'
                       ? 'var(--green, #22c55e)'
-                      : r === 'provider'
-                        ? 'var(--blue, #3b82f6)'
-                        : '#f59e0b')
+                      : 'var(--blue, #3b82f6)')
                     : 'var(--border, #eee)'}`,
                   borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                 }}
