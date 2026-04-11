@@ -39,6 +39,11 @@ function ConversationAvatar({ thread }) {
   return <span style={styles.threadAvatarFallback}>{String(thread?.counterpartName || 'F').slice(0, 1).toUpperCase()}</span>
 }
 
+function getThreadListSubtitle(thread) {
+  if (thread?.counterpartRole === 'provider') return 'FlashMat provider'
+  return thread?.counterpartSubtitle || 'FlashMat conversation'
+}
+
 function formatAttachmentSize(size) {
   const value = Number(size) || 0
   if (value >= 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
@@ -409,7 +414,7 @@ export default function Messages() {
                         <strong style={styles.threadName}>{thread.counterpartName}</strong>
                         <span style={styles.threadDate}>{formatMessageTime(thread.last_message_at)}</span>
                       </div>
-                      <div style={styles.threadSubtitle}>{thread.counterpartSubtitle || 'FlashMat conversation'}</div>
+                      <div style={styles.threadSubtitle}>{getThreadListSubtitle(thread)}</div>
                       <div style={styles.threadPreviewLine}>
                         <span style={styles.threadPreview}>{thread.last_message_preview || 'Conversation ready to start.'}</span>
                         {thread.unreadCount > 0 ? <span style={styles.unreadBadge}>{thread.unreadCount}</span> : null}
