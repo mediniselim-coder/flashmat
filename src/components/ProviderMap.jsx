@@ -226,6 +226,32 @@ function MapViewportUpdater({ coordsList }) {
   return null
 }
 
+function VisibleProvidersTracker({ providers, onVisibleProvidersChange }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (!onVisibleProvidersChange) return undefined
+
+    function updateVisibleProviders() {
+      const bounds = map.getBounds()
+      const visibleProviders = providers.filter((provider) => {
+        if (!Array.isArray(provider?.mapCoords) || provider.mapCoords.length !== 2) return false
+        return bounds.contains(provider.mapCoords)
+      })
+      onVisibleProvidersChange(visibleProviders)
+    }
+
+    updateVisibleProviders()
+    map.on('moveend zoomend', updateVisibleProviders)
+
+    return () => {
+      map.off('moveend zoomend', updateVisibleProviders)
+    }
+  }, [map, onVisibleProvidersChange, providers])
+
+  return null
+}
+
 function ProviderPopupCard({ provider }) {
   const logoImageUrl = provider.logoImageUrl || provider.logo_url || provider.avatar_url || ''
 
@@ -379,7 +405,15 @@ function ClusteredProviderMarkers({ providers, selectedProviderId, onSelect, onB
   return null
 }
 
-export default function ProviderMap({ providers, selectedProviderId, onSelect, onBook, scrollWheelZoom = true, height = 380 }) {
+export default function ProviderMap({
+  providers,
+  selectedProviderId,
+  onSelect,
+  onBook,
+  onVisibleProvidersChange,
+  scrollWheelZoom = true,
+  height = 380,
+}) {
   const [providersWithCoords, setProvidersWithCoords] = useState([])
   const [mapMode, setMapMode] = useState('map')
 
@@ -538,6 +572,10 @@ export default function ProviderMap({ providers, selectedProviderId, onSelect, o
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
         <TileLayer attribution={tileConfig.attribution} url={tileConfig.url} />
         <MapViewportUpdater coordsList={coordsList} />
+        <VisibleProvidersTracker
+          providers={providersWithCoords}
+          onVisibleProvidersChange={onVisibleProvidersChange}
+        />
         <ClusteredProviderMarkers
           providers={providersWithCoords}
           selectedProviderId={selectedProviderId}

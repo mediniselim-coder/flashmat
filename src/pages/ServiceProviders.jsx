@@ -67,6 +67,7 @@ export default function ServiceProviders() {
   const [sortBy, setSortBy] = useState('recommended')
   const [minRating, setMinRating] = useState(0)
   const [selectedProviderId, setSelectedProviderId] = useState(null)
+  const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
 
   useEffect(() => {
     setSearchCat(params.get('cat') || 'all')
@@ -116,17 +117,23 @@ export default function ServiceProviders() {
     })
   }, [providers, searchCat, searchQ, sortBy, minRating])
 
+  const displayedProviders = useMemo(() => {
+    if (!Array.isArray(visibleProviderKeys)) return filtered
+    const visibleSet = new Set(visibleProviderKeys)
+    return filtered.filter((provider, index) => visibleSet.has(getProviderKey(provider, index)))
+  }, [filtered, visibleProviderKeys])
+
   useEffect(() => {
-    if (!filtered.length) {
+    if (!displayedProviders.length) {
       setSelectedProviderId(null)
       return
     }
 
-    const hasSelectedProvider = filtered.some((provider, index) => getProviderKey(provider, index) === selectedProviderId)
+    const hasSelectedProvider = displayedProviders.some((provider, index) => getProviderKey(provider, index) === selectedProviderId)
     if (!hasSelectedProvider) {
-      setSelectedProviderId(getProviderKey(filtered[0], 0))
+      setSelectedProviderId(getProviderKey(displayedProviders[0], 0))
     }
-  }, [filtered, selectedProviderId])
+  }, [displayedProviders, selectedProviderId])
 
   return (
     <div style={{ height: '100vh', background: 'var(--bg, #f8f8f6)', fontFamily: 'var(--sans, sans-serif)', overflow: 'hidden' }}>
@@ -211,10 +218,10 @@ export default function ServiceProviders() {
                 <div className={styles.providerResultsHeaderModern}>
                   <div>
                     <div className={styles.providerResultsTitleModern}>
-                      Showing {provLoading ? 'providers...' : `${filtered.length} provider${filtered.length !== 1 ? 's' : ''}`}
+                      Showing {provLoading ? 'providers...' : `${displayedProviders.length} provider${displayedProviders.length !== 1 ? 's' : ''}`}
                     </div>
                     <div className={styles.providerResultsSubModern}>
-                      Compare providers, open profiles, and book without leaving FlashMat.
+                      Compare providers currently visible on the map, then open profiles or book without leaving FlashMat.
                     </div>
                   </div>
 
@@ -240,7 +247,7 @@ export default function ServiceProviders() {
                   </div>
                 ) : (
                   <div className={styles.providerListModern}>
-                    {filtered.map((provider, index) => (
+                    {displayedProviders.map((provider, index) => (
                       <div
                         key={provider.id || index}
                         className={`${styles.providerCardModern} ${selectedProviderId === getProviderKey(provider, index) ? styles.providerCardModernActive : ''}`}
@@ -308,14 +315,14 @@ export default function ServiceProviders() {
                       </div>
                     ))}
 
-                    {filtered.length === 0 && (
+                    {displayedProviders.length === 0 && (
                       <div className={styles.providerEmptyState}>
                         <div className={styles.providerEmptyIcon}>
                           <AppIcon code="SV" size={26} />
                         </div>
-                        <div className={styles.providerEmptyTitle}>No providers found</div>
+                        <div className={styles.providerEmptyTitle}>No providers in this map view</div>
                         <div className={styles.providerEmptyText}>
-                          Try another neighborhood, service type, or reset the current filters.
+                          Zoom out, move the map, or reset the current filters to see more providers.
                         </div>
                         <button className="btn" style={{ marginTop: 12 }} onClick={() => { setSearchQ(''); setSearchCat('all') }}>
                           Reset filters
@@ -335,6 +342,9 @@ export default function ServiceProviders() {
                   providers={filtered}
                   selectedProviderId={selectedProviderId}
                   onSelect={(provider) => setSelectedProviderId(getProviderKey(provider))}
+                  onVisibleProvidersChange={(visibleProviders) => {
+                    setVisibleProviderKeys(visibleProviders.map((provider) => getProviderKey(provider)))
+                  }}
                   onBook={(provider) => openProviderProfile(provider, true)}
                   scrollWheelZoom
                   height="100%"
