@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { getDefaultAppRoute } from '../lib/roles'
 
 // Cette page /auth redirige simplement vers l'accueil.
 // Le login se fait via le popup LoginModal dans NavBar.
@@ -12,7 +13,7 @@ export default function Auth() {
     if (loading) return
 
     if (user && profile) {
-      navigate(profile.role === 'provider' ? '/app/provider' : '/app/client', { replace: true })
+      navigate(getDefaultAppRoute(profile.role), { replace: true })
     } else {
       navigate('/', { replace: true })
     }

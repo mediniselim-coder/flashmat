@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
+import { getDefaultAppRoute } from '../lib/roles'
 
 export default function LoginModal({ onClose }) {
   const { signIn, signUp } = useAuth()
@@ -45,17 +46,19 @@ export default function LoginModal({ onClose }) {
     e.preventDefault()
     setLoading(true)
     try {
+      let authData = null
       if (mode === 'signup') {
         if (form.password !== form.confirmPassword) throw new Error('Passwords do not match')
         if (form.password.length < 6) throw new Error('Password must be at least 6 characters')
-        await signUp({ email: form.email, password: form.password, fullName: form.fullName, role })
+        authData = await signUp({ email: form.email, password: form.password, fullName: form.fullName, role })
         toast('Account created. Welcome aboard.', 'success')
       } else {
-        await signIn({ email: form.email, password: form.password })
+        authData = await signIn({ email: form.email, password: form.password })
         toast('Signed in successfully.', 'success')
       }
       const nextPath = consumePostLoginRedirect()
-      const fallbackPath = mode === 'signup' ? (role === 'provider' ? '/app/provider' : '/app/client') : '/'
+      const resolvedRole = authData?.user?.user_metadata?.role || role
+      const fallbackPath = getDefaultAppRoute(resolvedRole)
       onClose()
       navigate(nextPath || fallbackPath)
     } catch (err) {
@@ -119,18 +122,31 @@ export default function LoginModal({ onClose }) {
         </div>
 
         {mode === 'signup' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10, marginBottom: 18 }}>
             {[
               { r: 'client', title: 'I am a client', sub: 'I am looking for auto services' },
               { r: 'provider', title: 'I am a provider', sub: "I offer auto services" },
+              { r: 'flashmat_admin', title: 'I am FlashMat Admin', sub: 'I manage the platform' },
             ].map(({ r, title, sub }) => (
               <button
                 key={r}
                 onClick={() => setRole(r)}
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: 10, padding: 14,
-                  background: role === r ? (r === 'client' ? 'var(--green-bg, #f0fdf4)' : 'var(--blue-bg, #eff6ff)') : 'var(--bg3, #f9f9f9)',
-                  border: `1.5px solid ${role === r ? (r === 'client' ? 'var(--green, #22c55e)' : 'var(--blue, #3b82f6)') : 'var(--border, #eee)'}`,
+                  background: role === r
+                    ? (r === 'client'
+                      ? 'var(--green-bg, #f0fdf4)'
+                      : r === 'provider'
+                        ? 'var(--blue-bg, #eff6ff)'
+                        : 'rgba(255, 244, 228, 0.9)')
+                    : 'var(--bg3, #f9f9f9)',
+                  border: `1.5px solid ${role === r
+                    ? (r === 'client'
+                      ? 'var(--green, #22c55e)'
+                      : r === 'provider'
+                        ? 'var(--blue, #3b82f6)'
+                        : '#f59e0b')
+                    : 'var(--border, #eee)'}`,
                   borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                 }}
               >

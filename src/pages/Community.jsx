@@ -4,6 +4,7 @@ import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 import { useAuth } from '../hooks/useAuth'
 import { getMarketplaceListingPath, normalizeMarketplaceListing } from '../lib/marketplace'
+import { getRoleLabel } from '../lib/roles'
 import { fetchProviders } from '../lib/providerProfiles'
 import { supabase } from '../lib/supabase'
 
@@ -165,7 +166,7 @@ export default function Community() {
               </div>
               <div>
                 <div style={styles.userName}>{viewerName}</div>
-                <div style={styles.userRole}>{profile?.role === 'provider' ? 'provider' : 'client'} · montreal</div>
+                <div style={styles.userRole}>{getRoleLabel(profile?.role)} · montreal</div>
               </div>
             </div>
             <div style={styles.shortcutStack}>

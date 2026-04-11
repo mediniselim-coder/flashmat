@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { getDefaultAppRoute, isAdminRole } from '../lib/roles'
 
 const BASE_COLUMNS = [
   {
@@ -47,7 +48,7 @@ export default function SiteFooter({ portal = 'public' }) {
     return window.innerWidth <= 640
   })
   const isLoggedIn = Boolean(user)
-  const accountRoute = profile?.role === 'provider' ? '/app/provider/dashboard' : '/app/client/dashboard'
+  const accountRoute = getDefaultAppRoute(profile?.role)
 
   const portalCard = getPortalCard(portal, { isLoggedIn, accountRoute, role: profile?.role || 'client' })
   const columns = [
@@ -228,6 +229,18 @@ export default function SiteFooter({ portal = 'public' }) {
 }
 
 function getPortalCard(portal, { isLoggedIn = false, accountRoute = '/app/client/dashboard', role = 'client' } = {}) {
+  if (portal === 'admin' || isAdminRole(role)) {
+    return {
+      title: 'Espace admin',
+      links: [
+        { label: 'Dashboard admin', to: '/app/admin/dashboard' },
+        { label: 'Community', to: '/community' },
+        { label: 'Marketplace', to: '/marketplace' },
+        { label: 'Providers', to: '/providers' },
+      ],
+    }
+  }
+
   if (portal === 'client') {
     return {
       title: 'Espace client',

@@ -9,6 +9,7 @@ import ProviderProfileModal from './ProviderProfileModal'
 import MessageInboxPopover from './MessageInboxPopover'
 import NotificationCenterModal from './NotificationCenterModal'
 import FloatingPanelBoundary from './FloatingPanelBoundary'
+import { getDefaultAppRoute, getRoleLabel, getRoleModeLabel, isAdminRole, isProviderRole } from '../lib/roles'
 
 const PRIMARY_ITEMS = [
   {
@@ -119,6 +120,7 @@ const SITE_SEARCH_ENTRIES = [
   { label: 'Connexion', section: 'Compte', to: '/auth', keywords: ['login', 'signup', 'compte', 'auth'] },
   { label: 'Espace client', section: 'Compte', to: '/app/client', keywords: ['client', 'dashboard', 'reservations', 'vehicules'] },
   { label: 'Espace fournisseur', section: 'Compte', to: '/app/provider', keywords: ['provider', 'fournisseur', 'atelier', 'dashboard'] },
+  { label: 'Espace admin', section: 'Compte', to: '/app/admin', keywords: ['admin', 'platform', 'moderation', 'dashboard'] },
 ]
 
 export default function NavBar({ activePage }) {
@@ -138,7 +140,10 @@ export default function NavBar({ activePage }) {
   const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
   const rootRef = useRef(null)
 
-  const isProvider = profile?.role === 'provider'
+  const isProvider = isProviderRole(profile?.role)
+  const isAdmin = isAdminRole(profile?.role)
+  const accountRoute = getDefaultAppRoute(profile?.role)
+  const roleModeLabel = getRoleModeLabel(profile?.role)
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
   const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
   const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
@@ -251,6 +256,16 @@ export default function NavBar({ activePage }) {
   const profileItems = useMemo(() => {
     if (!user || !profile) return []
 
+    if (isAdmin) {
+      return [
+        { icon: <DashboardIcon />, label: 'Admin dashboard', action: () => navigateTo('/app/admin/dashboard') },
+        { icon: <MessageIcon />, label: 'Messages', action: () => openMessages() },
+        { icon: <ProvidersIcon />, label: 'Providers', action: () => navigateTo('/providers') },
+        { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/marketplace') },
+        { icon: <DoctorIcon />, label: 'Community', action: () => navigateTo('/community') },
+      ]
+    }
+
     if (isProvider) {
       return [
         { icon: <DashboardIcon />, label: 'Dashboard', action: () => navigateTo('/app/provider') },
@@ -268,7 +283,7 @@ export default function NavBar({ activePage }) {
            { icon: <CalendarIcon />, label: 'Mes reservations', action: () => navigateTo('/app/client/bookings') },
            { icon: <MarketplaceIcon />, label: 'Marketplace', action: () => navigateTo('/app/marketplace') },
         ]
-    }, [isProvider, navigate, openMessages, openNotifications, profile, user])
+    }, [isAdmin, isProvider, navigate, openMessages, openNotifications, profile, user])
 
   const siteSearchEntries = useMemo(() => {
     const dynamicEntries = PRIMARY_ITEMS.flatMap((item) =>
@@ -412,7 +427,7 @@ export default function NavBar({ activePage }) {
                       <div style={styles.profileHeaderRow}>
                         <div>
                           <div style={styles.profileTitle}>{displayName}</div>
-                          <div style={styles.profileSubtitle}>{isProvider ? 'Profil fournisseur' : 'Profil client'}</div>
+                          <div style={styles.profileSubtitle}>{isAdmin ? 'Profil administration' : isProvider ? 'Profil fournisseur' : 'Profil client'}</div>
                         </div>
                         <button
                           type="button"
@@ -467,7 +482,7 @@ export default function NavBar({ activePage }) {
               <div style={styles.mobileDrawerHeader}>
                 <div style={styles.mobileDrawerBrand}>
                   <img src="/logo-dark.png" alt="FlashMat" style={styles.mobileDrawerLogo} />
-                  <span style={styles.mobileDrawerMode}>{isProvider ? 'PROVIDER' : 'CLIENT'}</span>
+                  <span style={styles.mobileDrawerMode}>{roleModeLabel}</span>
                 </div>
                 <button type="button" style={styles.mobileDrawerClose} onClick={() => setMenuOpen(false)} aria-label="Fermer le menu">×</button>
               </div>
@@ -504,7 +519,7 @@ export default function NavBar({ activePage }) {
                   </div>
                   {user ? (
                     <div style={styles.mobileDrawerAccountActions}>
-                      <button type="button" onClick={() => navigateTo(isProvider ? '/app/provider' : '/app/client')} style={styles.mobileDrawerPrimaryCta}>
+                      <button type="button" onClick={() => navigateTo(accountRoute)} style={styles.mobileDrawerPrimaryCta}>
                         Mon espace
                       </button>
                       <button type="button" onClick={handleSignOut} style={styles.mobileDrawerSecondaryCta}>
@@ -550,7 +565,7 @@ export default function NavBar({ activePage }) {
               </div>
               {user ? (
                 <div style={styles.drawerAccountActions}>
-                  <button type="button" onClick={() => navigateTo(isProvider ? '/app/provider' : '/app/client')} style={styles.drawerPrimaryCta}>
+                  <button type="button" onClick={() => navigateTo(accountRoute)} style={styles.drawerPrimaryCta}>
                     Mon espace
                   </button>
                   <button type="button" onClick={handleSignOut} style={styles.drawerSecondaryCta}>
@@ -618,12 +633,6 @@ function AppIconButton({ item, isActive, hoveredIcon, setHoveredIcon, onClick, i
       <HoverLabel visible={hoveredIcon === item.id} label={item.shortLabel} />
     </button>
   )
-}
-
-function getRoleLabel(role) {
-  if (role === 'provider') return 'fournisseur'
-  if (role === 'client') return 'client'
-  return 'compte flashmat'
 }
 
 function DrawerLink({ label, to, onNavigate, compact }) {

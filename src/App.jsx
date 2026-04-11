@@ -3,11 +3,13 @@ import { useEffect, lazy, Suspense } from "react"
 import { AuthProvider, useAuth } from "./hooks/useAuth"
 import { ToastProvider } from "./hooks/useToast"
 import { supabase } from "./lib/supabase"
+import { getDefaultAppRoute } from "./lib/roles"
 
 const Landing = lazy(() => import("./pages/Landing"))
 const Auth = lazy(() => import("./pages/Auth"))
 const ClientApp = lazy(() => import("./pages/ClientApp"))
 const ProviderApp = lazy(() => import("./pages/ProviderApp"))
+const AdminApp = lazy(() => import("./pages/AdminApp"))
 const ProviderProfile = lazy(() => import("./pages/ProviderProfile"))
 const Services = lazy(() => import("./pages/Services"))
 const ServiceProviders = lazy(() => import("./pages/ServiceProviders"))
@@ -88,7 +90,7 @@ function AuthCallback() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const role = session.user.user_metadata?.role || "client"
-        navigate(role === "provider" ? "/app/provider/dashboard" : "/app/client/dashboard", { replace: true })
+        navigate(getDefaultAppRoute(role), { replace: true })
       } else {
         navigate("/auth", { replace: true })
       }
@@ -111,8 +113,10 @@ function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/?login=1" replace />
   }
 
-  if (requiredRole && profile?.role !== requiredRole) {
-    return <Navigate to={profile?.role === "provider" ? "/app/provider/dashboard" : "/app/client/dashboard"} replace />
+  const allowedRoles = Array.isArray(requiredRole) ? requiredRole : requiredRole ? [requiredRole] : []
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(profile?.role)) {
+    return <Navigate to={getDefaultAppRoute(profile?.role)} replace />
   }
 
   return children
@@ -150,6 +154,7 @@ export default function App() {
             <Route path="/app/search" element={<Navigate to="/" replace />} />
             <Route path="/app/client" element={<Navigate to="/app/client/dashboard" replace />} />
             <Route path="/app/provider" element={<Navigate to="/app/provider/dashboard" replace />} />
+            <Route path="/app/admin" element={<Navigate to="/app/admin/dashboard" replace />} />
             <Route
               path="/app/client/vehicles/:vehicleId"
               element={
@@ -172,6 +177,14 @@ export default function App() {
               element={
                 <ProtectedRoute requiredRole="provider">
                   <ProviderApp />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/admin/*"
+              element={
+                <ProtectedRoute requiredRole="flashmat_admin">
+                  <AdminApp />
                 </ProtectedRoute>
               }
             />
