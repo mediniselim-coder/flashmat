@@ -9,6 +9,7 @@ import ProviderProfileModal from './ProviderProfileModal'
 import MessageInboxPopover from './MessageInboxPopover'
 import NotificationCenterModal from './NotificationCenterModal'
 import FloatingPanelBoundary from './FloatingPanelBoundary'
+import { FLASHMAT_CART_UPDATED_EVENT, clearCart, readCart, removeCartItem } from '../lib/cart'
 import { getDefaultAppRoute, getRoleLabel, getRoleModeLabel, isAdminRole, isProviderRole } from '../lib/roles'
 
 const PRIMARY_ITEMS = [
@@ -134,6 +135,8 @@ export default function NavBar({ activePage }) {
   const [providerProfileModalOpen, setProviderProfileModalOpen] = useState(false)
   const [messagePopoverOpen, setMessagePopoverOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [cartItems, setCartItems] = useState([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
   const [hoveredIcon, setHoveredIcon] = useState(null)
@@ -147,6 +150,8 @@ export default function NavBar({ activePage }) {
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Mon compte'
   const profileAvatar = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
   const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
+  const activeCartUserId = user?.id || 'guest'
+  const cartCount = cartItems.reduce((total, item) => total + Math.max(1, Number(item.quantity || 1)), 0)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -190,11 +195,31 @@ export default function NavBar({ activePage }) {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  useEffect(() => {
+    function syncCart(event) {
+      if (event?.type === FLASHMAT_CART_UPDATED_EVENT) {
+        const eventUserId = event.detail?.userId || 'guest'
+        if (String(eventUserId) !== String(activeCartUserId)) return
+      }
+      setCartItems(readCart(activeCartUserId))
+    }
+
+    syncCart()
+    window.addEventListener('storage', syncCart)
+    window.addEventListener(FLASHMAT_CART_UPDATED_EVENT, syncCart)
+    return () => {
+      window.removeEventListener('storage', syncCart)
+      window.removeEventListener(FLASHMAT_CART_UPDATED_EVENT, syncCart)
+    }
+  }, [activeCartUserId])
+
   function closeFloatingUi() {
     setMenuOpen(false)
     setPanelOpen(null)
     setProfileOpen(false)
     setMessagePopoverOpen(false)
+    setNotificationCenterOpen(false)
+    setCartOpen(false)
   }
 
   function openMessages(threadId = '') {
@@ -205,7 +230,6 @@ export default function NavBar({ activePage }) {
 
   function toggleMessagesPopover() {
     closeFloatingUi()
-    setNotificationCenterOpen(false)
     setMessagePopoverOpen((current) => !current)
   }
 
@@ -216,7 +240,7 @@ export default function NavBar({ activePage }) {
 
   function openCart() {
     closeFloatingUi()
-    navigate(user && profile ? '/app/marketplace' : '/marketplace')
+    setCartOpen(true)
   }
 
   function toggleProfileMenu() {
@@ -224,6 +248,7 @@ export default function NavBar({ activePage }) {
     setPanelOpen(null)
     setMessagePopoverOpen(false)
     setNotificationCenterOpen(false)
+    setCartOpen(false)
     setProfileOpen((current) => !current)
   }
 
@@ -241,6 +266,7 @@ export default function NavBar({ activePage }) {
   function togglePanel(id) {
     setMenuOpen(false)
     setProfileOpen(false)
+    setCartOpen(false)
     setPanelOpen((current) => (current === id ? null : id))
   }
 
@@ -248,9 +274,18 @@ export default function NavBar({ activePage }) {
     setProfileOpen(false)
     setMessagePopoverOpen(false)
     setNotificationCenterOpen(false)
+    setCartOpen(false)
     await signOut()
     navigate('/')
     toast('You have been logged off.', 'success')
+  }
+
+  function handleRemoveCartItem(itemId) {
+    setCartItems(removeCartItem(activeCartUserId, itemId))
+  }
+
+  function handleClearCart() {
+    setCartItems(clearCart(activeCartUserId))
   }
 
   const profileItems = useMemo(() => {
@@ -421,7 +456,7 @@ export default function NavBar({ activePage }) {
                   </span>
                 </button>
 
-                {profileOpen && !messagePopoverOpen && !notificationCenterOpen && (
+                {profileOpen && !messagePopoverOpen && !notificationCenterOpen && !cartOpen && (
                   <div style={{ ...styles.profilePopup, width: isPhone ? 'min(280px, calc(100vw - 20px))' : 280, right: isPhone ? -4 : 0 }}>
                     <div style={styles.profileHeader}>
                       <div style={styles.profileHeaderRow}>
@@ -452,7 +487,7 @@ export default function NavBar({ activePage }) {
                     </div>
                   </div>
                 )}
-                {messagePopoverOpen && !profileOpen && !notificationCenterOpen && (
+                {messagePopoverOpen && !profileOpen && !notificationCenterOpen && !cartOpen && (
                   <MessageInboxPopover
                     open={messagePopoverOpen}
                     onClose={() => setMessagePopoverOpen(false)}
@@ -614,6 +649,86 @@ export default function NavBar({ activePage }) {
             onOpenMessages={(threadId) => openMessages(threadId)}
           />
         </FloatingPanelBoundary>
+      )}
+      {cartOpen && (
+        <div style={styles.cartScrim} onClick={() => setCartOpen(false)}>
+          <aside style={styles.cartDrawer} onClick={(event) => event.stopPropagation()}>
+            <div style={styles.cartHeader}>
+              <div>
+                <div style={styles.cartEyebrow}>FlashMat cart</div>
+                <div style={styles.cartTitle}>Your cart</div>
+                <div style={styles.cartSubtitle}>
+                  {cartCount > 0 ? `${cartCount} item${cartCount !== 1 ? 's' : ''} saved for this account` : 'Items added for this user will appear here.'}
+                </div>
+              </div>
+              <button type="button" style={styles.cartClose} onClick={() => setCartOpen(false)} aria-label="Close cart">
+                ×
+              </button>
+            </div>
+
+            <div style={styles.cartBody}>
+              {cartItems.length === 0 ? (
+                <div style={styles.cartEmpty}>
+                  <div style={styles.cartEmptyIcon}><CartIcon /></div>
+                  <div style={styles.cartEmptyTitle}>No items in the cart yet</div>
+                  <div style={styles.cartEmptyText}>When this user adds marketplace items, they will be managed from this sidebar.</div>
+                  <button type="button" style={styles.cartPrimaryButton} onClick={() => { setCartOpen(false); navigate('/marketplace') }}>
+                    Browse marketplace
+                  </button>
+                </div>
+              ) : (
+                <div style={styles.cartItems}>
+                  {cartItems.map((item) => (
+                    <div key={item.id} style={styles.cartItemCard}>
+                      <div style={styles.cartItemMedia}>
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.title} style={styles.cartItemImage} />
+                        ) : (
+                          <div style={styles.cartItemFallback}><CartIcon /></div>
+                        )}
+                      </div>
+                      <div style={styles.cartItemContent}>
+                        <div style={styles.cartItemTop}>
+                          <div>
+                            <div style={styles.cartItemTitle}>{item.title}</div>
+                            <div style={styles.cartItemMeta}>
+                              {[item.category, item.seller_name].filter(Boolean).join(' · ') || 'Marketplace item'}
+                            </div>
+                          </div>
+                          <div style={styles.cartItemPrice}>
+                            {item.price != null ? `$${Number(item.price).toFixed(0)}` : '—'}
+                          </div>
+                        </div>
+                        <div style={styles.cartItemBottom}>
+                          <span style={styles.cartQuantity}>Qty {Math.max(1, Number(item.quantity || 1))}</span>
+                          <div style={styles.cartItemActions}>
+                            <button type="button" style={styles.cartSecondaryButton} onClick={() => { setCartOpen(false); navigate(item.route || '/marketplace') }}>
+                              View item
+                            </button>
+                            <button type="button" style={styles.cartDangerButton} onClick={() => handleRemoveCartItem(item.id)}>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {cartItems.length > 0 ? (
+              <div style={styles.cartFooter}>
+                <button type="button" style={styles.cartSecondaryWideButton} onClick={() => { setCartOpen(false); navigate('/marketplace') }}>
+                  Continue shopping
+                </button>
+                <button type="button" style={styles.cartDangerWideButton} onClick={handleClearCart}>
+                  Clear cart
+                </button>
+              </div>
+            ) : null}
+          </aside>
+        </div>
       )}
     </>
   )
@@ -1405,6 +1520,245 @@ const styles = {
   searchResultMeta: { color: '#6a8097', fontSize: 12, fontWeight: 600 },
   searchResultArrow: { color: '#3b84ba', fontSize: 15, fontWeight: 700 },
   searchEmpty: { padding: '14px 16px', color: '#6a8097', fontSize: 13, fontWeight: 600 },
+  cartScrim: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(5,17,29,0.28)',
+    backdropFilter: 'blur(3px)',
+    zIndex: 6200,
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
+  cartDrawer: {
+    width: 'min(430px, 100vw)',
+    height: '100vh',
+    background: '#f8fbff',
+    borderLeft: '1px solid rgba(120,171,218,0.16)',
+    boxShadow: '-28px 0 60px rgba(10,28,45,0.22)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  cartHeader: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '24px 22px 18px',
+    borderBottom: '1px solid rgba(120,171,218,0.14)',
+  },
+  cartEyebrow: {
+    fontSize: 11,
+    fontWeight: 800,
+    letterSpacing: '.16em',
+    textTransform: 'uppercase',
+    color: '#2f7de1',
+    marginBottom: 8,
+  },
+  cartTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 32,
+    fontWeight: 800,
+    letterSpacing: '-0.05em',
+    color: '#123052',
+    lineHeight: 1.02,
+    marginBottom: 6,
+  },
+  cartSubtitle: {
+    fontSize: 13,
+    lineHeight: 1.65,
+    color: '#5c7289',
+  },
+  cartClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    border: '1px solid rgba(120,171,218,0.16)',
+    background: '#fff',
+    color: '#4b6480',
+    fontSize: 22,
+    lineHeight: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  cartBody: {
+    flex: 1,
+    overflowY: 'auto',
+    padding: 20,
+  },
+  cartEmpty: {
+    minHeight: '100%',
+    display: 'grid',
+    alignContent: 'center',
+    justifyItems: 'center',
+    textAlign: 'center',
+    gap: 12,
+    padding: '20px 10px',
+  },
+  cartEmptyIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    background: 'linear-gradient(135deg, rgba(47,125,225,.12), rgba(14,43,74,.08))',
+    color: '#2f7de1',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartEmptyTitle: {
+    fontFamily: 'var(--display)',
+    fontSize: 24,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: '#123052',
+  },
+  cartEmptyText: {
+    maxWidth: 280,
+    fontSize: 13,
+    lineHeight: 1.7,
+    color: '#5c7289',
+  },
+  cartItems: {
+    display: 'grid',
+    gap: 12,
+  },
+  cartItemCard: {
+    display: 'grid',
+    gridTemplateColumns: '84px minmax(0, 1fr)',
+    gap: 12,
+    padding: 12,
+    borderRadius: 18,
+    background: '#fff',
+    border: '1px solid rgba(120,171,218,0.14)',
+    boxShadow: '0 12px 26px rgba(10,28,45,0.06)',
+  },
+  cartItemMedia: {
+    width: 84,
+    height: 84,
+    borderRadius: 16,
+    overflow: 'hidden',
+    background: '#edf4fb',
+  },
+  cartItemImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  },
+  cartItemFallback: {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#2f7de1',
+    background: 'linear-gradient(135deg, rgba(47,125,225,.12), rgba(14,43,74,.08))',
+  },
+  cartItemContent: {
+    minWidth: 0,
+    display: 'grid',
+    gap: 10,
+  },
+  cartItemTop: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  cartItemTitle: {
+    fontSize: 15,
+    fontWeight: 800,
+    color: '#123052',
+    lineHeight: 1.3,
+  },
+  cartItemMeta: {
+    marginTop: 4,
+    fontSize: 11,
+    color: '#7a8da2',
+    fontFamily: 'var(--mono)',
+  },
+  cartItemPrice: {
+    fontFamily: 'var(--display)',
+    fontSize: 22,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+    color: '#17314a',
+    whiteSpace: 'nowrap',
+  },
+  cartItemBottom: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    flexWrap: 'wrap',
+  },
+  cartQuantity: {
+    padding: '6px 10px',
+    borderRadius: 999,
+    background: 'rgba(47,125,225,.08)',
+    color: '#2f7de1',
+    fontSize: 11,
+    fontWeight: 800,
+  },
+  cartItemActions: {
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  cartPrimaryButton: {
+    border: 'none',
+    borderRadius: 14,
+    padding: '12px 16px',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #154779 100%)',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 800,
+  },
+  cartSecondaryButton: {
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 12,
+    padding: '10px 12px',
+    background: '#fff',
+    color: '#17314a',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  cartDangerButton: {
+    border: '1px solid rgba(239,68,68,.14)',
+    borderRadius: 12,
+    padding: '10px 12px',
+    background: 'rgba(254,242,242,.92)',
+    color: '#dc2626',
+    fontSize: 12,
+    fontWeight: 800,
+  },
+  cartFooter: {
+    padding: 20,
+    borderTop: '1px solid rgba(120,171,218,0.14)',
+    display: 'grid',
+    gap: 10,
+  },
+  cartSecondaryWideButton: {
+    width: '100%',
+    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 14,
+    padding: '12px 16px',
+    background: '#fff',
+    color: '#17314a',
+    fontSize: 13,
+    fontWeight: 800,
+  },
+  cartDangerWideButton: {
+    width: '100%',
+    border: '1px solid rgba(239,68,68,.14)',
+    borderRadius: 14,
+    padding: '12px 16px',
+    background: 'rgba(254,242,242,.92)',
+    color: '#dc2626',
+    fontSize: 13,
+    fontWeight: 800,
+  },
   visualCard: { position: 'relative', minHeight: 290, borderRadius: 24, overflow: 'hidden', backgroundSize: 'cover', backgroundPosition: 'center' },
   visualShade: { position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,24,39,0.08) 0%, rgba(6,24,39,0.24) 36%, rgba(6,24,39,0.42) 100%)' },
   visualText: { position: 'relative', zIndex: 1, minHeight: 290, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 28 },
