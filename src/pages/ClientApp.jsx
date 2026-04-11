@@ -1259,32 +1259,27 @@ export default function ClientApp() {
                 </div>
               </div>
               <div className={styles.g2} style={{alignItems:'start'}}>
-                <div className="panel">
-                  <div className="panel-hd">
-                    <div>
-                      <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 2</div>
-                      <div className="panel-title" style={{ fontSize: 21 }}>Maintenance suggestions</div>
-                      <div className={styles.muted}>
-                        {selectedMaintenanceVehicle
-                          ? `Recommendations tuned for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
-                          : 'FlashMat builds recommendations from your garage, mileage, and recent activity.'}
+                  <div className="panel">
+                    <div className="panel-hd">
+                      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, flexWrap:'wrap', width:'100%' }}>
+                        <div>
+                        <div style={{ fontSize: 11, letterSpacing: '.14em', textTransform: 'uppercase', color: 'var(--ink3)', marginBottom: 6 }}>Step 2</div>
+                        <div className="panel-title" style={{ fontSize: 21 }}>Maintenance suggestions</div>
+                        <div className={styles.muted}>
+                          {selectedMaintenanceVehicle
+                            ? `Recommendations tuned for ${selectedMaintenanceVehicle.make} ${selectedMaintenanceVehicle.model}.`
+                            : 'FlashMat builds recommendations from your garage, mileage, and recent activity.'}
+                        </div>
+                        </div>
+                        {selectedMaintenanceVehicle ? (
+                          <button className="btn btn-blue" onClick={() => openBooking()}>Book now</button>
+                        ) : null}
                       </div>
                     </div>
-                  </div>
-                  <div className="panel-body">
-                    {selectedMaintenanceVehicle && (
-                      <div style={{background:'linear-gradient(135deg, rgba(37,99,235,.08), rgba(37,99,235,.03))',border:'1px solid rgba(37,99,235,.18)',borderRadius:16,padding:14,marginBottom:14,display:'flex',gap:12,alignItems:'center'}}>
-                        <span style={{color:'var(--blue)',display:'inline-flex'}}><AppIcon code="VG" size={20} /></span>
-                        <div style={{flex:1}}>
-                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>Priority suggestion for {selectedMaintenanceVehicle.make} {selectedMaintenanceVehicle.model}</div>
-                          <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>Preventive maintenance is recommended this week based on this vehicle profile, recent usage, and current FlashScore signals.</div>
-                        </div>
-                        <button className="btn btn-blue" onClick={() => openBooking()}>Book now</button>
-                      </div>
-                    )}
-                    {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle to unlock maintenance intelligence',meta:'FlashMat will personalize reminders per vehicle.',detail:'Mileage, model, and service activity help generate better recommendations.'}]).map(item => (
-                      <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
-                        <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={item.icon} size={20} /></span>
+                    <div className="panel-body">
+                      {(maintenanceItems.length > 0 ? maintenanceItems : [{icon:'ME',title:'Add a vehicle to unlock maintenance intelligence',meta:'FlashMat will personalize reminders per vehicle.',detail:'Mileage, model, and service activity help generate better recommendations.'}]).map(item => (
+                        <div key={item.title} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:14,display:'flex',gap:12,marginBottom:10,alignItems:'flex-start'}}>
+                          <span style={{color:'var(--blue)',display:'inline-flex',marginTop:2}}><AppIcon code={item.icon} size={20} /></span>
                         <div style={{flex:1}}>
                           <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:5}}>{item.title}</div>
                           <div style={{fontSize:12,color:'var(--ink2)',marginBottom:5}}>{item.meta}</div>
