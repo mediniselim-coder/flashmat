@@ -723,7 +723,22 @@ export default function ClientApp() {
     .slice(0, 8)
   const flashScoreCards = myVehicles.map((v) => {
     const score = Number(v.flash_score || 80)
-    return { make: v.make, model: v.model, year: v.year, score, items: [['Engine', Math.min(99, score + 6), 'green'], ['Brakes', Math.min(98, score + 3), score >= 80 ? 'green' : 'amber'], ['Tires', Math.max(55, score - 4), score >= 75 ? 'blue' : 'amber'], ['Battery', Math.min(97, score + 2), 'blue'], ['Oil', Math.max(40, score - 8), score >= 85 ? 'green' : 'amber']] }
+    return {
+      make: v.make,
+      model: v.model,
+      year: v.year,
+      image: v.image_url || v.photo_url || '/vehicle-fallback.svg',
+      plate: v.plate || '',
+      mileage: v.mileage || '',
+      score,
+      items: [
+        ['Engine', Math.min(99, score + 6), 'green'],
+        ['Brakes', Math.min(98, score + 3), score >= 80 ? 'green' : 'amber'],
+        ['Tires', Math.max(55, score - 4), score >= 75 ? 'blue' : 'amber'],
+        ['Battery', Math.min(97, score + 2), 'blue'],
+        ['Oil', Math.max(40, score - 8), score >= 85 ? 'green' : 'amber'],
+      ],
+    }
   })
   const vehicleActivity = [
     ...myVehicles.map((vehicle) => ({
@@ -1445,24 +1460,68 @@ export default function ClientApp() {
 
         {pane === 'flashscore' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>FlashScore™</div></div></div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>FlashScore™</div>
+                <div className={styles.pageSub}>A clearer health snapshot for every vehicle, with the strongest and weakest parameters highlighted first.</div>
+              </div>
+            </div>
             <div className={styles.pad}>
               <div className={styles.g2}>
-                {(flashScoreCards.length > 0 ? flashScoreCards : [{make:'Add',model:'a vehicle',year:'',score:0,items:[]}]).map(v => (
+                {(flashScoreCards.length > 0 ? flashScoreCards : [{make:'Add',model:'a vehicle',year:'',score:0,items:[],image:'/vehicle-fallback.svg',plate:'',mileage:''}]).map(v => (
                   <div key={`${v.make}-${v.model}-${v.year}`} className="panel">
-                    <div className="panel-hd"><div className="panel-title">FS {v.make} {v.model} {v.year}</div><span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span></div>
+                    <div className="panel-hd">
+                      <div className="panel-title">FS {v.make} {v.model} {v.year}</div>
+                      <span className="badge badge-green">{v.score || '—'}{v.score ? '%' : ''}</span>
+                    </div>
                     <div className="panel-body">
-                      <div style={{width:80,height:80,borderRadius:'50%',border:'6px solid var(--green)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px',background:'var(--green-bg)'}}>
-                        <span style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--green)'}}>{v.score || '—'}</span>
-                      </div>
-                      {v.items.map(([l,val,c]) => (
-                        <div key={l} style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,fontSize:11}}>
-                          <span style={{width:6,height:6,borderRadius:'50%',background:`var(--${c})`,flexShrink:0}}/>
-                          <span style={{flex:1,color:'var(--ink2)'}}>{l}</span>
-                          <span style={{fontFamily:'var(--mono)',fontSize:10}}>{val}%</span>
-                          <div style={{width:60}}><div className="prog-bar"><div className="prog-fill" style={{width:`${val}%`,background:`var(--${c})`}}/></div></div>
+                      <div style={{display:'grid',gridTemplateColumns:'110px minmax(0, 1fr)',gap:16,alignItems:'center',marginBottom:18}}>
+                        <div style={{width:110,height:84,borderRadius:18,overflow:'hidden',border:'1px solid rgba(37,99,235,.14)',background:'rgba(37,99,235,.06)'}}>
+                          <img src={v.image} alt={`${v.make} ${v.model}`} style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}} />
                         </div>
-                      ))}
+                        <div style={{display:'grid',gap:10}}>
+                          <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+                            <div style={{width:86,height:86,borderRadius:'50%',border:'6px solid var(--green)',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--green-bg)',boxShadow:'0 12px 24px rgba(34,197,94,.10)'}}>
+                              <span style={{fontFamily:'var(--display)',fontSize:24,fontWeight:800,color:'var(--green)'}}>{v.score || '—'}</span>
+                            </div>
+                            <div>
+                              <div style={{fontSize:11,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Vehicle health</div>
+                              <div style={{fontFamily:'var(--display)',fontSize:20,fontWeight:800,color:'var(--ink)',lineHeight:1.05}}>{v.make} {v.model}</div>
+                              <div style={{fontSize:12,color:'var(--ink2)',marginTop:4}}>
+                                {[v.year, v.plate, v.mileage ? `${Number(v.mileage).toLocaleString()} km` : null].filter(Boolean).join(' • ') || 'Add more vehicle details for richer scoring.'}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))',gap:8}}>
+                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:'10px 12px'}}>
+                              <div style={{fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Strongest</div>
+                              <div style={{fontWeight:800,color:'var(--ink)'}}>{v.items[0]?.[0] || '—'}</div>
+                              <div style={{fontSize:12,color:'var(--green)'}}>{v.items[0]?.[1] ? `${v.items[0][1]}%` : '—'}</div>
+                            </div>
+                            <div style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:14,padding:'10px 12px'}}>
+                              <div style={{fontSize:10,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--ink3)',marginBottom:4}}>Watch first</div>
+                              <div style={{fontWeight:800,color:'var(--ink)'}}>{v.items[v.items.length - 1]?.[0] || '—'}</div>
+                              <div style={{fontSize:12,color:'var(--amber)'}}>{v.items[v.items.length - 1]?.[1] ? `${v.items[v.items.length - 1][1]}%` : '—'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{display:'grid',gap:10}}>
+                        {v.items.map(([l,val,c]) => (
+                          <div key={l} style={{background:'var(--bg3)',border:'1px solid var(--border)',borderRadius:16,padding:'12px 14px'}}>
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,marginBottom:8}}>
+                              <div style={{display:'flex',alignItems:'center',gap:10,minWidth:0}}>
+                                <span style={{width:10,height:10,borderRadius:'50%',background:`var(--${c})`,flexShrink:0,boxShadow:`0 0 0 4px color-mix(in srgb, var(--${c}) 16%, transparent)`}} />
+                                <span style={{fontWeight:800,color:'var(--ink)',fontSize:14}}>{l}</span>
+                              </div>
+                              <span style={{fontFamily:'var(--display)',fontSize:18,fontWeight:800,color:`var(--${c})`}}>{val}%</span>
+                            </div>
+                            <div className="prog-bar" style={{height:10,borderRadius:999,background:'rgba(15,30,61,.08)'}}>
+                              <div className="prog-fill" style={{width:`${val}%`,background:`var(--${c})`,borderRadius:999}}/>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                       {v.items.length === 0 && <div style={{textAlign:'center',fontSize:12,color:'var(--ink3)'}}>Add a vehicle to calculate your FlashScore.</div>}
                     </div>
                   </div>
