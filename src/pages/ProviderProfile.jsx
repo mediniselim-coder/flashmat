@@ -99,6 +99,7 @@ export default function ProviderProfile() {
   const [reviewComment, setReviewComment] = useState('')
   const [reviewSaving, setReviewSaving] = useState(false)
   const [messageOpening, setMessageOpening] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState(null)
   const autoMessageStartedRef = useRef(false)
   const expertiseCarouselRef = useRef(null)
   const canBook = user && profile?.role === 'client'
@@ -300,6 +301,23 @@ export default function ProviderProfile() {
     expertiseCarouselRef.current.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' })
   }
 
+  function isGalleryPhoto(value) {
+    return typeof value === 'string' && (value.startsWith('data:image') || value.startsWith('http'))
+  }
+
+  function openGalleryLightbox(index) {
+    setLightboxIndex(index)
+  }
+
+  function closeGalleryLightbox() {
+    setLightboxIndex(null)
+  }
+
+  function stepGalleryLightbox(direction) {
+    if (lightboxIndex == null || galleryImages.length === 0) return
+    setLightboxIndex((lightboxIndex + direction + galleryImages.length) % galleryImages.length)
+  }
+
   if (loading) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}><div className="spinner" style={{ width: 36, height: 36 }} /></div>
   if (!provider) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', flexDirection: 'column', gap: 16 }}><div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 800 }}>Provider not found</div><button className="btn btn-green" onClick={() => navigate('/providers')}>Back to providers</button></div>
 
@@ -366,10 +384,10 @@ export default function ProviderProfile() {
           }
           .provider-profile-dual-cards,
           .provider-profile-gallery {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
-          .provider-profile-gallery-main {
-            min-height: 280px !important;
+          .provider-profile-gallery-tile {
+            min-height: 180px !important;
           }
           .provider-profile-reviews-header {
             align-items: flex-start !important;
@@ -619,6 +637,44 @@ export default function ProviderProfile() {
             </InfoCard>
 
             {galleryImages.length > 0 ? <InfoCard><SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." /><div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div className="provider-profile-gallery-main" style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
+            {galleryImages.length > 0 ? (
+              <InfoCard>
+                <SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." />
+                <div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                  {galleryImages.map((img, index) => (
+                    <button
+                      key={`gallery-${index}`}
+                      type="button"
+                      className="provider-profile-gallery-tile"
+                      onClick={() => openGalleryLightbox(index)}
+                      style={{
+                        borderRadius: 18,
+                        overflow: 'hidden',
+                        minHeight: 200,
+                        aspectRatio: '1 / .82',
+                        border: '1px solid var(--border)',
+                        background: 'var(--bg3)',
+                        padding: 0,
+                        cursor: 'pointer',
+                        position: 'relative',
+                        boxShadow: '0 10px 24px rgba(15, 30, 61, 0.06)',
+                      }}
+                    >
+                      {isGalleryPhoto(img) ? (
+                        <img src={img} alt={`${provider.name} gallery ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 30 }}>
+                          {img}
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', inset: 'auto 10px 10px auto', padding: '6px 9px', borderRadius: 999, background: 'rgba(11,39,64,.72)', color: '#fff', fontSize: 11, fontWeight: 700 }}>
+                        View
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </InfoCard>
+            ) : null}
 
             {providerProducts.length > 0 ? <InfoCard><SectionHeading title="Provider products" subtitle="Items currently published by this provider through FlashMat Marketplace." /><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16 }}>{providerProducts.map((item) => <div key={item.id} style={{ display: 'grid', gap: 12 }}><div style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / .92', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{item.image_url ? <img src={item.image_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ServiceIcon code={item.icon || 'PC'} size={86} /></div>}</div><div><div style={{ fontFamily: 'var(--display)', fontSize: 17, lineHeight: 1.2, color: 'var(--ink)', marginBottom: 6 }}>{item.title}</div><div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 8 }}>{item.category}</div><div style={{ fontFamily: 'var(--display)', fontSize: 18, fontWeight: 800, color: 'var(--blue)', marginBottom: 10 }}>{formatPrice(item.price)}</div><button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>View item</button></div></div>)}</div></InfoCard> : null}
 
@@ -667,6 +723,114 @@ export default function ProviderProfile() {
       </div>
 
       {bookingOpen && user ? <BookingModal providers={[provider]} vehicles={userVehicles} initialProvider={provider} onClose={() => setBookingOpen(false)} onConfirm={handleBookingConfirm} /> : null}
+      {lightboxIndex != null ? (
+        <div
+          onClick={closeGalleryLightbox}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9000,
+            background: 'rgba(6, 20, 34, 0.86)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              position: 'relative',
+              width: 'min(1040px, 100%)',
+              maxHeight: '92vh',
+              display: 'grid',
+              gap: 14,
+            }}
+          >
+            <button
+              type="button"
+              onClick={closeGalleryLightbox}
+              aria-label="Close gallery"
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                zIndex: 2,
+                width: 42,
+                height: 42,
+                borderRadius: 999,
+                border: '1px solid rgba(255,255,255,.16)',
+                background: 'rgba(7,24,42,.72)',
+                color: '#fff',
+                fontSize: 22,
+                cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+            <div style={{ borderRadius: 24, overflow: 'hidden', background: '#081f31', maxHeight: '92vh' }}>
+              {isGalleryPhoto(galleryImages[lightboxIndex]) ? (
+                <img
+                  src={galleryImages[lightboxIndex]}
+                  alt={`${provider.name} gallery ${lightboxIndex + 1}`}
+                  style={{ width: '100%', maxHeight: '82vh', objectFit: 'contain', display: 'block', margin: '0 auto', background: '#081f31' }}
+                />
+              ) : (
+                <div style={{ minHeight: 520, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 68 }}>
+                  {galleryImages[lightboxIndex]}
+                </div>
+              )}
+            </div>
+            {galleryImages.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => stepGalleryLightbox(-1)}
+                  aria-label="Previous image"
+                  style={{
+                    position: 'absolute',
+                    left: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 48,
+                    height: 48,
+                    borderRadius: 999,
+                    border: '1px solid rgba(255,255,255,.16)',
+                    background: 'rgba(7,24,42,.72)',
+                    color: '#fff',
+                    fontSize: 22,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => stepGalleryLightbox(1)}
+                  aria-label="Next image"
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: 48,
+                    height: 48,
+                    borderRadius: 999,
+                    border: '1px solid rgba(255,255,255,.16)',
+                    background: 'rgba(7,24,42,.72)',
+                    color: '#fff',
+                    fontSize: 22,
+                    cursor: 'pointer',
+                  }}
+                >
+                  →
+                </button>
+              </>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       <SiteFooter portal="public" />
     </div>
   )
