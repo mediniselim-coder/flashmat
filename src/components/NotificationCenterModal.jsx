@@ -48,10 +48,11 @@ export default function NotificationCenterModal({ open, onClose, user, onOpenMes
 
   async function handleMarkAllRead() {
     try {
+      setNotifications((current) => current.map((notification) => ({ ...notification, is_read: true })))
       await markAllNotificationsRead(user.id)
+    } catch (error) {
       const nextNotifications = await fetchNotificationsForUser(user.id)
       setNotifications(nextNotifications)
-    } catch (error) {
       toast(error.message || 'Unable to mark notifications as read.', 'error')
     }
   }
@@ -59,6 +60,9 @@ export default function NotificationCenterModal({ open, onClose, user, onOpenMes
   async function handleNotificationClick(notification) {
     try {
       if (!notification.is_read) {
+        setNotifications((current) => current.map((item) => (
+          item.id === notification.id ? { ...item, is_read: true } : item
+        )))
         await markNotificationRead(notification.id)
       }
     } catch {

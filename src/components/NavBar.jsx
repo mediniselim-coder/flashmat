@@ -439,6 +439,7 @@ export default function NavBar({ activePage }) {
             <HeaderUtilityButton
               label="Cart"
               icon={<CartIcon />}
+              badge={cartCount}
               onClick={openCart}
               compact={isPhone}
             />

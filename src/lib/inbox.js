@@ -2,6 +2,12 @@ import { supabase } from './supabase'
 
 const ATTACHMENT_START = '[flashmat-attachments]'
 const ATTACHMENT_END = '[/flashmat-attachments]'
+export const FLASHMAT_INBOX_COUNTS_UPDATED_EVENT = 'flashmat-inbox-counts-updated'
+
+function notifyInboxCountsUpdated(userId) {
+  if (typeof window === 'undefined' || !userId) return
+  window.dispatchEvent(new CustomEvent(FLASHMAT_INBOX_COUNTS_UPDATED_EVENT, { detail: { userId } }))
+}
 
 function uniq(values) {
   return Array.from(new Set(values.filter(Boolean)))
@@ -102,12 +108,21 @@ export async function fetchNotificationsForUser(userId) {
 export async function markNotificationRead(notificationId) {
   if (!notificationId) return
 
+  const { data: notification, error: fetchError } = await supabase
+    .from('notifications')
+    .select('id, user_id')
+    .eq('id', notificationId)
+    .maybeSingle()
+
+  if (fetchError && !isMissingInboxRelation(fetchError)) throw fetchError
+
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('id', notificationId)
 
   if (error && !isMissingInboxRelation(error)) throw error
+  notifyInboxCountsUpdated(notification?.user_id)
 }
 
 export async function markAllNotificationsRead(userId) {
@@ -121,6 +136,7 @@ export async function markAllNotificationsRead(userId) {
     .neq('type', 'message')
 
   if (error && !isMissingInboxRelation(error)) throw error
+  notifyInboxCountsUpdated(userId)
 }
 
 export async function fetchUnreadInboxCounts(userId) {

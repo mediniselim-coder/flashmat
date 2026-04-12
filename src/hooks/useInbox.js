@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchUnreadInboxCounts, subscribeToInbox } from '../lib/inbox'
+import { FLASHMAT_INBOX_COUNTS_UPDATED_EVENT, fetchUnreadInboxCounts, subscribeToInbox } from '../lib/inbox'
 
 export function useInboxSummary(user, profile) {
   const [summary, setSummary] = useState({
@@ -33,9 +33,15 @@ export function useInboxSummary(user, profile) {
       onNotificationsChange: refresh,
       onMessagesChange: refresh,
     })
+    function handleCountsUpdated(event) {
+      if (String(event?.detail?.userId || '') !== String(user.id)) return
+      refresh()
+    }
+    window.addEventListener(FLASHMAT_INBOX_COUNTS_UPDATED_EVENT, handleCountsUpdated)
 
     return () => {
       active = false
+      window.removeEventListener(FLASHMAT_INBOX_COUNTS_UPDATED_EVENT, handleCountsUpdated)
       unsubscribe()
     }
   }, [profile?.role, user?.id])
