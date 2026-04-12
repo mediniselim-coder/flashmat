@@ -1043,22 +1043,22 @@ export default function ClientApp() {
                     style={{
                       background:'var(--bg2)',
                       border:'1px solid var(--border)',
-                      borderRadius:16,
-                      minHeight:108,
-                      padding:'20px 18px',
+                      borderRadius:14,
+                      minHeight:74,
+                      padding:'14px 16px',
                       cursor:'pointer',
                       textAlign:'left',
                       transition:'all .18s',
                       boxShadow:'var(--shadow)',
                       display:'flex',
                       flexDirection:'column',
-                      justifyContent:'space-between',
+                      justifyContent:'center',
                     }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = q.color}
                     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                    <div style={{ color:q.color, marginBottom:12, display:'inline-flex' }}><AppIcon code={q.icon} size={24} /></div>
-                    <div style={{ fontWeight:800, fontSize:19, color:'var(--ink)', lineHeight:1.05 }}>{q.label}</div>
-                    <div style={{ fontSize:13, color:'var(--ink3)', marginTop:6 }}>{q.sub}</div>
+                    <div style={{ color:q.color, marginBottom:8, display:'inline-flex' }}><AppIcon code={q.icon} size={18} /></div>
+                    <div style={{ fontWeight:800, fontSize:16, color:'var(--ink)', lineHeight:1.05 }}>{q.label}</div>
+                    <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4 }}>{q.sub}</div>
                   </button>
                 ))}
               </div>
