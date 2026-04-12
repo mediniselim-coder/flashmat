@@ -984,28 +984,6 @@ export default function ClientApp() {
           <div className={styles.mobileTopbar}>
             <button className={styles.menuBtn} onClick={() => setSidebar(true)}>☰</button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button
-                type="button"
-                onClick={goHome}
-                aria-label="Back to home"
-                title="Back to home"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  border: '1px solid rgba(255,255,255,.08)',
-                  background: 'rgba(255,255,255,.04)',
-                  color: '#f7fbff',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                ←
-              </button>
               <img src="/logo-dark.png" alt="FlashMat" onClick={goHome} style={{ height: 28, objectFit: 'contain', cursor: 'pointer' }} />
             </div>
             <button className="btn btn-green" style={{fontSize:11,padding:'7px 12px'}} onClick={() => openBooking()}>+ Book</button>
