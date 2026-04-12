@@ -1,8 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useToast } from '../hooks/useToast'
 import { PROVIDER_SERVICE_OPTIONS } from '../lib/providerProfiles'
-import PaymentDetailsFields from './PaymentDetailsFields'
-import { validateBillingAddress, validatePaymentDetails } from '../lib/payments'
 
 const SERVICE_PRICES = {
   'mechanic-general': '$80-$150',
@@ -67,20 +65,6 @@ export default function BookingModal({
   const [date, setDate] = useState('')
   const [time, setTime] = useState('10:00')
   const [notes, setNotes] = useState('')
-  const [payment, setPayment] = useState({
-    cardholder: paymentDefaults?.cardholder || '',
-    cardNumber: '',
-    expiry: '',
-    cvc: '',
-  })
-  const [billing, setBilling] = useState({
-    addressLine1: paymentDefaults?.addressLine1 || '',
-    addressLine2: paymentDefaults?.addressLine2 || '',
-    city: paymentDefaults?.city || '',
-    province: paymentDefaults?.province || '',
-    postalCode: paymentDefaults?.postalCode || '',
-    country: paymentDefaults?.country || 'Canada',
-  })
   const [loading, setLoading] = useState(false)
 
   const openProviders = providers.filter((entry) => entry.is_open === true || entry.is_open === 'true')
@@ -105,18 +89,6 @@ export default function BookingModal({
   }, [activeProvider])
 
   async function confirm() {
-    const paymentError = validatePaymentDetails(payment)
-    if (paymentError) {
-      toast(paymentError, 'error')
-      return
-    }
-
-    const billingError = validateBillingAddress(billing)
-    if (billingError) {
-      toast(billingError, 'error')
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -129,8 +101,6 @@ export default function BookingModal({
         timeSlot: time,
         notes,
         price: service.price,
-        paymentDetails: payment,
-        billingAddress: billing,
       })
       setLoading(false)
       onClose()
@@ -141,14 +111,6 @@ export default function BookingModal({
   }
 
   const steps = ['Service', 'Date & Time', 'Confirm']
-
-  function handlePaymentChange(name, value) {
-    setPayment((current) => ({ ...current, [name]: value }))
-  }
-
-  function handleBillingChange(name, value) {
-    setBilling((current) => ({ ...current, [name]: value }))
-  }
 
   return (
     <div className="modal-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
@@ -299,17 +261,6 @@ export default function BookingModal({
               {notes ? (
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(22,199,132,.2)', fontSize: 12, color: 'var(--ink2)' }}>{notes}</div>
               ) : null}
-            </div>
-            <div style={{ marginBottom: 18, padding: 16, borderRadius: 16, border: '1px solid var(--border)', background: '#fff' }}>
-              <PaymentDetailsFields
-                payment={payment}
-                onPaymentChange={handlePaymentChange}
-                billing={billing}
-                onBillingChange={handleBillingChange}
-                compact
-                title="Payment method"
-                subtitle="FlashMat keeps this card ready. The provider must still confirm the booking request before any charge is active."
-              />
             </div>
             <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 16 }}>The booking request will be saved in FlashMat. The provider must confirm it before the reservation becomes active.</p>
             <div className="modal-actions">
