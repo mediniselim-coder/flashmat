@@ -120,8 +120,13 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
   }
 
   function handleAddToCart(listing) {
-    const cartUserId = user?.id || 'guest'
-    addCartItem(cartUserId, {
+    if (!user) {
+      window.sessionStorage.setItem('flashmat-post-login-redirect', '/marketplace')
+      window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+      return
+    }
+
+    addCartItem(user.id, {
       id: listing.id,
       listing_id: listing.id,
       title: listing.title,

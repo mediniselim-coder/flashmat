@@ -59,7 +59,13 @@ export default function PublicMarketplaceListing() {
 
   function handleAddToCart() {
     if (!listing) return
-    addCartItem(user?.id || 'guest', {
+    if (!user) {
+      window.sessionStorage.setItem('flashmat-post-login-redirect', `/marketplace/listings/${listing.id}`)
+      window.dispatchEvent(new CustomEvent('flashmat-login-modal-open'))
+      return
+    }
+
+    addCartItem(user.id, {
       id: listing.id,
       listing_id: listing.id,
       title: listing.title,
