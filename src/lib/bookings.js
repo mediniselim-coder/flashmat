@@ -3,9 +3,9 @@
 const STATUS_META = {
   pending: { label: 'Pending', cls: 'badge-amber' },
   confirmed: { label: 'Confirmed', cls: 'badge-green' },
-  progress: { label: 'In progress', cls: 'badge-blue' },
-  done: { label: 'Completed', cls: 'badge-green' },
-  cancelled: { label: 'Cancelled', cls: 'badge-gray' },
+  refused: { label: 'Refused', cls: 'badge-red' },
+  canceled: { label: 'Canceled', cls: 'badge-gray' },
+  cancelled: { label: 'Canceled', cls: 'badge-gray' },
 }
 
 function formatBookingDate(date, timeSlot) {
@@ -90,7 +90,7 @@ export async function createBooking(input) {
     time_slot: input.timeSlot || null,
     notes: input.notes || '',
     price: input.price || 'Price to confirm',
-    status: 'confirmed',
+    status: 'pending',
   }
 
   const { data, error } = await supabase

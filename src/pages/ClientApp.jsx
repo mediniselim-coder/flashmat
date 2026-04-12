@@ -693,7 +693,7 @@ export default function ClientApp() {
   async function handleBookingConfirm(payload) {
     if (!user?.id) throw new Error('Client login required')
     const createdBooking = await createBooking({ clientId: user.id, providerId: payload.provider.id, vehicleId: payload.vehicle?.id, service: payload.service, serviceIcon: payload.serviceIcon, date: payload.date, timeSlot: payload.timeSlot, notes: payload.notes, price: payload.price })
-    setBookings((current) => [createdBooking, ...current]); setSelectedBookingProvider(null); go('bookings'); toast('Booking confirmed', 'success')
+    setBookings((current) => [createdBooking, ...current]); setSelectedBookingProvider(null); go('bookings'); toast('Booking request sent to provider', 'success')
   }
 
   const averageFlashScore = myVehicles.length ? Math.round(myVehicles.reduce((sum, v) => sum + Number(v.flash_score || 0), 0) / myVehicles.length) : 0

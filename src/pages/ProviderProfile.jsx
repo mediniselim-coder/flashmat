@@ -270,7 +270,7 @@ export default function ProviderProfile() {
   async function handleBookingConfirm(payload) {
     if (!provider?.id) throw new Error('Provider not found for this booking')
     await createBooking({ clientId: user.id, providerId: provider.id, vehicleId: payload.vehicle?.id, service: payload.service, serviceIcon: payload.serviceIcon, date: payload.date, timeSlot: payload.timeSlot, notes: payload.notes, price: payload.price })
-    toast('Booking confirmed', 'success')
+    toast('Booking request sent to provider', 'success')
     navigate('/app/client/bookings')
   }
 

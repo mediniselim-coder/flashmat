@@ -200,9 +200,10 @@ export default function ProviderApp() {
   const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
   const flashFixQueue = flashFixRequests.filter((request) => request.channel === 'flashfix')
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
-  const bookingsDoneCount = providerBookings.filter((booking) => booking.status === 'done').length
-  const bookingsPendingCount = providerBookings.filter((booking) => booking.status !== 'done').length
+  const bookingsConfirmedCount = providerBookings.filter((booking) => booking.status === 'confirmed').length
+  const bookingsPendingCount = providerBookings.filter((booking) => booking.status === 'pending').length
   const monthlyRevenue = providerBookings.reduce((sum, booking) => {
+    if (booking.status !== 'confirmed') return sum
     const amount = Number(String(booking.priceLabel || '').replace(/[^0-9.]/g, ''))
     return sum + (Number.isFinite(amount) ? amount : 0)
   }, 0)
@@ -228,7 +229,7 @@ export default function ProviderApp() {
     service: booking.service,
     cls: booking.statusClass,
     label: booking.statusLabel,
-    done: booking.status === 'done',
+    done: booking.status === 'confirmed',
   }))
   const filteredClients = providerClients.filter((c) => !clientQ || c.name.toLowerCase().includes(clientQ.toLowerCase()))
   const rawPaneSegment = getProviderPathSegment(location.pathname)
@@ -308,7 +309,7 @@ export default function ProviderApp() {
         title: `${b.service} — ${b.clientName}${b.vehicleLabel && b.vehicleLabel !== 'Vehicle to confirm' ? ` (${b.vehicleLabel})` : ''}`,
         meta: b.statusLabel,
         time: b.timeSlot || b.date || 'To confirm',
-        done: b.status === 'done',
+        done: b.status === 'confirmed',
       }))
     setTasks(prev => {
       const customTasks = prev.filter(t => !t.bookingId)
@@ -319,14 +320,8 @@ export default function ProviderApp() {
   async function toggleTask(i) {
     const task = tasks[i]
     if (task.bookingId) {
-      const newStatus = task.done ? 'confirmed' : 'done'
-      try {
-        await updateBookingStatus(task.bookingId, newStatus)
-        const meta = getBookingStatusMeta(newStatus)
-        setProviderBookings(prev => prev.map(b =>
-          b.id === task.bookingId ? { ...b, status: newStatus, statusLabel: meta.label, statusClass: meta.cls } : b
-        ))
-      } catch { /* ignore */ }
+      setTasks(prev => prev.map((x, j) => j === i ? { ...x, done: !x.done } : x))
+      return
     }
     setTasks(prev => prev.map((x, j) => j === i ? { ...x, done: !x.done } : x))
   }
@@ -623,24 +618,48 @@ export default function ProviderApp() {
     toast(labels[nextStatus] || 'Update sent', 'success')
   }
 
-  async function markBookingDone(booking) {
+  async function handleBookingStatusChange(booking, nextStatus) {
     try {
-      const updated = await updateBookingStatus(booking.id, 'done')
+      const updated = await updateBookingStatus(booking.id, nextStatus)
       setProviderBookings((current) => current.map((entry) => entry.id === updated.id ? updated : entry))
 
       try {
+        const notificationMeta = {
+          confirmed: {
+            title: 'Booking confirmed',
+            body: `${name} confirmed your ${booking.service} reservation.`,
+            icon: 'OK',
+          },
+          refused: {
+            title: 'Booking refused',
+            body: `${name} refused your ${booking.service} reservation request.`,
+            icon: 'AL',
+          },
+          canceled: {
+            title: 'Booking canceled',
+            body: `${name} canceled your ${booking.service} reservation.`,
+            icon: 'AL',
+          },
+        }[nextStatus]
+
         await createNotification({
           userId: booking.client_id,
-          title: 'Votre vehicule est pret',
-          body: `${name} a termine le service ${booking.service}.`,
-          icon: 'OK',
+          title: notificationMeta?.title || 'Booking updated',
+          body: notificationMeta?.body || `${name} updated your ${booking.service} booking.`,
+          icon: notificationMeta?.icon || 'AL',
           type: 'booking',
         })
       } catch {
         // Notification cross-user may be blocked by RLS; the booking itself still stays updated.
       }
 
-      toast(`${booking.clientName} notifie: voiture prete`, 'success')
+      const toastLabel = {
+        confirmed: 'Booking confirmed',
+        refused: 'Booking refused',
+        canceled: 'Booking canceled',
+      }[nextStatus] || 'Booking updated'
+
+      toast(`${toastLabel} for ${booking.clientName}`, 'success')
     } catch (error) {
       toast(error.message || 'Impossible de mettre a jour la reservation', 'error')
     }
@@ -731,9 +750,9 @@ export default function ProviderApp() {
             </div>
             <div className={styles.pad}>
               <div className={styles.statsGrid}>
-                <div className="stat-card sc-green"><div className="stat-lbl">Recorded Revenue</div><div className="stat-val">$<span style={{fontSize:22}}>{monthlyRevenue || 0}</span></div><div className="stat-sub">{bookingsDoneCount} completed job(s)</div></div>
+                <div className="stat-card sc-green"><div className="stat-lbl">Recorded Revenue</div><div className="stat-val">$<span style={{fontSize:22}}>{monthlyRevenue || 0}</span></div><div className="stat-sub">{bookingsConfirmedCount} confirmed booking(s)</div></div>
                 <div className="stat-card sc-blue"><div className="stat-lbl">Active Jobs</div><div className="stat-val">{providerBookings.length}</div><div className="stat-sub">bookings synced with FlashMat</div></div>
-                <div className="stat-card sc-amber"><div className="stat-lbl">Pending</div><div className="stat-val">{bookingsPendingCount}</div><div className="stat-sub">booking(s) to handle</div></div>
+                <div className="stat-card sc-amber"><div className="stat-lbl">Pending</div><div className="stat-val">{bookingsPendingCount}</div><div className="stat-sub">booking request(s) to review</div></div>
                 <div className="stat-card sc-purple"><div className="stat-lbl">Average Rating</div><div className="stat-val">{averageRating}</div><div className="stat-sub">public shop profile</div></div>
               </div>
 
@@ -945,11 +964,20 @@ export default function ProviderApp() {
                         <td style={{fontFamily:'var(--mono)',fontSize:11}}>{b.datetimeLabel}</td>
                         <td style={{fontFamily:'var(--mono)',fontSize:12,color:'var(--green)'}}>{b.priceLabel}</td>
                         <td><span className={`badge ${b.statusClass}`}>{b.statusLabel}</span></td>
-                        <td style={{display:'flex',gap:4}}>
-                          <button className="btn btn-green" style={{fontSize:10,opacity:b.status==='done'?.4:1}} disabled={b.status==='done'} onClick={() => markBookingDone(b)}>Ready</button>
-                        </td>
-                      </tr>
-                    ))}
+                          <td style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                            {b.status === 'pending' ? (
+                              <>
+                                <button className="btn btn-green" style={{fontSize:10}} onClick={() => handleBookingStatusChange(b, 'confirmed')}>Confirm</button>
+                                <button className="btn" style={{fontSize:10,color:'var(--red)',borderColor:'rgba(239,68,68,.22)'}} onClick={() => handleBookingStatusChange(b, 'refused')}>Refuse</button>
+                              </>
+                            ) : null}
+                            {b.status === 'confirmed' ? (
+                              <button className="btn" style={{fontSize:10,color:'var(--red)',borderColor:'rgba(239,68,68,.22)'}} onClick={() => handleBookingStatusChange(b, 'canceled')}>Cancel</button>
+                            ) : null}
+                            {b.status !== 'pending' && b.status !== 'confirmed' ? <span style={{fontSize:11,color:'var(--ink3)'}}>—</span> : null}
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>

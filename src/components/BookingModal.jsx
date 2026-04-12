@@ -261,11 +261,11 @@ export default function BookingModal({
                 <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(22,199,132,.2)', fontSize: 12, color: 'var(--ink2)' }}>{notes}</div>
               ) : null}
             </div>
-            <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 16 }}>The booking will be saved in FlashMat and visible to both the client and the provider.</p>
+            <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 16 }}>The booking request will be saved in FlashMat. The provider must confirm it before the reservation becomes active.</p>
             <div className="modal-actions">
               <button className="btn" onClick={() => setStep(2)}>&lt;- Back</button>
               <button className="btn btn-green btn-lg" onClick={confirm} disabled={loading || !selectedVehicle || !provider || !service}>
-                {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Confirm Booking'}
+                {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Send Request'}
               </button>
             </div>
           </div>

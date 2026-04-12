@@ -156,7 +156,7 @@ export default function ServiceProviders() {
     })
     setBookingOpen(false)
     setSelectedBookingProvider(null)
-    toast('Booking confirmed', 'success')
+    toast('Booking request sent to provider', 'success')
     navigate('/app/client/bookings')
   }
 
