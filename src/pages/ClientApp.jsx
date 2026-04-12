@@ -1786,37 +1786,47 @@ export default function ClientApp() {
 
                       return (
                         <>
-                          <div>
-                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:10}}>
-                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Upcoming bookings</div>
-                              <span className="badge badge-blue">{upcoming.length}</span>
+                          <details open style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:'10px 12px',boxShadow:'var(--shadow)'}}>
+                            <summary style={{listStyle:'none',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,cursor:'pointer',padding:'6px 6px'}}>
+                              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Upcoming bookings</div>
+                                <span className="badge badge-blue">{upcoming.length}</span>
+                              </div>
+                              <span aria-hidden="true" style={{fontSize:18,color:'var(--ink3)'}}>▾</span>
+                            </summary>
+                            <div style={{padding:'8px 6px 12px'}}>
+                              {upcoming.length > 0 ? (
+                                <div style={{ display:'grid', gap:12 }}>
+                                  {upcomingSorted.map((booking) => renderBooking(booking))}
+                                </div>
+                              ) : (
+                                <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
+                                  No upcoming bookings yet.
+                                </div>
+                              )}
                             </div>
-                            {upcoming.length > 0 ? (
-                              <div style={{ display:'grid', gap:12 }}>
-                                {upcomingSorted.map((booking) => renderBooking(booking))}
-                              </div>
-                            ) : (
-                              <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
-                                No upcoming bookings yet.
-                              </div>
-                            )}
-                          </div>
+                          </details>
 
-                          <div>
-                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:10}}>
-                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Past bookings</div>
-                              <span className="badge badge-gray">{past.length}</span>
+                          <details style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:'10px 12px',boxShadow:'var(--shadow)'}}>
+                            <summary style={{listStyle:'none',display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,cursor:'pointer',padding:'6px 6px'}}>
+                              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Past bookings</div>
+                                <span className="badge badge-gray">{past.length}</span>
+                              </div>
+                              <span aria-hidden="true" style={{fontSize:18,color:'var(--ink3)'}}>▾</span>
+                            </summary>
+                            <div style={{padding:'8px 6px 12px'}}>
+                              {past.length > 0 ? (
+                                <div style={{ display:'grid', gap:12 }}>
+                                  {pastSorted.map((booking) => renderBooking(booking))}
+                                </div>
+                              ) : (
+                                <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
+                                  No past bookings yet.
+                                </div>
+                              )}
                             </div>
-                            {past.length > 0 ? (
-                              <div style={{ display:'grid', gap:12 }}>
-                                {pastSorted.map((booking) => renderBooking(booking))}
-                              </div>
-                            ) : (
-                              <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
-                                No past bookings yet.
-                              </div>
-                            )}
-                          </div>
+                          </details>
                         </>
                       )
                     })()}

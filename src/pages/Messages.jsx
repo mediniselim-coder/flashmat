@@ -723,7 +723,7 @@ export default function Messages() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                    <button type="button" style={isMobile ? styles.mobileProfileButton : styles.secondaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
+                    <button type="button" style={isMobile ? styles.mobileProfileButton : styles.primaryButton} onClick={() => openCounterpartProfile(selectedThread)}>
                       View profile
                     </button>
                   </div>
@@ -1886,8 +1886,8 @@ const styles = {
     color: 'rgba(255,255,255,0.58)',
   },
   mobileProfileButton: {
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(255,255,255,0.05)',
+    border: 'none',
+    background: 'linear-gradient(135deg, #17355c 0%, #1c4d82 100%)',
     color: '#fff',
     borderRadius: 999,
     padding: '9px 12px',
