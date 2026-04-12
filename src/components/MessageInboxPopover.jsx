@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchConversationThreads, subscribeToInbox } from '../lib/inbox'
 
 function formatPreviewTime(value) {
@@ -30,6 +30,7 @@ function Avatar({ thread }) {
 export default function MessageInboxPopover({ open, onClose, onOpenThread, onOpenAll, user, profile }) {
   const [threads, setThreads] = useState([])
   const [loading, setLoading] = useState(false)
+  const wrapperRef = useRef(null)
   const role = profile?.role || 'client'
 
   useEffect(() => {
@@ -62,12 +63,31 @@ export default function MessageInboxPopover({ open, onClose, onOpenThread, onOpe
     }
   }, [open, role, user?.id])
 
+  useEffect(() => {
+    if (!open) return undefined
+
+    function handleOutsideClick(event) {
+      if (!wrapperRef.current) return
+      if (!wrapperRef.current.contains(event.target)) {
+        onClose?.()
+      }
+    }
+
+    document.addEventListener('mousedown', handleOutsideClick)
+    document.addEventListener('touchstart', handleOutsideClick)
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick)
+      document.removeEventListener('touchstart', handleOutsideClick)
+    }
+  }, [open, onClose])
+
   const visibleThreads = useMemo(() => threads.slice(0, 8), [threads])
 
   if (!open) return null
 
   return (
-    <div style={styles.wrap}>
+    <div style={styles.wrap} ref={wrapperRef}>
       <div style={styles.header}>
         <div>
           <div style={styles.eyebrow}>FlashMat messages</div>
