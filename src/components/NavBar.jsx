@@ -746,7 +746,7 @@ export default function NavBar({ activePage }) {
                             >
                               -
                             </button>
-                            <span style={styles.cartQuantityValue}>Qty {Math.max(1, Number(item.quantity || 1))}</span>
+                            <span style={styles.cartQuantityValue}>{Math.max(1, Number(item.quantity || 1))}</span>
                             <button
                               type="button"
                               style={styles.cartQuantityButton}
@@ -757,11 +757,23 @@ export default function NavBar({ activePage }) {
                             </button>
                           </div>
                           <div style={styles.cartItemActions}>
-                            <button type="button" style={styles.cartSecondaryButton} onClick={() => { setCartOpen(false); navigate(item.route || '/marketplace') }}>
-                              View item
+                            <button
+                              type="button"
+                              style={styles.cartIconButton}
+                              onClick={() => { setCartOpen(false); navigate(item.route || '/marketplace') }}
+                              aria-label={`View ${item.title}`}
+                              title="View item"
+                            >
+                              <EyeIcon />
                             </button>
-                            <button type="button" style={styles.cartDangerButton} onClick={() => handleRemoveCartItem(item.id)}>
-                              Remove
+                            <button
+                              type="button"
+                              style={styles.cartDangerIconButton}
+                              onClick={() => handleRemoveCartItem(item.id)}
+                              aria-label={`Remove ${item.title}`}
+                              title="Remove item"
+                            >
+                              <TrashIcon />
                             </button>
                           </div>
                         </div>
@@ -1044,6 +1056,8 @@ function DashboardIcon() { return <Svg><path d="M4 13h7V4H4v9Z" /><path d="M13 2
 function CarIcon() { return <Svg><path d="M5 16h14" /><path d="m7 16 1-5h8l1 5" /><path d="M6 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="M18 19a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" /><path d="m8 11 2-3h4l2 3" /></Svg> }
 function CalendarIcon() { return <Svg><path d="M8 3v4" /><path d="M16 3v4" /><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16" /></Svg> }
 function LogoutIcon() { return <Svg><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /></Svg> }
+function EyeIcon() { return <Svg><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z" /><circle cx="12" cy="12" r="3" /></Svg> }
+function TrashIcon() { return <Svg><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M7 7l1 13h8l1-13" /><path d="M10 11v6" /><path d="M14 11v6" /></Svg> }
 
 const styles = {
   root: { position: 'sticky', top: 0, zIndex: 5000 },
@@ -1790,10 +1804,10 @@ const styles = {
     boxShadow: '0 4px 10px rgba(10,28,45,0.08)',
   },
   cartQuantityValue: {
-    minWidth: 54,
+    minWidth: 20,
     textAlign: 'center',
     color: '#2f7de1',
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: 800,
   },
   cartItemActions: {
@@ -1810,23 +1824,27 @@ const styles = {
     fontSize: 13,
     fontWeight: 800,
   },
-  cartSecondaryButton: {
+  cartIconButton: {
     border: '1px solid rgba(120,171,218,0.16)',
     borderRadius: 12,
-    padding: '10px 12px',
+    width: 42,
+    height: 42,
     background: '#fff',
     color: '#17314a',
-    fontSize: 12,
-    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  cartDangerButton: {
+  cartDangerIconButton: {
     border: '1px solid rgba(239,68,68,.14)',
     borderRadius: 12,
-    padding: '10px 12px',
+    width: 42,
+    height: 42,
     background: 'rgba(254,242,242,.92)',
     color: '#dc2626',
-    fontSize: 12,
-    fontWeight: 800,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cartFooter: {
     padding: 20,
