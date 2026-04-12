@@ -387,7 +387,7 @@ export default function ProviderProfile() {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
           .provider-profile-gallery-tile {
-            min-height: 148px !important;
+            min-height: 110px !important;
           }
           .provider-profile-reviews-header {
             align-items: flex-start !important;
@@ -436,7 +436,7 @@ export default function ProviderProfile() {
             min-height: 166px !important;
           }
           .provider-profile-gallery-tile {
-            min-height: 136px !important;
+            min-height: 96px !important;
           }
           .provider-profile-map {
             height: 220px !important;
@@ -642,7 +642,7 @@ export default function ProviderProfile() {
             {galleryImages.length > 0 ? (
               <InfoCard>
                 <SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." />
-                <div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                <div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                   {galleryImages.map((img, index) => (
                     <button
                       key={`gallery-${index}`}
@@ -652,7 +652,7 @@ export default function ProviderProfile() {
                       style={{
                         borderRadius: 18,
                         overflow: 'hidden',
-                        minHeight: 156,
+                        minHeight: 112,
                         aspectRatio: '1 / .82',
                         border: '1px solid var(--border)',
                         background: 'var(--bg3)',
