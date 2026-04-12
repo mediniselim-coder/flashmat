@@ -6,11 +6,25 @@ import { supabase } from "./lib/supabase"
 import { getDefaultAppRoute } from "./lib/roles"
 
 const ROUTE_RELOAD_PREFIX = "flashmat-route-reload:"
+const routeModuleCache = new Map()
+
+function loadPageModule(importer, key) {
+  const cached = routeModuleCache.get(key)
+  if (cached) return cached
+
+  const request = importer().catch((error) => {
+    routeModuleCache.delete(key)
+    throw error
+  })
+
+  routeModuleCache.set(key, request)
+  return request
+}
 
 function lazyPage(importer, key) {
   return lazy(async () => {
     try {
-      return await importer()
+      return await loadPageModule(importer, key)
     } catch (error) {
       if (typeof window !== "undefined") {
         const markerKey = `${ROUTE_RELOAD_PREFIX}${key}`
@@ -30,25 +44,47 @@ function lazyPage(importer, key) {
   })
 }
 
-const Landing = lazyPage(() => import("./pages/Landing"), "landing")
-const Auth = lazyPage(() => import("./pages/Auth"), "auth")
-const ClientApp = lazyPage(() => import("./pages/ClientApp"), "client-app")
-const ProviderApp = lazyPage(() => import("./pages/ProviderApp"), "provider-app")
-const AdminApp = lazyPage(() => import("./pages/AdminApp"), "admin-app")
-const ProviderProfile = lazyPage(() => import("./pages/ProviderProfile"), "provider-profile")
-const Services = lazyPage(() => import("./pages/Services"), "services")
-const ServiceProviders = lazyPage(() => import("./pages/ServiceProviders"), "service-providers")
-const AutoDoctor = lazyPage(() => import("./pages/AutoDoctor"), "auto-doctor")
-const FlashFixUrgence = lazyPage(() => import("./pages/FlashFixUrgence"), "flashfix")
-const PublicMarketplace = lazyPage(() => import("./pages/PublicMarketplace"), "marketplace")
-const VehicleDetails = lazyPage(() => import("./pages/VehicleDetails"), "vehicle-details")
-const PublicVehicleListing = lazyPage(() => import("./pages/PublicVehicleListing"), "public-vehicle")
-const PublicMarketplaceListing = lazyPage(() => import("./pages/PublicMarketplaceListing"), "marketplace-listing")
-const Checkout = lazyPage(() => import("./pages/Checkout"), "checkout")
-const Community = lazyPage(() => import("./pages/Community"), "community")
-const Pricing = lazyPage(() => import("./pages/Pricing"), "pricing")
-const Contact = lazyPage(() => import("./pages/Contact"), "contact")
-const Messages = lazyPage(() => import("./pages/Messages"), "messages")
+const pageImporters = {
+  landing: () => import("./pages/Landing"),
+  auth: () => import("./pages/Auth"),
+  "client-app": () => import("./pages/ClientApp"),
+  "provider-app": () => import("./pages/ProviderApp"),
+  "admin-app": () => import("./pages/AdminApp"),
+  "provider-profile": () => import("./pages/ProviderProfile"),
+  services: () => import("./pages/Services"),
+  "service-providers": () => import("./pages/ServiceProviders"),
+  "auto-doctor": () => import("./pages/AutoDoctor"),
+  flashfix: () => import("./pages/FlashFixUrgence"),
+  marketplace: () => import("./pages/PublicMarketplace"),
+  "vehicle-details": () => import("./pages/VehicleDetails"),
+  "public-vehicle": () => import("./pages/PublicVehicleListing"),
+  "marketplace-listing": () => import("./pages/PublicMarketplaceListing"),
+  checkout: () => import("./pages/Checkout"),
+  community: () => import("./pages/Community"),
+  pricing: () => import("./pages/Pricing"),
+  contact: () => import("./pages/Contact"),
+  messages: () => import("./pages/Messages"),
+}
+
+const Landing = lazyPage(pageImporters.landing, "landing")
+const Auth = lazyPage(pageImporters.auth, "auth")
+const ClientApp = lazyPage(pageImporters["client-app"], "client-app")
+const ProviderApp = lazyPage(pageImporters["provider-app"], "provider-app")
+const AdminApp = lazyPage(pageImporters["admin-app"], "admin-app")
+const ProviderProfile = lazyPage(pageImporters["provider-profile"], "provider-profile")
+const Services = lazyPage(pageImporters.services, "services")
+const ServiceProviders = lazyPage(pageImporters["service-providers"], "service-providers")
+const AutoDoctor = lazyPage(pageImporters["auto-doctor"], "auto-doctor")
+const FlashFixUrgence = lazyPage(pageImporters.flashfix, "flashfix")
+const PublicMarketplace = lazyPage(pageImporters.marketplace, "marketplace")
+const VehicleDetails = lazyPage(pageImporters["vehicle-details"], "vehicle-details")
+const PublicVehicleListing = lazyPage(pageImporters["public-vehicle"], "public-vehicle")
+const PublicMarketplaceListing = lazyPage(pageImporters["marketplace-listing"], "marketplace-listing")
+const Checkout = lazyPage(pageImporters.checkout, "checkout")
+const Community = lazyPage(pageImporters.community, "community")
+const Pricing = lazyPage(pageImporters.pricing, "pricing")
+const Contact = lazyPage(pageImporters.contact, "contact")
+const Messages = lazyPage(pageImporters.messages, "messages")
 
 class RouteErrorBoundary extends Component {
   constructor(props) {
@@ -117,10 +153,11 @@ function RouteLoadingScreen() {
     <div
       style={{
         minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
+        display: "flex",
+        alignItems: "flex-start",
+        justifyContent: "center",
         background: "linear-gradient(180deg, #edf4ff 0%, #f7fbff 100%)",
-        padding: 24,
+        padding: "clamp(72px, 14vh, 152px) 24px 24px",
       }}
     >
       <div
@@ -174,13 +211,18 @@ function RouteLoadingScreen() {
 function RouteWarmup() {
   useEffect(() => {
     const preload = () => {
-      import("./pages/ClientApp")
-      import("./pages/ProviderApp")
-      import("./pages/Messages")
-      import("./pages/PublicMarketplace")
-      import("./pages/ServiceProviders")
-      import("./pages/ProviderProfile")
-      import("./pages/Community")
+      const connection = window.navigator?.connection
+      const shouldLimitWarmup = connection?.saveData || /2g/.test(connection?.effectiveType || "")
+      const criticalRoutes = ["client-app", "provider-app", "messages", "marketplace", "service-providers"]
+      const secondaryRoutes = ["provider-profile", "community", "checkout"]
+      const preloadKeys = shouldLimitWarmup ? criticalRoutes : [...criticalRoutes, ...secondaryRoutes]
+
+      preloadKeys.forEach((key) => {
+        const importer = pageImporters[key]
+        if (importer) {
+          void loadPageModule(importer, key)
+        }
+      })
     }
 
     if (typeof window === "undefined") return undefined
