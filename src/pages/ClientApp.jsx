@@ -283,6 +283,31 @@ function formatActivityTime(value) {
   }
 }
 
+function formatBookingCalendar(date) {
+  if (!date) {
+    return { month: 'TBC', day: '—', weekday: 'Date to confirm' }
+  }
+
+  const parsed = new Date(`${date}T00:00:00`)
+  if (Number.isNaN(parsed.getTime())) {
+    return { month: 'TBC', day: '—', weekday: 'Date to confirm' }
+  }
+
+  return {
+    month: parsed.toLocaleDateString('en-CA', { month: 'short' }).toUpperCase(),
+    day: parsed.toLocaleDateString('en-CA', { day: 'numeric' }),
+    weekday: parsed.toLocaleDateString('en-CA', { weekday: 'long' }),
+  }
+}
+
+function getApproximateBookingPriceLabel(priceLabel) {
+  if (!priceLabel || priceLabel === 'Price to confirm') {
+    return 'Price to confirm'
+  }
+
+  return `Approx. ${priceLabel}`
+}
+
 function getProviderKey(provider, fallback = '') {
   return String(provider?.id || provider?.name || fallback)
 }
@@ -387,6 +412,15 @@ export default function ClientApp() {
     .flatMap((r) => (r.events || []).map((e) => ({ ...e, requestId: r.id, issueLabel: r.issueLabel, status: r.status, providerName: r.providerName })))
     .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
     .slice(0, 6)
+  const bookingVehicleImageMap = useMemo(
+    () => new Map(
+      myVehicles.map((vehicle) => [
+        String(vehicle.id),
+        vehicle.imageUrl || vehicle.image || vehicle.photo || '/vehicle-fallback.svg',
+      ]),
+    ),
+    [myVehicles],
+  )
 
   useEffect(() => { loadProviders() }, [])
   useEffect(() => { if (!user?.id) return; fetchMyBookings() }, [user?.id])
@@ -1625,20 +1659,55 @@ export default function ClientApp() {
               {bookings.length > 0 && (
                 <div style={{ display:'grid', gap:12, marginBottom:16 }}>
                   {bookings.map((booking) => (
-                    <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:14,padding:16,boxShadow:'var(--shadow)'}}>
-                      <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:10}}>
-                        <div>
-                          <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:16,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
-                          <div style={{fontSize:12,color:'var(--ink2)'}}>{booking.providerName}</div>
+                    <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:18,boxShadow:'var(--shadow)'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'auto minmax(0, 1fr) auto',gap:16,alignItems:'stretch'}}>
+                        <div style={{display:'grid',gridTemplateColumns:'80px 86px',gap:12,alignItems:'stretch'}}>
+                          <div style={{width:80,height:80,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
+                            <img
+                              src={bookingVehicleImageMap.get(String(booking.vehicle_id || booking.vehicle?.id || '')) || '/vehicle-fallback.svg'}
+                              alt={booking.vehicleLabel}
+                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                            />
+                          </div>
+                          <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
+                            <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
+                            <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
+                          </div>
                         </div>
-                        <span className={`badge ${booking.statusClass}`}>{booking.statusLabel}</span>
+
+                        <div style={{minWidth:0}}>
+                          <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:8}}>
+                            <div>
+                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:19,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
+                              <div style={{fontSize:13,color:'var(--ink2)',marginBottom:6}}>{booking.providerName}</div>
+                              <div style={{fontSize:12,color:'var(--ink3)'}}>{booking.vehicleLabel}</div>
+                            </div>
+                            <span className={`badge ${booking.statusClass}`}>{booking.statusLabel}</span>
+                          </div>
+
+                          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+                            <span className="badge badge-blue" style={{fontSize:12,padding:'8px 12px'}}>{booking.time_slot || 'Time to confirm'}</span>
+                            <span className="badge badge-gray" style={{fontSize:12,padding:'8px 12px'}}>Booked service</span>
+                          </div>
+
+                          {booking.notes && <div style={{marginTop:12,fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>📝 {booking.notes}</div>}
+                        </div>
+
+                        <div style={{display:'grid',justifyItems:'end',alignContent:'space-between',minWidth:150}}>
+                          <div style={{textAlign:'right'}}>
+                            <div style={{fontSize:10,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink3)',fontFamily:'var(--mono)',marginBottom:6}}>Approximate price</div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:24,color:'var(--green)',lineHeight:1.05}}>
+                              {getApproximateBookingPriceLabel(booking.priceLabel)}
+                            </div>
+                            {booking.priceLabel && booking.priceLabel !== 'Price to confirm' ? (
+                              <div style={{fontSize:11,color:'var(--ink3)',marginTop:6,maxWidth:150}}>
+                                Final total can change after provider inspection.
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
-                        <span className="badge badge-gray">{booking.vehicleLabel}</span>
-                        <span className="badge badge-blue">{booking.datetimeLabel}</span>
-                        <span className="badge badge-green">{booking.priceLabel}</span>
-                      </div>
-                      {booking.notes && <div style={{marginTop:10,fontSize:11,color:'var(--ink2)'}}>📝 {booking.notes}</div>}
                     </div>
                   ))}
                 </div>
