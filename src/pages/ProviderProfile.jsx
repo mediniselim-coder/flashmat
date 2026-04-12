@@ -387,7 +387,7 @@ export default function ProviderProfile() {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
           .provider-profile-gallery-tile {
-            min-height: 180px !important;
+            min-height: 148px !important;
           }
           .provider-profile-reviews-header {
             align-items: flex-start !important;
@@ -434,6 +434,9 @@ export default function ProviderProfile() {
           }
           .provider-profile-expertise-card {
             min-height: 166px !important;
+          }
+          .provider-profile-gallery-tile {
+            min-height: 136px !important;
           }
           .provider-profile-map {
             height: 220px !important;
@@ -636,7 +639,6 @@ export default function ProviderProfile() {
               </div>
             </InfoCard>
 
-            {galleryImages.length > 0 ? <InfoCard><SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." /><div className="provider-profile-gallery" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.05fr) minmax(0,.95fr)', gap: 16 }}><div className="provider-profile-gallery-main" style={{ borderRadius: 22, overflow: 'hidden', minHeight: 420, border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof galleryImages[0] === 'string' && (galleryImages[0].startsWith('data:image') || galleryImages[0].startsWith('http')) ? <img src={galleryImages[0]} alt={`${provider.name} highlight`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 42 }}>{galleryImages[0]}</div>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 16 }}>{galleryImages.slice(1, 5).map((img, index) => <div key={`gallery-${index}`} style={{ borderRadius: 18, overflow: 'hidden', aspectRatio: '1 / 1', border: '1px solid var(--border)', background: 'var(--bg3)' }}>{typeof img === 'string' && (img.startsWith('data:image') || img.startsWith('http')) ? <img src={img} alt={`${provider.name} gallery ${index + 2}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--green-bg), var(--blue-bg))', fontSize: 26 }}>{img}</div>}</div>)}</div></div></InfoCard> : null}
             {galleryImages.length > 0 ? (
               <InfoCard>
                 <SectionHeading title="Business highlights" subtitle="A visual snapshot of the workspace, results, and services shown by this provider." />
@@ -650,7 +652,7 @@ export default function ProviderProfile() {
                       style={{
                         borderRadius: 18,
                         overflow: 'hidden',
-                        minHeight: 200,
+                        minHeight: 156,
                         aspectRatio: '1 / .82',
                         border: '1px solid var(--border)',
                         background: 'var(--bg3)',
