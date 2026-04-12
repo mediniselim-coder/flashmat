@@ -32,6 +32,7 @@ export default function WalletModal({ onClose }) {
   const walletUserId = user?.id || 'guest'
   const [methods, setMethods] = useState([])
   const [methodType, setMethodType] = useState('credit_card')
+  const [addOpen, setAddOpen] = useState(false)
   const [payment, setPayment] = useState({
     cardholder: profile?.full_name || '',
     cardNumber: '',
@@ -154,33 +155,27 @@ export default function WalletModal({ onClose }) {
         </div>
 
         <div style={{ display: 'grid', gap: 16 }}>
-          <div style={{ background: 'linear-gradient(135deg, rgba(10,39,65,0.94) 0%, rgba(23,76,122,0.92) 100%)', color: '#fff', borderRadius: 18, padding: '18px 20px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(207,234,255,.72)', marginBottom: 8 }}>
-              FlashMat wallet
-            </div>
-            <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 24, marginBottom: 6 }}>Saved payment methods</div>
-            <div style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(236,247,255,0.82)' }}>
-              Register a credit card, debit card, or PayPal account for faster bookings and marketplace checkout.
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.05fr) minmax(320px, .95fr)', gap: 16, alignItems: 'start' }}>
-            <div style={{ display: 'grid', gap: 12 }}>
-              <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px' }}>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', display: 'grid', gap: 10 }}>
+              <div>
                 <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginBottom: 6 }}>Current balance</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--ink)' }}>$0.00</div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--ink)' }}>$0.00</div>
                 <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7, marginTop: 8 }}>
                   Refunds, credits, and future FlashMat wallet balance will appear here.
                 </div>
               </div>
+              <button type="button" className="btn btn-green" style={{ justifyContent: 'center', width: 'fit-content' }} onClick={() => setAddOpen(true)}>
+                Add payment method
+              </button>
+            </div>
 
-              <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', display: 'grid', gap: 12 }}>
-                <div>
-                  <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginBottom: 4 }}>Saved methods</div>
-                  <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7 }}>
-                    Choose the method you want FlashMat to show first at checkout.
-                  </div>
+            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 16, padding: '14px 16px', display: 'grid', gap: 12 }}>
+              <div>
+                <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginBottom: 4 }}>Saved methods</div>
+                <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7 }}>
+                  Choose the method you want FlashMat to show first at checkout.
                 </div>
+              </div>
 
                 {defaultMethod ? (
                   <div style={{ padding: 14, borderRadius: 14, background: 'var(--bg3)', border: '1px solid var(--border)' }}>
@@ -227,17 +222,32 @@ export default function WalletModal({ onClose }) {
                     </div>
                   ))
                 )}
-              </div>
             </div>
+          </div>
+        </div>
 
-            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 16, padding: '16px 18px', display: 'grid', gap: 12 }}>
+        <div className="modal-actions" style={{ marginTop: 18 }}>
+          <button className="btn" onClick={onClose}>Close</button>
+        </div>
+      </div>
+      {addOpen ? (
+        <div
+          className="modal-overlay"
+          style={{ background: 'rgba(9, 20, 35, 0.55)', zIndex: 6000 }}
+          onClick={(event) => event.target === event.currentTarget && setAddOpen(false)}
+        >
+          <div className="modal" style={{ maxWidth: 640, maxHeight: '92vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div>
-                <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginBottom: 4 }}>Add payment method</div>
-                <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7 }}>
+                <div className="modal-title" style={{ marginBottom: 0 }}>Add payment method</div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 4 }}>
                   Register a reusable payment option from your profile wallet.
                 </div>
               </div>
+              <button onClick={() => setAddOpen(false)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>X</button>
+            </div>
 
+            <div style={{ display: 'grid', gap: 12 }}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {METHOD_OPTIONS.map((option) => (
                   <button
@@ -297,11 +307,7 @@ export default function WalletModal({ onClose }) {
             </div>
           </div>
         </div>
-
-        <div className="modal-actions" style={{ marginTop: 18 }}>
-          <button className="btn" onClick={onClose}>Close</button>
-        </div>
-      </div>
+      ) : null}
     </div>
   )
 }
