@@ -1039,28 +1039,28 @@ export default function ClientApp() {
                   { icon:'SV', label:'Find', sub:'a provider', action: () => go('search'), color:'var(--blue)' },
                   { icon:'MP', label:'Marketplace', sub:'auto parts', action: () => go('marketplace'), color:'var(--amber)' },
                 ].map(q => (
-                  <button key={q.label} onClick={q.action}
-                    style={{
-                      background:'var(--bg2)',
-                      border:'1px solid var(--border)',
-                      borderRadius:14,
-                      minHeight:74,
-                      padding:'14px 16px',
-                      cursor:'pointer',
-                      textAlign:'left',
-                      transition:'all .18s',
-                      boxShadow:'var(--shadow)',
-                      display:'flex',
-                      flexDirection:'column',
-                      justifyContent:'center',
-                    }}
+                    <button key={q.label} onClick={q.action}
+                      style={{
+                        background:'var(--bg2)',
+                        border:'1px solid var(--border)',
+                        borderRadius:12,
+                        minHeight:60,
+                        padding:'10px 12px',
+                        cursor:'pointer',
+                        textAlign:'left',
+                        transition:'all .18s',
+                        boxShadow:'var(--shadow)',
+                        display:'flex',
+                        flexDirection:'column',
+                        justifyContent:'center',
+                      }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = q.color}
                     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                    <div style={{ color:q.color, marginBottom:8, display:'inline-flex' }}><AppIcon code={q.icon} size={18} /></div>
-                    <div style={{ fontWeight:800, fontSize:16, color:'var(--ink)', lineHeight:1.05 }}>{q.label}</div>
-                    <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4 }}>{q.sub}</div>
-                  </button>
-                ))}
+                      <div style={{ color:q.color, marginBottom:6, display:'inline-flex' }}><AppIcon code={q.icon} size={16} /></div>
+                      <div style={{ fontWeight:800, fontSize:14, color:'var(--ink)', lineHeight:1.05 }}>{q.label}</div>
+                      <div style={{ fontSize:10, color:'var(--ink3)', marginTop:3 }}>{q.sub}</div>
+                    </button>
+                  ))}
               </div>
               <div className={styles.statsGrid}>
                 <div className="stat-card sc-green"><div className="stat-lbl">Montreal Providers</div><div className="stat-val">{providers.length}</div><div className="stat-sub">available now</div></div>
