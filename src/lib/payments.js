@@ -36,7 +36,7 @@ export function validatePaymentDetails(details = {}) {
   if (!cardholder) return 'Add the cardholder name.'
   if (cardNumber.length < 13 || cardNumber.length > 19) return 'Add a valid card number.'
   if (!/^\d{2}\/\d{2}$/.test(expiry)) return 'Add the expiry as MM/YY.'
-  if (!/^\d{3,4}$/.test(cvc)) return 'Add a valid CVC.'
+  if (cvc && !/^\d{3,4}$/.test(cvc)) return 'Add a valid CVC.'
 
   const [monthRaw, yearRaw] = expiry.split('/')
   const month = Number(monthRaw)
