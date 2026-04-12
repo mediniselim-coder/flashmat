@@ -1377,7 +1377,7 @@ export default function VehicleDoctor({ compact = false, fullBleed = false, user
                 <div className={styles.eyebrow}>FlashMat Auto Doctor</div>
                 <h2 className={styles.chatLandingTitle}>How can FlashMat help with your vehicle?</h2>
                 <p className={styles.chatLandingText}>
-                  Ask about a symptom, maintenance timing, warning light, repair estimate, or which FlashMat service you should book next.
+                  Describe the issue in simple words. FlashMat will explain what it likely means, how urgent it is, and what to do next.
                 </p>
                 <div className={styles.modeRow} style={{ justifyContent: 'center', marginTop: 20 }}>
                   {INPUT_MODES.map((mode) => (
@@ -1454,7 +1454,7 @@ export default function VehicleDoctor({ compact = false, fullBleed = false, user
                     </>
                   ) : (
                     <p className={styles.chatText}>
-                      Ask a simple question like “when should I do my oil change?”, or describe a real symptom like brake noise, overheating, a weak battery, or a warning light.
+                      Ask a simple question like “when should I change my oil?” or describe a symptom like brake noise, overheating, a weak battery, or a warning light.
                     </p>
                   )}
                 </div>

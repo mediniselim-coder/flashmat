@@ -1335,18 +1335,10 @@ export default function ClientApp() {
           )}
 
         {pane === 'doctor' && (
-            <div>
-              <div className={styles.pageHdr}>
-                <div>
-                  <div className={styles.pageTitle}>Docteur Automobile</div>
-                  <div className={styles.pageSub}>A simpler FlashMat-focused auto chat for symptoms, maintenance, and the right provider direction.</div>
-                </div>
-              </div>
-              <div className={styles.pad}>
-                <VehicleDoctor compact userName={name} />
-              </div>
-            </div>
-          )}
+          <div style={{ flex: 1, minHeight: 'calc(100vh - 74px)' }}>
+            <VehicleDoctor fullBleed userName={name} />
+          </div>
+        )}
 
         {pane === 'flashfix' && (
           <div>
