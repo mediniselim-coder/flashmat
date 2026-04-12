@@ -454,7 +454,12 @@ export default function ClientApp() {
     () => new Map(
       myVehicles.map((vehicle) => [
         String(vehicle.id),
-        vehicle.imageUrl || vehicle.image || vehicle.photo || '/vehicle-fallback.svg',
+        vehicle.image_url
+          || vehicle.photo_url
+          || vehicle.imageUrl
+          || vehicle.image
+          || vehicle.photo
+          || '/vehicle-fallback.svg',
       ]),
     ),
     [myVehicles],
@@ -1717,18 +1722,26 @@ export default function ClientApp() {
                         return bTime - aTime
                       })
 
-                      const renderBooking = (booking) => (
+                      const renderBooking = (booking) => {
+                        const bookingThumbSize = 90
+                        const bookingVehicleImage = bookingVehicleImageMap.get(
+                          String(booking.vehicle_id || booking.vehicle?.id || ''),
+                        )
+                          || booking.vehicle?.image_url
+                          || booking.vehicle?.photo_url
+                          || '/vehicle-fallback.svg'
+                        return (
                         <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:18,boxShadow:'var(--shadow)'}}>
                           <div style={{display:'grid',gridTemplateColumns:'auto minmax(0, 1fr) auto',gap:16,alignItems:'stretch'}}>
-                            <div style={{display:'grid',gridTemplateColumns:'86px 80px',gap:12,alignItems:'stretch'}}>
-                              <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
+                            <div style={{display:'grid',gridTemplateColumns:`${bookingThumbSize}px ${bookingThumbSize}px`,gap:12,alignItems:'stretch'}}>
+                              <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'8px 6px',display:'grid',alignContent:'center',justifyItems:'center',width:bookingThumbSize,height:bookingThumbSize}}>
                                 <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
                                 <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
                                 <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
                               </div>
-                              <div style={{width:80,height:80,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
+                              <div style={{width:bookingThumbSize,height:bookingThumbSize,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
                                 <img
-                                  src={bookingVehicleImageMap.get(String(booking.vehicle_id || booking.vehicle?.id || '')) || '/vehicle-fallback.svg'}
+                                  src={bookingVehicleImage}
                                   alt={booking.vehicleLabel}
                                   style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                                 />
@@ -1769,6 +1782,7 @@ export default function ClientApp() {
                           </div>
                         </div>
                       )
+                      }
 
                       return (
                         <>
