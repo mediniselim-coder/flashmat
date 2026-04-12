@@ -18,6 +18,7 @@ import VehicleDoctor from '../components/VehicleDoctor'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, createFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
 import { createBooking, fetchClientBookings, fetchClientNotifications } from '../lib/bookings'
+import { createPaymentRecord, getMaskedCardLabel } from '../lib/payments'
 import { fetchProviders } from '../lib/providerProfiles'
 import { fetchSellerVehicleListings, normalizeMarketplaceListing } from '../lib/marketplace'
 import {
@@ -692,6 +693,26 @@ export default function ClientApp() {
 
   async function handleBookingConfirm(payload) {
     if (!user?.id) throw new Error('Client login required')
+    createPaymentRecord({
+      userId: user.id,
+      kind: 'booking_request',
+      amountLabel: payload.price,
+      paymentDetails: payload.paymentDetails,
+      billingAddress: payload.billingAddress,
+      payer: {
+        name: profile?.full_name || user.email || 'FlashMat client',
+        email: user.email || '',
+        phone: profile?.phone || '',
+      },
+      meta: {
+        providerId: payload.provider.id,
+        providerName: payload.provider.name,
+        service: payload.service,
+        date: payload.date,
+        timeSlot: payload.timeSlot,
+        paymentMethod: getMaskedCardLabel(payload.paymentDetails?.cardNumber),
+      },
+    })
     const createdBooking = await createBooking({ clientId: user.id, providerId: payload.provider.id, vehicleId: payload.vehicle?.id, service: payload.service, serviceIcon: payload.serviceIcon, date: payload.date, timeSlot: payload.timeSlot, notes: payload.notes, price: payload.price })
     setBookings((current) => [createdBooking, ...current]); setSelectedBookingProvider(null); go('bookings'); toast('Booking request sent to provider', 'success')
   }
@@ -1794,6 +1815,14 @@ export default function ClientApp() {
 
       {bookingModal && (
         <BookingModal providers={providers} vehicles={myVehicles} initialProvider={selectedBookingProvider}
+          paymentDefaults={{
+            cardholder: profile?.full_name || user?.email || '',
+            addressLine1: profile?.address || '',
+            city: profile?.city || 'Montreal',
+            province: profile?.province || 'QC',
+            postalCode: profile?.postal_code || '',
+            country: profile?.country || 'Canada',
+          }}
           onClose={() => { setBookingModal(false); setSelectedBookingProvider(null) }}
           onConfirm={handleBookingConfirm}
         />

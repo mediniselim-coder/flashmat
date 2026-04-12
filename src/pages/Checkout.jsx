@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 import ServiceIcon from '../components/ServiceIcon'
+import PaymentDetailsFields from '../components/PaymentDetailsFields'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { FLASHMAT_CART_UPDATED_EVENT, clearCart, readCart, removeCartItem, updateCartItemQuantity } from '../lib/cart'
+import { createPaymentRecord, validateBillingAddress, validatePaymentDetails } from '../lib/payments'
 
 function formatCurrency(value) {
   if (!Number.isFinite(Number(value))) return 'Price on request'
@@ -19,13 +21,24 @@ export default function Checkout() {
   const cartUserId = user?.id || 'guest'
   const [cartItems, setCartItems] = useState([])
   const [checkoutDone, setCheckoutDone] = useState(false)
+  const [receipt, setReceipt] = useState(null)
   const [form, setForm] = useState({
     fullName: profile?.full_name || '',
     email: user?.email || '',
     phone: profile?.phone || '',
     address: '',
+    address2: '',
     city: profile?.city || 'Montreal',
+    province: 'QC',
+    postalCode: '',
+    country: 'Canada',
     note: '',
+  })
+  const [payment, setPayment] = useState({
+    cardholder: profile?.full_name || '',
+    cardNumber: '',
+    expiry: '',
+    cvc: '',
   })
 
   useEffect(() => {
@@ -78,6 +91,14 @@ export default function Checkout() {
     setForm((current) => ({ ...current, [name]: value }))
   }
 
+  function handlePaymentChange(name, value) {
+    setPayment((current) => ({ ...current, [name]: value }))
+  }
+
+  function handleBillingChange(name, value) {
+    setForm((current) => ({ ...current, [name === 'addressLine1' ? 'address' : name === 'addressLine2' ? 'address2' : name]: value }))
+  }
+
   function handleCheckout(event) {
     event.preventDefault()
     if (cartItems.length === 0) {
@@ -85,15 +106,60 @@ export default function Checkout() {
       return
     }
 
-    if (!form.fullName || !form.email || !form.phone) {
-      toast('Add your contact details before checkout.', 'error')
+    if (!form.fullName || !form.email || !form.phone || !form.address || !form.city || !form.province || !form.postalCode || !form.country) {
+      toast('Add your full checkout address before paying.', 'error')
       return
     }
 
+    const paymentError = validatePaymentDetails(payment)
+    if (paymentError) {
+      toast(paymentError, 'error')
+      return
+    }
+
+    const billingError = validateBillingAddress({
+      addressLine1: form.address,
+      addressLine2: form.address2,
+      city: form.city,
+      province: form.province,
+      postalCode: form.postalCode,
+      country: form.country,
+    })
+    if (billingError) {
+      toast(billingError, 'error')
+      return
+    }
+
+    const nextReceipt = createPaymentRecord({
+      userId: cartUserId,
+      kind: 'marketplace_checkout',
+      amount: total,
+      amountLabel: formatCurrency(total),
+      payer: {
+        name: form.fullName,
+        email: form.email,
+        phone: form.phone,
+      },
+      billingAddress: {
+        addressLine1: form.address,
+        addressLine2: form.address2,
+        city: form.city,
+        province: form.province,
+        postalCode: form.postalCode,
+        country: form.country,
+      },
+      paymentDetails: payment,
+      meta: {
+        itemCount: cartItems.length,
+        items: cartItems.map((item) => ({ id: item.id, title: item.title, quantity: item.quantity })),
+      },
+    })
+
     clearCart(cartUserId)
     setCartItems([])
+    setReceipt(nextReceipt)
     setCheckoutDone(true)
-    toast('Checkout request sent.', 'success')
+    toast('Payment authorized and checkout sent.', 'success')
   }
 
   return (
@@ -130,11 +196,19 @@ export default function Checkout() {
                 <ServiceIcon code="CK" size={34} />
               </div>
               <div style={{ fontFamily: 'var(--display)', fontSize: 32, fontWeight: 800, letterSpacing: '-0.05em', color: 'var(--ink)', marginBottom: 10 }}>
-                Checkout sent
+                Payment received
               </div>
               <div style={{ maxWidth: 560, margin: '0 auto', color: 'var(--ink2)', fontSize: 15, lineHeight: 1.8 }}>
-                Your cart request has been prepared for FlashMat follow-up. You can keep browsing the marketplace or go back to your cart later if you want to add more items.
+                Your FlashMat checkout was authorized successfully. You can keep shopping or open your messages for follow-up with sellers.
               </div>
+              {receipt ? (
+                <div style={{ margin: '18px auto 0', maxWidth: 420, padding: 16, borderRadius: 18, background: 'var(--bg3)', border: '1px solid var(--border)', textAlign: 'left' }}>
+                  <SummaryRow label="Receipt" value={receipt.id} />
+                  <SummaryRow label="Paid with" value={receipt.paymentMethod.label} />
+                  <SummaryRow label="Billing city" value={receipt.billingAddress.city} />
+                  <SummaryRow label="Total" value={receipt.amountLabel || formatCurrency(receipt.amount)} strong />
+                </div>
+              ) : null}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap', marginTop: 20 }}>
                 <button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>Continue shopping</button>
                 <button type="button" className="btn" onClick={() => navigate('/messages')}>Open messages</button>
@@ -218,8 +292,34 @@ export default function Checkout() {
                     <input className="form-input" name="email" value={form.email} onChange={handleInputChange} placeholder="Email" />
                     <input className="form-input" name="phone" value={form.phone} onChange={handleInputChange} placeholder="Phone" />
                     <input className="form-input" name="address" value={form.address} onChange={handleInputChange} placeholder="Address" />
-                    <input className="form-input" name="city" value={form.city} onChange={handleInputChange} placeholder="City" />
+                    <input className="form-input" name="address2" value={form.address2} onChange={handleInputChange} placeholder="Apartment, suite, unit (optional)" />
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                      <input className="form-input" name="city" value={form.city} onChange={handleInputChange} placeholder="City" />
+                      <input className="form-input" name="province" value={form.province} onChange={handleInputChange} placeholder="Province / State" />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                      <input className="form-input" name="postalCode" value={form.postalCode} onChange={handleInputChange} placeholder="Postal code" />
+                      <input className="form-input" name="country" value={form.country} onChange={handleInputChange} placeholder="Country" />
+                    </div>
                     <textarea className="form-input" name="note" value={form.note} onChange={handleInputChange} placeholder="Order note or pickup instructions" style={{ minHeight: 120, resize: 'vertical' }} />
+
+                    <div style={{ padding: 14, borderRadius: 18, border: '1px solid var(--border)', background: '#fff' }}>
+                      <PaymentDetailsFields
+                        payment={payment}
+                        onPaymentChange={handlePaymentChange}
+                        billing={{
+                          addressLine1: form.address,
+                          addressLine2: form.address2,
+                          city: form.city,
+                          province: form.province,
+                          postalCode: form.postalCode,
+                          country: form.country,
+                        }}
+                        onBillingChange={handleBillingChange}
+                        title="Payment"
+                        subtitle="Secure your FlashMat order with one card authorization."
+                      />
+                    </div>
 
                     <div style={{ padding: 14, borderRadius: 16, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'grid', gap: 10 }}>
                       <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
@@ -241,8 +341,8 @@ export default function Checkout() {
                 <div className="panel">
                   <div className="panel-hd"><div className="panel-title">What happens next</div></div>
                   <div className="panel-body" style={{ display: 'grid', gap: 10, color: 'var(--ink2)', fontSize: 14, lineHeight: 1.75 }}>
-                    <div>1. FlashMat keeps the item selection from your cart.</div>
-                    <div>2. Your contact details help prepare the order request.</div>
+                    <div>1. FlashMat authorizes your payment with the card you entered.</div>
+                    <div>2. Your full address prepares delivery or seller follow-up.</div>
                     <div>3. After checkout, you can keep shopping or follow up through your account.</div>
                   </div>
                 </div>
