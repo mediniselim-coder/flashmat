@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
@@ -25,6 +26,17 @@ export default function Services() {
   const { user, profile } = useAuth()
   const [search, setSearch] = useState(location.state?.cat || '')
   const [active, setActive] = useState(null)
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
+  const isMobile = viewportWidth < 900
+  const isPhone = viewportWidth < 600
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   function openFlashFix() {
     if (user && profile?.role === 'client') { navigate('/urgence'); return }
@@ -47,10 +59,10 @@ export default function Services() {
       <NavBar activePage="services" />
 
       {/* HERO */}
-      <div style={{ background: 'linear-gradient(135deg, rgba(8,19,37,.92) 0%, rgba(16,37,73,.9) 52%, rgba(34,67,162,.88) 100%), url(/nav-services.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 32px 36px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, rgba(8,19,37,.92) 0%, rgba(16,37,73,.9) 52%, rgba(34,67,162,.88) 100%), url(/nav-services.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: isPhone ? '36px 16px 30px' : isMobile ? '42px 20px 34px' : '48px 32px 36px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,.14), transparent 68%)', top: -160, right: -90, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,159,216,.16), transparent 70%)', bottom: -120, left: -60, pointerEvents: 'none' }} />
-        <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(320px, .8fr)', gap: 28, alignItems: 'stretch' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'minmax(0, 1.2fr) minmax(320px, .8fr)', gap: isMobile ? 20 : 28, alignItems: 'stretch' }}>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 999, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.10)', fontSize: 11, letterSpacing: 1.8, textTransform: 'uppercase', color: '#8fd0ff', marginBottom: 18, fontWeight: 700 }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b9fd8', boxShadow: '0 0 0 6px rgba(59,159,216,.14)' }} />
@@ -105,7 +117,7 @@ export default function Services() {
                   style={{ width: '100%', padding: '14px 18px', borderRadius: 14, border: '1px solid rgba(255,255,255,.1)', background: '#fff', fontSize: 15, outline: 'none', boxSizing: 'border-box', fontFamily: 'var(--font)' }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isPhone ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
                 {[
                   ['11', 'Types de services'],
                   ['200+', 'Fournisseurs verifies'],
@@ -125,7 +137,7 @@ export default function Services() {
       </div>
 
       {/* STATS */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 48, padding: '24px 32px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: isPhone ? 18 : 48, padding: isPhone ? '20px 16px' : '24px 32px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap', flexDirection: isPhone ? 'column' : 'row', alignItems: isPhone ? 'flex-start' : 'center' }}>
         {[['11', 'Types de services'], ['200+', 'Fournisseurs'], ['4.7', 'Note moyenne'], ['24/7', 'Support urgences']].map(([v, l]) => (
           <div key={l} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--display)' }}>{v}</div>
@@ -135,8 +147,8 @@ export default function Services() {
       </div>
 
       {/* GRID */}
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '48px 64px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: isMobile ? '32px 16px' : '48px 64px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isPhone ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
           {filtered.map(s => (
             <div
               key={s.id}
@@ -159,7 +171,7 @@ export default function Services() {
                 </div>
               </div>
               <p style={{ fontSize: 14, color: 'var(--ink2)', lineHeight: 1.6, margin: '0 0 16px' }}>{s.desc}</p>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'grid', gridTemplateColumns: isPhone ? '1fr' : '1fr 1fr', gap: 6 }}>
                 {s.items.map(item => (
                   <li key={item} style={{ fontSize: 12, color: 'var(--ink2)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ color: 'var(--blue)', fontSize: 10, fontWeight: 700 }}>+</span> {item}

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
@@ -52,12 +53,23 @@ const FAQS = [
 
 export default function Pricing() {
   const navigate = useNavigate()
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
+  const isMobile = viewportWidth < 900
+  const isPhone = viewportWidth < 600
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   return (
     <div style={styles.page}>
       <NavBar activePage="pricing" />
 
-      <main style={styles.main}>
+      <main style={{ ...styles.main, padding: isMobile ? '28px 16px 0' : styles.main.padding }}>
         <section style={styles.hero}>
           <div style={styles.heroCopy}>
             <div style={styles.eyebrow}>FlashMat Pricing</div>
@@ -66,13 +78,13 @@ export default function Pricing() {
               Clean pricing built around bookings, provider visibility, and the FlashMat marketplace.
             </p>
           </div>
-          <div style={styles.heroToggle}>
-            <button type="button" style={styles.toggleActive}>Particuliers</button>
-            <button type="button" style={styles.toggleIdle}>Business</button>
+          <div style={{ ...styles.heroToggle, width: isPhone ? '100%' : 'auto', justifyContent: isPhone ? 'space-between' : 'center' }}>
+            <button type="button" style={{ ...styles.toggleActive, flex: isPhone ? 1 : 'none' }}>Particuliers</button>
+            <button type="button" style={{ ...styles.toggleIdle, flex: isPhone ? 1 : 'none' }}>Business</button>
           </div>
         </section>
 
-        <section style={styles.planGrid}>
+        <section style={{ ...styles.planGrid, gridTemplateColumns: isPhone ? '1fr' : styles.planGrid.gridTemplateColumns }}>
           {PLANS.map((plan) => {
             const featured = Boolean(plan.featured)
             return (
@@ -80,6 +92,7 @@ export default function Pricing() {
                 key={plan.name}
                 style={{
                   ...styles.planCard,
+                  padding: isPhone ? '20px 18px 18px' : styles.planCard.padding,
                   border: featured ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
                   boxShadow: featured ? '0 24px 60px rgba(0,0,0,0.4)' : '0 18px 40px rgba(0,0,0,0.3)',
                 }}
@@ -100,7 +113,7 @@ export default function Pricing() {
                 </ul>
                 <button
                   type="button"
-                  style={featured ? styles.primaryFeaturedButton : styles.primaryButton}
+                  style={featured ? { ...styles.primaryFeaturedButton, alignSelf: isPhone ? 'stretch' : styles.primaryFeaturedButton.alignSelf } : { ...styles.primaryButton, alignSelf: isPhone ? 'stretch' : styles.primaryButton.alignSelf }}
                   onClick={() => navigate(plan.to)}
                 >
                   {plan.cta}
@@ -110,7 +123,7 @@ export default function Pricing() {
           })}
         </section>
 
-        <section style={styles.faqSection}>
+        <section style={{ ...styles.faqSection, padding: isPhone ? '18px 16px 20px' : styles.faqSection.padding }}>
           <div style={styles.sectionEyebrow}>Pricing FAQ</div>
           <div style={styles.faqGrid}>
             {FAQS.map((item) => (

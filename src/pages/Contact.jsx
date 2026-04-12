@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 
@@ -36,6 +36,17 @@ export default function Contact() {
     message: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
+  const isMobile = viewportWidth < 900
+  const isPhone = viewportWidth < 600
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   function updateField(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -50,9 +61,9 @@ export default function Contact() {
     <div style={styles.page}>
       <NavBar activePage="contact" />
 
-      <main style={styles.main}>
+      <main style={{ ...styles.main, padding: isMobile ? '22px 16px 0' : styles.main.padding }}>
         <section style={styles.hero}>
-          <div style={styles.heroCopy}>
+          <div style={{ ...styles.heroCopy, padding: isPhone ? '24px 20px' : isMobile ? '28px 24px' : styles.heroCopy.padding }}>
             <div style={styles.eyebrow}>FlashMat Contact</div>
             <h1 style={styles.title}>Talk to the right FlashMat team quickly.</h1>
             <p style={styles.subtitle}>
@@ -61,9 +72,9 @@ export default function Contact() {
           </div>
         </section>
 
-        <section style={styles.layout}>
+        <section style={{ ...styles.layout, gridTemplateColumns: isMobile ? '1fr' : styles.layout.gridTemplateColumns }}>
           <div style={styles.leftColumn}>
-            <div style={styles.card}>
+            <div style={{ ...styles.card, padding: isPhone ? '22px 20px 24px' : styles.card.padding }}>
               <div style={styles.sectionEyebrow}>Channels</div>
               <h2 style={styles.sectionTitle}>Choose the most direct path.</h2>
               <div style={styles.channelGrid}>
@@ -77,7 +88,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div style={styles.card}>
+            <div style={{ ...styles.card, padding: isPhone ? '22px 20px 24px' : styles.card.padding }}>
               <div style={styles.sectionEyebrow}>Common topics</div>
               <h2 style={styles.sectionTitle}>What the team usually helps with.</h2>
               <div style={styles.topicList}>
@@ -88,7 +99,7 @@ export default function Contact() {
             </div>
           </div>
 
-          <div style={styles.formCard}>
+          <div style={{ ...styles.formCard, padding: isPhone ? '22px 20px 24px' : styles.formCard.padding }}>
             <div style={styles.sectionEyebrow}>Contact form</div>
             <h2 style={styles.sectionTitle}>Send a message to FlashMat.</h2>
             <p style={styles.formIntro}>
@@ -96,7 +107,7 @@ export default function Contact() {
             </p>
 
             <form onSubmit={handleSubmit} style={styles.form}>
-              <div style={styles.formGrid}>
+              <div style={{ ...styles.formGrid, gridTemplateColumns: isPhone ? '1fr' : styles.formGrid.gridTemplateColumns }}>
                 <label style={styles.field}>
                   <span style={styles.label}>Full name</span>
                   <input value={form.name} onChange={(e) => updateField('name', e.target.value)} style={styles.input} placeholder="Your name" />
@@ -137,7 +148,9 @@ export default function Contact() {
                 </div>
               ) : null}
 
-              <button type="submit" style={styles.primaryButton}>Send message</button>
+              <button type="submit" style={{ ...styles.primaryButton, width: isPhone ? '100%' : 'auto', justifySelf: isPhone ? 'stretch' : styles.primaryButton.justifySelf }}>
+                Send message
+              </button>
             </form>
           </div>
         </section>

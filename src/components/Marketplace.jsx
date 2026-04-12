@@ -81,11 +81,22 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
   const [showModal, setShowModal] = useState(false)
   const [myOnly, setMyOnly] = useState(false)
   const [expanded, setExpanded] = useState(null)
+  const [viewportWidth, setViewportWidth] = useState(typeof window === 'undefined' ? 1440 : window.innerWidth)
+  const isMobile = viewportWidth < 900
+  const isPhone = viewportWidth < 600
   const isProvider = isProviderRole(profile?.role)
   const availableSections = useMemo(
     () => SECTIONS.filter((item) => item.id !== 'parts' || isProvider),
     [isProvider],
   )
+
+  useEffect(() => {
+    function handleResize() {
+      setViewportWidth(window.innerWidth)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   useEffect(() => { fetchListings() }, [])
   useEffect(() => {
@@ -193,7 +204,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px 0', flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '16px 16px 0' : '20px 24px 0', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 24, letterSpacing: '-.5px' }}>{currentSection.title}</div>
           <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 4 }}>
@@ -212,7 +223,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
         </div>
       </div>
 
-      <div style={{ padding: '14px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      <div style={{ padding: isMobile ? '12px 16px 0' : '14px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {availableSections.map((item) => (
           <button
             key={item.id}
@@ -233,7 +244,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
         ))}
       </div>
 
-      <div style={{ padding: '10px 24px 0', color: 'var(--ink2)', fontSize: 13, lineHeight: 1.7 }}>
+      <div style={{ padding: isMobile ? '8px 16px 0' : '10px 24px 0', color: 'var(--ink2)', fontSize: 13, lineHeight: 1.7 }}>
         {currentSection.description}
         {section === 'parts' ? (
           <span style={{ display: 'block', color: 'var(--ink3)', marginTop: 4 }}>
@@ -257,20 +268,20 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
         ) : null}
       </div>
 
-      <div style={{ padding: '16px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+      <div style={{ padding: isMobile ? '14px 16px 0' : '16px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: isPhone ? 'stretch' : 'center', flexDirection: isPhone ? 'column' : 'row' }}>
         <input
           className="form-input"
           placeholder={section === 'vehicle' ? 'Search a vehicle listing...' : 'Search a listing...'}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          style={{ flex: 1, minWidth: 220, fontSize: 13 }}
+          style={{ flex: 1, minWidth: isPhone ? '100%' : 220, fontSize: 13 }}
         />
-        <select className="form-select" value={sort} onChange={(event) => setSort(event.target.value)} style={{ width: 150, fontSize: 13 }}>
+        <select className="form-select" value={sort} onChange={(event) => setSort(event.target.value)} style={{ width: isPhone ? '100%' : 150, fontSize: 13 }}>
           {SORTS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
 
-      <div style={{ padding: '16px 24px 24px' }}>
+      <div style={{ padding: isMobile ? '16px 16px 24px' : '16px 24px 24px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60 }}>
             <div className="spinner" style={{ width: 32, height: 32, margin: '0 auto 12px' }} />
@@ -288,7 +299,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
             <button className="btn btn-green btn-lg" onClick={openComposerModal}>{currentSection.cta}</button>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isPhone ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
             {visibleListings.map((listing) => {
               const vehicle = listing.vehicle_snapshot
               const cardImage = listing.image_url || vehicle?.imageUrl || ''
@@ -306,7 +317,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                   }}
                   style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
                 >
-                  <div style={{ height: 180, overflow: 'hidden', borderBottom: '1px solid var(--border)', position: 'relative', background: 'linear-gradient(135deg, #102746 0%, #2c7ac8 100%)' }}>
+                  <div style={{ height: isPhone ? 160 : 180, overflow: 'hidden', borderBottom: '1px solid var(--border)', position: 'relative', background: 'linear-gradient(135deg, #102746 0%, #2c7ac8 100%)' }}>
                     {cardImage ? (
                       <img src={cardImage} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
