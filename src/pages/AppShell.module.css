@@ -896,6 +896,13 @@
   min-height: 0;
 }
 
+.providerListWrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
 .providerResultsHeaderModern {
   display: flex;
   align-items: flex-start;
@@ -946,6 +953,13 @@
   min-height: 0;
   padding-right: 4px;
   padding-bottom: 22px;
+}
+
+.providerMoreProvidersBar {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+  margin-top: auto;
 }
 
 .providerCardModern {

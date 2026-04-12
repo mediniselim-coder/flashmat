@@ -205,7 +205,7 @@ function getProviderKey(provider) {
   return String(provider?.id || provider?.name || '')
 }
 
-function MapViewportUpdater({ coordsList }) {
+function MapViewportUpdater({ coordsList, resetKey }) {
   const map = useMap()
 
   useEffect(() => {
@@ -221,7 +221,7 @@ function MapViewportUpdater({ coordsList }) {
 
     const bounds = L.latLngBounds(coordsList)
     map.fitBounds(bounds, { padding: [42, 42] })
-  }, [coordsList, map])
+  }, [coordsList, map, resetKey])
 
   return null
 }
@@ -483,6 +483,7 @@ export default function ProviderMap({
   onBook,
   onVisitProfile,
   onVisibleProvidersChange,
+  viewportResetKey = 0,
   scrollWheelZoom = true,
   height = 380,
 }) {
@@ -657,7 +658,7 @@ export default function ProviderMap({
       </div>
       <MapContainer center={mapCenter} zoom={12} style={{ height: '100%', width: '100%', position: 'relative', zIndex: 0 }} scrollWheelZoom={scrollWheelZoom}>
         <TileLayer attribution={tileConfig.attribution} url={tileConfig.url} />
-        <MapViewportUpdater coordsList={coordsList} />
+        <MapViewportUpdater coordsList={coordsList} resetKey={viewportResetKey} />
         <VisibleProvidersTracker
           providers={providersWithCoords}
           onVisibleProvidersChange={onVisibleProvidersChange}

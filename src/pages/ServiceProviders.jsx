@@ -75,6 +75,7 @@ export default function ServiceProviders() {
   const [minRating, setMinRating] = useState(0)
   const [selectedProviderId, setSelectedProviderId] = useState(null)
   const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
+  const [mapViewportResetKey, setMapViewportResetKey] = useState(0)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [selectedBookingProvider, setSelectedBookingProvider] = useState(null)
   const [userVehicles, setUserVehicles] = useState([])
@@ -186,6 +187,8 @@ export default function ServiceProviders() {
     const visibleSet = new Set(visibleProviderKeys)
     return filtered.filter((provider, index) => visibleSet.has(getProviderKey(provider, index)))
   }, [filtered, visibleProviderKeys])
+
+  const canShowMoreProviders = displayedProviders.length === 1 && filtered.length > displayedProviders.length
 
   useEffect(() => {
     if (!displayedProviders.length) {
@@ -310,7 +313,8 @@ export default function ServiceProviders() {
                     <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--ink3)' }}>Loading providers...</div>
                   </div>
                 ) : (
-                  <div className={styles.providerListModern}>
+                  <div className={styles.providerListWrap}>
+                    <div className={styles.providerListModern}>
                     {displayedProviders.map((provider, index) => (
                       <div
                         key={provider.id || index}
@@ -393,6 +397,18 @@ export default function ServiceProviders() {
                         </button>
                       </div>
                     )}
+                    </div>
+
+                    {canShowMoreProviders ? (
+                      <div className={styles.providerMoreProvidersBar}>
+                        <button
+                          className="btn"
+                          onClick={() => setMapViewportResetKey((current) => current + 1)}
+                        >
+                          More providers
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </section>
@@ -417,6 +433,7 @@ export default function ServiceProviders() {
                     })
                   }}
                   onBook={(provider) => openBooking(provider)}
+                  viewportResetKey={mapViewportResetKey}
                   scrollWheelZoom
                   height="100%"
                 />
