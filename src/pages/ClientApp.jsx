@@ -1661,7 +1661,12 @@ export default function ClientApp() {
                   {bookings.map((booking) => (
                     <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:18,boxShadow:'var(--shadow)'}}>
                       <div style={{display:'grid',gridTemplateColumns:'auto minmax(0, 1fr) auto',gap:16,alignItems:'stretch'}}>
-                        <div style={{display:'grid',gridTemplateColumns:'80px 86px',gap:12,alignItems:'stretch'}}>
+                        <div style={{display:'grid',gridTemplateColumns:'86px 80px',gap:12,alignItems:'stretch'}}>
+                          <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
+                            <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
+                            <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
+                          </div>
                           <div style={{width:80,height:80,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
                             <img
                               src={bookingVehicleImageMap.get(String(booking.vehicle_id || booking.vehicle?.id || '')) || '/vehicle-fallback.svg'}
@@ -1669,25 +1674,17 @@ export default function ClientApp() {
                               style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
                             />
                           </div>
-                          <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
-                            <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
-                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
-                            <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
-                          </div>
                         </div>
 
                         <div style={{minWidth:0}}>
-                          <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'flex-start',marginBottom:8}}>
-                            <div>
-                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:19,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
-                              <div style={{fontSize:13,color:'var(--ink2)',marginBottom:6}}>{booking.providerName}</div>
-                              <div style={{fontSize:12,color:'var(--ink3)'}}>{booking.vehicleLabel}</div>
-                            </div>
-                            <span className={`badge ${booking.statusClass}`}>{booking.statusLabel}</span>
+                          <div style={{marginBottom:8}}>
+                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:19,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
+                            <div style={{fontSize:13,color:'var(--ink2)',marginBottom:6}}>{booking.providerName}</div>
+                            <div style={{fontSize:12,color:'var(--ink3)'}}>{booking.vehicleLabel}</div>
                           </div>
 
                           <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-                            <span className="badge badge-blue" style={{fontSize:12,padding:'8px 12px'}}>{booking.time_slot || 'Time to confirm'}</span>
+                            <span className="badge badge-blue" style={{fontSize:16,padding:'10px 14px',fontWeight:800}}>{booking.time_slot || 'Time to confirm'}</span>
                             <span className="badge badge-gray" style={{fontSize:12,padding:'8px 12px'}}>Booked service</span>
                           </div>
 
@@ -1706,6 +1703,9 @@ export default function ClientApp() {
                               </div>
                             ) : null}
                           </div>
+                          <span className={`badge ${booking.statusClass}`} style={{justifySelf:'end'}}>
+                            {booking.statusLabel}
+                          </span>
                         </div>
                       </div>
                     </div>
