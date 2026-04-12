@@ -20,7 +20,7 @@ const FEED_FILTERS = [
   ['all', 'Tout'],
   ['vehicle', 'Vehicules'],
   ['parts', 'Pieces'],
-  ['shop', 'Shop'],
+  ['shop', 'FlashMat Shop'],
 ]
 
 function timeAgo(ts) {
@@ -55,7 +55,7 @@ function getFeedMeta(listing) {
   }
 
   return {
-    badge: 'Shop update',
+    badge: 'FlashMat Shop',
     title: listing.title,
     body: listing.description || 'Nouvel item ou accessoire partage dans FlashMat Marketplace.',
     cta: 'Voir l annonce',
@@ -200,7 +200,7 @@ export default function Community() {
           <div style={styles.leftCard}>
             <div style={styles.railTitle}>A suivre</div>
             <div style={styles.railText}>
-              Toute nouvelle annonce visible sur FlashMat peut remonter ici: vehicules en vente, pieces, nouveaux items shop et activite providers.
+              Toute nouvelle annonce visible sur FlashMat peut remonter ici: vehicules en vente, pieces, nouveaux items FlashMat Shop et activite providers.
             </div>
           </div>
         </aside>

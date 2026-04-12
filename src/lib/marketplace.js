@@ -87,7 +87,12 @@ export function normalizeMarketplaceListing(listing) {
     vehicle_id: meta.vehicleId || '',
     vehicle_snapshot: meta.vehicleSnapshot || null,
     vehicle_public_path: meta.vehiclePublicPath || '',
-    seller_label: meta.sellerType === 'provider' ? 'Provider' : 'Client',
+    seller_label:
+      meta.sellerType === 'provider'
+        ? 'Provider'
+        : meta.sellerType === 'flashmat_admin'
+          ? 'FlashMat Admin'
+          : 'Client',
   }
 }
 

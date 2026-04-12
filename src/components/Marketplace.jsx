@@ -6,16 +6,17 @@ import { useToast } from '../hooks/useToast'
 import NewListingModal from './NewListingModal'
 import { getMarketplaceListingPath, normalizeMarketplaceListing } from '../lib/marketplace'
 import { addCartItem } from '../lib/cart'
+import { isAdminRole, isProviderRole } from '../lib/roles'
 import ServiceIcon from './ServiceIcon'
 
 const SECTIONS = [
   {
     id: 'shop',
-    label: 'Shop',
-    title: 'General shop',
-    description: 'Cleaning products, accessories, tools, and everyday automotive gear.',
-    cta: 'Publish shop item',
-    empty: 'No shop items yet',
+    label: 'FlashMat Shop',
+    title: 'FlashMat Shop',
+    description: 'Stock-based items published by FlashMat Admins and FlashMat Providers.',
+    cta: 'Publish FlashMat Shop item',
+    empty: 'No FlashMat Shop items yet',
   },
   {
     id: 'parts',
@@ -54,7 +55,8 @@ function matchesSection(listing, sectionId) {
 }
 
 function canPublishSection(sectionId, profileRole) {
-  if (sectionId === 'parts') return profileRole === 'provider'
+  if (sectionId === 'parts') return isProviderRole(profileRole)
+  if (sectionId === 'shop') return isProviderRole(profileRole) || isAdminRole(profileRole)
   return sectionId !== 'vehicle'
 }
 
@@ -70,7 +72,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
   const [showModal, setShowModal] = useState(false)
   const [myOnly, setMyOnly] = useState(false)
   const [expanded, setExpanded] = useState(null)
-  const isProvider = profile?.role === 'provider'
+  const isProvider = isProviderRole(profile?.role)
   const availableSections = useMemo(
     () => SECTIONS.filter((item) => item.id !== 'parts' || isProvider),
     [isProvider],
@@ -219,6 +221,11 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
         {section === 'vehicle' ? (
           <span style={{ display: 'block', color: 'var(--ink3)', marginTop: 4 }}>
             Vehicles are listed from the owner dashboard, and each sale listing links to a public FlashMat vehicle profile.
+          </span>
+        ) : null}
+        {section === 'shop' ? (
+          <span style={{ display: 'block', color: 'var(--ink3)', marginTop: 4 }}>
+            FlashMat Shop is reserved for stocked items published by FlashMat Admins and FlashMat Providers.
           </span>
         ) : null}
       </div>

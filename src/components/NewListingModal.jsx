@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
 import { normalizeMarketplaceListing, serializeMarketplaceDescription } from '../lib/marketplace'
+import { isAdminRole, isProviderRole } from '../lib/roles'
 import AppIcon from './AppIcon'
 
 const SHOP_CATEGORIES = ['Cleaning Products', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
@@ -91,6 +92,10 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
       setError('Auto parts listings can only be published from a provider account.')
       return
     }
+    if (listingType === 'shop' && !(isProviderRole(profile?.role) || isAdminRole(profile?.role))) {
+      setError('FlashMat Shop listings can only be published from a FlashMat Admin or provider account.')
+      return
+    }
     if (!form.title.trim() || !form.price) { setError('Title and price are required.'); return }
     setLoading(true); setError('')
     try {
@@ -123,9 +128,9 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 540, maxHeight: '90vh', overflowY: 'auto' }}>
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
           <div className="modal-title" style={{ marginBottom:0 }}>
-            {listingType === 'parts' ? 'Create an auto parts listing' : 'Create a shop listing'}
+            {listingType === 'parts' ? 'Create an auto parts listing' : 'Create a FlashMat Shop listing'}
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>x</button>
         </div>
@@ -211,6 +216,12 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
             <label className="form-label">Description</label>
             <textarea className="form-input" rows={3} placeholder="Describe the item, condition, and reason for selling..." value={form.description} onChange={e => set('description', e.target.value)} style={{ resize:'vertical' }} />
           </div>
+
+          {listingType === 'shop' ? (
+            <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+              FlashMat Shop is intended for stocked items sold by FlashMat Admins and FlashMat Providers.
+            </div>
+          ) : null}
 
           {error && <div style={{ color:'var(--red)', fontSize:12, marginBottom:12 }}>{error}</div>}
 

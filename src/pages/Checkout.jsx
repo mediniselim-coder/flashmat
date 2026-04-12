@@ -152,8 +152,8 @@ export default function Checkout() {
                     {cartItems.length === 0 ? (
                       <div style={{ textAlign: 'center', padding: '24px 14px', color: 'var(--ink3)' }}>
                         <div style={{ fontFamily: 'var(--display)', fontSize: 24, fontWeight: 800, color: 'var(--ink)', marginBottom: 10 }}>Your cart is empty</div>
-                        <div style={{ marginBottom: 16, fontSize: 14 }}>Add shop items from the marketplace first, then come back here to checkout.</div>
-                        <button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>Browse shop</button>
+                        <div style={{ marginBottom: 16, fontSize: 14 }}>Add FlashMat Shop items from the marketplace first, then come back here to checkout.</div>
+                        <button type="button" className="btn btn-green" onClick={() => navigate('/marketplace')}>Browse FlashMat Shop</button>
                       </div>
                     ) : (
                       cartItems.map((item) => (

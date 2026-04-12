@@ -227,7 +227,7 @@ export default function PublicMarketplace() {
                 Le bon canal pour chaque type d annonce.
               </div>
               <div style={{ fontSize: 14, lineHeight: 1.8, color: "rgba(226,236,248,.78)" }}>
-                Section boutique pour l equipement quotidien, auto parts pro pour les fournisseurs, et vehicle marketplace
+                FlashMat Shop pour les items avec stock publies par FlashMat, auto parts pro pour les fournisseurs, et vehicle marketplace
                 pour les ventes connectees aux profils vehicules FlashMat.
               </div>
 
