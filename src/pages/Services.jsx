@@ -120,13 +120,6 @@ export default function Services() {
               </div>
             </div>
 
-            <div style={{ background: 'linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04))', border: '1px solid rgba(255,255,255,.10)', borderRadius: 24, padding: 18, display: 'grid', gap: 10 }}>
-              <div style={{ fontSize: 11, letterSpacing: 1.6, textTransform: 'uppercase', color: '#9bd5ff', fontWeight: 700 }}>En ce moment</div>
-              <div style={{ fontFamily: 'var(--display)', fontSize: 26, fontWeight: 800, lineHeight: 1.05 }}>Le bon service avant le mauvais detour.</div>
-              <div style={{ fontSize: 13, lineHeight: 1.7, color: 'rgba(255,255,255,.72)' }}>
-                Besoin d un diagnostic, d un garage de confiance ou d une intervention urgente ? Commencez ici et passez au bon fournisseur en quelques clics.
-              </div>
-            </div>
           </div>
         </div>
       </div>
