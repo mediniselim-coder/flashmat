@@ -19,6 +19,14 @@ const SECTIONS = [
     empty: 'No FlashMat Shop items yet',
   },
   {
+    id: 'pickup',
+    label: 'Pick up',
+    title: 'Pick up',
+    description: 'Peer-to-peer items that clients and providers sell directly for local pickup.',
+    cta: 'Publish pick up item',
+    empty: 'No pick up items yet',
+  },
+  {
     id: 'parts',
     label: 'Auto Parts Pro',
     title: 'Provider-only parts exchange',
@@ -57,6 +65,7 @@ function matchesSection(listing, sectionId) {
 function canPublishSection(sectionId, profileRole) {
   if (sectionId === 'parts') return isProviderRole(profileRole)
   if (sectionId === 'shop') return isProviderRole(profileRole) || isAdminRole(profileRole)
+  if (sectionId === 'pickup') return Boolean(profileRole)
   return sectionId !== 'vehicle'
 }
 
@@ -228,6 +237,11 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
             FlashMat Shop is reserved for stocked items published by FlashMat Admins and FlashMat Providers.
           </span>
         ) : null}
+        {section === 'pickup' ? (
+          <span style={{ display: 'block', color: 'var(--ink3)', marginTop: 4 }}>
+            Pick up listings are sold directly between clients and providers. These items are not added to cart and buyers contact the seller to arrange pickup.
+          </span>
+        ) : null}
       </div>
 
       <div style={{ padding: '16px 24px 0', display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -251,7 +265,7 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
           </div>
         ) : visibleListings.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--ink3)' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}><ServiceIcon code={section === 'vehicle' ? 'VH' : section === 'parts' ? 'PC' : 'SH'} size={40} /></div>
+            <div style={{ fontSize: 40, marginBottom: 12 }}><ServiceIcon code={section === 'vehicle' ? 'VH' : section === 'parts' ? 'PC' : section === 'pickup' ? 'PK' : 'SH'} size={40} /></div>
             <div style={{ fontFamily: 'var(--display)', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>
               {search ? 'No matching listings' : currentSection.empty}
             </div>
@@ -334,6 +348,18 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                         <button className="btn" style={{ justifyContent: 'center' }} onClick={() => handleAddToCart(listing)}>
                           Add to cart
                         </button>
+                      ) : null}
+
+                      {listing.listing_type === 'pickup' && listing.seller_id !== user?.id ? (
+                        listing.phone ? (
+                          <a href={`tel:${listing.phone}`} className="btn" style={{ justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
+                            Call seller
+                          </a>
+                        ) : (
+                          <button className="btn" style={{ justifyContent: 'center' }} onClick={() => navigate(getMarketplaceListingPath(listing))}>
+                            Pickup details
+                          </button>
+                        )
                       ) : null}
 
                       {listing.seller_id === user?.id ? (

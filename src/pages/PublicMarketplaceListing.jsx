@@ -52,6 +52,7 @@ export default function PublicMarketplaceListing() {
     ['Condition', listing.condition || 'Not shared'],
     ['Audience', listing.audience === 'providers' ? 'Providers only' : 'Public listing'],
     ['Seller type', listing.seller_label || 'Seller'],
+    ['Listing flow', listing.listing_type === 'pickup' ? 'Call seller and pick up locally' : listing.listing_type === 'shop' ? 'Stock item with cart checkout' : 'Direct listing'],
     ['City', listing.city || 'Montreal'],
     ['Published', timeAgo(listing.created_at)],
   ] : []
@@ -174,9 +175,15 @@ export default function PublicMarketplaceListing() {
                         </button>
                       ) : null}
 
+                      {listing.listing_type === 'pickup' ? (
+                        <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.6, padding: '2px 2px 4px' }}>
+                          This is a pick up item. Call the seller to confirm availability and arrange where to collect it.
+                        </div>
+                      ) : null}
+
                       {listing.phone ? (
                         <a href={`tel:${listing.phone}`} className="btn" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
-                          Call seller
+                          {listing.listing_type === 'pickup' ? 'Call seller for pickup' : 'Call seller'}
                         </a>
                       ) : (
                         <div className="btn" style={{ width: '100%', justifyContent: 'center', color: 'var(--ink3)', cursor: 'default' }}>Seller contact unavailable</div>

@@ -6,6 +6,7 @@ import { isAdminRole, isProviderRole } from '../lib/roles'
 import AppIcon from './AppIcon'
 
 const SHOP_CATEGORIES = ['Cleaning Products', 'Accessories', 'Audio & Tech', 'Tools', 'Other']
+const PICKUP_CATEGORIES = ['Garage clearout', 'Tools', 'Accessories', 'Tires & Wheels', 'Parts', 'Other']
 const PARTS_CATEGORIES = ['Engine Parts', 'Tires & Wheels', 'Bodywork', 'Brakes & Suspension']
 const CONDITIONS = ['New', 'Very good', 'Good', 'Acceptable']
 const ICON_OPTIONS = [
@@ -26,7 +27,7 @@ const ICON_OPTIONS = [
 export default function NewListingModal({ onClose, onCreated, listingType = 'shop' }) {
   const { user, profile } = useAuth()
   const fileRef = useRef()
-  const categories = listingType === 'parts' ? PARTS_CATEGORIES : SHOP_CATEGORIES
+  const categories = listingType === 'parts' ? PARTS_CATEGORIES : listingType === 'pickup' ? PICKUP_CATEGORIES : SHOP_CATEGORIES
   const [form, setForm] = useState({
     title: '', description: '', price: '', category: categories[0],
     condition: 'Good', icon: listingType === 'parts' ? 'EN' : 'WL', phone: '',
@@ -130,7 +131,11 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
       <div className="modal" style={{ maxWidth: 540, maxHeight: '90vh', overflowY: 'auto' }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20 }}>
           <div className="modal-title" style={{ marginBottom:0 }}>
-            {listingType === 'parts' ? 'Create an auto parts listing' : 'Create a FlashMat Shop listing'}
+            {listingType === 'parts'
+              ? 'Create an auto parts listing'
+              : listingType === 'pickup'
+                ? 'Create a pick up listing'
+                : 'Create a FlashMat Shop listing'}
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>x</button>
         </div>
@@ -220,6 +225,12 @@ export default function NewListingModal({ onClose, onCreated, listingType = 'sho
           {listingType === 'shop' ? (
             <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
               FlashMat Shop is intended for stocked items sold by FlashMat Admins and FlashMat Providers.
+            </div>
+          ) : null}
+
+          {listingType === 'pickup' ? (
+            <div style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 12 }}>
+              Pick up listings are sold directly between users and providers. Buyers will call you and arrange pickup, so these items are not added to cart.
             </div>
           ) : null}
 
