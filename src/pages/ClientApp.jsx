@@ -302,6 +302,42 @@ function formatBookingCalendar(date) {
   }
 }
 
+function getBookingStartAt(booking) {
+  if (!booking?.date) return null
+
+  const timeSlot = booking.time_slot || booking.timeSlot || ''
+  if (!timeSlot) {
+    const parsed = new Date(`${booking.date}T00:00:00`)
+    return Number.isNaN(parsed.getTime()) ? null : parsed
+  }
+
+  const normalized = String(timeSlot).trim().toLowerCase().replace(/\./g, '')
+  const ampmMatch = normalized.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/)
+  const twentyFourMatch = normalized.match(/^(\d{1,2})(?::(\d{2}))?$/)
+
+  let hours = null
+  let minutes = null
+
+  if (ampmMatch) {
+    hours = Number(ampmMatch[1])
+    minutes = Number(ampmMatch[2] || 0)
+    const meridiem = ampmMatch[3]
+    if (meridiem === 'pm' && hours < 12) hours += 12
+    if (meridiem === 'am' && hours === 12) hours = 0
+  } else if (twentyFourMatch) {
+    hours = Number(twentyFourMatch[1])
+    minutes = Number(twentyFourMatch[2] || 0)
+  }
+
+  if (hours === null || Number.isNaN(hours) || Number.isNaN(minutes)) {
+    const fallback = new Date(`${booking.date}T00:00:00`)
+    return Number.isNaN(fallback.getTime()) ? null : fallback
+  }
+
+  const dateValue = new Date(`${booking.date}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`)
+  return Number.isNaN(dateValue.getTime()) ? null : dateValue
+}
+
 function getApproximateBookingPriceLabel(priceLabel) {
   if (!priceLabel || priceLabel === 'Price to confirm') {
     return 'Price to confirm'
@@ -1678,62 +1714,122 @@ export default function ClientApp() {
           <div>
             <div className={styles.pageHdr}><div><div className={styles.pageTitle}>My Bookings</div></div><button className="btn btn-green" onClick={() => openBooking()}>+ New</button></div>
             <div className={styles.pad}>
-              {bookings.length > 0 && (
-                <div style={{ display:'grid', gap:12, marginBottom:16 }}>
-                  {bookings.map((booking) => (
-                    <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:18,boxShadow:'var(--shadow)'}}>
-                      <div style={{display:'grid',gridTemplateColumns:'auto minmax(0, 1fr) auto',gap:16,alignItems:'stretch'}}>
-                        <div style={{display:'grid',gridTemplateColumns:'86px 80px',gap:12,alignItems:'stretch'}}>
-                          <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
-                            <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
-                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
-                            <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
-                          </div>
-                          <div style={{width:80,height:80,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
-                            <img
-                              src={bookingVehicleImageMap.get(String(booking.vehicle_id || booking.vehicle?.id || '')) || '/vehicle-fallback.svg'}
-                              alt={booking.vehicleLabel}
-                              style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
-                            />
-                          </div>
-                        </div>
+                {bookings.length > 0 && (
+                  <div style={{ display:'grid', gap:18, marginBottom:16 }}>
+                    {(() => {
+                      const now = new Date()
+                      const { upcoming, past } = bookings.reduce((acc, booking) => {
+                        const bookingStartAt = getBookingStartAt(booking)
+                        if (!bookingStartAt || bookingStartAt >= now) {
+                          acc.upcoming.push(booking)
+                        } else {
+                          acc.past.push(booking)
+                        }
+                        return acc
+                      }, { upcoming: [], past: [] })
 
-                        <div style={{minWidth:0}}>
-                          <div style={{marginBottom:8}}>
-                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:19,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
-                            <div style={{fontSize:13,color:'var(--ink2)',marginBottom:6}}>{booking.providerName}</div>
-                            <div style={{fontSize:12,color:'var(--ink3)'}}>{booking.vehicleLabel}</div>
-                          </div>
+                      const upcomingSorted = [...upcoming].sort((a, b) => {
+                        const aTime = getBookingStartAt(a)?.getTime() || 0
+                        const bTime = getBookingStartAt(b)?.getTime() || 0
+                        return aTime - bTime
+                      })
+                      const pastSorted = [...past].sort((a, b) => {
+                        const aTime = getBookingStartAt(a)?.getTime() || 0
+                        const bTime = getBookingStartAt(b)?.getTime() || 0
+                        return bTime - aTime
+                      })
 
-                          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
-                            <span className="badge badge-blue" style={{fontSize:16,padding:'10px 14px',fontWeight:800}}>{booking.time_slot || 'Time to confirm'}</span>
-                            <span className="badge badge-gray" style={{fontSize:12,padding:'8px 12px'}}>Booked service</span>
-                          </div>
-
-                          {booking.notes && <div style={{marginTop:12,fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>📝 {booking.notes}</div>}
-                        </div>
-
-                        <div style={{display:'grid',justifyItems:'end',alignContent:'space-between',minWidth:150}}>
-                          <div style={{textAlign:'right'}}>
-                            <div style={{fontSize:10,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink3)',fontFamily:'var(--mono)',marginBottom:6}}>Approximate price</div>
-                            <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:24,color:'var(--green)',lineHeight:1.05}}>
-                              {getApproximateBookingPriceLabel(booking.priceLabel)}
-                            </div>
-                            {booking.priceLabel && booking.priceLabel !== 'Price to confirm' ? (
-                              <div style={{fontSize:11,color:'var(--ink3)',marginTop:6,maxWidth:150}}>
-                                Final total can change after provider inspection.
+                      const renderBooking = (booking) => (
+                        <div key={booking.id} style={{background:'var(--bg2)',border:'1px solid var(--border)',borderRadius:18,padding:18,boxShadow:'var(--shadow)'}}>
+                          <div style={{display:'grid',gridTemplateColumns:'auto minmax(0, 1fr) auto',gap:16,alignItems:'stretch'}}>
+                            <div style={{display:'grid',gridTemplateColumns:'86px 80px',gap:12,alignItems:'stretch'}}>
+                              <div style={{borderRadius:16,background:'linear-gradient(180deg, rgba(37,99,235,.10) 0%, rgba(37,99,235,.04) 100%)',border:'1px solid rgba(37,99,235,.12)',padding:'10px 8px',display:'grid',alignContent:'center',justifyItems:'center',minWidth:86}}>
+                                <div style={{fontSize:11,fontWeight:800,letterSpacing:'.16em',color:'var(--blue)',fontFamily:'var(--mono)'}}>{formatBookingCalendar(booking.date).month}</div>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:34,lineHeight:1,color:'var(--ink)'}}>{formatBookingCalendar(booking.date).day}</div>
+                                <div style={{fontSize:10,color:'var(--ink2)',textAlign:'center',marginTop:4}}>{formatBookingCalendar(booking.date).weekday}</div>
                               </div>
-                            ) : null}
+                              <div style={{width:80,height:80,borderRadius:16,overflow:'hidden',border:'1px solid var(--border)',background:'var(--bg3)'}}>
+                                <img
+                                  src={bookingVehicleImageMap.get(String(booking.vehicle_id || booking.vehicle?.id || '')) || '/vehicle-fallback.svg'}
+                                  alt={booking.vehicleLabel}
+                                  style={{width:'100%',height:'100%',objectFit:'cover',display:'block'}}
+                                />
+                              </div>
+                            </div>
+
+                            <div style={{minWidth:0}}>
+                              <div style={{marginBottom:8}}>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:19,color:'var(--ink)',marginBottom:4}}>{booking.service}</div>
+                                <div style={{fontSize:13,color:'var(--ink2)',marginBottom:6}}>{booking.providerName}</div>
+                                <div style={{fontSize:12,color:'var(--ink3)'}}>{booking.vehicleLabel}</div>
+                              </div>
+
+                              <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+                                <span className="badge badge-blue" style={{fontSize:16,padding:'10px 14px',fontWeight:800}}>{booking.time_slot || 'Time to confirm'}</span>
+                                <span className="badge badge-gray" style={{fontSize:12,padding:'8px 12px'}}>Booked service</span>
+                              </div>
+
+                              {booking.notes && <div style={{marginTop:12,fontSize:12,color:'var(--ink2)',lineHeight:1.6}}>📝 {booking.notes}</div>}
+                            </div>
+
+                            <div style={{display:'grid',justifyItems:'end',alignContent:'space-between',minWidth:150}}>
+                              <div style={{textAlign:'right'}}>
+                                <div style={{fontSize:10,letterSpacing:'.14em',textTransform:'uppercase',color:'var(--ink3)',fontFamily:'var(--mono)',marginBottom:6}}>Approximate price</div>
+                                <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:24,color:'var(--green)',lineHeight:1.05}}>
+                                  {getApproximateBookingPriceLabel(booking.priceLabel)}
+                                </div>
+                                {booking.priceLabel && booking.priceLabel !== 'Price to confirm' ? (
+                                  <div style={{fontSize:11,color:'var(--ink3)',marginTop:6,maxWidth:150}}>
+                                    Final total can change after provider inspection.
+                                  </div>
+                                ) : null}
+                              </div>
+                              <span className={`badge ${booking.statusClass}`} style={{justifySelf:'end'}}>
+                                {booking.statusLabel}
+                              </span>
+                            </div>
                           </div>
-                          <span className={`badge ${booking.statusClass}`} style={{justifySelf:'end'}}>
-                            {booking.statusLabel}
-                          </span>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                      )
+
+                      return (
+                        <>
+                          <div>
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:10}}>
+                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Upcoming bookings</div>
+                              <span className="badge badge-blue">{upcoming.length}</span>
+                            </div>
+                            {upcoming.length > 0 ? (
+                              <div style={{ display:'grid', gap:12 }}>
+                                {upcomingSorted.map((booking) => renderBooking(booking))}
+                              </div>
+                            ) : (
+                              <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
+                                No upcoming bookings yet.
+                              </div>
+                            )}
+                          </div>
+
+                          <div>
+                            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,marginBottom:10}}>
+                              <div style={{fontFamily:'var(--display)',fontWeight:800,fontSize:18,color:'var(--ink)'}}>Past bookings</div>
+                              <span className="badge badge-gray">{past.length}</span>
+                            </div>
+                            {past.length > 0 ? (
+                              <div style={{ display:'grid', gap:12 }}>
+                                {pastSorted.map((booking) => renderBooking(booking))}
+                              </div>
+                            ) : (
+                              <div style={{background:'var(--bg2)',border:'1px dashed var(--border)',borderRadius:16,padding:16,color:'var(--ink3)',fontSize:13}}>
+                                No past bookings yet.
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )
+                    })()}
+                  </div>
+                )}
               {activeFlashFixRequests.length > 0 && (
                 <div style={{background:'linear-gradient(135deg,#0f1e3d 0%, #1a3a8f 100%)',borderRadius:18,padding:18,marginBottom:16,color:'#fff',boxShadow:'var(--shadow)'}}>
                   <div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'flex-start',marginBottom:12}}>
