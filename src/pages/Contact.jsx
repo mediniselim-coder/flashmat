@@ -59,14 +59,6 @@ export default function Contact() {
               For client help, provider onboarding, marketplace questions, or urgent operational support, use the route that matches your need.
             </p>
           </div>
-
-          <div style={styles.heroPanel}>
-            <div style={styles.panelEyebrow}>Fast routing</div>
-            <div style={styles.panelTitle}>Support should feel clear, not buried.</div>
-            <div style={styles.panelText}>
-              FlashMat separates client support, provider growth, and urgency operations so each request lands with the right team.
-            </div>
-          </div>
         </section>
 
         <section style={styles.layout}>
@@ -170,7 +162,7 @@ const styles = {
   },
   hero: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.1fr) minmax(300px, 0.7fr)',
+    gridTemplateColumns: 'minmax(0, 1fr)',
     gap: 22,
     marginBottom: 24,
   },
@@ -203,35 +195,6 @@ const styles = {
     lineHeight: 1.7,
     color: 'var(--ink2)',
     maxWidth: 760,
-  },
-  heroPanel: {
-    borderRadius: 28,
-    padding: 24,
-    background: 'linear-gradient(145deg, rgba(8,28,49,0.96) 0%, rgba(18,71,121,0.92) 100%)',
-    color: '#eaf5ff',
-    boxShadow: '0 24px 54px rgba(10,28,45,0.18)',
-    border: '1px solid rgba(120,180,220,0.16)',
-    display: 'grid',
-    alignContent: 'start',
-    gap: 10,
-  },
-  panelEyebrow: {
-    fontSize: 11,
-    letterSpacing: '.16em',
-    textTransform: 'uppercase',
-    fontWeight: 800,
-    color: '#9ed8ff',
-  },
-  panelTitle: {
-    fontFamily: 'var(--display)',
-    fontSize: 28,
-    lineHeight: 1.02,
-    letterSpacing: '-0.05em',
-  },
-  panelText: {
-    fontSize: 14,
-    lineHeight: 1.75,
-    color: 'rgba(234,245,255,0.76)',
   },
   layout: {
     display: 'grid',
