@@ -383,9 +383,24 @@ export async function fetchConversationThreads(userId, role) {
   ;(unreadRows || []).forEach((row) => {
     unreadByThread[row.thread_id] = (unreadByThread[row.thread_id] || 0) + 1
   })
+  const threadIds = uniq(safeThreads.map((thread) => thread.id))
 
-  const providerIds = uniq(safeThreads.map((thread) => thread.provider_id))
-  const clientIds = uniq(safeThreads.map((thread) => thread.client_id))
+  const { data: threadMessageRows = [], error: threadMessageRowsError } = threadIds.length
+    ? await supabase
+      .from('messages')
+      .select('thread_id')
+      .in('thread_id', threadIds)
+    : { data: [], error: null }
+
+  if (threadMessageRowsError && !isMissingInboxRelation(threadMessageRowsError)) throw threadMessageRowsError
+
+  const threadIdsWithMessages = new Set((threadMessageRows || []).map((row) => String(row.thread_id)))
+  const visibleThreads = safeThreads.filter((thread) => (
+    String(thread.created_by) === String(userId) || threadIdsWithMessages.has(String(thread.id))
+  ))
+
+  const providerIds = uniq(visibleThreads.map((thread) => thread.provider_id))
+  const clientIds = uniq(visibleThreads.map((thread) => thread.client_id))
 
   const [
     { data: providers = [], error: providersError },
@@ -411,7 +426,7 @@ export async function fetchConversationThreads(userId, role) {
   const providerProfileMap = new Map((providerProfiles || []).map((provider) => [provider.id, provider]))
   const clientMap = new Map((clients || []).map((client) => [client.id, client]))
 
-  return safeThreads.map((thread) => {
+  return visibleThreads.map((thread) => {
     const counterpartId = role === 'provider' ? thread.client_id : thread.provider_id
     const providerCounterpart = providerMap.get(counterpartId)
     const providerProfile = providerProfileMap.get(counterpartId)
