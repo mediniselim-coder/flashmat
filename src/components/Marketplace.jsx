@@ -141,6 +141,14 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
     toast(`${listing.title} added to cart.`, 'success')
   }
 
+  function openListing(listing) {
+    navigate(getMarketplaceListingPath(listing))
+  }
+
+  function stopCardNavigation(event) {
+    event.stopPropagation()
+  }
+
   function openComposerModal() {
     if (section === 'vehicle') {
       navigate('/app/client/vehicles')
@@ -287,7 +295,16 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
               return (
                 <div
                   key={listing.id}
-                  style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column' }}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openListing(listing)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      openListing(listing)
+                    }
+                  }}
+                  style={{ background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 16, overflow: 'hidden', boxShadow: 'var(--shadow)', display: 'flex', flexDirection: 'column', cursor: 'pointer' }}
                 >
                   <div style={{ height: 180, overflow: 'hidden', borderBottom: '1px solid var(--border)', position: 'relative', background: 'linear-gradient(135deg, #102746 0%, #2c7ac8 100%)' }}>
                     {cardImage ? (
@@ -318,7 +335,10 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                         {expanded === listing.id ? listing.description : `${listing.description.slice(0, 96)}${listing.description.length > 96 ? '…' : ''}`}
                         {listing.description.length > 96 ? (
                           <button
-                            onClick={() => setExpanded(expanded === listing.id ? null : listing.id)}
+                            onClick={(event) => {
+                              stopCardNavigation(event)
+                              setExpanded(expanded === listing.id ? null : listing.id)
+                            }}
                             style={{ background: 'none', border: 'none', color: 'var(--green)', fontSize: 11, cursor: 'pointer', marginLeft: 4 }}
                           >
                             {expanded === listing.id ? 'Show less' : 'Read more'}
@@ -345,30 +365,42 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                      <button className="btn btn-green" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(getMarketplaceListingPath(listing))}>
+                      <button className="btn btn-green" style={{ flex: 1, justifyContent: 'center' }} onClick={(event) => {
+                        stopCardNavigation(event)
+                        openListing(listing)
+                      }}>
                         {listing.listing_type === 'vehicle' ? 'View vehicle' : 'View item'}
                       </button>
 
                       {listing.listing_type === 'shop' && listing.seller_id !== user?.id ? (
-                        <button className="btn" style={{ justifyContent: 'center' }} onClick={() => handleAddToCart(listing)}>
+                        <button className="btn" style={{ justifyContent: 'center' }} onClick={(event) => {
+                          stopCardNavigation(event)
+                          handleAddToCart(listing)
+                        }}>
                           Add to cart
                         </button>
                       ) : null}
 
                       {listing.listing_type === 'pickup' && listing.seller_id !== user?.id ? (
                         listing.phone ? (
-                          <a href={`tel:${listing.phone}`} className="btn" style={{ justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
+                          <a href={`tel:${listing.phone}`} className="btn" style={{ justifyContent: 'center', textDecoration: 'none', display: 'flex' }} onClick={stopCardNavigation}>
                             Call seller
                           </a>
                         ) : (
-                          <button className="btn" style={{ justifyContent: 'center' }} onClick={() => navigate(getMarketplaceListingPath(listing))}>
+                          <button className="btn" style={{ justifyContent: 'center' }} onClick={(event) => {
+                            stopCardNavigation(event)
+                            openListing(listing)
+                          }}>
                             Pickup details
                           </button>
                         )
                       ) : null}
 
                       {listing.seller_id === user?.id ? (
-                        <button className="btn" style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,.22)' }} onClick={() => { if (window.confirm('Remove this listing?')) deleteListing(listing.id) }}>
+                        <button className="btn" style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,.22)' }} onClick={(event) => {
+                          stopCardNavigation(event)
+                          if (window.confirm('Remove this listing?')) deleteListing(listing.id)
+                        }}>
                           Remove
                         </button>
                       ) : null}
