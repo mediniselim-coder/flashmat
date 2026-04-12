@@ -154,10 +154,10 @@ function RouteLoadingScreen() {
       style={{
         minHeight: "100vh",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
         background: "linear-gradient(180deg, #edf4ff 0%, #f7fbff 100%)",
-        padding: "clamp(72px, 14vh, 152px) 24px 24px",
+        padding: "32px 24px",
       }}
     >
       <div
