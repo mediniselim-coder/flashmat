@@ -61,20 +61,14 @@ export default function Pricing() {
         <section style={styles.hero}>
           <div style={styles.heroCopy}>
             <div style={styles.eyebrow}>FlashMat Pricing</div>
-            <h1 style={styles.title}>Simple pricing for clients and providers.</h1>
+            <h1 style={styles.title}>Choose the plan that fits your role.</h1>
             <p style={styles.subtitle}>
-              Clear value, no confusing stack of tools, and a structure that supports bookings, provider visibility, and future growth.
+              Clean pricing built around bookings, provider visibility, and the FlashMat marketplace.
             </p>
           </div>
-          <div style={styles.heroAside}>
-            <div style={styles.asideStat}>
-              <strong style={styles.asideValue}>3</strong>
-              <span style={styles.asideLabel}>pricing tracks designed around the platform</span>
-            </div>
-            <div style={styles.asideStat}>
-              <strong style={styles.asideValue}>200+</strong>
-              <span style={styles.asideLabel}>providers already visible across Montreal</span>
-            </div>
+          <div style={styles.heroToggle}>
+            <button type="button" style={styles.toggleActive}>Particuliers</button>
+            <button type="button" style={styles.toggleIdle}>Business</button>
           </div>
         </section>
 
@@ -86,22 +80,20 @@ export default function Pricing() {
                 key={plan.name}
                 style={{
                   ...styles.planCard,
-                  background: plan.accent,
-                  color: featured ? '#eef8ff' : 'var(--ink)',
-                  border: featured ? '1px solid rgba(120,180,220,0.18)' : '1px solid rgba(120,171,218,0.16)',
-                  boxShadow: featured ? '0 28px 60px rgba(10,28,45,0.18)' : '0 18px 42px rgba(19,54,92,0.08)',
+                  border: featured ? '1px solid rgba(255,255,255,0.2)' : '1px solid rgba(255,255,255,0.08)',
+                  boxShadow: featured ? '0 24px 60px rgba(0,0,0,0.4)' : '0 18px 40px rgba(0,0,0,0.3)',
                 }}
               >
                 {featured ? <div style={styles.featuredTag}>Recommended</div> : null}
                 <div style={styles.planName}>{plan.name}</div>
                 <div style={styles.planPriceRow}>
                   <span style={styles.planPrice}>{plan.price}</span>
-                  {plan.period ? <span style={featured ? styles.planPeriodFeatured : styles.planPeriod}>{plan.period}</span> : null}
+                  {plan.period ? <span style={styles.planPeriod}>{plan.period}</span> : null}
                 </div>
-                <p style={featured ? styles.planDescriptionFeatured : styles.planDescription}>{plan.description}</p>
+                <p style={styles.planDescription}>{plan.description}</p>
                 <ul style={styles.featureList}>
                   {plan.features.map((feature) => (
-                    <li key={feature} style={featured ? styles.featureItemFeatured : styles.featureItem}>
+                    <li key={feature} style={styles.featureItem}>
                       {feature}
                     </li>
                   ))}
@@ -120,7 +112,6 @@ export default function Pricing() {
 
         <section style={styles.faqSection}>
           <div style={styles.sectionEyebrow}>Pricing FAQ</div>
-          <h2 style={styles.sectionTitle}>Built to stay readable as FlashMat grows.</h2>
           <div style={styles.faqGrid}>
             {FAQS.map((item) => (
               <article key={item.question} style={styles.faqCard}>
@@ -140,108 +131,102 @@ export default function Pricing() {
 const styles = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #eef5fb 0%, #f8fbff 40%, #ffffff 100%)',
+    background: '#0f1115',
     fontFamily: 'var(--font)',
-    color: 'var(--ink)',
+    color: '#f4f6f8',
   },
   main: {
-    maxWidth: 1440,
+    maxWidth: 1200,
     margin: '0 auto',
-    padding: '28px 20px 0',
+    padding: '40px 20px 0',
   },
   hero: {
     display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.7fr)',
-    gap: 22,
-    alignItems: 'stretch',
-    marginBottom: 24,
+    justifyItems: 'center',
+    textAlign: 'center',
+    gap: 16,
+    marginBottom: 32,
   },
   heroCopy: {
-    background: 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,250,255,0.98) 100%)',
-    borderRadius: 28,
-    padding: '34px 34px 30px',
-    border: '1px solid rgba(120,171,218,0.18)',
-    boxShadow: '0 20px 50px rgba(19,54,92,0.08)',
+    maxWidth: 680,
   },
   eyebrow: {
     fontSize: 12,
     letterSpacing: '.18em',
     textTransform: 'uppercase',
-    color: 'var(--blue)',
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: 800,
     marginBottom: 14,
   },
   title: {
     margin: '0 0 14px',
     fontFamily: 'var(--display)',
-    fontSize: 'clamp(2.4rem, 4vw, 4rem)',
-    lineHeight: 1,
-    letterSpacing: '-0.06em',
-    color: '#11253e',
+    fontSize: 'clamp(2.2rem, 4vw, 3.4rem)',
+    lineHeight: 1.1,
+    letterSpacing: '-0.04em',
   },
   subtitle: {
     margin: 0,
-    maxWidth: 760,
-    fontSize: 17,
+    fontSize: 16,
     lineHeight: 1.7,
-    color: 'var(--ink2)',
+    color: 'rgba(255,255,255,0.72)',
   },
-  heroAside: {
-    borderRadius: 28,
-    padding: 22,
-    background: 'linear-gradient(145deg, rgba(8,28,49,0.96) 0%, rgba(18,71,121,0.9) 100%)',
-    color: '#eaf5ff',
-    display: 'grid',
-    gap: 14,
-    border: '1px solid rgba(120,180,220,0.16)',
-    boxShadow: '0 24px 54px rgba(10,28,45,0.16)',
-  },
-  asideStat: {
-    borderRadius: 22,
-    padding: '18px 18px 16px',
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    display: 'grid',
+  heroToggle: {
+    display: 'inline-flex',
     gap: 6,
+    padding: 6,
+    background: 'rgba(255,255,255,0.08)',
+    borderRadius: 999,
+    border: '1px solid rgba(255,255,255,0.12)',
   },
-  asideValue: {
-    fontFamily: 'var(--display)',
-    fontSize: 34,
-    lineHeight: 1,
-    letterSpacing: '-0.05em',
+  toggleActive: {
+    border: 'none',
+    borderRadius: 999,
+    padding: '8px 16px',
+    background: '#ffffff',
+    color: '#0f1115',
+    fontWeight: 700,
+    fontSize: 12,
+    cursor: 'pointer',
   },
-  asideLabel: {
-    fontSize: 13,
-    lineHeight: 1.6,
-    color: 'rgba(234,245,255,0.76)',
+  toggleIdle: {
+    border: 'none',
+    borderRadius: 999,
+    padding: '8px 16px',
+    background: 'transparent',
+    color: 'rgba(255,255,255,0.75)',
+    fontWeight: 700,
+    fontSize: 12,
+    cursor: 'pointer',
   },
   planGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: 18,
-    marginBottom: 24,
+    gap: 16,
+    marginBottom: 28,
   },
   planCard: {
-    borderRadius: 28,
-    padding: '24px 24px 22px',
+    borderRadius: 20,
+    padding: '22px 22px 20px',
     display: 'flex',
     flexDirection: 'column',
+    background: '#171a1f',
   },
   featuredTag: {
     alignSelf: 'flex-start',
-    padding: '7px 11px',
+    padding: '6px 10px',
     borderRadius: 999,
     marginBottom: 14,
     background: 'rgba(255,255,255,0.12)',
-    color: '#bde9ff',
-    fontSize: 11,
+    color: '#fff',
+    fontSize: 10,
     fontWeight: 800,
     letterSpacing: '.12em',
     textTransform: 'uppercase',
   },
   planName: {
     fontFamily: 'var(--display)',
-    fontSize: 29,
+    fontSize: 24,
     lineHeight: 1,
     letterSpacing: '-0.05em',
     marginBottom: 10,
@@ -254,64 +239,44 @@ const styles = {
   },
   planPrice: {
     fontFamily: 'var(--display)',
-    fontSize: 42,
+    fontSize: 36,
     lineHeight: 1,
     letterSpacing: '-0.06em',
   },
   planPeriod: {
-    fontSize: 14,
-    color: 'var(--ink3)',
-    marginBottom: 5,
-  },
-  planPeriodFeatured: {
-    fontSize: 14,
-    color: 'rgba(234,245,255,0.74)',
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 5,
   },
   planDescription: {
     margin: '0 0 14px',
     fontSize: 14,
     lineHeight: 1.75,
-    color: 'var(--ink2)',
-  },
-  planDescriptionFeatured: {
-    margin: '0 0 14px',
-    fontSize: 14,
-    lineHeight: 1.75,
-    color: 'rgba(234,245,255,0.78)',
+    color: 'rgba(255,255,255,0.7)',
   },
   featureList: {
     listStyle: 'none',
     padding: 0,
     margin: '0 0 18px',
     display: 'grid',
-    gap: 10,
+    gap: 8,
     flex: 1,
   },
   featureItem: {
-    padding: '11px 13px',
-    borderRadius: 16,
-    background: 'rgba(14,43,74,0.04)',
-    border: '1px solid rgba(120,171,218,0.16)',
+    padding: '10px 12px',
+    borderRadius: 12,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)',
     fontSize: 13,
     lineHeight: 1.55,
-    color: 'var(--ink2)',
-  },
-  featureItemFeatured: {
-    padding: '11px 13px',
-    borderRadius: 16,
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.1)',
-    fontSize: 13,
-    lineHeight: 1.55,
-    color: 'rgba(234,245,255,0.82)',
+    color: 'rgba(255,255,255,0.75)',
   },
   primaryButton: {
     border: 'none',
     borderRadius: 999,
     padding: '13px 18px',
-    background: 'linear-gradient(135deg, #0e2b4a 0%, #154779 100%)',
-    color: '#fff',
+    background: '#ffffff',
+    color: '#0f1115',
     fontWeight: 800,
     fontSize: 14,
     cursor: 'pointer',
@@ -321,59 +286,51 @@ const styles = {
     border: 'none',
     borderRadius: 999,
     padding: '13px 18px',
-    background: '#ffffff',
-    color: '#143b63',
+    background: '#2b90ff',
+    color: '#fff',
     fontWeight: 800,
     fontSize: 14,
     cursor: 'pointer',
     alignSelf: 'flex-start',
   },
   faqSection: {
-    background: 'rgba(255,255,255,0.92)',
-    borderRadius: 28,
-    border: '1px solid rgba(120,171,218,0.16)',
-    boxShadow: '0 16px 40px rgba(19,54,92,0.06)',
-    padding: '28px 28px 30px',
+    borderRadius: 18,
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: '#14171c',
+    padding: '20px 20px 22px',
+    marginBottom: 32,
   },
   sectionEyebrow: {
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: '.16em',
     textTransform: 'uppercase',
-    color: 'var(--blue)',
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: 800,
     marginBottom: 8,
-  },
-  sectionTitle: {
-    margin: '0 0 18px',
-    fontFamily: 'var(--display)',
-    fontSize: 30,
-    lineHeight: 1.04,
-    letterSpacing: '-0.05em',
-    color: '#102743',
   },
   faqGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: 16,
+    gap: 12,
   },
   faqCard: {
-    borderRadius: 22,
-    padding: '20px 20px 18px',
-    background: 'linear-gradient(180deg, #f7fbff 0%, #edf6ff 100%)',
-    border: '1px solid rgba(120,171,218,0.16)',
+    borderRadius: 14,
+    padding: '16px',
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.08)',
   },
   faqQuestion: {
     margin: '0 0 10px',
     fontFamily: 'var(--display)',
-    fontSize: 22,
+    fontSize: 18,
     lineHeight: 1.08,
     letterSpacing: '-0.05em',
-    color: '#123052',
+    color: '#ffffff',
   },
   faqAnswer: {
     margin: 0,
     fontSize: 14,
     lineHeight: 1.75,
-    color: 'var(--ink2)',
+    color: 'rgba(255,255,255,0.72)',
   },
 }
