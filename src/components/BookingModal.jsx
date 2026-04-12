@@ -1,16 +1,33 @@
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useToast } from '../hooks/useToast'
 import { PROVIDER_SERVICE_OPTIONS } from '../lib/providerProfiles'
 
 const SERVICE_PRICES = {
-  'mechanic-general': '$80–$150', 'oil-change': '$75–$95', 'brakes': '$150–$250',
-  'suspension': '$120–$300', 'diagnostic': '$60–$120', 'ac': '$100–$150',
-  'tires': '$45–$65', 'alignment': '$80–$120', 'balancing': '$45–$80',
-  'flat-repair': '$25–$50', 'wash': '$35–$55', 'detailing': '$120–$280',
-  'ceramic': '$300–$800', 'body': '$200+', 'paint': '$300+', 'dent': '$80–$250',
-  'glass': '$80–$200', 'windshield': '$200–$500', 'towing': '$79+',
-  'roadside': '$59+', 'battery': '$39–$79', 'lockout': '$49–$99',
-  'parts': 'Selon pièce', 'parking': 'Selon abonnement', 'performance': '$150+',
+  'mechanic-general': '$80-$150',
+  'oil-change': '$75-$95',
+  brakes: '$150-$250',
+  suspension: '$120-$300',
+  diagnostic: '$60-$120',
+  ac: '$100-$150',
+  tires: '$45-$65',
+  alignment: '$80-$120',
+  balancing: '$45-$80',
+  'flat-repair': '$25-$50',
+  wash: '$35-$55',
+  detailing: '$120-$280',
+  ceramic: '$300-$800',
+  body: '$200+',
+  paint: '$300+',
+  dent: '$80-$250',
+  glass: '$80-$200',
+  windshield: '$200-$500',
+  towing: '$79+',
+  roadside: '$59+',
+  battery: '$39-$79',
+  lockout: '$49-$99',
+  parts: 'Selon piece',
+  parking: 'Selon abonnement',
+  performance: '$150+',
 }
 
 const GENERIC_SERVICES = [
@@ -39,7 +56,7 @@ export default function BookingModal({
   onConfirm,
 }) {
   const { toast } = useToast()
-  const initialStep = initialService ? (initialProvider ? 3 : 2) : 1
+  const initialStep = initialService ? 2 : 1
   const [step, setStep] = useState(initialStep)
   const [service, setService] = useState(initialService || null)
   const [provider, setProvider] = useState(initialProvider || null)
@@ -51,20 +68,22 @@ export default function BookingModal({
 
   const openProviders = providers.filter((entry) => entry.is_open === true || entry.is_open === 'true')
   const selectedVehicle = vehicles.find((entry) => String(entry.id) === vehicleId) || vehicles[0] || null
-
   const activeProvider = provider || initialProvider
+
   const displayServices = useMemo(() => {
     const providerServices = activeProvider?.services
     if (providerServices?.length > 0) {
       return providerServices.map((label) => {
         const opt = PROVIDER_SERVICE_OPTIONS.find(
-          (o) => o.label.toLowerCase() === String(label).toLowerCase()
+          (option) => option.label.toLowerCase() === String(label).toLowerCase(),
         )
+
         return opt
           ? { id: opt.id, label: opt.label, icon: opt.icon, price: SERVICE_PRICES[opt.id] || 'Price to confirm' }
           : { id: label, label: String(label), icon: 'SV', price: 'Price to confirm' }
       })
     }
+
     return GENERIC_SERVICES
   }, [activeProvider])
 
@@ -90,14 +109,21 @@ export default function BookingModal({
     }
   }
 
-  const steps = ['Service', 'Provider', 'Date & Time', 'Confirm']
+  const steps = ['Service', 'Date & Time', 'Confirm']
 
   return (
     <div className="modal-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <div className="modal" style={{ maxWidth: 520 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div className="modal-title" style={{ marginBottom: 0 }}>Book a Service</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>×</button>
+          <div>
+            <div className="modal-title" style={{ marginBottom: 0 }}>Book a Service</div>
+            {activeProvider ? (
+              <div style={{ marginTop: 6, fontSize: 12, color: 'var(--ink2)', fontWeight: 600 }}>
+                Booking with <span style={{ color: 'var(--green)', fontWeight: 800 }}>{activeProvider.name}</span>
+              </div>
+            ) : null}
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: 'var(--ink3)' }}>x</button>
         </div>
 
         <div style={{ display: 'flex', gap: 0, marginBottom: 24, background: 'var(--bg3)', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -117,12 +143,13 @@ export default function BookingModal({
                 fontWeight: step === index + 1 ? 700 : 400,
               }}
             >
-              {step > index + 1 ? 'Done ' : ''}{label}
+              {step > index + 1 ? 'Done ' : ''}
+              {label}
             </div>
           ))}
         </div>
 
-        {step === 1 && (
+        {step === 1 ? (
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--ink3)', marginBottom: 12 }}>Choose a service</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 340, overflowY: 'auto' }}>
@@ -148,54 +175,19 @@ export default function BookingModal({
             </div>
             <div className="modal-actions">
               <button className="btn" onClick={onClose}>Cancel</button>
-              <button className="btn btn-green" disabled={!service} onClick={() => setStep(2)}>Next →</button>
+              <button className="btn btn-green" disabled={!service} onClick={() => setStep(2)}>Next -&gt;</button>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {step === 2 && (
-          <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--ink3)', marginBottom: 12 }}>Choose a provider</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 340, overflowY: 'auto' }}>
-              {openProviders.map((entry) => (
-                <div
-                  key={entry.id || entry.name}
-                  onClick={() => setProvider(entry)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 14px',
-                    borderRadius: 9,
-                    cursor: 'pointer',
-                    border: `1.5px solid ${provider?.id === entry.id || provider?.name === entry.name ? 'var(--green)' : 'var(--border)'}`,
-                    background: provider?.id === entry.id || provider?.name === entry.name ? 'var(--green-bg)' : 'var(--bg3)',
-                  }}
-                >
-                  <div style={{ width: 38, height: 38, borderRadius: 9, background: 'var(--bg2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontFamily: 'var(--mono)', flexShrink: 0 }}>{entry.icon || 'FM'}</div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 700, fontSize: 13 }}>{entry.name}</div>
-                    <div style={{ fontSize: 10, color: 'var(--ink2)' }}>{entry.type_label} · {entry.distance || 'Montreal'} · {entry.rating} stars</div>
-                  </div>
-                  <span className="badge badge-green">Open</span>
-                </div>
-              ))}
-            </div>
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setStep(1)}>← Back</button>
-              <button className="btn btn-green" disabled={!provider} onClick={() => setStep(3)}>Next →</button>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
+        {step === 2 ? (
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--ink3)', marginBottom: 16 }}>Date, time, and vehicle</div>
-            {vehicles.length === 0 && (
-              <div style={{background:'var(--amber-bg)',border:'1px solid rgba(245,158,11,.25)',borderRadius:12,padding:'12px 14px',fontSize:12,color:'var(--ink2)',marginBottom:14}}>
+            {vehicles.length === 0 ? (
+              <div style={{ background: 'var(--amber-bg)', border: '1px solid rgba(245,158,11,.25)', borderRadius: 12, padding: '12px 14px', fontSize: 12, color: 'var(--ink2)', marginBottom: 14 }}>
                 Add a vehicle in your client profile before confirming a booking.
               </div>
-            )}
+            ) : null}
             <div className="form-group">
               <label className="form-label">Vehicle</label>
               <select className="form-select" value={vehicleId} onChange={(event) => setVehicleId(event.target.value)}>
@@ -221,20 +213,41 @@ export default function BookingModal({
               <input className="form-input" placeholder="Describe your issue or request..." value={notes} onChange={(event) => setNotes(event.target.value)} />
             </div>
             <div className="modal-actions">
-              <button className="btn" onClick={() => setStep(2)}>← Back</button>
-              <button className="btn btn-green" onClick={() => setStep(4)} disabled={!selectedVehicle}>Next →</button>
+              <button className="btn" onClick={() => setStep(1)}>&lt;- Back</button>
+              <button className="btn btn-green" onClick={() => setStep(3)} disabled={!selectedVehicle}>Next -&gt;</button>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {step === 4 && (
+        {step === 3 ? (
           <div>
+            {!initialProvider ? (
+              <div className="form-group" style={{ marginBottom: 18 }}>
+                <label className="form-label">Provider</label>
+                <select
+                  className="form-select"
+                  value={provider?.id || provider?.name || ''}
+                  onChange={(event) => {
+                    const nextProvider = openProviders.find((entry) => String(entry.id || entry.name) === String(event.target.value)) || null
+                    setProvider(nextProvider)
+                  }}
+                >
+                  <option value="">Choose a provider</option>
+                  {openProviders.map((entry) => (
+                    <option key={entry.id || entry.name} value={entry.id || entry.name}>
+                      {entry.name} - {entry.type_label} - {entry.distance || 'Montreal'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+
             <div style={{ background: 'var(--green-bg)', border: '1px solid rgba(22,199,132,.2)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 9, textTransform: 'uppercase', letterSpacing: '.7px', color: 'var(--green)', marginBottom: 12 }}>Booking summary</div>
               {[
                 ['Service', service?.label],
-                ['Provider', provider?.name],
-                ['Address', provider?.address],
+                ['Provider', provider?.name || initialProvider?.name],
+                ['Address', provider?.address || initialProvider?.address],
                 ['Vehicle', formatVehicleLabel(selectedVehicle)],
                 ['Date & Time', `${date || 'To be confirmed'} · ${time}`],
                 ['Estimated Price', service?.price],
@@ -244,17 +257,19 @@ export default function BookingModal({
                   <span style={{ fontWeight: 600, textAlign: 'right' }}>{value}</span>
                 </div>
               ))}
-              {notes && <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(22,199,132,.2)', fontSize: 12, color: 'var(--ink2)' }}>{notes}</div>}
+              {notes ? (
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(22,199,132,.2)', fontSize: 12, color: 'var(--ink2)' }}>{notes}</div>
+              ) : null}
             </div>
             <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 16 }}>The booking will be saved in FlashMat and visible to both the client and the provider.</p>
             <div className="modal-actions">
-              <button className="btn" onClick={() => setStep(3)}>← Back</button>
+              <button className="btn" onClick={() => setStep(2)}>&lt;- Back</button>
               <button className="btn btn-green btn-lg" onClick={confirm} disabled={loading || !selectedVehicle || !provider || !service}>
                 {loading ? <span className="spinner" style={{ width: 16, height: 16 }} /> : 'Confirm Booking'}
               </button>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
