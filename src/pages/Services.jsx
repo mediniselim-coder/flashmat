@@ -47,7 +47,7 @@ export default function Services() {
       <NavBar activePage="services" />
 
       {/* HERO */}
-      <div style={{ background: 'radial-gradient(circle at top left, rgba(59,159,216,.18), transparent 28%), linear-gradient(135deg, #081325 0%, #102549 52%, #2243a2 100%)', color: '#fff', padding: '72px 32px 56px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(135deg, rgba(8,19,37,.92) 0%, rgba(16,37,73,.9) 52%, rgba(34,67,162,.88) 100%), url(/nav-services.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', color: '#fff', padding: '48px 32px 36px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', width: 420, height: 420, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,.14), transparent 68%)', top: -160, right: -90, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,159,216,.16), transparent 70%)', bottom: -120, left: -60, pointerEvents: 'none' }} />
         <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(320px, .8fr)', gap: 28, alignItems: 'stretch' }}>
