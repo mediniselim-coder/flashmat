@@ -24,7 +24,7 @@ export default function PublicMarketplace() {
             grid-template-columns: 1fr !important;
           }
           .marketplace-hero-shell {
-            padding: 44px 18px 34px !important;
+            padding: 32px 18px 28px !important;
           }
           .marketplace-hero-headline {
             font-size: clamp(34px, 8vw, 50px) !important;
@@ -33,7 +33,7 @@ export default function PublicMarketplace() {
 
         @media (max-width: 640px) {
           .marketplace-hero-shell {
-            padding: 34px 14px 28px !important;
+            padding: 26px 14px 22px !important;
           }
           .marketplace-hero-card {
             padding: 18px !important;
@@ -58,9 +58,9 @@ export default function PublicMarketplace() {
           position: "relative",
           overflow: "hidden",
           background:
-            "radial-gradient(circle at top left, rgba(22,199,132,.14), transparent 28%), radial-gradient(circle at 88% 18%, rgba(59,159,216,.18), transparent 26%), linear-gradient(135deg, #091325 0%, #132846 54%, #1f4ca4 100%)",
+            "linear-gradient(180deg, rgba(5,12,26,.7) 0%, rgba(8,22,45,.78) 46%, rgba(15,35,70,.82) 100%), url('/nav-marketplace.jpg') center/cover no-repeat",
           color: "#fff",
-          padding: "58px 28px 42px",
+          padding: "40px 24px 32px",
         }}
       >
         <div
