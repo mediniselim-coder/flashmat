@@ -88,10 +88,11 @@ export function createPaymentRecord({
       country: billingAddress.country || '',
     },
     paymentMethod: {
-      brand: getCardBrand(paymentDetails.cardNumber),
+      type: paymentDetails.methodType || 'card',
+      brand: paymentDetails.methodLabel || getCardBrand(paymentDetails.cardNumber),
       last4: normalizeCardNumber(paymentDetails.cardNumber).slice(-4),
       cardholder: String(paymentDetails.cardholder || '').trim(),
-      label: getMaskedCardLabel(paymentDetails.cardNumber),
+      label: paymentDetails.methodLabel || getMaskedCardLabel(paymentDetails.cardNumber),
     },
     meta,
   }

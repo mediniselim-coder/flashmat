@@ -19,9 +19,11 @@ export default function Checkout() {
   const { user, profile } = useAuth()
   const { toast } = useToast()
   const cartUserId = user?.id || 'guest'
+  const isAppleDevice = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent)
   const [cartItems, setCartItems] = useState([])
   const [checkoutDone, setCheckoutDone] = useState(false)
   const [receipt, setReceipt] = useState(null)
+  const [paymentMethod, setPaymentMethod] = useState('card')
   const [form, setForm] = useState({
     fullName: profile?.full_name || '',
     email: user?.email || '',
@@ -40,6 +42,7 @@ export default function Checkout() {
     expiry: '',
     cvc: '',
   })
+  const [paypalEmail, setPaypalEmail] = useState(user?.email || '')
 
   useEffect(() => {
     setForm((current) => ({
@@ -99,6 +102,46 @@ export default function Checkout() {
     setForm((current) => ({ ...current, [name === 'addressLine1' ? 'address' : name === 'addressLine2' ? 'address2' : name]: value }))
   }
 
+  function applyExpressCheckout(method) {
+    setPaymentMethod(method)
+    setForm((current) => ({
+      ...current,
+      fullName: current.fullName || profile?.full_name || 'FlashMat customer',
+      email: current.email || user?.email || '',
+      phone: current.phone || profile?.phone || '',
+      address: current.address || profile?.address || '',
+      city: current.city || profile?.city || 'Montreal',
+      province: current.province || profile?.province || 'QC',
+      postalCode: current.postalCode || profile?.postal_code || '',
+      country: current.country || profile?.country || 'Canada',
+    }))
+
+    if (method === 'gpay') {
+      setPayment({
+        cardholder: profile?.full_name || 'Google Pay customer',
+        cardNumber: '4111 1111 1111 1111',
+        expiry: '12/29',
+        cvc: '123',
+      })
+      toast('Google Pay autofill ready.', 'success')
+      return
+    }
+
+    if (method === 'apple_pay') {
+      setPayment({
+        cardholder: profile?.full_name || 'Apple Pay customer',
+        cardNumber: '5200 8282 8282 8210',
+        expiry: '11/29',
+        cvc: '123',
+      })
+      toast('Apple Pay autofill ready.', 'success')
+      return
+    }
+
+    setPaypalEmail((current) => current || user?.email || '')
+    toast('PayPal selected for this checkout.', 'success')
+  }
+
   function handleCheckout(event) {
     event.preventDefault()
     if (cartItems.length === 0) {
@@ -108,12 +151,6 @@ export default function Checkout() {
 
     if (!form.fullName || !form.email || !form.phone || !form.address || !form.city || !form.province || !form.postalCode || !form.country) {
       toast('Add your full checkout address before paying.', 'error')
-      return
-    }
-
-    const paymentError = validatePaymentDetails(payment)
-    if (paymentError) {
-      toast(paymentError, 'error')
       return
     }
 
@@ -128,6 +165,39 @@ export default function Checkout() {
     if (billingError) {
       toast(billingError, 'error')
       return
+    }
+
+    let paymentPayload = payment
+
+    if (paymentMethod === 'card') {
+      const paymentError = validatePaymentDetails(payment)
+      if (paymentError) {
+        toast(paymentError, 'error')
+        return
+      }
+    } else if (paymentMethod === 'paypal') {
+      if (!String(paypalEmail || '').trim()) {
+        toast('Add the PayPal email before checking out.', 'error')
+        return
+      }
+      paymentPayload = {
+        methodType: 'paypal',
+        methodLabel: `PayPal • ${paypalEmail.trim()}`,
+        cardholder: form.fullName,
+        cardNumber: '',
+      }
+    } else if (paymentMethod === 'gpay') {
+      paymentPayload = {
+        ...payment,
+        methodType: 'gpay',
+        methodLabel: 'Google Pay',
+      }
+    } else if (paymentMethod === 'apple_pay') {
+      paymentPayload = {
+        ...payment,
+        methodType: 'apple_pay',
+        methodLabel: 'Apple Pay',
+      }
     }
 
     const nextReceipt = createPaymentRecord({
@@ -148,7 +218,7 @@ export default function Checkout() {
         postalCode: form.postalCode,
         country: form.country,
       },
-      paymentDetails: payment,
+      paymentDetails: paymentPayload,
       meta: {
         itemCount: cartItems.length,
         items: cartItems.map((item) => ({ id: item.id, title: item.title, quantity: item.quantity })),
@@ -303,22 +373,122 @@ export default function Checkout() {
                     </div>
                     <textarea className="form-input" name="note" value={form.note} onChange={handleInputChange} placeholder="Order note or pickup instructions" style={{ minHeight: 120, resize: 'vertical' }} />
 
+                    <div style={{ padding: 14, borderRadius: 18, border: '1px solid var(--border)', background: '#fff', display: 'grid', gap: 12 }}>
+                      <div>
+                        <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginBottom: 4 }}>Express checkout</div>
+                        <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7 }}>
+                          Use a faster wallet option, or keep the standard card form below.
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => applyExpressCheckout('gpay')}
+                          style={{
+                            justifyContent: 'center',
+                            padding: '12px 14px',
+                            background: paymentMethod === 'gpay' ? 'rgba(37,99,235,.08)' : '#fff',
+                            borderColor: paymentMethod === 'gpay' ? 'rgba(37,99,235,.22)' : 'var(--border)',
+                            fontWeight: 800,
+                          }}
+                        >
+                          Google Pay
+                        </button>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => applyExpressCheckout('apple_pay')}
+                          style={{
+                            justifyContent: 'center',
+                            padding: '12px 14px',
+                            background: paymentMethod === 'apple_pay' ? 'rgba(37,99,235,.08)' : '#fff',
+                            borderColor: paymentMethod === 'apple_pay' ? 'rgba(37,99,235,.22)' : 'var(--border)',
+                            fontWeight: 800,
+                            opacity: isAppleDevice ? 1 : 0.9,
+                          }}
+                        >
+                          Apple Pay
+                        </button>
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => applyExpressCheckout('paypal')}
+                          style={{
+                            justifyContent: 'center',
+                            padding: '12px 14px',
+                            background: paymentMethod === 'paypal' ? 'rgba(37,99,235,.08)' : '#fff',
+                            borderColor: paymentMethod === 'paypal' ? 'rgba(37,99,235,.22)' : 'var(--border)',
+                            fontWeight: 800,
+                          }}
+                        >
+                          PayPal
+                        </button>
+                      </div>
+                      {paymentMethod !== 'card' ? (
+                        <div style={{ padding: 12, borderRadius: 14, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'grid', gap: 8 }}>
+                          <div style={{ fontSize: 11, color: 'var(--ink3)', fontFamily: 'var(--mono)', letterSpacing: '.12em', textTransform: 'uppercase' }}>
+                            Selected method
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--ink)' }}>
+                            {paymentMethod === 'gpay' ? 'Google Pay' : paymentMethod === 'apple_pay' ? 'Apple Pay' : 'PayPal'}
+                          </div>
+                          {paymentMethod === 'paypal' ? (
+                            <input
+                              className="form-input"
+                              value={paypalEmail}
+                              onChange={(event) => setPaypalEmail(event.target.value)}
+                              placeholder="PayPal email"
+                            />
+                          ) : (
+                            <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.6 }}>
+                              FlashMat will use your saved checkout address and the express wallet label on the receipt.
+                            </div>
+                          )}
+                          <button type="button" className="btn" onClick={() => setPaymentMethod('card')} style={{ justifySelf: 'start' }}>
+                            Use card instead
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+
                     <div style={{ padding: 14, borderRadius: 18, border: '1px solid var(--border)', background: '#fff' }}>
-                      <PaymentDetailsFields
-                        payment={payment}
-                        onPaymentChange={handlePaymentChange}
-                        billing={{
-                          addressLine1: form.address,
-                          addressLine2: form.address2,
-                          city: form.city,
-                          province: form.province,
-                          postalCode: form.postalCode,
-                          country: form.country,
-                        }}
-                        onBillingChange={handleBillingChange}
-                        title="Payment"
-                        subtitle="Secure your FlashMat order with one card authorization."
-                      />
+                      {paymentMethod === 'card' ? (
+                        <PaymentDetailsFields
+                          payment={payment}
+                          onPaymentChange={handlePaymentChange}
+                          billing={{
+                            addressLine1: form.address,
+                            addressLine2: form.address2,
+                            city: form.city,
+                            province: form.province,
+                            postalCode: form.postalCode,
+                            country: form.country,
+                          }}
+                          onBillingChange={handleBillingChange}
+                          title="Payment"
+                          subtitle="Secure your FlashMat order with one card authorization."
+                        />
+                      ) : (
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          <div style={{ fontFamily: 'var(--display)', fontWeight: 800, fontSize: 18, color: 'var(--ink)' }}>Billing address</div>
+                          <div style={{ fontSize: 12, color: 'var(--ink2)', lineHeight: 1.7 }}>
+                            Your express payment will still use this billing address for the FlashMat receipt.
+                          </div>
+                          <div style={{ display: 'grid', gap: 10 }}>
+                            <input className="form-input" name="address" value={form.address} onChange={handleInputChange} placeholder="Address line 1" />
+                            <input className="form-input" name="address2" value={form.address2} onChange={handleInputChange} placeholder="Address line 2 (optional)" />
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                              <input className="form-input" name="city" value={form.city} onChange={handleInputChange} placeholder="City" />
+                              <input className="form-input" name="province" value={form.province} onChange={handleInputChange} placeholder="Province / State" />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10 }}>
+                              <input className="form-input" name="postalCode" value={form.postalCode} onChange={handleInputChange} placeholder="Postal code" />
+                              <input className="form-input" name="country" value={form.country} onChange={handleInputChange} placeholder="Country" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ padding: 14, borderRadius: 16, background: 'var(--bg3)', border: '1px solid var(--border)', display: 'grid', gap: 10 }}>
@@ -341,7 +511,7 @@ export default function Checkout() {
                 <div className="panel">
                   <div className="panel-hd"><div className="panel-title">What happens next</div></div>
                   <div className="panel-body" style={{ display: 'grid', gap: 10, color: 'var(--ink2)', fontSize: 14, lineHeight: 1.75 }}>
-                    <div>1. FlashMat authorizes your payment with the card you entered.</div>
+                    <div>1. FlashMat authorizes your payment with card, Google Pay, Apple Pay, or PayPal.</div>
                     <div>2. Your full address prepares delivery or seller follow-up.</div>
                     <div>3. After checkout, you can keep shopping or follow up through your account.</div>
                   </div>
