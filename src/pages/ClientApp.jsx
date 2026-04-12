@@ -14,8 +14,6 @@ import ClientProfileModal from '../components/ClientProfileModal'
 import HelpSupportModal from '../components/HelpSupportModal'
 import SecurityPrivacyModal from '../components/SecurityPrivacyModal'
 import WalletModal from '../components/WalletModal'
-import NotificationCenterModal from '../components/NotificationCenterModal'
-import FloatingPanelBoundary from '../components/FloatingPanelBoundary'
 import VehicleDoctor from '../components/VehicleDoctor'
 import { useInboxSummary } from '../hooks/useInbox'
 import { FLASHFIX_UPDATED_EVENT, createFlashFixRequest, getFlashFixStageProgress, getFlashFixStatusMeta, readFlashFixRequests } from '../lib/flashfix'
@@ -43,7 +41,7 @@ const NAV = [
   { id: 'flashfix',      icon: 'FX', label: 'FlashFix' },
   { id: 'marketplace',   icon: 'MP', label: 'Marketplace' },
   { id: 'flashscore',    icon: 'FS', label: 'FlashScore' },
-  { id: 'notifications', icon: 'AL', label: 'Alerts', badge: true },
+  { id: 'notifications', icon: 'AL', label: 'Notifications', badge: true },
 ]
 
 const NAV_SECTIONS = {
@@ -74,7 +72,7 @@ const CLIENT_PANE_PATHS = {
   flashfix: '/app/client/flashfix',
   marketplace: '/app/client/marketplace',
   flashscore: '/app/client/flashscore',
-  notifications: '/app/client/alerts',
+  notifications: '/app/client/notifications',
 }
 
 const VALID_CLIENT_PANES = new Set(Object.keys(CLIENT_PANE_PATHS))
@@ -84,6 +82,7 @@ function getPaneFromClientPath(pathname) {
   const segment = cleanPath.split('/')[3] || 'dashboard'
 
   if (segment === 'alerts') return 'notifications'
+  if (segment === 'notifications') return 'notifications'
   return VALID_CLIENT_PANES.has(segment) ? segment : 'dashboard'
 }
 
@@ -352,7 +351,6 @@ export default function ClientApp() {
   const [walletModalOpen, setWalletModalOpen] = useState(false)
   const [helpSupportModalOpen, setHelpSupportModalOpen] = useState(false)
   const [securityModalOpen, setSecurityModalOpen] = useState(false)
-  const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
   const [flashFixRequests, setFlashFixRequests] = useState([])
   const [selectedMaintenanceVehicleId, setSelectedMaintenanceVehicleId] = useState('')
   const [visibleProviderKeys, setVisibleProviderKeys] = useState(null)
@@ -447,7 +445,7 @@ export default function ClientApp() {
       return
     }
 
-    if (location.pathname.startsWith('/app/client') && rawPaneSegment !== 'alerts' && !VALID_CLIENT_PANES.has(rawPaneSegment)) {
+    if (location.pathname.startsWith('/app/client') && rawPaneSegment !== 'alerts' && rawPaneSegment !== 'notifications' && !VALID_CLIENT_PANES.has(rawPaneSegment)) {
       navigate(CLIENT_PANE_PATHS.dashboard, { replace: true })
     }
   }, [location.pathname, navigate, pendingSearch, rawPaneSegment, routeCat])
@@ -539,7 +537,6 @@ export default function ClientApp() {
   function goFromProfileMenu(id) { setProfileMenuOpen(false); go(id) }
   async function handleSignOut() {
     setProfileMenuOpen(false)
-    setNotificationCenterOpen(false)
     await signOut()
     navigate('/')
     toast('You have been logged off.', 'success')
@@ -550,12 +547,7 @@ export default function ClientApp() {
   function openSecurityModal() { setProfileMenuOpen(false); setSecurityModalOpen(true) }
   function openMessageCenter(threadId = '') {
     setProfileMenuOpen(false)
-    setNotificationCenterOpen(false)
     navigate(threadId ? `/messages?thread=${threadId}` : '/messages')
-  }
-  function openNotificationCenter() {
-    setProfileMenuOpen(false)
-    setNotificationCenterOpen(true)
   }
 
   function chooseFlashFixQuickCase(label) {
@@ -775,6 +767,29 @@ export default function ClientApp() {
     .sort((left, right) => new Date(right.at || 0).getTime() - new Date(left.at || 0).getTime())
     .slice(0, 8)
 
+  const notificationFeed = [
+    ...latestFlashFixEvents.map((event) => {
+      const meta = getFlashFixStatusMeta(event.status)
+      return {
+        id: `alert-${event.id}`,
+        title: getClientSafeFlashFixEventLabel(event.label, event.status),
+        body: event.issueLabel || 'FlashFix update',
+        at: event.at,
+        tone: 'alert',
+        badge: meta.label,
+      }
+    }),
+    ...notifications.map((notification, index) => ({
+      id: `notification-${notification.id || notification.created_at || index}`,
+      title: notification.title || 'FlashMat update',
+      body: notification.body || 'New activity in your account',
+      at: notification.created_at,
+      tone: 'info',
+      badge: notification.type || 'Info',
+      icon: notification.icon,
+    })),
+  ].sort((left, right) => new Date(right.at || 0).getTime() - new Date(left.at || 0).getTime())
+
   function slugify(name) {
     return name.toLowerCase().replace(/[àáâã]/g,'a').replace(/[éèêë]/g,'e').replace(/[îï]/g,'i').replace(/[ôö]/g,'o').replace(/[ùûü]/g,'u').replace(/ç/g,'c').replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim()
   }
@@ -852,7 +867,6 @@ export default function ClientApp() {
                 <button className={styles.profileMenuItem} onClick={openClientProfileModal}><span><AppIcon code="PP" /></span><span>Edit Profile</span></button>
                 <button className={styles.profileMenuItem} onClick={openWalletModal}><span><AppIcon code="WL" /></span><span>Wallet</span></button>
                 <button className={styles.profileMenuItem} onClick={() => openMessageCenter()}><span><AppIcon code="RS" /></span><span>Messages {unreadMessages > 0 ? `(${unreadMessages})` : ''}</span></button>
-                <button className={styles.profileMenuItem} onClick={openNotificationCenter}><span><AppIcon code="AL" /></span><span>Notifications {unreadNotifications > 0 ? `(${unreadNotifications})` : ''}</span></button>
                 <button className={styles.profileMenuItem} onClick={openSecurityModal}><span><AppIcon code="AL" /></span><span>Security & Privacy</span></button>
                 <button className={styles.profileMenuItem} onClick={openHelpSupportModal}><span><AppIcon code="AI" /></span><span>Help & Support</span></button>
                 <div className={styles.profileMenuDivider} />
@@ -1558,36 +1572,46 @@ export default function ClientApp() {
 
         {pane === 'notifications' && (
           <div>
-            <div className={styles.pageHdr}><div><div className={styles.pageTitle}>Alerts</div></div></div>
+            <div className={styles.pageHdr}>
+              <div>
+                <div className={styles.pageTitle}>Notifications</div>
+                <div className={styles.pageSub}>Alerts and account updates in one feed.</div>
+              </div>
+            </div>
             <div className={styles.pad}>
-              {latestFlashFixEvents.length > 0 && (
-                <div className="panel" style={{ marginBottom: 14 }}>
-                  {latestFlashFixEvents.map((event, index, arr) => {
-                    const meta = getFlashFixStatusMeta(event.status)
-                    return (
-                      <div key={event.id} style={{display:'flex',gap:10,padding:'12px 14px',borderBottom:index<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
-                        <div style={{width:34,height:34,borderRadius:8,background:'var(--red-bg)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,flexShrink:0}}>🚨</div>
-                        <div style={{flex:1}}>
-                          <div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{getClientSafeFlashFixEventLabel(event.label, event.status)}</div>
-                          <div style={{fontSize:11,color:'var(--ink2)'}}>{event.issueLabel}</div>
-                          <div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(event.at)}</div>
-                        </div>
-                        <span className={`badge ${meta.cls}`}>{meta.label}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
               <div className="panel">
-                {notifications.map((n,i,arr) => (
-                  <div key={i} style={{display:'flex',gap:10,padding:'12px 14px',borderBottom:i<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
-                    <div style={{width:34,height:34,borderRadius:8,background:'var(--bg3)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:'var(--blue)'}}>{typeof n.icon === 'string' && n.icon.length <= 3 ? <AppIcon code={n.icon} size={16} /> : (n.icon || <AppIcon code="AL" size={16} />)}</div>
-                    <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,marginBottom:2}}>{n.title}</div><div style={{fontSize:11,color:'var(--ink2)'}}>{n.body}</div><div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:3}}>{formatFlashFixTime(n.created_at)}</div></div>
-                    <span className="badge badge-blue">{n.type || 'Info'}</span>
+                {notificationFeed.map((item, index, arr) => (
+                  <div key={item.id} style={{display:'flex',gap:12,padding:'14px 16px',borderBottom:index<arr.length-1?'1px solid var(--border)':'none',alignItems:'flex-start'}}>
+                    <div
+                      style={{
+                        width:36,
+                        height:36,
+                        borderRadius:10,
+                        background:item.tone === 'alert' ? 'var(--red-bg)' : 'var(--bg3)',
+                        display:'flex',
+                        alignItems:'center',
+                        justifyContent:'center',
+                        flexShrink:0,
+                        color:item.tone === 'alert' ? 'var(--red)' : 'var(--blue)',
+                        border:item.tone === 'alert' ? '1px solid rgba(239,68,68,.18)' : '1px solid var(--border)',
+                      }}
+                    >
+                      {item.tone === 'alert'
+                        ? '🚨'
+                        : typeof item.icon === 'string' && item.icon.length <= 3
+                          ? <AppIcon code={item.icon} size={16} />
+                          : (item.icon || <AppIcon code="AL" size={16} />)}
+                    </div>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,marginBottom:3,color:item.tone === 'alert' ? 'var(--red)' : 'var(--ink)'}}>{item.title}</div>
+                      <div style={{fontSize:12,color:'var(--ink2)',lineHeight:1.55}}>{item.body}</div>
+                      <div style={{fontFamily:'var(--mono)',fontSize:9,color:'var(--ink3)',marginTop:5}}>{formatFlashFixTime(item.at)}</div>
+                    </div>
+                    <span className={`badge ${item.tone === 'alert' ? 'badge-red' : 'badge-blue'}`}>{item.badge}</span>
                   </div>
                 ))}
-                {notifications.length === 0 && latestFlashFixEvents.length === 0 && (
-                  <div style={{padding:'16px 14px',fontSize:12,color:'var(--ink3)'}}>No alerts right now.</div>
+                {notificationFeed.length === 0 && (
+                  <div style={{padding:'16px 14px',fontSize:12,color:'var(--ink3)'}}>No notifications right now.</div>
                 )}
               </div>
             </div>
@@ -1728,16 +1752,6 @@ export default function ClientApp() {
       {walletModalOpen && <WalletModal onClose={() => setWalletModalOpen(false)} />}
       {helpSupportModalOpen && <HelpSupportModal onClose={() => setHelpSupportModalOpen(false)} />}
       {securityModalOpen && <SecurityPrivacyModal onClose={() => setSecurityModalOpen(false)} />}
-      {notificationCenterOpen && user && (
-        <FloatingPanelBoundary onClose={() => setNotificationCenterOpen(false)}>
-          <NotificationCenterModal
-            open={notificationCenterOpen}
-            onClose={() => setNotificationCenterOpen(false)}
-            user={user}
-            onOpenMessages={(threadId) => openMessageCenter(threadId)}
-          />
-        </FloatingPanelBoundary>
-      )}
     </div>
   )
 }
