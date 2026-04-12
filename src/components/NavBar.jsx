@@ -9,7 +9,7 @@ import ProviderProfileModal from './ProviderProfileModal'
 import MessageInboxPopover from './MessageInboxPopover'
 import NotificationCenterModal from './NotificationCenterModal'
 import FloatingPanelBoundary from './FloatingPanelBoundary'
-import { FLASHMAT_CART_UPDATED_EVENT, clearCart, getCartSubtotal, readCart, removeCartItem } from '../lib/cart'
+import { FLASHMAT_CART_UPDATED_EVENT, clearCart, getCartSubtotal, readCart, removeCartItem, updateCartItemQuantity } from '../lib/cart'
 import { getDefaultAppRoute, getRoleLabel, getRoleModeLabel, isAdminRole, isProviderRole } from '../lib/roles'
 
 const PRIMARY_ITEMS = [
@@ -136,6 +136,8 @@ export default function NavBar({ activePage }) {
   const [messagePopoverOpen, setMessagePopoverOpen] = useState(false)
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false)
   const [cartOpen, setCartOpen] = useState(false)
+  const [cartMounted, setCartMounted] = useState(false)
+  const [cartActive, setCartActive] = useState(false)
   const [cartItems, setCartItems] = useState([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [panelOpen, setPanelOpen] = useState(null)
@@ -214,6 +216,24 @@ export default function NavBar({ activePage }) {
     }
   }, [activeCartUserId])
 
+  useEffect(() => {
+    if (cartOpen) {
+      setCartMounted(true)
+      const frame = window.requestAnimationFrame(() => setCartActive(true))
+      return () => window.cancelAnimationFrame(frame)
+    }
+
+    setCartActive(false)
+    return undefined
+  }, [cartOpen])
+
+  useEffect(() => {
+    if (cartOpen || !cartMounted) return undefined
+
+    const timeout = window.setTimeout(() => setCartMounted(false), 240)
+    return () => window.clearTimeout(timeout)
+  }, [cartMounted, cartOpen])
+
   function closeFloatingUi() {
     setMenuOpen(false)
     setPanelOpen(null)
@@ -283,6 +303,10 @@ export default function NavBar({ activePage }) {
 
   function handleRemoveCartItem(itemId) {
     setCartItems(removeCartItem(activeCartUserId, itemId))
+  }
+
+  function handleUpdateCartItemQuantity(itemId, quantity) {
+    setCartItems(updateCartItemQuantity(activeCartUserId, itemId, quantity))
   }
 
   function handleClearCart() {
@@ -651,9 +675,21 @@ export default function NavBar({ activePage }) {
           />
         </FloatingPanelBoundary>
       )}
-      {cartOpen && (
-        <div style={styles.cartScrim} onClick={() => setCartOpen(false)}>
-          <aside style={styles.cartDrawer} onClick={(event) => event.stopPropagation()}>
+      {cartMounted && (
+        <div
+          style={{
+            ...styles.cartScrim,
+            ...(cartActive ? styles.cartScrimActive : {}),
+          }}
+          onClick={() => setCartOpen(false)}
+        >
+          <aside
+            style={{
+              ...styles.cartDrawer,
+              ...(cartActive ? styles.cartDrawerActive : {}),
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div style={styles.cartHeader}>
               <div>
                 <div style={styles.cartEyebrow}>FlashMat cart</div>
@@ -701,7 +737,25 @@ export default function NavBar({ activePage }) {
                           </div>
                         </div>
                         <div style={styles.cartItemBottom}>
-                          <span style={styles.cartQuantity}>Qty {Math.max(1, Number(item.quantity || 1))}</span>
+                          <div style={styles.cartQuantityControl}>
+                            <button
+                              type="button"
+                              style={styles.cartQuantityButton}
+                              onClick={() => handleUpdateCartItemQuantity(item.id, Math.max(1, Number(item.quantity || 1) - 1))}
+                              aria-label={`Decrease quantity for ${item.title}`}
+                            >
+                              -
+                            </button>
+                            <span style={styles.cartQuantityValue}>Qty {Math.max(1, Number(item.quantity || 1))}</span>
+                            <button
+                              type="button"
+                              style={styles.cartQuantityButton}
+                              onClick={() => handleUpdateCartItemQuantity(item.id, Math.max(1, Number(item.quantity || 1) + 1))}
+                              aria-label={`Increase quantity for ${item.title}`}
+                            >
+                              +
+                            </button>
+                          </div>
                           <div style={styles.cartItemActions}>
                             <button type="button" style={styles.cartSecondaryButton} onClick={() => { setCartOpen(false); navigate(item.route || '/marketplace') }}>
                               View item
@@ -1536,6 +1590,11 @@ const styles = {
     zIndex: 6200,
     display: 'flex',
     justifyContent: 'flex-end',
+    opacity: 0,
+    transition: 'opacity .22s ease',
+  },
+  cartScrimActive: {
+    opacity: 1,
   },
   cartDrawer: {
     width: 'min(430px, 100vw)',
@@ -1545,6 +1604,12 @@ const styles = {
     boxShadow: '-28px 0 60px rgba(10,28,45,0.22)',
     display: 'flex',
     flexDirection: 'column',
+    transform: 'translateX(100%)',
+    transition: 'transform .24s cubic-bezier(.22, 1, .36, 1)',
+    willChange: 'transform',
+  },
+  cartDrawerActive: {
+    transform: 'translateX(0)',
   },
   cartHeader: {
     display: 'flex',
@@ -1701,10 +1766,32 @@ const styles = {
     gap: 12,
     flexWrap: 'wrap',
   },
-  cartQuantity: {
-    padding: '6px 10px',
+  cartQuantityControl: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '4px',
     borderRadius: 999,
     background: 'rgba(47,125,225,.08)',
+  },
+  cartQuantityButton: {
+    width: 28,
+    height: 28,
+    border: 'none',
+    borderRadius: '50%',
+    background: '#ffffff',
+    color: '#17314a',
+    fontSize: 16,
+    fontWeight: 800,
+    lineHeight: 1,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 10px rgba(10,28,45,0.08)',
+  },
+  cartQuantityValue: {
+    minWidth: 54,
+    textAlign: 'center',
     color: '#2f7de1',
     fontSize: 11,
     fontWeight: 800,
