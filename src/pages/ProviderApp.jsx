@@ -202,6 +202,7 @@ export default function ProviderApp() {
   const pendingFlashFix = flashFixQueue.filter((request) => request.status === 'pending')
   const bookingsConfirmedCount = providerBookings.filter((booking) => booking.status === 'confirmed').length
   const bookingsPendingCount = providerBookings.filter((booking) => booking.status === 'pending').length
+  const bookingsDueCount = bookingsPendingCount
   const monthlyRevenue = providerBookings.reduce((sum, booking) => {
     if (booking.status !== 'confirmed') return sum
     const amount = Number(String(booking.priceLabel || '').replace(/[^0-9.]/g, ''))
