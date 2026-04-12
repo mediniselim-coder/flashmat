@@ -19,6 +19,7 @@ const PublicMarketplace = lazy(() => import("./pages/PublicMarketplace"))
 const VehicleDetails = lazy(() => import("./pages/VehicleDetails"))
 const PublicVehicleListing = lazy(() => import("./pages/PublicVehicleListing"))
 const PublicMarketplaceListing = lazy(() => import("./pages/PublicMarketplaceListing"))
+const Checkout = lazy(() => import("./pages/Checkout"))
 const Community = lazy(() => import("./pages/Community"))
 const Pricing = lazy(() => import("./pages/Pricing"))
 const Contact = lazy(() => import("./pages/Contact"))
@@ -138,6 +139,7 @@ export default function App() {
             <Route path="/urgence" element={<FlashFixUrgence />} />
             <Route path="/marketplace" element={<PublicMarketplace />} />
             <Route path="/marketplace/listings/:listingId" element={<PublicMarketplaceListing />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route path="/community" element={<Community />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />

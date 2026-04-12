@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../hooks/useToast'
 import NewListingModal from './NewListingModal'
 import { getMarketplaceListingPath, normalizeMarketplaceListing } from '../lib/marketplace'
+import { addCartItem } from '../lib/cart'
 import ServiceIcon from './ServiceIcon'
 
 const SECTIONS = [
@@ -59,6 +61,7 @@ function canPublishSection(sectionId, profileRole) {
 export default function Marketplace({ portal = 'client', openComposer = false, forcedSection = null }) {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const { toast } = useToast()
   const [listings, setListings] = useState([])
   const [loading, setLoading] = useState(true)
   const [section, setSection] = useState(forcedSection || 'shop')
@@ -103,6 +106,23 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
   async function deleteListing(id) {
     await supabase.from('marketplace').update({ is_active: false }).eq('id', id)
     setListings((current) => current.filter((item) => item.id !== id))
+  }
+
+  function handleAddToCart(listing) {
+    const cartUserId = user?.id || 'guest'
+    addCartItem(cartUserId, {
+      id: listing.id,
+      listing_id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      quantity: 1,
+      image_url: listing.image_url,
+      seller_name: listing.seller_name,
+      route: getMarketplaceListingPath(listing),
+      category: listing.category,
+      listing_type: listing.listing_type,
+    })
+    toast(`${listing.title} added to cart.`, 'success')
   }
 
   function openComposerModal() {
@@ -302,6 +322,12 @@ export default function Marketplace({ portal = 'client', openComposer = false, f
                       <button className="btn btn-green" style={{ flex: 1, justifyContent: 'center' }} onClick={() => navigate(getMarketplaceListingPath(listing))}>
                         {listing.listing_type === 'vehicle' ? 'View vehicle' : 'View item'}
                       </button>
+
+                      {listing.listing_type === 'shop' && listing.seller_id !== user?.id ? (
+                        <button className="btn" style={{ justifyContent: 'center' }} onClick={() => handleAddToCart(listing)}>
+                          Add to cart
+                        </button>
+                      ) : null}
 
                       {listing.seller_id === user?.id ? (
                         <button className="btn" style={{ color: 'var(--red)', borderColor: 'rgba(239,68,68,.22)' }} onClick={() => { if (window.confirm('Remove this listing?')) deleteListing(listing.id) }}>

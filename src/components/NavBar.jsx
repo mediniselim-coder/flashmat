@@ -9,7 +9,7 @@ import ProviderProfileModal from './ProviderProfileModal'
 import MessageInboxPopover from './MessageInboxPopover'
 import NotificationCenterModal from './NotificationCenterModal'
 import FloatingPanelBoundary from './FloatingPanelBoundary'
-import { FLASHMAT_CART_UPDATED_EVENT, clearCart, readCart, removeCartItem } from '../lib/cart'
+import { FLASHMAT_CART_UPDATED_EVENT, clearCart, getCartSubtotal, readCart, removeCartItem } from '../lib/cart'
 import { getDefaultAppRoute, getRoleLabel, getRoleModeLabel, isAdminRole, isProviderRole } from '../lib/roles'
 
 const PRIMARY_ITEMS = [
@@ -152,6 +152,7 @@ export default function NavBar({ activePage }) {
   const { unreadMessages, unreadNotifications } = useInboxSummary(user, profile)
   const activeCartUserId = user?.id || 'guest'
   const cartCount = cartItems.reduce((total, item) => total + Math.max(1, Number(item.quantity || 1)), 0)
+  const cartSubtotal = getCartSubtotal(activeCartUserId)
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -719,6 +720,13 @@ export default function NavBar({ activePage }) {
 
             {cartItems.length > 0 ? (
               <div style={styles.cartFooter}>
+                <div style={styles.cartSummaryRow}>
+                  <span style={styles.cartSummaryLabel}>Subtotal</span>
+                  <span style={styles.cartSummaryValue}>${Number(cartSubtotal).toFixed(2)}</span>
+                </div>
+                <button type="button" style={styles.cartPrimaryWideButton} onClick={() => { setCartOpen(false); navigate('/checkout') }}>
+                  Checkout
+                </button>
                 <button type="button" style={styles.cartSecondaryWideButton} onClick={() => { setCartOpen(false); navigate('/marketplace') }}>
                   Continue shopping
                 </button>
@@ -1738,6 +1746,35 @@ const styles = {
     borderTop: '1px solid rgba(120,171,218,0.14)',
     display: 'grid',
     gap: 10,
+  },
+  cartSummaryRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    padding: '2px 2px 8px',
+  },
+  cartSummaryLabel: {
+    color: '#5c7289',
+    fontSize: 13,
+    fontWeight: 700,
+  },
+  cartSummaryValue: {
+    color: '#123052',
+    fontFamily: 'var(--display)',
+    fontSize: 24,
+    fontWeight: 800,
+    letterSpacing: '-0.04em',
+  },
+  cartPrimaryWideButton: {
+    width: '100%',
+    border: 'none',
+    borderRadius: 14,
+    padding: '13px 16px',
+    background: 'linear-gradient(135deg, #0e2b4a 0%, #154779 100%)',
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 800,
   },
   cartSecondaryWideButton: {
     width: '100%',

@@ -3,6 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import NavBar from '../components/NavBar'
 import SiteFooter from '../components/SiteFooter'
 import ServiceIcon from '../components/ServiceIcon'
+import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../hooks/useToast'
+import { addCartItem } from '../lib/cart'
 import { normalizeMarketplaceListing } from '../lib/marketplace'
 import { supabase } from '../lib/supabase'
 
@@ -17,6 +20,8 @@ function timeAgo(ts) {
 export default function PublicMarketplaceListing() {
   const { listingId } = useParams()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const { toast } = useToast()
   const [listing, setListing] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -50,6 +55,23 @@ export default function PublicMarketplaceListing() {
     ['City', listing.city || 'Montreal'],
     ['Published', timeAgo(listing.created_at)],
   ] : []
+
+  function handleAddToCart() {
+    if (!listing) return
+    addCartItem(user?.id || 'guest', {
+      id: listing.id,
+      listing_id: listing.id,
+      title: listing.title,
+      price: listing.price,
+      quantity: 1,
+      image_url: listing.image_url,
+      seller_name: listing.seller_name,
+      route: `/marketplace/listings/${listing.id}`,
+      category: listing.category,
+      listing_type: listing.listing_type,
+    })
+    toast(`${listing.title} added to cart.`, 'success')
+  }
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
@@ -146,8 +168,14 @@ export default function PublicMarketplaceListing() {
                     </div>
 
                     <div style={{ display: 'grid', gap: 10 }}>
+                      {listing.listing_type === 'shop' ? (
+                        <button type="button" className="btn btn-green" onClick={handleAddToCart} style={{ width: '100%', justifyContent: 'center' }}>
+                          Add to cart
+                        </button>
+                      ) : null}
+
                       {listing.phone ? (
-                        <a href={`tel:${listing.phone}`} className="btn btn-green" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
+                        <a href={`tel:${listing.phone}`} className="btn" style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', display: 'flex' }}>
                           Call seller
                         </a>
                       ) : (
