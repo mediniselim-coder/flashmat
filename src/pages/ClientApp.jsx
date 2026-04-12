@@ -964,19 +964,32 @@ export default function ClientApp() {
             </div>
 
             <div className={styles.pad}>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:10, marginBottom:20 }}>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(3, minmax(0, 1fr))', gap:14, marginBottom:24 }}>
                 {[
                   { icon:'RS', label:'Book', sub:'a service', action: () => openBooking(), color:'var(--green)' },
                   { icon:'SV', label:'Find', sub:'a provider', action: () => go('search'), color:'var(--blue)' },
                   { icon:'MP', label:'Marketplace', sub:'auto parts', action: () => go('marketplace'), color:'var(--amber)' },
                 ].map(q => (
                   <button key={q.label} onClick={q.action}
-                    style={{ background:'var(--bg2)', border:'1px solid var(--border)', borderRadius:12, padding:'14px 12px', cursor:'pointer', textAlign:'left', transition:'all .18s', boxShadow:'var(--shadow)' }}
+                    style={{
+                      background:'var(--bg2)',
+                      border:'1px solid var(--border)',
+                      borderRadius:16,
+                      minHeight:108,
+                      padding:'20px 18px',
+                      cursor:'pointer',
+                      textAlign:'left',
+                      transition:'all .18s',
+                      boxShadow:'var(--shadow)',
+                      display:'flex',
+                      flexDirection:'column',
+                      justifyContent:'space-between',
+                    }}
                     onMouseEnter={e => e.currentTarget.style.borderColor = q.color}
                     onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
-                    <div style={{ color:q.color, marginBottom:8, display:'inline-flex' }}><AppIcon code={q.icon} size={22} /></div>
-                    <div style={{ fontWeight:700, fontSize:13, color:'var(--ink)' }}>{q.label}</div>
-                    <div style={{ fontSize:11, color:'var(--ink3)' }}>{q.sub}</div>
+                    <div style={{ color:q.color, marginBottom:12, display:'inline-flex' }}><AppIcon code={q.icon} size={24} /></div>
+                    <div style={{ fontWeight:800, fontSize:19, color:'var(--ink)', lineHeight:1.05 }}>{q.label}</div>
+                    <div style={{ fontSize:13, color:'var(--ink3)', marginTop:6 }}>{q.sub}</div>
                   </button>
                 ))}
               </div>
