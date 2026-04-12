@@ -1,7 +1,12 @@
 export const FLASHMAT_PAYMENTS_UPDATED_EVENT = 'flashmat-payments-updated'
+export const FLASHMAT_WALLET_UPDATED_EVENT = 'flashmat-wallet-updated'
 
 function getPaymentStorageKey(userId) {
   return `flashmat-payments:${userId || 'guest'}`
+}
+
+function getWalletStorageKey(userId) {
+  return `flashmat-wallet-methods:${userId || 'guest'}`
 }
 
 function normalizeCardNumber(cardNumber = '') {
@@ -114,4 +119,84 @@ export function readPaymentRecords(userId) {
   } catch {
     return []
   }
+}
+
+export function readSavedPaymentMethods(userId) {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = window.localStorage.getItem(getWalletStorageKey(userId))
+    const parsed = JSON.parse(raw || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeSavedPaymentMethods(userId, methods) {
+  if (typeof window === 'undefined') return methods
+  window.localStorage.setItem(getWalletStorageKey(userId), JSON.stringify(methods))
+  window.dispatchEvent(new CustomEvent(FLASHMAT_WALLET_UPDATED_EVENT, { detail: { userId, methods } }))
+  return methods
+}
+
+export function savePaymentMethod({
+  userId,
+  kind = 'credit_card',
+  paymentDetails = {},
+  billingAddress = {},
+  paypalEmail = '',
+  setDefault = false,
+}) {
+  if (typeof window === 'undefined') return []
+
+  const current = readSavedPaymentMethods(userId)
+  const method = {
+    id: `pm_${Date.now()}`,
+    kind,
+    type: kind === 'paypal' ? 'paypal' : 'card',
+    createdAt: new Date().toISOString(),
+    billingAddress: {
+      addressLine1: billingAddress.addressLine1 || '',
+      addressLine2: billingAddress.addressLine2 || '',
+      city: billingAddress.city || '',
+      province: billingAddress.province || '',
+      postalCode: billingAddress.postalCode || '',
+      country: billingAddress.country || '',
+    },
+    paypalEmail: paypalEmail || '',
+    cardholder: String(paymentDetails.cardholder || '').trim(),
+    brand: kind === 'paypal' ? 'PayPal' : getCardBrand(paymentDetails.cardNumber),
+    last4: kind === 'paypal' ? '' : normalizeCardNumber(paymentDetails.cardNumber).slice(-4),
+    label:
+      kind === 'paypal'
+        ? `PayPal • ${paypalEmail}`
+        : `${kind === 'debit_card' ? 'Debit card' : 'Credit card'} • ${getMaskedCardLabel(paymentDetails.cardNumber)}`,
+    isDefault: setDefault || current.length === 0,
+  }
+
+  const next = [method, ...current].map((item, index) => ({
+    ...item,
+    isDefault: method.isDefault ? index === 0 : item.isDefault,
+  }))
+
+  return writeSavedPaymentMethods(userId, next)
+}
+
+export function removeSavedPaymentMethod(userId, methodId) {
+  const current = readSavedPaymentMethods(userId)
+  const filtered = current.filter((method) => String(method.id) !== String(methodId))
+  const next = filtered.map((method, index) => ({
+    ...method,
+    isDefault: filtered.length > 0 ? (filtered.some((item) => item.isDefault) ? method.isDefault : index === 0) : false,
+  }))
+  return writeSavedPaymentMethods(userId, next)
+}
+
+export function setDefaultPaymentMethod(userId, methodId) {
+  const current = readSavedPaymentMethods(userId)
+  const next = current.map((method) => ({
+    ...method,
+    isDefault: String(method.id) === String(methodId),
+  }))
+  return writeSavedPaymentMethods(userId, next)
 }
