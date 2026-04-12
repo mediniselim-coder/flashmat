@@ -65,7 +65,7 @@ function getProviderPathSegment(pathname) {
   return pathname.replace(/\/+$/, '').split('/')[3] || 'dashboard'
 }
 
-const SERVICE_TYPE_ORDER = ['mechanic', 'wash', 'tire', 'body', 'glass', 'tow', 'parts', 'parking', 'tuning']
+const SERVICE_TYPE_ORDER = ['mechanic', 'wash', 'tire', 'body', 'glass', 'tow', 'dealer', 'parts', 'parking', 'tuning']
 const PROVIDER_SERVICE_TYPE_OPTIONS = SERVICE_TYPE_ORDER.map((type) => ({
   id: type,
   label: PROVIDER_SERVICE_CATEGORY_LABELS[type] || type,

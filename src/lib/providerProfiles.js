@@ -29,6 +29,7 @@ export const PROVIDER_SERVICE_OPTIONS = [
   { id: 'roadside', label: 'Assistance routiere', icon: 'AR', category: 'tow' },
   { id: 'battery', label: 'Boost batterie', icon: 'BT', category: 'tow' },
   { id: 'lockout', label: 'Deverrouillage', icon: 'DV', category: 'tow' },
+  { id: 'dealer-sales', label: 'Vente de vehicules', icon: 'DL', category: 'dealer' },
   { id: 'parts', label: 'Pieces auto', icon: 'PC', category: 'parts' },
   { id: 'parking', label: 'Stationnement', icon: 'PK', category: 'parking' },
   { id: 'performance', label: 'Performance', icon: 'PR', category: 'tuning' },
@@ -41,6 +42,7 @@ const CATEGORY_LABELS = {
   body: 'Carrosserie',
   glass: 'Vitres auto',
   tow: 'Remorquage',
+  dealer: 'Concessionnaire',
   parts: 'Pieces auto',
   parking: 'Parking',
   tuning: 'Performance',
@@ -53,6 +55,7 @@ const CATEGORY_ICONS = {
   body: 'CR',
   glass: 'VT',
   tow: 'RW',
+  dealer: 'DL',
   parts: 'PC',
   parking: 'PK',
   tuning: 'PR',
@@ -296,6 +299,14 @@ export function getProviderServiceCategories(services = [], fallbackType = '') {
       if (normalized.includes('pare-brise') || normalized.includes('vitres')) categories.add('glass')
       if (normalized.includes('carrosserie') || normalized.includes('peinture') || normalized.includes('debosselage')) categories.add('body')
       if (normalized.includes('pneu') || normalized.includes('alignement') || normalized.includes('balancement') || normalized.includes('crevaison')) categories.add('tire')
+      if (
+        normalized.includes('concession')
+        || normalized.includes('dealer')
+        || normalized.includes('vente de vehicule')
+        || normalized.includes('vente de voiture')
+      ) {
+        categories.add('dealer')
+      }
       if (normalized.includes('piece')) categories.add('parts')
       if (normalized.includes('parking') || normalized.includes('stationnement')) categories.add('parking')
       if (normalized.includes('performance')) categories.add('tuning')

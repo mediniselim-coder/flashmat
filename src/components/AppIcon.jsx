@@ -64,6 +64,8 @@ export default function AppIcon({ code, size = 18 }) {
       return <Svg size={size}><path d="M9 4h6l1 3v11H8V7l1-3z" {...common} /><path d="M10 10h4" {...common} /></Svg>
     case 'PK':
       return <Svg size={size}><path d="M8 19V5h5a4 4 0 010 8H8" {...common} /></Svg>
+    case 'DL':
+      return <Svg size={size}><path d="M4 14h16" {...common} /><path d="m6 14 1.6-4h8.8L18 14" {...common} /><circle cx="8" cy="17.5" r="1.4" fill="currentColor" /><circle cx="16" cy="17.5" r="1.4" fill="currentColor" /><path d="M6 6h6.5l1.5 2.5H6z" {...common} /></Svg>
     case 'RW':
       return <Svg size={size}><path d="M4 14h12l2-3h2v5h-2" {...common} /><circle cx="8" cy="18" r="1.5" fill="currentColor" /><circle cx="18" cy="18" r="1.5" fill="currentColor" /></Svg>
     default:

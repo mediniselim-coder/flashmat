@@ -20,6 +20,7 @@ const SEARCH_CATS = [
   ['body', 'Bodywork', 'CR'],
   ['glass', 'Glass', 'VT'],
   ['tow', 'Towing', 'RW'],
+  ['dealer', 'Car Dealers', 'DL'],
   ['parts', 'Parts', 'PC'],
   ['parking', 'Parking', 'PK'],
 ]
@@ -45,6 +46,7 @@ function getProviderIconCode(provider) {
   if (categories.includes('body') || typeLabel.includes('body') || typeLabel.includes('collision')) return 'CR'
   if (categories.includes('glass') || typeLabel.includes('glass') || typeLabel.includes('windshield')) return 'VT'
   if (categories.includes('tow') || typeLabel.includes('tow')) return 'RW'
+  if (categories.includes('dealer') || typeLabel.includes('dealer') || typeLabel.includes('concession')) return 'DL'
   if (categories.includes('parts') || typeLabel.includes('part')) return 'PC'
   if (categories.includes('parking') || typeLabel.includes('parking')) return 'PK'
 

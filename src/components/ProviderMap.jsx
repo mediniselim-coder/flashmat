@@ -36,6 +36,7 @@ function getProviderIconCode(provider) {
   if (categories.includes('body') || typeLabel.includes('body') || typeLabel.includes('collision')) return 'body'
   if (categories.includes('glass') || typeLabel.includes('glass') || typeLabel.includes('windshield')) return 'glass'
   if (categories.includes('tow') || typeLabel.includes('tow')) return 'tow'
+  if (categories.includes('dealer') || typeLabel.includes('dealer') || typeLabel.includes('concession')) return 'dealer'
   if (categories.includes('parts') || typeLabel.includes('part')) return 'parts'
   if (categories.includes('parking') || typeLabel.includes('parking')) return 'parking'
 
@@ -130,6 +131,17 @@ function ProviderGlyph({ code, size = 18, color = '#f8fbff' }) {
       return (
         <svg {...common}>
           <path d="M8 20V4h5.5a3.5 3.5 0 1 1 0 7H8" />
+        </svg>
+      )
+    case 'dealer':
+      return (
+        <svg {...common}>
+          <path d="M5 15l1.5-4h11L19 15" />
+          <path d="M4 15h16v3H4z" />
+          <circle cx="8" cy="18" r="1.5" fill={color} stroke="none" />
+          <circle cx="16" cy="18" r="1.5" fill={color} stroke="none" />
+          <path d="M6 6h7l1.8 2.5H6z" />
+          <path d="M16 6v4" />
         </svg>
       )
     default:

@@ -59,6 +59,7 @@ const SEARCH_CATS = [
   ['body', 'Bodywork'],
   ['glass', 'Glass'],
   ['tow', 'Towing'],
+  ['dealer', 'Car Dealers'],
   ['parts', 'Parts'],
   ['parking', 'Parking'],
 ]
