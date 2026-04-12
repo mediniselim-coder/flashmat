@@ -47,7 +47,7 @@ function RouteLoadingScreen() {
           textAlign: "center",
         }}
       >
-        <img src="/logo-dark.png" alt="FlashMat" style={{ height: 34, objectFit: "contain", marginBottom: 16 }} />
+        <img src="/loading-logo.png" alt="FlashMat" style={{ width: "min(100%, 230px)", objectFit: "contain", margin: "0 auto 16px", display: "block" }} />
         <div
           style={{
             fontFamily: "var(--display)",
